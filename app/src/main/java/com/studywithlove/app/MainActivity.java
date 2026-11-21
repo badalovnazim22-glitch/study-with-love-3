@@ -711,7 +711,22 @@ private void showSettings() {
         timerPauseButton=button("Ⅱ  Пауза",false);timerPauseButton.setEnabled(timerRunning);timerPauseButton.setOnClickListener(v->pauseTimer());
         Button reset=button("↺  Сброс",false);reset.setOnClickListener(v->{timerHandler.removeCallbacks(timerTick);timerRunning=false;timerIsBreak=false;timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();});
         Button[] controls={timerStartButton,timerPauseButton,reset};
-        for(Button control:controls){ LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(48),1f); cp.setMargins(dp(3),0,dp(3),0); control.setPadding(dp(3),dp(4),dp(3),dp(4)); control.setTextSize(12); control.setMinHeight(0); control.setBackground(shape(control==timerStartButton?PINK:PALE,14,control==timerStartButton?PINK:0)); timerControls.addView(control,cp); }
+        for(Button control:controls){
+            LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(48),1f); cp.setMargins(dp(3),0,dp(3),0);
+            control.setPadding(dp(3),dp(4),dp(3),dp(4)); control.setTextSize(12); control.setMinHeight(0);
+            int normal=control==timerStartButton?PINK:PALE, pressed=control==timerStartButton?0xFF9F526B:0xFFD9C5CC;
+            android.graphics.drawable.StateListDrawable states=new android.graphics.drawable.StateListDrawable();
+            states.addState(new int[]{android.R.attr.state_pressed},shape(pressed,14,pressed));
+            states.addState(new int[]{android.R.attr.state_enabled},shape(normal,14,control==timerStartButton?PINK:0));
+            states.addState(new int[]{},shape(0xFFE7E1E4,14,0));
+            control.setBackground(states);
+            control.setOnTouchListener((view,event)->{
+                if(event.getAction()==android.view.MotionEvent.ACTION_DOWN)view.animate().scaleX(0.94f).scaleY(0.94f).alpha(0.82f).setDuration(75).start();
+                else if(event.getAction()==android.view.MotionEvent.ACTION_UP||event.getAction()==android.view.MotionEvent.ACTION_CANCEL)view.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(130).start();
+                return false;
+            });
+            timerControls.addView(control,cp);
+        }
         root.addView(timerControls,lp(-1,52,0,0,0,0));
         if(timerRemainingMs<=0)timerRemainingMs=(timerIsBreak?selectedBreakMinutes:selectedStudyMinutes)*60000L;if(timerRunning)updateTimerDisplay();
     }
