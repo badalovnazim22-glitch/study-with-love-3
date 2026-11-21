@@ -24,6 +24,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.DatePicker;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.widget.Toast;
@@ -43,6 +44,7 @@ import java.util.TimeZone;
 public class MainActivity extends Activity {
     private int BG = 0xFFFFF9F7, PINK = 0xFFC97891, PALE = 0xFFFCEEF2, DARK = 0xFF3F3439, MUTED = 0xFF95878C;
     private int progressMonthOffset = 0;
+    private LinearLayout progressCalendarHost;
     private LinearLayout root;
     private String currentScreen = "home";
     private SharedPreferences prefs;
@@ -88,7 +90,21 @@ public class MainActivity extends Activity {
         scheduleReminders(this);
         if (prefs.getBoolean("notifications_enabled", true) && Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 20);
-        showHome();
+        if (!prefs.getBoolean("welcome_done", false)) showWelcome(); else showHome();
+    }
+
+    private void showWelcome() {
+        currentScreen="welcome"; base("Добро пожаловать ♡","Давай познакомимся и настроим Study with Love");
+        LinearLayout panel=card();panel.setGravity(Gravity.CENTER_HORIZONTAL);panel.setPadding(dp(20),dp(20),dp(20),dp(20));
+        TextView flower=text("🌷",64,PINK,true);flower.setGravity(Gravity.CENTER);panel.addView(flower,lp(-1,92,0,0,0,8));
+        EditText name=new EditText(this);name.setSingleLine(true);name.setTextSize(17);name.setTextColor(DARK);name.setHint("Как тебя зовут?");name.setPadding(dp(14),dp(8),dp(14),dp(8));name.setBackground(shape(0xFFFFFFFF,16,0xFFEADDE2));panel.addView(name,lp(-1,52,0,0,0,12));
+        addText(panel,"КАК К ТЕБЕ ОБРАЩАТЬСЯ?",11,PINK,true);addText(panel,"Выбери обращение",13,MUTED,false);
+        final String[] gender={""};LinearLayout choices=new LinearLayout(this);choices.setOrientation(LinearLayout.HORIZONTAL);
+        Button[] opts={button("Девушка",false),button("Парень",false),button("Не указывать",false)};String[] vals={"female","male","none"};
+        for(int i=0;i<3;i++){final int k=i;LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(48),1f);p.setMargins(dp(3),0,dp(3),0);choices.addView(opts[i],p);opts[i].setOnClickListener(v->{gender[0]=vals[k];for(Button q:opts)q.setAlpha(.65f);opts[k].setAlpha(1f);opts[k].setBackground(shape(PALE,18,PINK));opts[k].setTextColor(PINK);opts[k].animate().scaleX(1.05f).scaleY(1.05f).setDuration(160).withEndAction(()->opts[k].animate().scaleX(1f).scaleY(1f).setDuration(130).start()).start();});}
+        panel.addView(choices,lp(-1,52,0,5,0,16));Button start=button("Начать путешествие ✨",true);panel.addView(start,lp(-1,54,0,4,0,0));root.addView(panel,lp(-1,-2,0,0,0,18));
+        start.setOnClickListener(v->{String n=name.getText().toString().trim();if(n.isEmpty()){name.setError("Введи имя");return;}if(gender[0].isEmpty()){Toast.makeText(this,"Выбери обращение или «Не указывать»",Toast.LENGTH_SHORT).show();return;}prefs.edit().putString("display_name",n).putString("profile_gender",gender[0]).putBoolean("welcome_done",true).apply();panel.animate().alpha(0f).translationY(dp(18)).setDuration(260).withEndAction(this::showHome).start();});
+        panel.setAlpha(0f);panel.setTranslationY(dp(24));panel.animate().alpha(1f).translationY(0).setDuration(520).start();
     }
 
     private void loadChapters() {
@@ -272,19 +288,17 @@ private void showSettings() {
         LinearLayout themeCard = card();
         addText(themeCard, "ТЕМА ОФОРМЛЕНИЯ", 12, PINK, true);
         addText(themeCard, "Выбери настроение приложения", 13, MUTED, false);
-        String[] themeNames = {"Розовая", "Лавандовая", "Мятная", "Ночная", "Белая", "Кофейная", "Золотая", "Люкс-монограмма", "Небесная", "Персиковая"};
-        String[] themeKeys = {"pink", "lavender", "mint", "night", "white", "brown", "gold", "luxury", "sky", "peach"};
+        String[] themeNames = {"Розовая", "Лавандовая", "Мятная", "Ночная", "Белая", "Кофейная", "Золотая", "Люкс-монограмма", "Небесная", "Персиковая", "Красная", "Louis Vuitton"};
+        String[] themeKeys = {"pink", "lavender", "mint", "night", "white", "brown", "gold", "luxury", "sky", "peach", "red", "lv"};
         String current = prefs.getString("app_theme", "pink");
-        for (int i=0;i<themeNames.length;i++) {
-            final String key=themeKeys[i];
-            Button choice = button((current.equals(key) ? "✓  " : "") + themeNames[i], current.equals(key));
-            themeCard.addView(choice, lp(-1, 44, 0, 5, 0, 4));
-            choice.setOnClickListener(v -> {
-                prefs.edit().putString("app_theme", key).apply();
-                applySavedTheme();
-                showSettings();
-            });
-        }
+        android.widget.GridLayout themeGrid=new android.widget.GridLayout(this);themeGrid.setColumnCount(3);
+        int[] swatches={0xFFC97891,0xFF8979B8,0xFF659B86,0xFF302735,0xFFFFFFFF,0xFF8B6046,0xFFB18A32,0xFF30251F,0xFF5D91B5,0xFFD88968,0xFFB32635,0xFF4B3428};
+        for(int i=0;i<themeNames.length;i++){final String key=themeKeys[i];final int color=swatches[i];LinearLayout tile=new LinearLayout(this);tile.setOrientation(LinearLayout.VERTICAL);tile.setGravity(Gravity.CENTER);tile.setPadding(dp(4),dp(7),dp(4),dp(7));tile.setBackground(shape(current.equals(key)?PALE:0xFFFFFFFF,15,current.equals(key)?PINK:0xFFEADDE2));
+            TextView sample=text(key.equals("lv")?"LV":(current.equals(key)?"✓":" "),21,color,true);sample.setGravity(Gravity.CENTER);sample.setBackground(shape(color,13,key.equals("white")?0xFFDCE1E8:0));tile.addView(sample,lp(48,42,0,0,0,5));
+            TextView label=text(themeNames[i],11,DARK,true);label.setGravity(Gravity.CENTER);label.setMaxLines(2);tile.addView(label,lp(-1,30,0,0,0,0));
+            android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(86);gp.columnSpec=android.widget.GridLayout.spec(i%3,1f);gp.setMargins(dp(3),dp(3),dp(3),dp(3));themeGrid.addView(tile,gp);
+            tile.setOnClickListener(v->{prefs.edit().putString("app_theme",key).apply();applySavedTheme();showSettings();});}
+        themeCard.addView(themeGrid,lp(-1,-2,0,8,0,0));
         root.addView(themeCard, lp(-1, -2, 0, 0, 0, 13));
 
         LinearLayout notificationCard = card();
@@ -321,6 +335,8 @@ private void showSettings() {
         else if ("luxury".equals(theme)) { BG=0xFF211B18; PINK=0xFFD6B36A; PALE=0xFF3A3028; DARK=0xFFF3E7D0; MUTED=0xFFB7A68B; }
         else if ("sky".equals(theme)) { BG=0xFFF1F8FC; PINK=0xFF5D91B5; PALE=0xFFE1EFF8; DARK=0xFF304656; MUTED=0xFF8199A8; }
         else if ("peach".equals(theme)) { BG=0xFFFFF5EF; PINK=0xFFD88968; PALE=0xFFFBE5D9; DARK=0xFF513D34; MUTED=0xFFA88D80; }
+        else if ("red".equals(theme)) { BG=0xFFFFF5F4; PINK=0xFFB32635; PALE=0xFFF8E2E3; DARK=0xFF4B2026; MUTED=0xFF9D777B; }
+        else if ("lv".equals(theme)) { BG=0xFF241B17; PINK=0xFFD6B36A; PALE=0xFF3B2D24; DARK=0xFFF4E6CF; MUTED=0xFFBDA98B; }
         else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF95878C; }
         if (getWindow() != null) { getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG); }
     }
@@ -368,13 +384,13 @@ private void showSettings() {
         for (int i = 0; i < values.length; i++) {
             String[] value = values[i];
             LinearLayout stat = card(); stat.setGravity(Gravity.CENTER);
-            stat.setPadding(dp(7), dp(13), dp(7), dp(13));
+            stat.setPadding(dp(5), dp(7), dp(5), dp(7));
             stat.setBackground(shape(i == 0 || i == 2 ? 0xFFFFF0F4 : colors[i], 22, 0));
             TextView number = text(value[0], 24, PINK, true); number.setGravity(Gravity.CENTER);
-            stat.addView(number, lp(-1, 31, 0, 0, 0, 3));
+            stat.addView(number, lp(-1, 30, 0, 0, 0, 3));
             TextView caption = text(value[1], 12, MUTED, false); caption.setGravity(Gravity.CENTER); caption.setMaxLines(2);
-            stat.addView(caption, lp(-1, 30, 0, 0, 0, 0));
-            LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, -2, 1f);
+            stat.addView(caption, lp(-1, 38, 0, 0, 0, 0));
+            LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, dp(102), 1f);
             p.setMargins(dp(3), 0, dp(3), 0); stats.addView(stat, p);
         }
         root.addView(stats, lp(-1, -2, 0, 0, 0, 22));
@@ -571,20 +587,9 @@ private void showSettings() {
         showPraise();
     }
 
-    private void showProgress() {
-        saveForegroundUsage();
-        currentScreen = "progress";
-        base("Мой прогресс 📊", "Здесь видно, сколько уже изучено по каждой теме");
-        int totalTopics = 0, completedTopics = 0;
-        for (String chapter : chapters.keySet()) {
-            for (String topic : chapters.get(chapter)) {
-                totalTopics++;
-                if (topicProgress(topic) == 100) completedTopics++;
-            }
-        }
-        int overall = totalTopics == 0 ? 0 : completedTopics * 100 / totalTopics;
 
-        // Study calendar: every date on which the learner marked a study session.
+    private void renderProgressCalendar() {
+        if(progressCalendarHost==null)return;progressCalendarHost.removeAllViews();
         LinearLayout calendarCard = card();
         addText(calendarCard, "📅  ДНИ ЗАНЯТИЙ", 12, PINK, true);
         Calendar month = Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));
@@ -603,8 +608,8 @@ private void showSettings() {
         nextMonth.setEnabled(progressMonthOffset < 0);
         monthNav.addView(nextMonth, lp(48, 42, 8, 0, 0, 0));
         calendarCard.addView(monthNav, lp(-1, 44, 0, 5, 0, 2));
-        prevMonth.setOnClickListener(v -> { progressMonthOffset--; showProgress(); });
-        nextMonth.setOnClickListener(v -> { if (progressMonthOffset < 0) { progressMonthOffset++; showProgress(); } });
+        prevMonth.setOnClickListener(v -> { progressMonthOffset--; renderProgressCalendar(); });
+        nextMonth.setOnClickListener(v -> { if (progressMonthOffset < 0) { progressMonthOffset++; renderProgressCalendar(); } });
         Set<String> studiedDays = new TreeSet<>(prefs.getStringSet("study_days", new TreeSet<String>()));
         Set<String> visitedDays = new TreeSet<>(prefs.getStringSet("visit_days", new TreeSet<String>()));
         Calendar first = (Calendar) month.clone();
@@ -646,10 +651,26 @@ private void showSettings() {
                 cell.setElevation(dp(1));
                 if (isToday) cell.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             }
-            week.addView(cell, new LinearLayout.LayoutParams(0, dp(43), 1f));
+            week.addView(cell, new LinearLayout.LayoutParams(0, dp(35), 1f));
         }
         addText(calendarCard, "♥ Учебные дни: " + countStudyDaysThisMonth(studiedDays, yearNumber, monthNumber) + "   ·   Заходила: " + countStudyDaysThisMonth(visitedDays, yearNumber, monthNumber), 12, MUTED, false);
-        root.addView(calendarCard, lp(-1, -2, 0, 0, 0, 14));
+        progressCalendarHost.addView(calendarCard, lp(-1, -2, 0, 0, 0, 0));
+
+    }
+    private void showProgress() {
+        saveForegroundUsage();
+        currentScreen = "progress";
+        base("Мой прогресс 📊", "Здесь видно, сколько уже изучено по каждой теме");
+        int totalTopics = 0, completedTopics = 0;
+        for (String chapter : chapters.keySet()) {
+            for (String topic : chapters.get(chapter)) {
+                totalTopics++;
+                if (topicProgress(topic) == 100) completedTopics++;
+            }
+        }
+        int overall = totalTopics == 0 ? 0 : completedTopics * 100 / totalTopics;
+
+        progressCalendarHost=new LinearLayout(this);progressCalendarHost.setOrientation(LinearLayout.VERTICAL);renderProgressCalendar();root.addView(progressCalendarHost,lp(-1,-2,0,0,0,14));
 
         LinearLayout summary = card();
         addText(summary, "🌸  ОБЩИЙ РЕЗУЛЬТАТ", 12, PINK, true);
@@ -875,48 +896,30 @@ private void showSettings() {
     }
 
     private void showFlower() {
-        currentScreen = "flower";
-        Set<String> days = new TreeSet<>(prefs.getStringSet("study_days", new TreeSet<String>()));
-        int count=days.size(), water=prefs.getInt("flower_water_count",0), petals=prefs.getInt("flower_petals",0);
-        String[] flowers={"🌸","🌷","🌻","🌼","🪻"}; int flowerIndex=prefs.getInt("flower_type",0)%flowers.length;
+        currentScreen="flower";Set<String> days=new TreeSet<>(prefs.getStringSet("study_days",new TreeSet<String>()));
+        int count=days.size(),waterCount=prefs.getInt("flower_water_count",0),petals=prefs.getInt("flower_petals",0);
+        String[] flowers={"🌸","🌷","🌻","🌼","🪻"};int flowerIndex=prefs.getInt("flower_type",0)%flowers.length;
         String stage=count>=30?"Пышное цветение":count>=14?"Цветочек окреп":count>=7?"Появились бутоны":count>=3?"Первые листочки":"Маленький росток";
-        base("Мой цветочек","Небольшой сад твоих учебных побед");
-        LinearLayout c=card();c.setGravity(Gravity.CENTER);
-        android.widget.FrameLayout garden=new android.widget.FrameLayout(this);garden.setClipChildren(false);garden.setClipToPadding(false);
-        TextView art=text(count>=30?"🌸":flowers[flowerIndex],62,PINK,true);art.setGravity(Gravity.CENTER);
-        android.widget.FrameLayout.LayoutParams flowerLp=new android.widget.FrameLayout.LayoutParams(dp(118),dp(90),Gravity.CENTER);flowerLp.topMargin=-dp(18);garden.addView(art,flowerLp);
-        TextView pot=text("🪴",54,PINK,true);pot.setGravity(Gravity.CENTER);
-        android.widget.FrameLayout.LayoutParams potLp=new android.widget.FrameLayout.LayoutParams(dp(100),dp(66),Gravity.CENTER);potLp.topMargin=dp(63);garden.addView(pot,potLp);
-        TextView can=text("🚿",34,PINK,true);can.setGravity(Gravity.CENTER);
-        android.widget.FrameLayout.LayoutParams canLp=new android.widget.FrameLayout.LayoutParams(dp(70),dp(58),Gravity.RIGHT|Gravity.TOP);canLp.setMargins(0,dp(2),dp(20),0);garden.addView(can,canLp);
-        TextView drops=text("·  ·  ·",19,PINK,true);drops.setGravity(Gravity.CENTER);
-        android.widget.FrameLayout.LayoutParams dropsLp=new android.widget.FrameLayout.LayoutParams(dp(64),dp(30),Gravity.RIGHT|Gravity.TOP);dropsLp.setMargins(0,dp(52),dp(36),0);garden.addView(drops,dropsLp);
-        android.animation.ObjectAnimator pour=android.animation.ObjectAnimator.ofFloat(can,"rotation",-12f,13f);
-        pour.setDuration(850);pour.setRepeatMode(android.animation.ValueAnimator.REVERSE);pour.setRepeatCount(android.animation.ValueAnimator.INFINITE);pour.start();
-        android.animation.ObjectAnimator moveCan=android.animation.ObjectAnimator.ofFloat(can,View.TRANSLATION_X,0f,-dp(14),0f);
-        moveCan.setDuration(1700);moveCan.setRepeatCount(android.animation.ValueAnimator.INFINITE);moveCan.start();
-        drops.setAlpha(0.35f);
-        android.animation.ObjectAnimator waterAnim=android.animation.ObjectAnimator.ofFloat(drops,View.ALPHA,0.25f,1f,0.25f);
-        waterAnim.setDuration(650);waterAnim.setRepeatCount(android.animation.ValueAnimator.INFINITE);waterAnim.start();
-        android.animation.ObjectAnimator fall=android.animation.ObjectAnimator.ofFloat(drops,View.TRANSLATION_Y,0f,dp(14));
-        fall.setDuration(650);fall.setRepeatCount(android.animation.ValueAnimator.INFINITE);fall.start();
-        android.animation.ObjectAnimator grow=android.animation.ObjectAnimator.ofFloat(art,View.SCALE_X,0.94f,1.04f,0.94f);
-        grow.setDuration(1500);grow.setRepeatCount(android.animation.ValueAnimator.INFINITE);grow.start();
-        android.animation.ObjectAnimator sway=android.animation.ObjectAnimator.ofFloat(art,View.SCALE_Y,0.94f,1.04f,0.94f);
-        sway.setDuration(1500);sway.setRepeatCount(android.animation.ValueAnimator.INFINITE);sway.start();
-        c.addView(garden,lp(-1,174,0,0,0,7));
-        addText(c,stage,21,DARK,true);addText(c,count+" дней занятий · "+totalStudyMinutes()+" минут вместе",13,MUTED,false);addText(c,"✿  "+petals+" лепестков заботы",14,PINK,true);
-        root.addView(c,lp(-1,-2,0,0,0,12));
-        LinearLayout care=card();addText(care,"УХОД ЗА ЦВЕТОЧКОМ",12,PINK,true);
-        addText(care,"Поливай его раз в день и получай лепесток. Он растёт вместе с твоими привычками.",13,MUTED,false);
-        boolean watered=prefs.getString("flower_water_date","").equals(todayKey());
-        Button waterButton=button(watered?"Уже полит сегодня ✓":"💧  Полить цветочек",true);waterButton.setEnabled(!watered);
-        waterButton.setOnClickListener(v->{prefs.edit().putString("flower_water_date",todayKey()).putInt("flower_water_count",water+1).putInt("flower_petals",petals+1).apply();showFlower();});
-        care.addView(waterButton,lp(-1,48,0,8,0,8));
-        Button change=button("🌷  Изменить цветочек",false);change.setOnClickListener(v->{prefs.edit().putInt("flower_type",(flowerIndex+1)%flowers.length).apply();showFlower();});
-        care.addView(change,lp(-1,46,0,0,0,0));root.addView(care,lp(-1,-2,0,0,0,12));
-        addText(root,"Твой цветочек не сравнивает себя с другими. Ему достаточно того, что ты возвращаешься к себе и своим мечтам. ♡",14,MUTED,false);
-        backHome();
+        base("Мой цветочек","Он растёт вместе с твоими учебными победами");
+        LinearLayout c=card();c.setGravity(Gravity.CENTER);android.widget.FrameLayout garden=new android.widget.FrameLayout(this);garden.setClipChildren(false);garden.setClipToPadding(false);
+        TextView pot=text("🪴",104,PINK,true);pot.setGravity(Gravity.CENTER);android.widget.FrameLayout.LayoutParams potLp=new android.widget.FrameLayout.LayoutParams(dp(150),dp(132),Gravity.CENTER);potLp.topMargin=dp(28);garden.addView(pot,potLp);
+        TextView art=text(count>=30?"🌸":flowers[flowerIndex],56,PINK,true);art.setGravity(Gravity.CENTER);android.widget.FrameLayout.LayoutParams flowerLp=new android.widget.FrameLayout.LayoutParams(dp(100),dp(78),Gravity.CENTER);flowerLp.topMargin=-dp(32);garden.addView(art,flowerLp);
+        TextView can=text("🪣",34,PINK,true);can.setGravity(Gravity.CENTER);android.widget.FrameLayout.LayoutParams canLp=new android.widget.FrameLayout.LayoutParams(dp(58),dp(54),Gravity.RIGHT|Gravity.TOP);canLp.setMargins(0,dp(20),dp(18),0);garden.addView(can,canLp);
+        TextView drops=text("💧  💧  💧",18,PINK,true);drops.setGravity(Gravity.CENTER);drops.setVisibility(View.GONE);android.widget.FrameLayout.LayoutParams dropsLp=new android.widget.FrameLayout.LayoutParams(dp(90),dp(40),Gravity.RIGHT|Gravity.TOP);dropsLp.setMargins(0,dp(68),dp(28),0);garden.addView(drops,dropsLp);
+        android.animation.ObjectAnimator grow=android.animation.ObjectAnimator.ofFloat(art,View.SCALE_X,.97f,1.03f,.97f);grow.setDuration(1900);grow.setRepeatCount(android.animation.ValueAnimator.INFINITE);grow.start();
+        android.animation.ObjectAnimator sway=android.animation.ObjectAnimator.ofFloat(art,View.SCALE_Y,.97f,1.03f,.97f);sway.setDuration(1900);sway.setRepeatCount(android.animation.ValueAnimator.INFINITE);sway.start();
+        c.addView(garden,lp(-1,190,0,0,0,8));addText(c,stage,21,DARK,true);addText(c,count+" дней занятий · "+totalStudyMinutes()+" минут вместе",13,MUTED,false);addText(c,"✿  "+petals+" лепестков заботы",14,PINK,true);root.addView(c,lp(-1,-2,0,0,0,12));
+        LinearLayout care=card();addText(care,"УХОД ЗА ЦВЕТОЧКОМ",12,PINK,true);addText(care,"Нажми на кнопку — появится вода и цветочек получит лепесток. Поливать можно раз в день.",13,MUTED,false);
+        boolean watered=prefs.getString("flower_water_date","").equals(todayKey());Button waterButton=button(watered?"Уже полит сегодня ✓":"💧  Полить цветочек",true);waterButton.setEnabled(!watered);
+        waterButton.setOnClickListener(v->{waterButton.setEnabled(false);waterButton.setText("Поливаем... 💧");drops.setVisibility(View.VISIBLE);
+            android.animation.ObjectAnimator pour=android.animation.ObjectAnimator.ofFloat(can,"rotation",0f,-24f,12f,0f);pour.setDuration(900);
+            android.animation.ObjectAnimator move=android.animation.ObjectAnimator.ofFloat(can,View.TRANSLATION_X,0f,-dp(16),0f);move.setDuration(900);
+            android.animation.ObjectAnimator rain=android.animation.ObjectAnimator.ofFloat(drops,View.TRANSLATION_Y,0f,dp(32));rain.setDuration(900);
+            android.animation.ObjectAnimator fade=android.animation.ObjectAnimator.ofFloat(drops,View.ALPHA,1f,.15f);fade.setDuration(900);pour.start();move.start();rain.start();fade.start();
+            prefs.edit().putString("flower_water_date",todayKey()).putInt("flower_water_count",waterCount+1).putInt("flower_petals",petals+1).apply();
+            new Handler().postDelayed(()->{if(!isFinishing()&&"flower".equals(currentScreen))showFlower();},1050);});
+        care.addView(waterButton,lp(-1,48,0,8,0,8));Button change=button("🌷  Изменить цветочек",false);change.setOnClickListener(v->{prefs.edit().putInt("flower_type",(flowerIndex+1)%flowers.length).apply();showFlower();});care.addView(change,lp(-1,46,0,0,0,0));root.addView(care,lp(-1,-2,0,0,0,12));
+        addText(root,"Твой цветочек растёт в своём горшочке — так же, как твои маленькие победы ♡",14,MUTED,false);backHome();
     }
 
     private void showAchievements() {
@@ -966,8 +969,8 @@ private void showSettings() {
         currentScreen = "letters";
         base("Письмо себе в будущее", "Оставь доброе напоминание для себя будущей");
         EditText body = new EditText(this); body.setHint("Дорогая я, хочу сказать тебе..."); body.setMinLines(4); body.setGravity(Gravity.TOP); body.setTextSize(16); body.setTextColor(DARK); body.setPadding(dp(14),dp(12),dp(14),dp(12)); body.setBackground(shape(0xFFFFFFFF,18,0xFFEADDE2)); root.addView(body, lp(-1,130,0,0,0,10));
-        EditText date = new EditText(this); date.setHint("Дата открытия: ГГГГ-ММ-ДД"); date.setSingleLine(true); date.setInputType(android.text.InputType.TYPE_CLASS_DATETIME); date.setTextSize(15); date.setPadding(dp(12),dp(8),dp(12),dp(8)); date.setBackground(shape(0xFFFFFFFF,14,0xFFEADDE2)); root.addView(date,lp(-1,50,0,0,0,10));
-        Button save = button("♡  Сохранить письмо", true); save.setOnClickListener(v -> { String msg=body.getText().toString().trim(), d=date.getText().toString().trim(); if(msg.isEmpty() || d.isEmpty()){Toast.makeText(this,"Заполни письмо и дату открытия",Toast.LENGTH_SHORT).show();return;} try { java.text.SimpleDateFormat f=new java.text.SimpleDateFormat("yyyy-MM-dd",Locale.US); f.setLenient(false); f.parse(d); } catch(Exception e){Toast.makeText(this,"Введи дату в формате ГГГГ-ММ-ДД",Toast.LENGTH_SHORT).show();return;} String id=String.valueOf(System.currentTimeMillis()); Set<String> ids=new TreeSet<>(prefs.getStringSet("future_letter_ids",new TreeSet<String>())); ids.add(id); prefs.edit().putString("future_letter_"+id,msg).putString("future_date_"+id,d).putStringSet("future_letter_ids",ids).apply(); body.setText("");date.setText(""); Toast.makeText(this,"Письмо сохранено ❤️",Toast.LENGTH_SHORT).show(); showFutureLetters(); }); root.addView(save,lp(-1,50,0,0,0,14));
+        EditText date = new EditText(this); date.setHint("Выбери дату открытия"); date.setSingleLine(true); date.setFocusable(false); date.setClickable(true); date.setTextSize(15); date.setPadding(dp(12),dp(8),dp(12),dp(8)); date.setBackground(shape(0xFFFFFFFF,14,0xFFEADDE2)); date.setOnClickListener(v->{Calendar now=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));new android.app.DatePickerDialog(this,(picker,y,m,d)->date.setText(String.format(Locale.US,"%04d-%02d-%02d",y,m+1,d)),now.get(Calendar.YEAR),now.get(Calendar.MONTH),now.get(Calendar.DAY_OF_MONTH)).show();}); root.addView(date,lp(-1,50,0,0,0,10));
+        Button save = button("♡  Сохранить письмо", true); save.setOnClickListener(v -> { String msg=body.getText().toString().trim(), d=date.getText().toString().trim(); if(msg.isEmpty() || d.isEmpty()){Toast.makeText(this,"Заполни письмо и дату открытия",Toast.LENGTH_SHORT).show();return;} try { java.text.SimpleDateFormat f=new java.text.SimpleDateFormat("yyyy-MM-dd",Locale.US); f.setLenient(false); Date parsed=f.parse(d); if(parsed==null || d.compareTo(todayKey())<0){Toast.makeText(this,"Выбери сегодняшнюю или будущую дату",Toast.LENGTH_SHORT).show();return;} } catch(Exception e){Toast.makeText(this,"Выбери дату в календаре",Toast.LENGTH_SHORT).show();return;} String id=String.valueOf(System.currentTimeMillis()); Set<String> ids=new TreeSet<>(prefs.getStringSet("future_letter_ids",new TreeSet<String>())); ids.add(id); prefs.edit().putString("future_letter_"+id,msg).putString("future_date_"+id,d).putStringSet("future_letter_ids",ids).apply(); body.setText("");date.setText(""); Toast.makeText(this,"Письмо сохранено ❤️",Toast.LENGTH_SHORT).show(); showFutureLetters(); }); root.addView(save,lp(-1,50,0,0,0,14));
         Set<String> ids=new TreeSet<>(prefs.getStringSet("future_letter_ids",new TreeSet<String>())); List<String> sorted=new ArrayList<>(ids); java.util.Collections.sort(sorted,java.util.Collections.reverseOrder());
         for(String id:sorted){String d=prefs.getString("future_date_"+id,""); String msg=prefs.getString("future_letter_"+id,""); LinearLayout c=card(); boolean open=d.compareTo(todayKey())<=0; addText(c,(open?"✉️  Можно открыть":"🔒  Открывается "+d),14,PINK,true); if(open)addText(c,msg,15,DARK,false); else addText(c,"Твоё письмо ждёт назначенного дня ♡",13,MUTED,false); root.addView(c,lp(-1,-2,0,0,0,8)); }
         backHome();
@@ -1234,6 +1237,8 @@ private void showSettings() {
         } else if ("sky".equals(theme)) {
             if (white) color = color == 0xFFFFF9F7 ? 0xFFF1F8FC : 0xFFFFFFFF; else if (soft || pale) color = 0xFFE1EFF8;
             if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFFD4E5F0;
+        } else if ("red".equals(theme)) { if (white) color = color == 0xFFFFF9F7 ? 0xFFFFF5F4 : 0xFFFFFCFC; else if (soft || pale) color = 0xFFF8E2E3; if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFFECC9CC;
+        } else if ("lv".equals(theme)) { if (white) color = color == 0xFFFFF9F7 ? 0xFF241B17 : 0xFF33271F; else if (soft || pale) color = 0xFF3B2D24; if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFF80633C;
         } else if ("peach".equals(theme)) {
             if (white) color = color == 0xFFFFF9F7 ? 0xFFFFF5EF : 0xFFFFFCF9; else if (soft || pale) color = 0xFFFBE5D9;
             if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFFF0D2C4;
