@@ -103,7 +103,7 @@ public class MainActivity extends Activity {
         Button[] opts={button("Девушка",false),button("Парень",false)};String[] vals={"female","male"};
         for(int i=0;i<2;i++){final int k=i;LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(48),1f);p.setMargins(dp(3),0,dp(3),0);choices.addView(opts[i],p);opts[i].setOnClickListener(v->{gender[0]=vals[k];for(Button q:opts)q.setAlpha(.65f);opts[k].setAlpha(1f);opts[k].setBackground(shape(PALE,18,PINK));opts[k].setTextColor(PINK);opts[k].animate().scaleX(1.05f).scaleY(1.05f).setDuration(160).withEndAction(()->opts[k].animate().scaleX(1f).scaleY(1f).setDuration(130).start()).start();});}
         panel.addView(choices,lp(-1,52,0,5,0,16));Button start=button("Начать путешествие ✨",true);panel.addView(start,lp(-1,54,0,4,0,0));root.addView(panel,lp(-1,-2,0,0,0,18));
-        start.setOnClickListener(v->{String n=name.getText().toString().trim();if(n.isEmpty()){name.setError("Введи имя");return;}if(gender[0].isEmpty()){Toast.makeText(this,"Выбери пол",Toast.LENGTH_SHORT).show();return;}prefs.edit().putString("display_name",n).putString("profile_gender",gender[0]).putBoolean("welcome_done",true).apply();panel.animate().alpha(0f).translationY(dp(28)).scaleX(.97f).scaleY(.97f).setDuration(520).withEndAction(()->{showHome();View decor=getWindow().getDecorView();decor.setAlpha(0f);decor.setScaleX(1.025f);decor.setScaleY(1.025f);decor.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(720).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();}).start();});
+        start.setOnClickListener(v->{String n=name.getText().toString().trim();if(n.isEmpty()){name.setError("Введи имя");return;}if(gender[0].isEmpty()){Toast.makeText(this,"Выбери пол",Toast.LENGTH_SHORT).show();return;}prefs.edit().putString("display_name",n).putString("profile_gender",gender[0]).putBoolean("welcome_done",true).apply();panel.animate().alpha(0f).translationY(dp(28)).scaleX(.97f).scaleY(.97f).setDuration(950).setInterpolator(new android.view.animation.DecelerateInterpolator()).withEndAction(()->{showHome();View decor=getWindow().getDecorView();decor.setAlpha(0f);decor.setScaleX(1.025f);decor.setScaleY(1.025f);decor.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(1100).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();}).start();});
         panel.setAlpha(0f);panel.setTranslationY(dp(24));panel.animate().alpha(1f).translationY(0).setDuration(520).start();
     }
 
@@ -173,7 +173,7 @@ public class MainActivity extends Activity {
                 Intent intent = new Intent(context, ReminderReceiver.class).setAction("study_reminder_" + key)
                         .putExtra("message", "🌸 Пора немного позаниматься! Ты сможешь!").putExtra("id", id);
                 PendingIntent pi = PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-                am.setInexactRepeating(AlarmManager.RTC_WAKEUP, next.getTimeInMillis(), AlarmManager.INTERVAL_DAY * 7L, pi);
+                if (Build.VERSION.SDK_INT >= 23) { if (Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms()) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next.getTimeInMillis(), pi); else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next.getTimeInMillis(), pi); } else am.setExact(AlarmManager.RTC_WAKEUP, next.getTimeInMillis(), pi);
                 newKeys.add(key);
             } catch (Exception ignored) { }
         }
@@ -190,7 +190,7 @@ public class MainActivity extends Activity {
         root.setPadding(dp(20), dp(18), dp(20), dp(26)); root.setBackgroundColor(BG);
         scroll.addView(root);
         shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
-        if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 68, 0, 0, 0, 0));
+        if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 78, 0, 0, 0, 0));
         setContentView(shell);
         scroll.setAlpha(0f); scroll.setTranslationY(dp(8));
         scroll.setLayerType(View.LAYER_TYPE_HARDWARE, null);
@@ -226,8 +226,8 @@ public class MainActivity extends Activity {
         String active=currentScreen.equals("home")?"home":(currentScreen.equals("chapters")||currentScreen.equals("topics")||currentScreen.equals("topic"))?"math":currentScreen.equals("progress")||currentScreen.equals("flower")||currentScreen.equals("achievements")?"progress":currentScreen.equals("exam")?"exam":currentScreen.equals("diary")||currentScreen.equals("letters")?"diary":currentScreen.equals("pomodoro")?"timer":"";
         String[] keys={"home","math","progress","exam","diary","timer"};
         for(int i=0;i<keys.length;i++){final String key=keys[i];boolean selected=key.equals(active);LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.VERTICAL);item.setGravity(Gravity.CENTER);item.setPadding(dp(1),dp(4),dp(1),dp(3));item.setBackground(selected?shape(PALE,14,0):shape(0x00FFFFFF,14,0));
-            TextView icon=text(icons[i],19,selected?PINK:MUTED,true);icon.setGravity(Gravity.CENTER);item.addView(icon,lp(-1,25,0,0,0,1));
-            TextView label=text(labels[i],8,selected?PINK:MUTED,selected);label.setGravity(Gravity.CENTER);label.setMaxLines(1);item.addView(label,lp(-1,15,0,0,0,0));
+            TextView icon=text(icons[i],22,selected?PINK:MUTED,true);icon.setGravity(Gravity.CENTER);icon.setIncludeFontPadding(false);item.addView(icon,lp(-1,29,0,0,0,2));
+            TextView label=text(labels[i],10,selected?PINK:MUTED,selected);label.setGravity(Gravity.CENTER);label.setMaxLines(1);label.setSingleLine(true);label.setIncludeFontPadding(false);item.addView(label,lp(-1,19,0,0,0,0));
             LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-1,1f);p.setMargins(dp(1),0,dp(1),0);bar.addView(item,p);
             item.setOnClickListener(v->{if(key.equals("home"))showHome();else if(key.equals("math"))showChapters();else if(key.equals("progress"))showProgress();else if(key.equals("exam"))showExam();else if(key.equals("diary"))showDiary();else if(key.equals("timer"))showPomodoro();});
         }return bar;
@@ -262,8 +262,8 @@ public class MainActivity extends Activity {
         String[] themeKeys = {"pink", "lavender", "mint", "night", "white", "brown", "gold", "luxury", "sky", "peach", "red", "lv"};
         String current = prefs.getString("app_theme", "pink");
         android.widget.GridLayout themeGrid=new android.widget.GridLayout(this);themeGrid.setColumnCount(3);
-        int[] swatches={0xFFC97891,0xFF8979B8,0xFF659B86,0xFF302735,0xFFFFFFFF,0xFF8B6046,0xFFB18A32,0xFF30251F,0xFF5D91B5,0xFFD88968,0xFFB32635,0xFF4B3428};
-        for(int i=0;i<themeNames.length;i++){final String key=themeKeys[i];final int color=swatches[i];LinearLayout tile=new LinearLayout(this);tile.setOrientation(LinearLayout.VERTICAL);tile.setGravity(Gravity.CENTER);tile.setPadding(dp(3),dp(5),dp(3),dp(5));int labelColor=(key.equals("white")||key.equals("gold")||key.equals("peach"))?0xFF40363A:0xFFFFFFFF;tile.setBackground(shape(color,16,current.equals(key)?PINK:0));tile.setElevation(dp(current.equals(key)?4:1));TextView label=text((current.equals(key)?"✓ ":"")+themeNames[i],11,labelColor,true);label.setGravity(Gravity.CENTER);label.setMaxLines(2);label.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);tile.addView(label,lp(-1,-1,0,0,0,0));android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(78);gp.columnSpec=android.widget.GridLayout.spec(i%3,1f);gp.setMargins(dp(3),dp(3),dp(3),dp(3));themeGrid.addView(tile,gp);tile.setOnClickListener(v->{prefs.edit().putString("app_theme",key).apply();applySavedTheme();showSettings();});}
+        int[] swatches={0xFFC97891,0xFF8979B8,0xFF659B86,0xFF302735,0xFFFFFFFF,0xFF8B6046,0xFFB18A32,0xFF30251F,0xFF5D91B5,0xFFD88968,0xFFB32635,0xFFD9C19A};
+        for(int i=0;i<themeNames.length;i++){final String key=themeKeys[i];final int color=swatches[i];LinearLayout tile=new LinearLayout(this);tile.setOrientation(LinearLayout.VERTICAL);tile.setGravity(Gravity.CENTER);tile.setPadding(dp(3),dp(5),dp(3),dp(5));int labelColor=(key.equals("white")||key.equals("gold")||key.equals("peach")||key.equals("lv"))?0xFF403020:0xFFFFFFFF;tile.setBackground(shape(color,16,current.equals(key)?PINK:0));tile.setElevation(dp(current.equals(key)?4:1));TextView label=text((current.equals(key)?"✓ ":"")+themeNames[i],11,labelColor,true);label.setGravity(Gravity.CENTER);label.setMaxLines(2);label.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);tile.addView(label,lp(-1,-1,0,0,0,0));android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(78);gp.columnSpec=android.widget.GridLayout.spec(i%3,1f);gp.setMargins(dp(3),dp(3),dp(3),dp(3));themeGrid.addView(tile,gp);tile.setOnClickListener(v->{prefs.edit().putString("app_theme",key).apply();applySavedTheme();showSettings();});}
         themeCard.addView(themeGrid,lp(-1,-2,0,8,0,0));
         root.addView(themeCard, lp(-1, -2, 0, 0, 0, 13));
 
@@ -302,7 +302,7 @@ public class MainActivity extends Activity {
         else if ("sky".equals(theme)) { BG=0xFFF1F8FC; PINK=0xFF5D91B5; PALE=0xFFE1EFF8; DARK=0xFF304656; MUTED=0xFF8199A8; }
         else if ("peach".equals(theme)) { BG=0xFFFFF5EF; PINK=0xFFD88968; PALE=0xFFFBE5D9; DARK=0xFF513D34; MUTED=0xFFA88D80; }
         else if ("red".equals(theme)) { BG=0xFFFFF5F4; PINK=0xFFB32635; PALE=0xFFF8E2E3; DARK=0xFF4B2026; MUTED=0xFF9D777B; }
-        else if ("lv".equals(theme)) { BG=0xFF241B17; PINK=0xFFD6B36A; PALE=0xFF3B2D24; DARK=0xFFF4E6CF; MUTED=0xFFBDA98B; }
+        else if ("lv".equals(theme)) { BG=0xFFF4E8D5; PINK=0xFF76502F; PALE=0xFFE7D2B3; DARK=0xFF3B281C; MUTED=0xFF92775E; }
         else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF95878C; }
         if (getWindow() != null) { getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG); }
     }
@@ -592,33 +592,18 @@ public class MainActivity extends Activity {
         }
         calendarCard.addView(weekHeader, lp(-1, 30, 0, 4, 0, 2));
         LinearLayout week = null;
-        for (int slot = 0; slot < offset + daysInMonth; slot++) {
-            if (slot % 7 == 0) {
-                week = new LinearLayout(this);
-                week.setOrientation(LinearLayout.HORIZONTAL);
-                week.setGravity(Gravity.CENTER_VERTICAL);
-                calendarCard.addView(week, lp(-1, 34, 0, 1, 0, 1));
-            }
-            TextView cell = text("", 12, DARK, true);
-            cell.setGravity(Gravity.CENTER);
-            if (slot >= offset) {
+        for (int slot = 0; slot < 42; slot++) {
+            if (slot % 7 == 0) { week = new LinearLayout(this); week.setOrientation(LinearLayout.HORIZONTAL); week.setGravity(Gravity.CENTER_VERTICAL); calendarCard.addView(week, lp(-1, 36, 0, 1, 0, 1)); }
+            TextView cell = text("", 11, DARK, true); cell.setGravity(Gravity.CENTER); cell.setIncludeFontPadding(false);
+            if (slot >= offset && slot < offset + daysInMonth) {
                 int day = slot - offset + 1;
                 String dateKey = String.format(Locale.US, "%04d-%02d-%02d", yearNumber, monthNumber + 1, day);
-                boolean studied = studiedDays.contains(dateKey);
-                boolean visited = visitedDays.contains(dateKey);
-                boolean isToday = progressMonthOffset == 0 && day == todayDay;
-                int minutes = prefs.getInt("app_minutes_" + dateKey, 0);
-                String cellText = (studied ? "♥\n" : "") + day + (minutes > 0 ? "\n" + minutes + "м" : "");
-                android.text.SpannableString mark = new android.text.SpannableString(cellText);
-                if (studied) mark.setSpan(new android.text.style.RelativeSizeSpan(0.58f), 0, 1, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                if (minutes > 0) mark.setSpan(new android.text.style.RelativeSizeSpan(0.72f), cellText.length() - (String.valueOf(minutes).length() + 1), cellText.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                cell.setText(mark);
-                cell.setTextColor(studied || minutes > 0 ? PINK : DARK);
-                cell.setBackground(shape(studied ? PALE : (isToday ? PALE : (visited ? 0xFFF1F0F2 : 0xFFFFFFFF)), 13, isToday ? PINK : (studied ? PINK : 0x00FFFFFF)));
-                cell.setElevation(dp(1));
-                if (isToday) cell.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+                boolean studied = studiedDays.contains(dateKey), visited = visitedDays.contains(dateKey), isToday = progressMonthOffset == 0 && day == todayDay;
+                cell.setText(String.valueOf(day)); cell.setTextColor(studied ? PINK : DARK);
+                cell.setBackground(shape(studied ? PALE : (isToday ? PALE : (visited ? 0xFFF1F0F2 : 0xFFFFFFFF)), 11, isToday ? PINK : (studied ? PINK : 0x00FFFFFF)));
+                cell.setElevation(dp(1)); if (isToday) cell.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             }
-            LinearLayout.LayoutParams dayCell=new LinearLayout.LayoutParams(0,dp(29),1f);dayCell.gravity=Gravity.CENTER;dayCell.setMargins(dp(2),0,dp(2),0);week.addView(cell,dayCell);
+            LinearLayout.LayoutParams dayCell=new LinearLayout.LayoutParams(0,dp(30),1f); dayCell.gravity=Gravity.CENTER; dayCell.setMargins(dp(2),0,dp(2),0); week.addView(cell,dayCell);
         }
         addText(calendarCard, "♥ Учебные дни: " + countStudyDaysThisMonth(studiedDays, yearNumber, monthNumber) + "   ·   Заходила: " + countStudyDaysThisMonth(visitedDays, yearNumber, monthNumber), 12, MUTED, false);
         progressCalendarHost.addView(calendarCard, lp(-1, -2, 0, 0, 0, 0));
@@ -783,18 +768,33 @@ public class MainActivity extends Activity {
     }
 
     private void showExam() {
-        currentScreen="exam";base("Мой экзамен ✨","Планируй подготовку и следи за оставшимся временем");
-        LinearLayout form=card();addText(form,"НАЗВАНИЕ ЭКЗАМЕНА",12,PINK,true);
-        EditText title=new EditText(this);title.setSingleLine(true);title.setTextSize(16);title.setTextColor(DARK);title.setHint("Например, математика");title.setPadding(dp(13),dp(8),dp(13),dp(8));title.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));title.setText(prefs.getString("exam_title",""));form.addView(title,lp(-1,50,0,7,0,12));
-        addText(form,"ДАТА ЭКЗАМЕНА",12,PINK,true);
-        EditText date=new EditText(this);date.setSingleLine(true);date.setFocusable(false);date.setClickable(true);date.setTextSize(15);date.setTextColor(DARK);date.setHint("Выбери дату");date.setPadding(dp(13),dp(8),dp(13),dp(8));date.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));date.setText(prefs.getString("exam_date",""));
+        currentScreen="exam";base("Мой экзамен ✨","Добавляй цели, редактируй их или удаляй после экзамена");
+        Set<String> savedIds=new TreeSet<>(prefs.getStringSet("exam_goal_ids",new TreeSet<String>()));
+        if(savedIds.isEmpty()&&!prefs.getString("exam_title","").isEmpty()&&!prefs.getString("exam_date","").isEmpty()){
+            String legacy="legacy_exam";savedIds.add(legacy);
+            prefs.edit().putString("exam_goal_title_"+legacy,prefs.getString("exam_title","")).putString("exam_goal_date_"+legacy,prefs.getString("exam_date","")).putStringSet("exam_goal_ids",savedIds).apply();
+        }
+        final String[] editing={null}; LinearLayout form=card();
+        addText(form,"НАЗВАНИЕ ЦЕЛИ",12,PINK,true);
+        EditText title=new EditText(this);title.setSingleLine(true);title.setTextSize(16);title.setTextColor(DARK);title.setHint("Например, экзамен по математике");title.setPadding(dp(13),dp(8),dp(13),dp(8));title.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));form.addView(title,lp(-1,50,0,7,0,12));
+        addText(form,"ДАТА",12,PINK,true);
+        EditText date=new EditText(this);date.setSingleLine(true);date.setFocusable(false);date.setClickable(true);date.setTextSize(15);date.setTextColor(DARK);date.setHint("Выбери дату");date.setPadding(dp(13),dp(8),dp(13),dp(8));date.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));form.addView(date,lp(-1,50,0,7,0,12));
         date.setOnClickListener(v->{Calendar now=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));Calendar min=(Calendar)now.clone();min.set(Calendar.HOUR_OF_DAY,0);min.set(Calendar.MINUTE,0);min.set(Calendar.SECOND,0);min.set(Calendar.MILLISECOND,0);android.app.DatePickerDialog dialog=new android.app.DatePickerDialog(this,(p,y,m,d)->date.setText(String.format(Locale.US,"%04d-%02d-%02d",y,m+1,d)),now.get(Calendar.YEAR),now.get(Calendar.MONTH),now.get(Calendar.DAY_OF_MONTH));dialog.getDatePicker().setMinDate(min.getTimeInMillis());dialog.show();});
-        form.addView(date,lp(-1,50,0,7,0,12));
-        LinearLayout countdown=card();countdown.setGravity(Gravity.CENTER);countdown.setBackground(shape(PALE,22,0));TextView days=text("—",42,PINK,true);days.setGravity(Gravity.CENTER);countdown.addView(days,lp(-1,60,0,0,0,0));TextView caption=text("дней до экзамена",14,DARK,true);caption.setGravity(Gravity.CENTER);countdown.addView(caption,lp(-1,28,0,0,0,0));
-        String savedDate=prefs.getString("exam_date","");String savedTitle=prefs.getString("exam_title","");if(!savedDate.isEmpty()){long remain=daysUntil(savedDate);days.setText(remain<0?"0":String.valueOf(remain));caption.setText(remain==0?"Экзамен сегодня!":remain<0?"Дата уже прошла":"дней до экзамена");}
-        form.addView(countdown,lp(-1,104,0,8,0,8));Button save=button("Сохранить экзамен",true);form.addView(save,lp(-1,48,0,0,0,0));
-        save.setOnClickListener(v->{String n=title.getText().toString().trim(),d=date.getText().toString().trim();if(n.isEmpty()){title.setError("Введи название экзамена");return;}if(d.isEmpty()){Toast.makeText(this,"Выбери дату экзамена",Toast.LENGTH_SHORT).show();return;}if(daysUntil(d)<0){Toast.makeText(this,"Выбери сегодняшнюю или будущую дату",Toast.LENGTH_SHORT).show();return;}prefs.edit().putString("exam_title",n).putString("exam_date",d).apply();showExam();});
-        root.addView(form,lp(-1,-2,0,0,0,14));if(!savedTitle.isEmpty()&&!savedDate.isEmpty()){LinearLayout info=card();addText(info,"ТВОЯ ЦЕЛЬ",11,PINK,true);addText(info,savedTitle,19,DARK,true);addText(info,"Дата: "+savedDate,13,MUTED,false);root.addView(info,lp(-1,-2,0,0,0,12));}
+        Button save=button("＋  Добавить цель",true);form.addView(save,lp(-1,50,0,4,0,0));root.addView(form,lp(-1,-2,0,0,0,14));
+        LinearLayout goals=new LinearLayout(this);goals.setOrientation(LinearLayout.VERTICAL);root.addView(goals,lp(-1,-2,0,0,0,0));
+        Runnable render=()->{goals.removeAllViews();Set<String> ids=new TreeSet<>(prefs.getStringSet("exam_goal_ids",new TreeSet<String>()));List<String> order=new ArrayList<>(ids);java.util.Collections.sort(order,java.util.Collections.reverseOrder());
+            if(order.isEmpty()){LinearLayout empty=card();addText(empty,"🌷  Пока нет целей",15,DARK,true);addText(empty,"Добавь первую дату экзамена или важную цель.",13,MUTED,false);goals.addView(empty,lp(-1,-2,0,0,0,10));}
+            for(String id:order){String goalTitle=prefs.getString("exam_goal_title_"+id,""),goalDate=prefs.getString("exam_goal_date_"+id,"");if(goalTitle.isEmpty()||goalDate.isEmpty())continue;
+                LinearLayout item=card();addText(item,"ТВОЯ ЦЕЛЬ",11,PINK,true);addText(item,goalTitle,18,DARK,true);long remain=daysUntil(goalDate);addText(item,"Дата: "+goalDate+"  ·  "+(remain<0?"дата прошла":remain==0?"сегодня":remain+" "+dayWord((int)remain)),13,MUTED,false);
+                LinearLayout actions=new LinearLayout(this);actions.setOrientation(LinearLayout.HORIZONTAL);Button edit=button("Изменить",false),delete=button("Удалить",false);
+                LinearLayout.LayoutParams ep=new LinearLayout.LayoutParams(0,dp(42),1f);ep.setMargins(0,dp(7),dp(4),0);actions.addView(edit,ep);LinearLayout.LayoutParams dpv=new LinearLayout.LayoutParams(0,dp(42),1f);dpv.setMargins(dp(4),dp(7),0,0);actions.addView(delete,dpv);item.addView(actions);
+                edit.setOnClickListener(v->{editing[0]=id;title.setText(goalTitle);date.setText(goalDate);save.setText("Сохранить изменения");form.requestFocus();});
+                delete.setOnClickListener(v->{Set<String> updated=new TreeSet<>(prefs.getStringSet("exam_goal_ids",new TreeSet<String>()));updated.remove(id);prefs.edit().remove("exam_goal_title_"+id).remove("exam_goal_date_"+id).putStringSet("exam_goal_ids",updated).apply();if(id.equals(editing[0])){editing[0]=null;title.setText("");date.setText("");save.setText("＋  Добавить цель");}render.run();});
+                goals.addView(item,lp(-1,-2,0,0,0,10));
+            }
+        };
+        save.setOnClickListener(v->{String n=title.getText().toString().trim(),d=date.getText().toString().trim();if(n.isEmpty()){title.setError("Введи название цели");return;}if(d.isEmpty()){Toast.makeText(this,"Выбери дату",Toast.LENGTH_SHORT).show();return;}if(daysUntil(d)<0){Toast.makeText(this,"Выбери сегодняшнюю или будущую дату",Toast.LENGTH_SHORT).show();return;}String id=editing[0]==null?String.valueOf(System.currentTimeMillis()):editing[0];Set<String> ids=new TreeSet<>(prefs.getStringSet("exam_goal_ids",new TreeSet<String>()));ids.add(id);prefs.edit().putString("exam_goal_title_"+id,n).putString("exam_goal_date_"+id,d).putStringSet("exam_goal_ids",ids).apply();editing[0]=null;title.setText("");date.setText("");save.setText("＋  Добавить цель");render.run();showSavedBanner("Цель сохранена","Изменения сохранены в твоём списке ♡");});
+        render.run();
     }
     private long daysUntil(String isoDate) {
         try {SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd",Locale.US);f.setLenient(false);f.setTimeZone(TimeZone.getTimeZone("Asia/Baku"));Date target=f.parse(isoDate);Calendar a=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));a.set(Calendar.HOUR_OF_DAY,0);a.set(Calendar.MINUTE,0);a.set(Calendar.SECOND,0);a.set(Calendar.MILLISECOND,0);Calendar b=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));b.setTime(target);b.set(Calendar.HOUR_OF_DAY,0);b.set(Calendar.MINUTE,0);b.set(Calendar.SECOND,0);b.set(Calendar.MILLISECOND,0);return (b.getTimeInMillis()-a.getTimeInMillis())/86400000L;}catch(Exception e){return -1;}
@@ -1083,10 +1083,11 @@ public class MainActivity extends Activity {
         dayChecks.clear();
         Set<String> savedDays = selectedDays();
         LinearLayout daysRow = new LinearLayout(this); daysRow.setOrientation(LinearLayout.HORIZONTAL); daysRow.setGravity(Gravity.CENTER);
-        String[] dayShort = {"Вс","Пн","Вт","Ср","Чт","Пт","Сб"};
-        for (int d = 1; d <= 7; d++) {
-            CheckBox cb = new CheckBox(this); cb.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK)); cb.setText(dayShort[d - 1]); cb.setTextSize(10); cb.setTextColor(DARK); cb.setGravity(Gravity.CENTER); cb.setPadding(0,0,0,0);
-            cb.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK)); cb.setChecked(savedDays.contains(String.valueOf(d)));
+        String[] dayShort = {"Пн","Вт","Ср","Чт","Пт","Сб","Вс"};
+        int[] calendarDays = {2,3,4,5,6,7,1};
+        for (int d = 0; d < 7; d++) {
+            CheckBox cb = new CheckBox(this); cb.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK)); cb.setText(dayShort[d]); cb.setTextSize(10); cb.setTextColor(DARK); cb.setGravity(Gravity.CENTER); cb.setPadding(0,0,0,0);
+            cb.setChecked(savedDays.contains(String.valueOf(calendarDays[d])));
             dayChecks.add(cb); daysRow.addView(cb, new LinearLayout.LayoutParams(0, dp(42), 1f));
         }
         LinearLayout daysCard = card(); daysCard.addView(daysRow, lp(-1, 44, 0, 0, 0, 0)); root.addView(daysCard, lp(-1, -2, 0, 2, 0, 10));
@@ -1117,12 +1118,12 @@ public class MainActivity extends Activity {
         Button save = button("💗  Сохранить расписание", true);
         save.setOnClickListener(v -> {
             Set<String> days = new TreeSet<>();
-            for (int i = 0; i < dayChecks.size(); i++) if (dayChecks.get(i).isChecked()) days.add(String.valueOf(i + 1));
+            for (int i = 0; i < dayChecks.size(); i++) if (dayChecks.get(i).isChecked()) days.add(String.valueOf(i == 6 ? 1 : i + 2));
             Set<String> times = new TreeSet<>(reminderTimes);
             SharedPreferences.Editor e = prefs.edit().putStringSet("reminder_days", days).putStringSet("reminder_times", times);
             for (int d = 1; d <= 7; d++) e.putBoolean("day_" + d, days.contains(String.valueOf(d)));
             e.apply(); scheduleReminders(this);
-            Toast.makeText(this, days.isEmpty() || times.isEmpty() ? "Напоминания выключены" : "Расписание сохранено! ❤️", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, days.isEmpty() || times.isEmpty() ? "Расписание очищено. Напоминания выключены." : "Готово! Напоминания сохранены по времени Баку. Проверь, что уведомления разрешены в настройках телефона.", Toast.LENGTH_LONG).show();
             showHome();
         });
         root.addView(save, lp(-1, 54, 0, 4, 0, 8));
@@ -1224,7 +1225,7 @@ public class MainActivity extends Activity {
             if (white) color = color == 0xFFFFF9F7 ? 0xFFF1F8FC : 0xFFFFFFFF; else if (soft || pale) color = 0xFFE1EFF8;
             if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFFD4E5F0;
         } else if ("red".equals(theme)) { if (white) color = color == 0xFFFFF9F7 ? 0xFFFFF5F4 : 0xFFFFFCFC; else if (soft || pale) color = 0xFFF8E2E3; if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFFECC9CC;
-        } else if ("lv".equals(theme)) { if (white) color = color == 0xFFFFF9F7 ? 0xFF241B17 : 0xFF33271F; else if (soft || pale) color = 0xFF3B2D24; if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFF80633C;
+        } else if ("lv".equals(theme)) { if (white) color = color == 0xFFFFF9F7 ? 0xFFF4E8D5 : 0xFFFFF9EF; else if (soft || pale) color = 0xFFE7D2B3; if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFFC6A779;
         } else if ("peach".equals(theme)) {
             if (white) color = color == 0xFFFFF9F7 ? 0xFFFFF5EF : 0xFFFFFCF9; else if (soft || pale) color = 0xFFFBE5D9;
             if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFFF0D2C4;
