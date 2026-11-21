@@ -336,7 +336,7 @@ private void showSettings() {
         hero.setPadding(dp(20), dp(20), dp(20), dp(18));
         hero.setBackground(shape(0xFFF8E8EE, 27, 0));
         addText(hero, "ТВОЙ ПРОГРЕСС", 12, PINK, true);
-        addText(hero, "Ты справляешься.\\nПродолжай в своём темпе.", 25, DARK, true);
+        addText(hero, "Ты справляешься.\nПродолжай в своём темпе.", 24, DARK, true);
         addText(hero, "Каждое занятие — это забота о себе будущей.", 14, MUTED, false);
         LinearLayout progressHead = new LinearLayout(this);
         progressHead.setGravity(Gravity.CENTER_VERTICAL);
