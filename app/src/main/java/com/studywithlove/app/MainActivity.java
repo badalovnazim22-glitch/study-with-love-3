@@ -874,15 +874,28 @@ private void showSettings() {
     private void showFlower() {
         currentScreen = "flower";
         Set<String> days = new TreeSet<>(prefs.getStringSet("study_days", new TreeSet<String>()));
-        int count = days.size();
-        String flower = count >= 30 ? "💐" : count >= 14 ? "🌸" : count >= 7 ? "🌷" : count >= 3 ? "🌿" : "🌱";
-        String stage = count >= 30 ? "Букет" : count >= 14 ? "Расцвет" : count >= 7 ? "Цветение" : count >= 3 ? "Первые листья" : "Росток";
-        base("Мой цветочек", "Он растёт вместе с твоими стараниями");
-        LinearLayout c = card(); c.setGravity(Gravity.CENTER);
-        TextView art = text(flower, 76, PINK, true); art.setGravity(Gravity.CENTER); c.addView(art, lp(-1, 130, 0, 0, 0, 8));
-        addText(c, stage, 22, DARK, true); addText(c, count + " дней занятий", 14, MUTED, false);
-        root.addView(c, lp(-1, -2, 0, 0, 0, 14));
-        addText(root, "Каждый день, когда ты занимаешься, твой цветочек становится крепче. Не торопись — всему своё время. ♡", 15, MUTED, false);
+        int count=days.size(), water=prefs.getInt("flower_water_count",0), petals=prefs.getInt("flower_petals",0);
+        String[] flowers={"🌸","🌷","🌻","🌼","🪻"}; int flowerIndex=prefs.getInt("flower_type",0)%flowers.length;
+        String stage=count>=30?"Пышное цветение":count>=14?"Цветочек окреп":count>=7?"Появились бутоны":count>=3?"Первые листочки":"Маленький росток";
+        base("Мой цветочек","Небольшой сад твоих учебных побед");
+        LinearLayout c=card();c.setGravity(Gravity.CENTER);
+        TextView art=text(count>=30?"💐":flowers[flowerIndex],68,PINK,true);art.setGravity(Gravity.CENTER);c.addView(art,lp(-1,116,0,0,0,7));
+        art.setScaleX(0.75f);art.setScaleY(0.75f);art.animate().scaleX(1f).scaleY(1f).setDuration(700).setInterpolator(new android.view.animation.OvershootInterpolator()).start();
+        addText(c,stage,21,DARK,true);addText(c,count+" дней занятий · "+totalStudyMinutes()+" минут вместе",13,MUTED,false);addText(c,"✿  "+petals+" лепестков заботы",14,PINK,true);
+        root.addView(c,lp(-1,-2,0,0,0,12));
+        LinearLayout care=card();addText(care,"УХОД ЗА ЦВЕТОЧКОМ",12,PINK,true);
+        addText(care,"Поливай его раз в день и получай лепесток. Он растёт вместе с твоими привычками.",13,MUTED,false);
+        boolean watered=prefs.getString("flower_water_date","").equals(todayKey());
+        Button waterButton=button(watered?"Уже полит сегодня ✓":"💧  Полить цветочек",true);waterButton.setEnabled(!watered);
+        waterButton.setOnClickListener(v->{prefs.edit().putString("flower_water_date",todayKey()).putInt("flower_water_count",water+1).putInt("flower_petals",petals+1).apply();showFlower();});
+        care.addView(waterButton,lp(-1,48,0,8,0,8));
+        Button change=button("🌷  Изменить цветочек",false);change.setOnClickListener(v->{prefs.edit().putInt("flower_type",(flowerIndex+1)%flowers.length).apply();showFlower();});
+        care.addView(change,lp(-1,46,0,0,0,0));root.addView(care,lp(-1,-2,0,0,0,12));
+        LinearLayout mood=card();addText(mood,"НАСТРОЕНИЕ САДА",12,PINK,true);
+        String[] moods={"🌞 Солнечно","☁️ Спокойно","🌈 Воодушевлённо"};String selected=prefs.getString("flower_mood",moods[0]);
+        for(String m:moods){Button choice=button((selected.equals(m)?"✓  ":"")+m,selected.equals(m));choice.setOnClickListener(v->{prefs.edit().putString("flower_mood",m).apply();showFlower();});mood.addView(choice,lp(-1,42,0,5,0,3));}
+        root.addView(mood,lp(-1,-2,0,0,0,10));
+        addText(root,"Твой цветочек не сравнивает себя с другими. Ему достаточно того, что ты возвращаешься к себе и своим мечтам. ♡",14,MUTED,false);
         backHome();
     }
 
@@ -1169,7 +1182,26 @@ private void showSettings() {
     private TextView text(String value, int size, int color, boolean bold) { TextView t = new TextView(this); t.setText(value); t.setTextSize(size); t.setTextColor(color); if (bold) t.setTypeface(Typeface.DEFAULT, Typeface.BOLD); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
     private Button button(String label, boolean primary) { Button b = new Button(this); b.setText(label); b.setTextSize(14); b.setTypeface(Typeface.DEFAULT, Typeface.BOLD); b.setAllCaps(false); b.setLetterSpacing(0.01f); b.setMinHeight(dp(48)); b.setPadding(dp(14), dp(8), dp(14), dp(8)); b.setElevation(primary ? dp(2) : 0); b.setTextColor(primary ? 0xFFFFFFFF : PINK); b.setBackground(shape(primary ? PINK : PALE, 22, primary ? PINK : 0xFFF2DDE4)); return b; }
     private interface OnAction { void go(); }
-    private GradientDrawable shape(int color, int radius, int stroke) { if (prefs != null && "night".equals(prefs.getString("app_theme", "pink"))) { if (color == 0xFFFFFFFF) color = 0xFF25212B; else if (color == 0xFFFCEEF2 || color == 0xFFFFF0F4 || color == 0xFFFFF0F5 || color == 0xFFFFEEF3 || color == 0xFFFFF1F5) color = 0xFF302735; else if (color == 0xFFF8E8EE || color == 0xFFF3F0FF || color == 0xFFF1F0FF || color == 0xFFEFF7F1 || color == 0xFFF5F2F1 || color == 0xFFF0E4E8 || color == 0xFFF1F0F2) color = 0xFF342E39; else if (color == 0xFFFFF9F7) color = 0xFF17151D; } GradientDrawable d = new GradientDrawable(); d.setColor(color); d.setCornerRadius(dp(radius)); if (stroke != 0) d.setStroke(dp(1), stroke); return d; }
+    private GradientDrawable shape(int color, int radius, int stroke) {
+        String theme = prefs == null ? "pink" : prefs.getString("app_theme", "pink");
+        boolean white = color == 0xFFFFFFFF || color == 0xFFFFF9F7;
+        boolean soft = color == 0xFFFCEEF2 || color == 0xFFFFF0F4 || color == 0xFFFFF0F5 || color == 0xFFFFEEF3 || color == 0xFFFFF1F5 || color == 0xFFF8E8EE;
+        boolean pale = color == 0xFFF3F0FF || color == 0xFFF1F0FF || color == 0xFFEFF7F1 || color == 0xFFF5F2F1 || color == 0xFFF0E4E8 || color == 0xFFF1F0F2;
+        if ("night".equals(theme)) {
+            if (white) color = color == 0xFFFFF9F7 ? 0xFF17151D : 0xFF25212B;
+            else if (soft) color = 0xFF302735; else if (pale) color = 0xFF342E39;
+            if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFF403541;
+        } else if ("lavender".equals(theme)) {
+            if (white) color = color == 0xFFFFF9F7 ? 0xFFF8F6FF : 0xFFFEFDFF;
+            else if (soft || pale) color = 0xFFF0ECFA;
+            if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFFE0D9F0;
+        } else if ("mint".equals(theme)) {
+            if (white) color = color == 0xFFFFF9F7 ? 0xFFF5FAF7 : 0xFFFEFFFE;
+            else if (soft || pale) color = 0xFFEAF5EF;
+            if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFFDCEBE2;
+        }
+        GradientDrawable d = new GradientDrawable(); d.setColor(color); d.setCornerRadius(dp(radius)); if (stroke != 0) d.setStroke(dp(1), stroke); return d;
+    }
     private LinearLayout.LayoutParams lp(int w, int h, int l, int t, int r, int b) { LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(w < 0 ? w : dp(w), h < 0 ? h : dp(h)); p.setMargins(dp(l), dp(t), dp(r), dp(b)); return p; }
     private int dp(int x) { return (int)(x * getResources().getDisplayMetrics().density + 0.5f); }
 }
