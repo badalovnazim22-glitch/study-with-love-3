@@ -333,6 +333,11 @@ private void showSettings() {
 
         LinearLayout hero = card();
         hero.setPadding(dp(20), dp(20), dp(20), dp(18));
+        TextView heart = text("♥", 28, PINK, true); heart.setGravity(Gravity.CENTER);
+        heart.setBackground(shape(PALE, 22, 0));
+        hero.addView(heart, lp(48, 44, 0, 0, 0, 10));
+        heart.setScaleX(0.85f); heart.setScaleY(0.85f);
+        heart.animate().scaleX(1f).scaleY(1f).setDuration(650).setInterpolator(new android.view.animation.OvershootInterpolator()).start();
         hero.setBackground(shape(0xFFF8E8EE, 27, 0));
         addText(hero, "ТВОЙ ПРОГРЕСС", 12, PINK, true);
         addText(hero, "Ты справляешься.\nПродолжай в своём темпе.", 24, DARK, true);
@@ -651,6 +656,20 @@ private void showSettings() {
         addText(summary, "⏱ Сегодня: " + prefs.getInt("app_minutes_" + todayKey(), 0) + " минут занятий", 14, PINK, true);
         addText(summary, "Всего: " + totalStudyMinutes() + " минут", 13, MUTED, false);
         addProgressLine(summary, "Весь учебный план", overall);
+        LinearLayout dailyMinutes = card();
+        addText(dailyMinutes, "⏱  МИНУТЫ ПО ДНЯМ", 12, PINK, true);
+        Calendar minuteMonth = Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku")); minuteMonth.add(Calendar.MONTH, progressMonthOffset);
+        int minuteYear=minuteMonth.get(Calendar.YEAR), minuteMonthNumber=minuteMonth.get(Calendar.MONTH);
+        Calendar minuteFirst=(Calendar)minuteMonth.clone(); minuteFirst.set(Calendar.DAY_OF_MONTH,1);
+        int minuteOffset=(minuteFirst.get(Calendar.DAY_OF_WEEK)+5)%7, minuteDays=minuteMonth.getActualMaximum(Calendar.DAY_OF_MONTH);
+        LinearLayout minuteWeek=null;
+        for(int slot=0;slot<minuteOffset+minuteDays;slot++){
+            if(slot%7==0){minuteWeek=new LinearLayout(this);minuteWeek.setOrientation(LinearLayout.HORIZONTAL);dailyMinutes.addView(minuteWeek,lp(-1,49,0,1,0,2));}
+            TextView dayCell=text("",10,DARK,true);dayCell.setGravity(Gravity.CENTER);
+            if(slot>=minuteOffset){int day=slot-minuteOffset+1;String dateKey=String.format(Locale.US,"%04d-%02d-%02d",minuteYear,minuteMonthNumber+1,day);int mins=prefs.getInt("app_minutes_"+dateKey,0);dayCell.setText(day+"\n"+(mins>0?mins+"м":"—"));dayCell.setTextColor(mins>0?PINK:MUTED);dayCell.setBackground(shape(mins>0?PALE:BG,10,0));}
+            minuteWeek.addView(dayCell,new LinearLayout.LayoutParams(0,dp(45),1f));
+        }
+        root.addView(dailyMinutes,lp(-1,-2,0,0,0,12));
         root.addView(summary, lp(-1, -2, 0, 0, 0, 16));
 
         for (String chapter : chapters.keySet()) {
@@ -688,7 +707,7 @@ private void showSettings() {
         LinearLayout wrap=new LinearLayout(this);wrap.setGravity(Gravity.CENTER);wrap.setPadding(0,dp(8),0,dp(14));
         timerDisplay=text(formatTimer(timerRemainingMs>0?timerRemainingMs:selectedStudyMinutes*60000L),42,DARK,true);timerDisplay.setGravity(Gravity.CENTER);
         GradientDrawable face=new GradientDrawable();face.setShape(GradientDrawable.OVAL);face.setColor(PALE);face.setStroke(dp(5),PINK);timerDisplay.setBackground(face);timerDisplay.setElevation(dp(5));
-        wrap.addView(timerDisplay,lp(246,246,0,0,0,0));root.addView(wrap,lp(-1,260,0,0,0,6));
+        wrap.addView(timerDisplay,lp(218,218,0,0,0,0));root.addView(wrap,lp(-1,232,0,0,0,2));
         timerStatus=text(timerIsBreak?"🌷  Время отдохнуть":"♡  Время для учёбы",15,PINK,true);timerStatus.setGravity(Gravity.CENTER);root.addView(timerStatus,lp(-1,32,0,0,0,12));
         LinearLayout settings=card();addText(settings,"ВРЕМЯ УЧЁБЫ",11,PINK,true);
         LinearLayout study=new LinearLayout(this);study.setGravity(Gravity.CENTER);Button minus=button("−",false),pick=button(selectedStudyMinutes+" минут",true),plus=button("+",false);
@@ -699,9 +718,13 @@ private void showSettings() {
         addText(settings,"ВРЕМЯ ПЕРЕРЫВА",11,PINK,true);LinearLayout breaksRow=new LinearLayout(this);breaksRow.setGravity(Gravity.CENTER);
         int[] choices={1,5,10,15,20};for(int n:choices){Button q=button(n+"м",selectedBreakMinutes==n);LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(40),1f);p.setMargins(dp(2),0,dp(2),0);breaksRow.addView(q,p);q.setOnClickListener(v->{if(!timerRunning){selectedBreakMinutes=n;if(timerIsBreak)timerRemainingMs=n*60000L;showPomodoro();}});}
         settings.addView(breaksRow,lp(-1,44,0,3,0,0));root.addView(settings,lp(-1,-2,0,0,0,14));
-        timerStartButton=button(timerRunning?"Идёт занятие":"▶  Начать",true);timerStartButton.setEnabled(!timerRunning);timerStartButton.setOnClickListener(v->startTimer());root.addView(timerStartButton,lp(-1,52,0,0,0,8));
-        timerPauseButton=button("Ⅱ  Пауза",false);timerPauseButton.setEnabled(timerRunning);timerPauseButton.setOnClickListener(v->pauseTimer());root.addView(timerPauseButton,lp(-1,46,0,0,0,7));
-        Button reset=button("↺  Сбросить",false);reset.setOnClickListener(v->{timerHandler.removeCallbacks(timerTick);timerRunning=false;timerIsBreak=false;timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();});root.addView(reset,lp(-1,44,0,0,0,0));
+        LinearLayout timerControls = new LinearLayout(this); timerControls.setOrientation(LinearLayout.HORIZONTAL); timerControls.setGravity(Gravity.CENTER);
+        timerStartButton=button(timerRunning?"Идёт":"▶  Начать",true);timerStartButton.setEnabled(!timerRunning);timerStartButton.setOnClickListener(v->startTimer());
+        timerPauseButton=button("Ⅱ  Пауза",false);timerPauseButton.setEnabled(timerRunning);timerPauseButton.setOnClickListener(v->pauseTimer());
+        Button reset=button("↺  Сброс",false);reset.setOnClickListener(v->{timerHandler.removeCallbacks(timerTick);timerRunning=false;timerIsBreak=false;timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();});
+        Button[] controls={timerStartButton,timerPauseButton,reset};
+        for(Button control:controls){ LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(48),1f); cp.setMargins(dp(3),0,dp(3),0); control.setPadding(dp(3),dp(4),dp(3),dp(4)); control.setTextSize(12); control.setMinHeight(0); control.setBackground(shape(control==timerStartButton?PINK:PALE,14,control==timerStartButton?PINK:0)); timerControls.addView(control,cp); }
+        root.addView(timerControls,lp(-1,52,0,0,0,0));
         if(timerRemainingMs<=0)timerRemainingMs=(timerIsBreak?selectedBreakMinutes:selectedStudyMinutes)*60000L;if(timerRunning)updateTimerDisplay();
     }
 
@@ -800,8 +823,18 @@ private void showSettings() {
             prefs.edit().putString("diary_" + id, value).putStringSet("diary_ids", ids).apply();
             editingId[0] = null; note.setText(""); save.setText("♡  Сохранить запись");
             renderDiaryEntries(entries, note, save, editingId);
-            Toast.makeText(this, "Запись сохранена ❤️", Toast.LENGTH_SHORT).show();
+            showSavedBanner("Запись сохранена", "Твоя маленькая победа осталась в дневнике ♡");
         });
+    }
+
+    private void showSavedBanner(String title, String subtitle) {
+        LinearLayout banner=new LinearLayout(this);banner.setOrientation(LinearLayout.HORIZONTAL);banner.setGravity(Gravity.CENTER_VERTICAL);
+        banner.setPadding(dp(16),dp(11),dp(18),dp(11));banner.setBackground(shape(PALE,20,0));banner.setElevation(dp(8));
+        TextView icon=text("♡",25,PINK,true);icon.setGravity(Gravity.CENTER);banner.addView(icon,lp(34,36,0,0,10,0));
+        LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);
+        addText(words,title,14,DARK,true);addText(words,subtitle,11,MUTED,false);banner.addView(words,new LinearLayout.LayoutParams(0,-2,1f));
+        Toast toast=new Toast(this);toast.setView(banner);toast.setDuration(Toast.LENGTH_SHORT);toast.setGravity(Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL,0,dp(82));toast.show();
+        banner.setAlpha(0f);banner.setTranslationY(dp(18));banner.animate().alpha(1f).translationY(0).setDuration(260).start();
     }
 
     private void renderDiaryEntries(LinearLayout entries, EditText note, Button save, String[] editingId) {
