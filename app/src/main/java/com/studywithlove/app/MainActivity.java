@@ -896,8 +896,8 @@ private void showSettings() {
         android.animation.ObjectAnimator moveCan=android.animation.ObjectAnimator.ofFloat(can,View.TRANSLATION_X,0f,-dp(14),0f);
         moveCan.setDuration(1700);moveCan.setRepeatCount(android.animation.ValueAnimator.INFINITE);moveCan.start();
         drops.setAlpha(0.35f);
-        android.animation.ObjectAnimator water=android.animation.ObjectAnimator.ofFloat(drops,View.ALPHA,0.25f,1f,0.25f);
-        water.setDuration(650);water.setRepeatCount(android.animation.ValueAnimator.INFINITE);water.start();
+        android.animation.ObjectAnimator waterAnim=android.animation.ObjectAnimator.ofFloat(drops,View.ALPHA,0.25f,1f,0.25f);
+        waterAnim.setDuration(650);waterAnim.setRepeatCount(android.animation.ValueAnimator.INFINITE);waterAnim.start();
         android.animation.ObjectAnimator fall=android.animation.ObjectAnimator.ofFloat(drops,View.TRANSLATION_Y,0f,dp(14));
         fall.setDuration(650);fall.setRepeatCount(android.animation.ValueAnimator.INFINITE);fall.start();
         android.animation.ObjectAnimator grow=android.animation.ObjectAnimator.ofFloat(art,View.SCALE_X,0.94f,1.04f,0.94f);
