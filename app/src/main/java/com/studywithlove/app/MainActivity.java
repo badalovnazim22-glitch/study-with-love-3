@@ -847,22 +847,22 @@ private void showSettings() {
         int completed = 0; for (List<String> topics : chapters.values()) completed += countCompleted(topics);
         int sessions = prefs.getInt("done_count", 0);
         String[][] a = {
-            {"🌱","Первые шаги","Первый день занятий",days>=1},
-            {"🌷","Неделя стараний","7 дней занятий",days>=7},
-            {"🌸","Две недели","14 дней занятий",days>=14},
-            {"💐","Месяц успеха","30 дней занятий",days>=30},
-            {"🏵️","Два месяца","60 дней занятий",days>=60},
-            {"🌻","Сто дней","100 дней занятий",days>=100},
-            {"📚","Маленький математик","Завершена первая тема",completed>=1},
-            {"🧮","Счёт — это просто","Завершено 5 тем",completed>=5},
-            {"🎓","Знаток математики","Завершено 10 тем",completed>=10},
-            {"🏆","Мастер знаний","Завершены все 33 темы",completed>=33},
-            {"⏳","Первый час","60 минут занятий",minutes>=60},
-            {"⌛","10 часов учёбы","600 минут занятий",minutes>=600},
-            {"🚀","Настойчивость","25 учебных занятий",sessions>=25},
-            {"💎","Пятьдесят побед","50 завершённых тем или занятий",completed+sessions>=50},
-            {"💗","Возвращаюсь к цели","Занятия в 3 разных дня",days>=3},
-            {"✨","Ритм учёбы","Занятия в 5 разных дней",days>=5}
+            {"🌱","Первые шаги","Первый день занятий",String.valueOf(days>=1)},
+            {"🌷","Неделя стараний","7 дней занятий",String.valueOf(days>=7)},
+            {"🌸","Две недели","14 дней занятий",String.valueOf(days>=14)},
+            {"💐","Месяц успеха","30 дней занятий",String.valueOf(days>=30)},
+            {"🏵️","Два месяца","60 дней занятий",String.valueOf(days>=60)},
+            {"🌻","Сто дней","100 дней занятий",String.valueOf(days>=100)},
+            {"📚","Маленький математик","Завершена первая тема",String.valueOf(completed>=1)},
+            {"🧮","Счёт — это просто","Завершено 5 тем",String.valueOf(completed>=5)},
+            {"🎓","Знаток математики","Завершено 10 тем",String.valueOf(completed>=10)},
+            {"🏆","Мастер знаний","Завершены все 33 темы",String.valueOf(completed>=33)},
+            {"⏳","Первый час","60 минут занятий",String.valueOf(minutes>=60)},
+            {"⌛","10 часов учёбы","600 минут занятий",String.valueOf(minutes>=600)},
+            {"🚀","Настойчивость","25 учебных занятий",String.valueOf(sessions>=25)},
+            {"💎","Пятьдесят побед","50 завершённых тем или занятий",String.valueOf(completed+sessions>=50)},
+            {"💗","Возвращаюсь к цели","Занятия в 3 разных дня",String.valueOf(days>=3)},
+            {"✨","Ритм учёбы","Занятия в 5 разных дней",String.valueOf(days>=5)}
         };
         for (String[] x : a) {
             boolean unlocked = Boolean.parseBoolean(x[3]);
@@ -1096,7 +1096,7 @@ private void showSettings() {
     }
     private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(17), dp(16), dp(17), dp(16)); l.setBackground(shape(0xFFFFFFFF, 23, 0xFFF3E9EC)); l.setElevation(dp(2)); return l; }
     private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, size, color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
-    private TextView text(String value, int size, int color, boolean bold) { TextView t = new TextView(this); t.setText(value); t.setTextSize(size + 1); t.setTextColor(color); if (bold) t.setTypeface(Typeface.DEFAULT, Typeface.BOLD); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
+    private TextView text(String value, int size, int color, boolean bold) { TextView t = new TextView(this); t.setText(value); t.setTextSize(size); t.setTextColor(color); if (bold) t.setTypeface(Typeface.DEFAULT, Typeface.BOLD); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
     private Button button(String label, boolean primary) { Button b = new Button(this); b.setText(label); b.setTextSize(14); b.setTypeface(Typeface.DEFAULT, Typeface.BOLD); b.setAllCaps(false); b.setLetterSpacing(0.01f); b.setMinHeight(dp(48)); b.setPadding(dp(14), dp(8), dp(14), dp(8)); b.setElevation(primary ? dp(2) : 0); b.setTextColor(primary ? 0xFFFFFFFF : PINK); b.setBackground(shape(primary ? PINK : PALE, 22, primary ? PINK : 0xFFF2DDE4)); return b; }
     private interface OnAction { void go(); }
     private GradientDrawable shape(int color, int radius, int stroke) { GradientDrawable d = new GradientDrawable(); d.setColor(color); d.setCornerRadius(dp(radius)); if (stroke != 0) d.setStroke(dp(1), stroke); return d; }
