@@ -76,6 +76,7 @@ public class MainActivity extends Activity {
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
         applySavedTheme();
         getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG);
+        Set<String> visits = new TreeSet<>(prefs.getStringSet("visit_days", new TreeSet<String>())); visits.add(todayKey()); prefs.edit().putStringSet("visit_days", visits).apply();
         // Migrate the last recorded study date from older app versions into the calendar history.
         String previousStudyDate = prefs.getString("last_study_date", "");
         if (!previousStudyDate.isEmpty()) {
@@ -91,10 +92,10 @@ public class MainActivity extends Activity {
     }
 
     private void loadChapters() {
-        add("1️⃣ Натуральные числа и действия с ними", "1.1. Натуральные числа", "1.2. Сравнение и упорядочивание", "1.3. Округление натуральных чисел", "1.4. Сложение и вычитание натуральных чисел", "1.5. Квадрат и куб натурального числа", "1.6. Умножение и деление натуральных чисел", "1.7. Числовые выражения", "1.8. Делители и кратные числа");
-        add("2️⃣ Обыкновенные дроби", "2.1. Правильные и неправильные дроби", "2.2. Сравнение и упорядочивание", "2.3. Сложение и вычитание дробей с разными знаменателями", "2.4. Сложение смешанных чисел", "2.5. Вычитание смешанных чисел", "2.6. Умножение обыкновенных дробей", "2.7. Умножение смешанных чисел", "2.8. Деление обыкновенных дробей", "2.9. Деление смешанных чисел", "2.10. Нахождение части числа и числа по его части");
-        add("3️⃣ Десятичные дроби", "3.1. Десятичные дроби", "3.2. Сравнение и упорядочивание", "3.3. Округление десятичных дробей", "3.4. Перевод обыкновенной дроби в десятичную и наоборот", "3.5. Сложение и вычитание десятичных дробей", "3.6. Умножение и деление десятичных дробей на степени числа 10", "3.7. Умножение десятичной дроби на натуральное число", "3.8. Умножение десятичных дробей", "3.9. Деление десятичной дроби на натуральное число", "3.10. Деление числа на десятичную дробь", "3.11. Действия над обыкновенными и десятичными дробями");
-        add("4️⃣ Процент", "4.1. Процент, обыкновенная дробь, десятичная дробь", "4.2. Процент от числа", "4.3. Нахождение числа по проценту", "4.4. Увеличение и уменьшение величины на определённый процент");
+        add("1️⃣ Натуральные числа и действия с ними", "1.1. Натуральные числа", "1.2. Сравнение и упорядочивание", "1.3. Округление натуральных чисел", "1.4. Сложение и вычитание натуральных чисел", "1.5. Квадрат и куб натурального числа", "1.6. Умножение и деление натуральных чисел", "1.7. Числовые выражения", "1.8. Делители и кратные числа", "1.9. Простые и составные числа", "1.10. Признаки делимости");
+        add("2️⃣ Обыкновенные дроби", "2.1. Правильные и неправильные дроби", "2.2. Сравнение и упорядочивание", "2.3. Сложение и вычитание дробей с разными знаменателями", "2.4. Сложение смешанных чисел", "2.5. Вычитание смешанных чисел", "2.6. Умножение обыкновенных дробей", "2.7. Умножение смешанных чисел", "2.8. Деление обыкновенных дробей", "2.9. Деление смешанных чисел", "2.10. Нахождение части числа и числа по его части", "2.11. Сокращение дробей", "2.12. Приведение дробей к общему знаменателю");
+        add("3️⃣ Десятичные дроби", "3.1. Десятичные дроби", "3.2. Сравнение и упорядочивание", "3.3. Округление десятичных дробей", "3.4. Перевод обыкновенной дроби в десятичную и наоборот", "3.5. Сложение и вычитание десятичных дробей", "3.6. Умножение и деление десятичных дробей на степени числа 10", "3.7. Умножение десятичной дроби на натуральное число", "3.8. Умножение десятичных дробей", "3.9. Деление десятичной дроби на натуральное число", "3.10. Деление числа на десятичную дробь", "3.11. Действия над обыкновенными и десятичными дробями", "3.12. Среднее арифметическое десятичных дробей", "3.13. Задачи на десятичные дроби");
+        add("4️⃣ Процент", "4.1. Процент, обыкновенная дробь, десятичная дробь", "4.2. Процент от числа", "4.3. Нахождение числа по проценту", "4.4. Увеличение и уменьшение величины на определённый процент", "4.5. Отношение и пропорция", "4.6. Решение задач на проценты");
     }
     private void add(String name, String... topics) { List<String> list = new ArrayList<>(); for (String t : topics) list.add(t); chapters.put(name, list); }
 
@@ -172,7 +173,7 @@ public class MainActivity extends Activity {
         setContentView(shell);
         scroll.setAlpha(0f); scroll.setTranslationY(dp(8));
         scroll.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-        scroll.animate().alpha(1f).translationY(0f).setDuration(280)
+        scroll.animate().alpha(1f).translationY(0f).setDuration(430)
             .setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
         LinearLayout brandRow = new LinearLayout(this);
         brandRow.setGravity(Gravity.CENTER_VERTICAL);
@@ -184,9 +185,9 @@ public class MainActivity extends Activity {
         brand.setLetterSpacing(0.14f);
         brandRow.addView(brand, new LinearLayout.LayoutParams(0, dp(24), 1f));
         if (currentScreen.equals("home")) {
-            TextView settings = text("⚙", 23, PINK, true); settings.setGravity(Gravity.CENTER);
-            settings.setBackground(shape(0xFFFFFFFF, 18, 0xFFF1DDE4));
-            brandRow.addView(settings, lp(42, 38, 5, 0, 0, 0));
+            TextView settings = text("⚙", 17, PINK, false); settings.setGravity(Gravity.CENTER);
+            settings.setBackground(shape(PALE, 16, 0xFFF1DDE4));
+            brandRow.addView(settings, lp(32, 30, 5, 0, 0, 0));
             settings.setOnClickListener(v -> showSettings());
         }
         root.addView(brandRow, lp(-1, 42, 0, 0, 0, 16));
@@ -266,8 +267,8 @@ private void showSettings() {
         LinearLayout themeCard = card();
         addText(themeCard, "ТЕМА ОФОРМЛЕНИЯ", 12, PINK, true);
         addText(themeCard, "Выбери настроение приложения", 13, MUTED, false);
-        String[] themeNames = {"Розовая", "Лавандовая", "Мятная"};
-        String[] themeKeys = {"pink", "lavender", "mint"};
+        String[] themeNames = {"Розовая", "Лавандовая", "Мятная", "Ночная"};
+        String[] themeKeys = {"pink", "lavender", "mint", "night"};
         String current = prefs.getString("app_theme", "pink");
         for (int i=0;i<themeNames.length;i++) {
             final String key=themeKeys[i];
@@ -299,22 +300,14 @@ private void showSettings() {
         notificationCard.addView(reminderSettings, lp(-1, 46, 0, 4, 0, 0));
         root.addView(notificationCard, lp(-1, -2, 0, 0, 0, 13));
 
-        LinearLayout other = card();
-        addText(other, "ДРУГИЕ НАСТРОЙКИ", 12, PINK, true);
-        Button reminder = button("Изменить расписание напоминаний", false);
-        reminder.setOnClickListener(v -> showReminderSettings());
-        other.addView(reminder, lp(-1, 46, 0, 5, 0, 5));
-        Button achievements = button("Моя коллекция достижений", false);
-        achievements.setOnClickListener(v -> showAchievements());
-        other.addView(achievements, lp(-1, 46, 0, 0, 0, 0));
-        root.addView(other, lp(-1, -2, 0, 0, 0, 12));
         Button back = button("← На главную", true); back.setOnClickListener(v -> showHome());
         root.addView(back, lp(-1, 50, 0, 0, 0, 0));
     }
 
     private void applySavedTheme() {
         String theme = prefs == null ? "pink" : prefs.getString("app_theme", "pink");
-        if ("lavender".equals(theme)) { BG=0xFFF8F6FF; PINK=0xFF8979B8; PALE=0xFFF0ECFA; DARK=0xFF393448; MUTED=0xFF8E879E; }
+        if ("night".equals(theme)) { BG=0xFF17151D; PINK=0xFFE39AB5; PALE=0xFF302735; DARK=0xFFF4EAF0; MUTED=0xFFB6A8B2; }
+        else if ("lavender".equals(theme)) { BG=0xFFF8F6FF; PINK=0xFF8979B8; PALE=0xFFF0ECFA; DARK=0xFF393448; MUTED=0xFF8E879E; }
         else if ("mint".equals(theme)) { BG=0xFFF5FAF7; PINK=0xFF659B86; PALE=0xFFEAF5EF; DARK=0xFF34443D; MUTED=0xFF84958C; }
         else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF95878C; }
     }
@@ -372,10 +365,6 @@ private void showSettings() {
         }
         root.addView(stats, lp(-1, -2, 0, 0, 0, 22));
 
-        action("Математика", "4 раздела · 33 учебные темы", this::showChapters);
-        action("Мой прогресс", "Твои занятия, календарь и результаты", this::showProgress);
-        action("Таймер Pomodoro", "Сосредоточься на одном небольшом шаге", this::showPomodoro);
-
         TextView more = text("ТВОИ УЧЕБНЫЕ РИТУАЛЫ", 13, PINK, true);
         more.setLetterSpacing(0.08f);
         root.addView(more, lp(-1, -2, 0, 16, 0, 10));
@@ -416,7 +405,7 @@ private void showSettings() {
         for (String chapter : chapters.keySet()) {
             final String selected = chapter;
             String prettyName = chapter.replaceFirst("^[^ ]+\\s*", "");
-            action("🌸  Раздел " + chapterNumber + "\n" + prettyName, chapters.get(chapter).size() + " учебных тем", () -> { selectedChapter = selected; showTopics(selected); });
+            actionRegular("Раздел " + chapterNumber + "\n" + prettyName, chapters.get(chapter).size() + " учебных тем", () -> { selectedChapter = selected; showTopics(selected); });
             chapterNumber++;
         }
         backHome();
@@ -492,6 +481,7 @@ private void showSettings() {
         toastView.addView(praise, lp(-2, 38, 0, 0, 0, 0));
         Toast toast = new Toast(this);
         toast.setDuration(Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 0, dp(112));
         toast.setView(toastView);
         toast.show();
     }
@@ -656,13 +646,13 @@ private void showSettings() {
         customMinutesInput.setTextSize(18); customMinutesInput.setTextColor(DARK); customMinutesInput.setPadding(dp(14), dp(8), dp(14), dp(8));
         customMinutesInput.setBackground(shape(0xFFFFFFFF, 16, 0xFFFFD5E1));
         root.addView(customMinutesInput, lp(-1, 52, 0, 5, 0, 14));
-        addText(root, "ПЕРЕРЫВ", 12, PINK, true);
+        addText(root, "ВРЕМЯ ПЕРЕРЫВА · МИНУТЫ", 12, PINK, true);
         LinearLayout breakChoices = new LinearLayout(this);
-        int[] breakOptions = {5, 10, 15};
+        int[] breakOptions = {1, 5, 10, 15, 20};
         for (int minutes : breakOptions) {
-            Button b = button(minutes + "м", selectedBreakMinutes == minutes);
-            breakChoices.addView(b, new LinearLayout.LayoutParams(0, dp(44), 1f));
-            b.setOnClickListener(v -> { if (!timerRunning) { selectedBreakMinutes = minutes; b.setText("✓ " + minutes + "м"); } });
+            Button b = button((selectedBreakMinutes == minutes ? "✓ " : "") + minutes + "м", selectedBreakMinutes == minutes);
+            LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(0, dp(42), 1f); bp.setMargins(dp(2),0,dp(2),0); breakChoices.addView(b, bp);
+            b.setOnClickListener(v -> { if (!timerRunning) { selectedBreakMinutes = minutes; showPomodoro(); } });
         }
         root.addView(breakChoices, lp(-1, 46, 0, 4, 0, 18));
         LinearLayout timerCard = card(); timerCard.setGravity(Gravity.CENTER);
@@ -682,7 +672,6 @@ private void showSettings() {
         timerPauseButton = button("Ⅱ  Пауза", false); timerPauseButton.setEnabled(timerRunning);
         timerPauseButton.setOnClickListener(v -> pauseTimer()); root.addView(timerPauseButton, lp(-1, 48, 0, 0, 0, 8));
         Button reset = button("↺  Сбросить", false); reset.setOnClickListener(v -> { timerHandler.removeCallbacks(timerTick); timerRunning = false; timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; showPomodoro(); }); root.addView(reset, lp(-1, 48, 0, 0, 0, 8));
-        Button back = button("← На главную", false); back.setOnClickListener(v -> showHome()); root.addView(back, lp(-1, 48, 0, 0, 0, 0));
         if (timerRemainingMs <= 0) timerRemainingMs = selectedStudyMinutes * 60000L;
         if (timerRunning) { updateTimerDisplay(); if (timerStartButton != null) timerStartButton.setEnabled(false); if (timerPauseButton != null) timerPauseButton.setEnabled(true); }
     }
@@ -1009,11 +998,14 @@ private void showSettings() {
         addText(root, "ДНИ НЕДЕЛИ", 12, PINK, true);
         dayChecks.clear();
         Set<String> savedDays = selectedDays();
+        LinearLayout daysRow = new LinearLayout(this); daysRow.setOrientation(LinearLayout.HORIZONTAL); daysRow.setGravity(Gravity.CENTER);
+        String[] dayShort = {"Вс","Пн","Вт","Ср","Чт","Пт","Сб"};
         for (int d = 1; d <= 7; d++) {
-            CheckBox cb = new CheckBox(this); cb.setText(DAY_NAMES[d - 1]); cb.setTextSize(15); cb.setTextColor(DARK);
+            CheckBox cb = new CheckBox(this); cb.setText(dayShort[d - 1]); cb.setTextSize(10); cb.setTextColor(DARK); cb.setGravity(Gravity.CENTER); cb.setPadding(0,0,0,0);
             cb.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK)); cb.setChecked(savedDays.contains(String.valueOf(d)));
-            dayChecks.add(cb); root.addView(cb, lp(-1, 42, 0, 0, 0, 0));
+            dayChecks.add(cb); daysRow.addView(cb, new LinearLayout.LayoutParams(0, dp(42), 1f));
         }
+        LinearLayout daysCard = card(); daysCard.addView(daysRow, lp(-1, 44, 0, 0, 0, 0)); root.addView(daysCard, lp(-1, -2, 0, 2, 0, 10));
         addText(root, "ВРЕМЯ НАПОМИНАНИЙ", 12, PINK, true);
         reminderTimes.clear(); reminderTimes.addAll(getSavedTimes());
         LinearLayout timeList = new LinearLayout(this); timeList.setOrientation(LinearLayout.VERTICAL); root.addView(timeList, lp(-1, -2, 0, 4, 0, 8));
@@ -1022,10 +1014,10 @@ private void showSettings() {
             timeList.removeAllViews();
             if (reminderTimes.isEmpty()) addText(timeList, "Время не выбрано — напоминания выключены", 14, MUTED, false);
             for (String time : new ArrayList<>(reminderTimes)) {
-                LinearLayout row = new LinearLayout(this); row.setGravity(Gravity.CENTER_VERTICAL);
-                TextView label = text("⏰  " + time, 17, DARK, true); row.addView(label, new LinearLayout.LayoutParams(0, dp(46), 1));
-                Button remove = button("Убрать", false); remove.setOnClickListener(v -> { reminderTimes.remove(time); renderTimes[0].run(); });
-                row.addView(remove, lp(100, 42, 6, 0, 0, 0)); timeList.addView(row, lp(-1, 46, 0, 2, 0, 2));
+                LinearLayout row = new LinearLayout(this); row.setGravity(Gravity.CENTER_VERTICAL); row.setBackground(shape(PALE, 16, 0)); row.setPadding(dp(12),0,dp(6),0);
+                TextView label = text("◷  " + time, 16, DARK, true); row.addView(label, new LinearLayout.LayoutParams(0, dp(46), 1));
+                Button remove = button("×", false); remove.setTextSize(19); remove.setOnClickListener(v -> { reminderTimes.remove(time); renderTimes[0].run(); });
+                row.addView(remove, lp(42, 40, 6, 0, 0, 0)); timeList.addView(row, lp(-1, 48, 0, 3, 0, 3));
             }
         };
         renderTimes[0].run();
@@ -1050,7 +1042,7 @@ private void showSettings() {
             showHome();
         });
         root.addView(save, lp(-1, 54, 0, 4, 0, 8));
-        Button back = button("← Назад", false); back.setOnClickListener(v -> showHome()); root.addView(back, lp(-1, 48, 0, 0, 0, 0));
+        Button back = button("← Назад", false); back.setOnClickListener(v -> showSettings()); root.addView(back, lp(-1, 48, 0, 0, 0, 0));
     }
     private void backHome() { Button b = button("← Главное меню", false); b.setOnClickListener(v -> showHome()); root.addView(b, lp(-1, 50, 0, 18, 0, 0)); }
     private void ritualTile(LinearLayout row, String icon, String title, String subtitle, OnAction run) {
@@ -1079,6 +1071,18 @@ private void showSettings() {
             });
         }
 
+    private void actionRegular(String title, String sub, OnAction run) {
+        LinearLayout c = new LinearLayout(this); c.setOrientation(LinearLayout.HORIZONTAL); c.setGravity(Gravity.CENTER_VERTICAL); c.setPadding(dp(16), dp(14), dp(14), dp(14));
+        c.setBackground(shape(0xFFFFFFFF, 22, 0xFFF3E9EC));
+        LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
+        TextView heading = text(title, 17, DARK, false); words.addView(heading, lp(-1, -2, 0, 0, 0, 4));
+        TextView detail = text(sub, 13, MUTED, false); words.addView(detail, lp(-1, -2, 0, 0, 0, 0));
+        c.addView(words, new LinearLayout.LayoutParams(0, -2, 1f));
+        TextView arrow = text("›", 28, PINK, false); arrow.setGravity(Gravity.CENTER); c.addView(arrow, lp(24, 34, 8, 0, 0, 0));
+        c.setOnClickListener(v -> { c.animate().scaleX(0.985f).scaleY(0.985f).setDuration(100).withEndAction(() -> { c.animate().scaleX(1f).scaleY(1f).setDuration(150).start(); run.go(); }).start(); });
+        root.addView(c, lp(-1, -2, 0, 0, 0, 9));
+    }
+
     private void action(String title, String sub, OnAction run) {
         LinearLayout c = new LinearLayout(this); c.setOrientation(LinearLayout.HORIZONTAL); c.setGravity(Gravity.CENTER_VERTICAL); c.setPadding(dp(16), dp(14), dp(14), dp(14));
         c.setBackground(shape(0xFFFFFFFF, 22, 0xFFF3E9EC)); c.setElevation(dp(2));
@@ -1090,7 +1094,7 @@ private void showSettings() {
         c.setOnClickListener(v -> { c.animate().scaleX(0.985f).scaleY(0.985f).setDuration(100).withEndAction(() -> { c.animate().scaleX(1f).scaleY(1f).setDuration(150).start(); run.go(); }).start(); });
         root.addView(c, lp(-1, -2, 0, 0, 0, 9));
     }
-    private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(17), dp(16), dp(17), dp(16)); l.setBackground(shape(0xFFFFFFFF, 23, 0xFFF3E9EC)); l.setElevation(dp(2)); return l; }
+    private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(17), dp(16), dp(17), dp(16)); boolean night = prefs != null && "night".equals(prefs.getString("app_theme", "pink")); l.setBackground(shape(night ? 0xFF25212B : 0xFFFFFFFF, 23, night ? 0xFF403541 : 0xFFF3E9EC)); l.setElevation(dp(2)); return l; }
     private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, size, color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
     private TextView text(String value, int size, int color, boolean bold) { TextView t = new TextView(this); t.setText(value); t.setTextSize(size); t.setTextColor(color); if (bold) t.setTypeface(Typeface.DEFAULT, Typeface.BOLD); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
     private Button button(String label, boolean primary) { Button b = new Button(this); b.setText(label); b.setTextSize(14); b.setTypeface(Typeface.DEFAULT, Typeface.BOLD); b.setAllCaps(false); b.setLetterSpacing(0.01f); b.setMinHeight(dp(48)); b.setPadding(dp(14), dp(8), dp(14), dp(8)); b.setElevation(primary ? dp(2) : 0); b.setTextColor(primary ? 0xFFFFFFFF : PINK); b.setBackground(shape(primary ? PINK : PALE, 22, primary ? PINK : 0xFFF2DDE4)); return b; }
