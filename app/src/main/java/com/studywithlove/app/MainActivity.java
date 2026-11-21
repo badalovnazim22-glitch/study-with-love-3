@@ -93,6 +93,8 @@ public class MainActivity extends Activity {
         if (!prefs.getBoolean("welcome_done", false)) showWelcome(); else showHome();
     }
 
+    @Override public void onResume() { super.onResume(); if (prefs != null) scheduleReminders(this); }
+
     private void showWelcome() {
         currentScreen="welcome"; base("Добро пожаловать ♡","Давай познакомимся и настроим Study with Love");
         LinearLayout panel=card();panel.setGravity(Gravity.CENTER_HORIZONTAL);panel.setPadding(dp(20),dp(20),dp(20),dp(20));
@@ -1123,7 +1125,14 @@ public class MainActivity extends Activity {
             SharedPreferences.Editor e = prefs.edit().putStringSet("reminder_days", days).putStringSet("reminder_times", times);
             for (int d = 1; d <= 7; d++) e.putBoolean("day_" + d, days.contains(String.valueOf(d)));
             e.apply(); scheduleReminders(this);
-            Toast.makeText(this, days.isEmpty() || times.isEmpty() ? "Расписание очищено. Напоминания выключены." : "Готово! Напоминания сохранены по времени Баку. Проверь, что уведомления разрешены в настройках телефона.", Toast.LENGTH_LONG).show();
+            if (!days.isEmpty() && !times.isEmpty() && Build.VERSION.SDK_INT >= 31) {
+                AlarmManager alarms=(AlarmManager)getSystemService(ALARM_SERVICE);
+                if (!alarms.canScheduleExactAlarms()) {
+                    try { startActivity(new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, android.net.Uri.parse("package:"+getPackageName()))); }
+                    catch (Exception ignored) { }
+                }
+            }
+            Toast.makeText(this, days.isEmpty() || times.isEmpty() ? "Расписание очищено. Напоминания выключены." : "Готово! Расписание сохранено по времени Баку. Разреши точные будильники и уведомления, чтобы получать напоминания без системной задержки.", Toast.LENGTH_LONG).show();
             showHome();
         });
         root.addView(save, lp(-1, 54, 0, 4, 0, 8));
