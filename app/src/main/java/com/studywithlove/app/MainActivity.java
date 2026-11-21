@@ -585,16 +585,23 @@ private void showSettings() {
                 int day = slot - offset + 1;
                 String dateKey = String.format(Locale.US, "%04d-%02d-%02d", yearNumber, monthNumber + 1, day);
                 boolean studied = studiedDays.contains(dateKey);
+                Set<String> visitedDays = new TreeSet<>(prefs.getStringSet("visit_days", new TreeSet<String>()));
+                boolean visited = visitedDays.contains(dateKey);
                 boolean isToday = progressMonthOffset == 0 && day == todayDay;
-                cell.setText(studied ? "♥\n" + day : String.valueOf(day));
+                if (studied) { android.text.SpannableString mark = new android.text.SpannableString("♥\n" + day); mark.setSpan(new android.text.style.RelativeSizeSpan(0.58f), 0, 1, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); cell.setText(mark); }
+                else cell.setText(String.valueOf(day));
                 cell.setTextColor(studied ? PINK : DARK);
-                cell.setBackground(shape(studied ? 0xFFFFE7EF : (isToday ? 0xFFFFF1F5 : 0xFFFFFFFF), 13, isToday ? PINK : (studied ? 0xFFFFBFD1 : 0x00FFFFFF)));
+                boolean nightCalendar = "night".equals(prefs.getString("app_theme", "pink"));
+                int normalCell = nightCalendar ? 0xFF25212B : (visited ? 0xFFF1F0F2 : 0xFFFFFFFF);
+                int markedCell = nightCalendar ? 0xFF49303D : 0xFFFFE7EF;
+                int todayCell = nightCalendar ? 0xFF39303E : 0xFFFFF1F5;
+                cell.setBackground(shape(studied ? markedCell : (isToday ? todayCell : normalCell), 13, isToday ? PINK : (studied ? 0xFFFFBFD1 : 0x00FFFFFF)));
                 cell.setElevation(dp(1));
                 if (isToday) cell.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             }
             week.addView(cell, new LinearLayout.LayoutParams(0, dp(36), 1f));
         }
-        addText(calendarCard, "Отмечено дней: " + countStudyDaysThisMonth(studiedDays, yearNumber, monthNumber), 13, MUTED, false);
+        addText(calendarCard, "♥ Учебные дни: " + countStudyDaysThisMonth(studiedDays, yearNumber, monthNumber) + "   ·   Заходила: " + countStudyDaysThisMonth(visitedDays, yearNumber, monthNumber), 12, MUTED, false);
         root.addView(calendarCard, lp(-1, -2, 0, 0, 0, 14));
 
         LinearLayout summary = card();
@@ -841,7 +848,7 @@ private void showSettings() {
             {"📚","Маленький математик","Завершена первая тема",String.valueOf(completed>=1)},
             {"🧮","Счёт — это просто","Завершено 5 тем",String.valueOf(completed>=5)},
             {"🎓","Знаток математики","Завершено 10 тем",String.valueOf(completed>=10)},
-            {"🏆","Мастер знаний","Завершены все 33 темы",String.valueOf(completed>=33)},
+            {"🏆","Мастер знаний","Завершены все 41 темы",String.valueOf(completed>=41)},
             {"⏳","Первый час","60 минут занятий",String.valueOf(minutes>=60)},
             {"⌛","10 часов учёбы","600 минут занятий",String.valueOf(minutes>=600)},
             {"🚀","Настойчивость","25 учебных занятий",String.valueOf(sessions>=25)},
