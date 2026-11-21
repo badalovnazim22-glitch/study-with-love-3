@@ -93,8 +93,6 @@ public class MainActivity extends Activity {
         if (!prefs.getBoolean("welcome_done", false)) showWelcome(); else showHome();
     }
 
-    @Override public void onResume() { super.onResume(); if (prefs != null) scheduleReminders(this); }
-
     private void showWelcome() {
         currentScreen="welcome"; base("Добро пожаловать ♡","Давай познакомимся и настроим Study with Love");
         LinearLayout panel=card();panel.setGravity(Gravity.CENTER_HORIZONTAL);panel.setPadding(dp(20),dp(20),dp(20),dp(20));
@@ -754,7 +752,7 @@ public class MainActivity extends Activity {
         if (addMinutes > 0) recordStudyDay();
     }
 
-    @Override protected void onResume() { super.onResume(); appUsageStartedElapsed = SystemClock.elapsedRealtime(); }
+    @Override protected void onResume() { super.onResume(); appUsageStartedElapsed = SystemClock.elapsedRealtime(); if (prefs != null) scheduleReminders(this); }
     @Override protected void onPause() { saveForegroundUsage(); appUsageStartedElapsed = 0L; super.onPause(); }
 
     private void showMessage() {
@@ -795,7 +793,7 @@ public class MainActivity extends Activity {
                 goals.addView(item,lp(-1,-2,0,0,0,10));
             }
         };
-        save.setOnClickListener(v->{String n=title.getText().toString().trim(),d=date.getText().toString().trim();if(n.isEmpty()){title.setError("Введи название цели");return;}if(d.isEmpty()){Toast.makeText(this,"Выбери дату",Toast.LENGTH_SHORT).show();return;}if(daysUntil(d)<0){Toast.makeText(this,"Выбери сегодняшнюю или будущую дату",Toast.LENGTH_SHORT).show();return;}String id=editing[0]==null?String.valueOf(System.currentTimeMillis()):editing[0];Set<String> ids=new TreeSet<>(prefs.getStringSet("exam_goal_ids",new TreeSet<String>()));ids.add(id);prefs.edit().putString("exam_goal_title_"+id,n).putString("exam_goal_date_"+id,d).putStringSet("exam_goal_ids",ids).apply();editing[0]=null;title.setText("");date.setText("");save.setText("＋  Добавить цель");render.run();showSavedBanner("Цель сохранена","Изменения сохранены в твоём списке ♡");});
+        save.setOnClickListener(v->{String n=title.getText().toString().trim(),d=date.getText().toString().trim();if(n.isEmpty()){title.setError("Введи название цели");return;}if(d.isEmpty()){Toast.makeText(this,"Выбери дату",Toast.LENGTH_SHORT).show();return;}if(daysUntil(d)<0){Toast.makeText(this,"Выбери сегодняшнюю или будущую дату",Toast.LENGTH_SHORT).show();return;}String id=editing[0]==null?String.valueOf(System.currentTimeMillis()):editing[0];Set<String> ids=new TreeSet<>(prefs.getStringSet("exam_goal_ids",new TreeSet<String>()));ids.add(id);prefs.edit().putString("exam_goal_title_"+id,n).putString("exam_goal_date_"+id,d).putStringSet("exam_goal_ids",ids).apply();editing[0]=null;title.setText("");date.setText("");save.setText("＋  Добавить цель");render[0].run();showSavedBanner("Цель сохранена","Изменения сохранены в твоём списке ♡");});
         render.run();
     }
     private long daysUntil(String isoDate) {
