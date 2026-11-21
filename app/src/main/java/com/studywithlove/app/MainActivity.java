@@ -41,7 +41,7 @@ import java.util.Random;
 import java.util.TimeZone;
 
 public class MainActivity extends Activity {
-    private final int BG = 0xFFFFFBFC, PINK = 0xFFD96C91, PALE = 0xFFFFF0F4, DARK = 0xFF553B46, MUTED = 0xFF927D86;
+    private final int BG = 0xFFFFF9F7, PINK = 0xFFC97891, PALE = 0xFFFCEEF2, DARK = 0xFF3F3439, MUTED = 0xFF95878C;
     private LinearLayout root;
     private String currentScreen = "home";
     private SharedPreferences prefs;
@@ -69,8 +69,8 @@ public class MainActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         getWindow().getDecorView().setBackgroundColor(BG);
-        getWindow().setStatusBarColor(0xFFFFF3F6);
-        getWindow().setNavigationBarColor(0xFFFFF3F6);
+        getWindow().setStatusBarColor(0xFFFFF9F7);
+        getWindow().setNavigationBarColor(0xFFFFF9F7);
         if (Build.VERSION.SDK_INT >= 23) getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
         // Migrate the last recorded study date from older app versions into the calendar history.
@@ -155,17 +155,18 @@ public class MainActivity extends Activity {
     }
 
     private void base(String title, String subtitle) {
-        ScrollView scroll = new ScrollView(this); scroll.setFillViewport(true);
-        root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL); root.setPadding(dp(22), dp(20), dp(22), dp(28)); root.setBackgroundColor(BG);
+        ScrollView scroll = new ScrollView(this); scroll.setFillViewport(true); scroll.setClipToPadding(false);
+        root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL); root.setPadding(dp(20), dp(18), dp(20), dp(30)); root.setBackgroundColor(BG);
         scroll.addView(root);
-        scroll.setAlpha(0f);
-        scroll.setTranslationY(dp(10));
-        setContentView(scroll);
+        scroll.setAlpha(0f); scroll.setTranslationY(dp(12)); setContentView(scroll);
         scroll.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-        scroll.animate().alpha(1f).translationY(0f).setDuration(240).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
-        TextView brand = text("STUDY WITH LOVE  🌷", 12, PINK, true); brand.setLetterSpacing(0.10f); root.addView(brand, lp(-1, -2, 0, 0, 0, 8));
-        TextView h = text(title, 27, DARK, true); root.addView(h, lp(-1, -2, 0, 0, 0, 5));
-        TextView s = text(subtitle, 14, MUTED, false); root.addView(s, lp(-1, -2, 0, 0, 0, 18));
+        scroll.animate().alpha(1f).translationY(0f).setDuration(280).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
+        LinearLayout brandRow = new LinearLayout(this); brandRow.setGravity(Gravity.CENTER_VERTICAL); brandRow.setPadding(dp(12), dp(7), dp(12), dp(7)); brandRow.setBackground(shape(0xFFFCEEF2, 30, 0x00FFFFFF));
+        TextView flower = text("✿", 16, PINK, true); brandRow.addView(flower, lp(24, 24, 0, 0, 7, 0));
+        TextView brand = text("STUDY WITH LOVE", 11, PINK, true); brand.setLetterSpacing(0.14f); brandRow.addView(brand, lp(-2, 24, 0, 0, 0, 0));
+        root.addView(brandRow, lp(-2, 34, 0, 0, 0, 20));
+        TextView h = text(title, 28, DARK, true); h.setLetterSpacing(-0.02f); root.addView(h, lp(-1, -2, 0, 0, 0, 6));
+        TextView sub = text(subtitle, 14, MUTED, false); sub.setLineSpacing(dp(2), 1f); root.addView(sub, lp(-1, -2, 0, 0, 0, 20));
     }
     private void showHome() {
         currentScreen = "home";
@@ -758,14 +759,22 @@ public class MainActivity extends Activity {
     }
     private void backHome() { Button b = button("← Главное меню", false); b.setOnClickListener(v -> showHome()); root.addView(b, lp(-1, 50, 0, 18, 0, 0)); }
     private void action(String title, String sub, OnAction run) {
-        LinearLayout c = card(); c.setOrientation(LinearLayout.VERTICAL); addText(c, title, 17, DARK, true); addText(c, sub, 13, MUTED, false); c.setOnClickListener(v -> run.go()); root.addView(c, lp(-1, -2, 0, 0, 0, 10));
+        LinearLayout c = new LinearLayout(this); c.setOrientation(LinearLayout.HORIZONTAL); c.setGravity(Gravity.CENTER_VERTICAL); c.setPadding(dp(16), dp(14), dp(14), dp(14));
+        c.setBackground(shape(0xFFFFFFFF, 22, 0xFFF3E9EC)); c.setElevation(dp(2));
+        LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL); words.setGravity(Gravity.CENTER_VERTICAL);
+        TextView heading = text(title, 16, DARK, true); heading.setMaxLines(2); words.addView(heading, lp(-1, -2, 0, 0, 0, 4));
+        TextView detail = text(sub, 12, MUTED, false); detail.setMaxLines(2); words.addView(detail, lp(-1, -2, 0, 0, 0, 0));
+        c.addView(words, new LinearLayout.LayoutParams(0, -2, 1f));
+        TextView arrow = text("›", 28, PINK, false); arrow.setGravity(Gravity.CENTER); c.addView(arrow, lp(24, 34, 8, 0, 0, 0));
+        c.setOnClickListener(v -> { c.animate().scaleX(0.985f).scaleY(0.985f).setDuration(75).withEndAction(() -> { c.animate().scaleX(1f).scaleY(1f).setDuration(100).start(); run.go(); }).start(); });
+        root.addView(c, lp(-1, -2, 0, 0, 0, 9));
     }
-    private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(16), dp(15), dp(16), dp(15)); l.setBackground(shape(0xFFFFFFFF, 20, 0xFFFFE2EA)); return l; }
+    private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(17), dp(16), dp(17), dp(16)); l.setBackground(shape(0xFFFFFFFF, 23, 0xFFF3E9EC)); l.setElevation(dp(2)); return l; }
     private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, size, color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
     private TextView text(String value, int size, int color, boolean bold) { TextView t = new TextView(this); t.setText(value); t.setTextSize(size); t.setTextColor(color); if (bold) t.setTypeface(Typeface.DEFAULT, Typeface.BOLD); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
-    private Button button(String label, boolean primary) { Button b = new Button(this); b.setText(label); b.setTextSize(15); b.setAllCaps(false); b.setTextColor(primary ? 0xFFFFFFFF : PINK); b.setBackground(shape(primary ? PINK : PALE, 18, primary ? PINK : 0xFFFFDCE6)); return b; }
+    private Button button(String label, boolean primary) { Button b = new Button(this); b.setText(label); b.setTextSize(14); b.setTypeface(Typeface.DEFAULT, Typeface.BOLD); b.setAllCaps(false); b.setLetterSpacing(0.01f); b.setMinHeight(dp(48)); b.setPadding(dp(14), dp(8), dp(14), dp(8)); b.setElevation(primary ? dp(2) : 0); b.setTextColor(primary ? 0xFFFFFFFF : PINK); b.setBackground(shape(primary ? PINK : PALE, 22, primary ? PINK : 0xFFF2DDE4)); return b; }
     private interface OnAction { void go(); }
-    private GradientDrawable shape(int color, int radius, int stroke) { GradientDrawable d = new GradientDrawable(); d.setColor(color); d.setCornerRadius(dp(radius)); d.setStroke(dp(1), stroke); return d; }
+    private GradientDrawable shape(int color, int radius, int stroke) { GradientDrawable d = new GradientDrawable(); d.setColor(color); d.setCornerRadius(dp(radius)); if (stroke != 0) d.setStroke(dp(1), stroke); return d; }
     private LinearLayout.LayoutParams lp(int w, int h, int l, int t, int r, int b) { LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(w < 0 ? w : dp(w), h < 0 ? h : dp(h)); p.setMargins(dp(l), dp(t), dp(r), dp(b)); return p; }
     private int dp(int x) { return (int)(x * getResources().getDisplayMetrics().density + 0.5f); }
 }
