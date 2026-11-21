@@ -768,32 +768,70 @@ public class MainActivity extends Activity {
     }
 
     private void showExam() {
-        currentScreen="exam";base("Мой экзамен ✨","Добавляй цели, редактируй их или удаляй после экзамена");
+        currentScreen="exam";base("Мой экзамен ✨","Выбери главную цель и следи за оставшимися днями");
         Set<String> savedIds=new TreeSet<>(prefs.getStringSet("exam_goal_ids",new TreeSet<String>()));
         if(savedIds.isEmpty()&&!prefs.getString("exam_title","").isEmpty()&&!prefs.getString("exam_date","").isEmpty()){
             String legacy="legacy_exam";savedIds.add(legacy);
             prefs.edit().putString("exam_goal_title_"+legacy,prefs.getString("exam_title","")).putString("exam_goal_date_"+legacy,prefs.getString("exam_date","")).putStringSet("exam_goal_ids",savedIds).apply();
         }
-        final String[] editing={null}; LinearLayout form=card();
-        addText(form,"НАЗВАНИЕ ЦЕЛИ",12,PINK,true);
+        LinearLayout hero=card();hero.setBackground(shape(0xFFFFF0F4,24,0xFFF4DCE5));hero.setPadding(dp(18),dp(16),dp(18),dp(16));
+        addText(hero,"ГЛАВНЫЙ ЭКЗАМЕН",11,PINK,true);
+        LinearLayout heroRow=new LinearLayout(this);heroRow.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout heroWords=new LinearLayout(this);heroWords.setOrientation(LinearLayout.VERTICAL);
+        TextView heroName=text("Главная цель пока не выбрана",15,DARK,true);heroWords.addView(heroName);
+        TextView heroDate=text("Выбери её в списке ниже",12,MUTED,false);heroWords.addView(heroDate);
+        heroRow.addView(heroWords,new LinearLayout.LayoutParams(0,-2,1f));
+        LinearLayout countdown=new LinearLayout(this);countdown.setOrientation(LinearLayout.VERTICAL);countdown.setGravity(Gravity.CENTER);
+        TextView heroDays=text("—",38,PINK,true);heroDays.setGravity(Gravity.CENTER);
+        TextView heroCaption=text("ДНЕЙ",10,MUTED,true);heroCaption.setGravity(Gravity.CENTER);
+        countdown.addView(heroDays);countdown.addView(heroCaption);heroRow.addView(countdown,lp(88,-2,8,0,0,0));
+        hero.addView(heroRow,lp(-1,-2,0,5,0,0));root.addView(hero,lp(-1,-2,0,0,0,14));
+        final String[] editing={null};
+        LinearLayout form=card();addText(form,"НАЗВАНИЕ ЦЕЛИ",12,PINK,true);
         EditText title=new EditText(this);title.setSingleLine(true);title.setTextSize(16);title.setTextColor(DARK);title.setHint("Например, экзамен по математике");title.setPadding(dp(13),dp(8),dp(13),dp(8));title.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));form.addView(title,lp(-1,50,0,7,0,12));
         addText(form,"ДАТА",12,PINK,true);
         EditText date=new EditText(this);date.setSingleLine(true);date.setFocusable(false);date.setClickable(true);date.setTextSize(15);date.setTextColor(DARK);date.setHint("Выбери дату");date.setPadding(dp(13),dp(8),dp(13),dp(8));date.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));form.addView(date,lp(-1,50,0,7,0,12));
         date.setOnClickListener(v->{Calendar now=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));Calendar min=(Calendar)now.clone();min.set(Calendar.HOUR_OF_DAY,0);min.set(Calendar.MINUTE,0);min.set(Calendar.SECOND,0);min.set(Calendar.MILLISECOND,0);android.app.DatePickerDialog dialog=new android.app.DatePickerDialog(this,(p,y,m,d)->date.setText(String.format(Locale.US,"%04d-%02d-%02d",y,m+1,d)),now.get(Calendar.YEAR),now.get(Calendar.MONTH),now.get(Calendar.DAY_OF_MONTH));dialog.getDatePicker().setMinDate(min.getTimeInMillis());dialog.show();});
         Button save=button("＋  Добавить цель",true);form.addView(save,lp(-1,50,0,4,0,0));root.addView(form,lp(-1,-2,0,0,0,14));
         LinearLayout goals=new LinearLayout(this);goals.setOrientation(LinearLayout.VERTICAL);root.addView(goals,lp(-1,-2,0,0,0,0));
-        final Runnable[] render={null}; render[0]=()->{goals.removeAllViews();Set<String> ids=new TreeSet<>(prefs.getStringSet("exam_goal_ids",new TreeSet<String>()));List<String> order=new ArrayList<>(ids);java.util.Collections.sort(order,java.util.Collections.reverseOrder());
-            if(order.isEmpty()){LinearLayout empty=card();addText(empty,"🌷  Пока нет целей",15,DARK,true);addText(empty,"Добавь первую дату экзамена или важную цель.",13,MUTED,false);goals.addView(empty,lp(-1,-2,0,0,0,10));}
-            for(String id:order){String goalTitle=prefs.getString("exam_goal_title_"+id,""),goalDate=prefs.getString("exam_goal_date_"+id,"");if(goalTitle.isEmpty()||goalDate.isEmpty())continue;
-                LinearLayout item=card();addText(item,"ТВОЯ ЦЕЛЬ",11,PINK,true);addText(item,goalTitle,18,DARK,true);long remain=daysUntil(goalDate);addText(item,"Дата: "+goalDate+"  ·  "+(remain<0?"дата прошла":remain==0?"сегодня":remain+" "+dayWord((int)remain)),13,MUTED,false);
-                LinearLayout actions=new LinearLayout(this);actions.setOrientation(LinearLayout.HORIZONTAL);Button edit=button("Изменить",false),delete=button("Удалить",false);
-                LinearLayout.LayoutParams ep=new LinearLayout.LayoutParams(0,dp(42),1f);ep.setMargins(0,dp(7),dp(4),0);actions.addView(edit,ep);LinearLayout.LayoutParams dpv=new LinearLayout.LayoutParams(0,dp(42),1f);dpv.setMargins(dp(4),dp(7),0,0);actions.addView(delete,dpv);item.addView(actions);
+        final Runnable[] render={null};
+        render[0]=()->{
+            goals.removeAllViews();
+            Set<String> ids=new TreeSet<>(prefs.getStringSet("exam_goal_ids",new TreeSet<String>()));
+            List<String> order=new ArrayList<>(ids);java.util.Collections.sort(order,java.util.Collections.reverseOrder());
+            String mainId=prefs.getString("exam_main_goal_id","");
+            if(!ids.contains(mainId))mainId="";
+            if(mainId.isEmpty()&&!order.isEmpty())mainId=order.get(0);
+            final String selectedMain=mainId;
+            if(!selectedMain.isEmpty()){
+                String mainTitle=prefs.getString("exam_goal_title_"+selectedMain,""),mainDate=prefs.getString("exam_goal_date_"+selectedMain,"");
+                long remain=daysUntil(mainDate);heroName.setText(mainTitle);heroDate.setText("Дата экзамена: "+mainDate);
+                heroDays.setText(remain<0?"—":String.valueOf(remain));
+                heroCaption.setText(remain==0?"СЕГОДНЯ":"ДНЕЙ ОСТАЛОСЬ");
+                prefs.edit().putString("exam_main_goal_id",selectedMain).apply();
+            }else{heroName.setText("Главная цель пока не выбрана");heroDate.setText("Добавь цель и отметь её главной");heroDays.setText("—");heroCaption.setText("ДНЕЙ");}
+            if(order.isEmpty()){LinearLayout empty=card();empty.setGravity(Gravity.CENTER);addText(empty,"Пока нет целей",15,DARK,true);addText(empty,"Добавь первую дату экзамена или важную цель.",13,MUTED,false);goals.addView(empty,lp(-1,-2,0,0,0,10));}
+            for(String id:order){
+                String goalTitle=prefs.getString("exam_goal_title_"+id,""),goalDate=prefs.getString("exam_goal_date_"+id,"");if(goalTitle.isEmpty()||goalDate.isEmpty())continue;
+                long remain=daysUntil(goalDate);boolean isMain=id.equals(selectedMain);
+                LinearLayout item=card();item.setOrientation(LinearLayout.VERTICAL);
+                LinearLayout top=new LinearLayout(this);top.setGravity(Gravity.CENTER_VERTICAL);
+                LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);
+                addText(words,isMain?"ГЛАВНАЯ ЦЕЛЬ":"ТВОЯ ЦЕЛЬ",11,isMain?PINK:MUTED,true);addText(words,goalTitle,17,DARK,true);addText(words,"Дата: "+goalDate,12,MUTED,false);
+                top.addView(words,new LinearLayout.LayoutParams(0,-2,1f));
+                LinearLayout number=new LinearLayout(this);number.setOrientation(LinearLayout.VERTICAL);number.setGravity(Gravity.CENTER);number.setBackground(shape(isMain?0xFFFFF0F4:0xFFF7F4F2,18,0));TextView big=text(remain<0?"—":String.valueOf(remain),30,PINK,true);big.setGravity(Gravity.CENTER);TextView unit=text(remain==0?"СЕГОДНЯ":"ДНЕЙ",9,MUTED,true);unit.setGravity(Gravity.CENTER);number.addView(big);number.addView(unit);top.addView(number,lp(82,78,8,0,0,0));item.addView(top);
+                LinearLayout actions=new LinearLayout(this);actions.setOrientation(LinearLayout.HORIZONTAL);
+                Button main=button(isMain?"★  Главная цель":"☆  Сделать главной",isMain);Button edit=button("Изменить",false),delete=button("Удалить",false);
+                main.setOnClickListener(v->{prefs.edit().putString("exam_main_goal_id",id).apply();render[0].run();});
                 edit.setOnClickListener(v->{editing[0]=id;title.setText(goalTitle);date.setText(goalDate);save.setText("Сохранить изменения");form.requestFocus();});
-                delete.setOnClickListener(v->{Set<String> updated=new TreeSet<>(prefs.getStringSet("exam_goal_ids",new TreeSet<String>()));updated.remove(id);prefs.edit().remove("exam_goal_title_"+id).remove("exam_goal_date_"+id).putStringSet("exam_goal_ids",updated).apply();if(id.equals(editing[0])){editing[0]=null;title.setText("");date.setText("");save.setText("＋  Добавить цель");}render[0].run();});
-                goals.addView(item,lp(-1,-2,0,0,0,10));
+                delete.setOnClickListener(v->{Set<String> updated=new TreeSet<>(prefs.getStringSet("exam_goal_ids",new TreeSet<String>()));updated.remove(id);SharedPreferences.Editor e=prefs.edit().remove("exam_goal_title_"+id).remove("exam_goal_date_"+id).putStringSet("exam_goal_ids",updated);if(id.equals(prefs.getString("exam_main_goal_id","")))e.remove("exam_main_goal_id");e.apply();if(id.equals(editing[0])){editing[0]=null;title.setText("");date.setText("");save.setText("＋  Добавить цель");}render[0].run();});
+                LinearLayout.LayoutParams mp=new LinearLayout.LayoutParams(0,dp(42),1f);mp.setMargins(0,dp(8),dp(3),0);actions.addView(main,mp);
+                LinearLayout.LayoutParams ep=new LinearLayout.LayoutParams(0,dp(42),.75f);ep.setMargins(dp(3),dp(8),dp(3),0);actions.addView(edit,ep);
+                LinearLayout.LayoutParams dpv=new LinearLayout.LayoutParams(0,dp(42),.65f);dpv.setMargins(dp(3),dp(8),0,0);actions.addView(delete,dpv);
+                item.addView(actions);goals.addView(item,lp(-1,-2,0,0,0,10));
             }
         };
-        save.setOnClickListener(v->{String n=title.getText().toString().trim(),d=date.getText().toString().trim();if(n.isEmpty()){title.setError("Введи название цели");return;}if(d.isEmpty()){Toast.makeText(this,"Выбери дату",Toast.LENGTH_SHORT).show();return;}if(daysUntil(d)<0){Toast.makeText(this,"Выбери сегодняшнюю или будущую дату",Toast.LENGTH_SHORT).show();return;}String id=editing[0]==null?String.valueOf(System.currentTimeMillis()):editing[0];Set<String> ids=new TreeSet<>(prefs.getStringSet("exam_goal_ids",new TreeSet<String>()));ids.add(id);prefs.edit().putString("exam_goal_title_"+id,n).putString("exam_goal_date_"+id,d).putStringSet("exam_goal_ids",ids).apply();editing[0]=null;title.setText("");date.setText("");save.setText("＋  Добавить цель");render[0].run();showSavedBanner("Цель сохранена","Изменения сохранены в твоём списке ♡");});
+        save.setOnClickListener(v->{String n=title.getText().toString().trim(),d=date.getText().toString().trim();if(n.isEmpty()){title.setError("Введи название цели");return;}if(d.isEmpty()){showSavedBanner("Выбери дату","Укажи день экзамена ♡");return;}if(daysUntil(d)<0){showSavedBanner("Неверная дата","Выбери сегодняшнюю или будущую дату");return;}String id=editing[0]==null?String.valueOf(System.currentTimeMillis()):editing[0];Set<String> ids=new TreeSet<>(prefs.getStringSet("exam_goal_ids",new TreeSet<String>()));ids.add(id);SharedPreferences.Editor e=prefs.edit().putString("exam_goal_title_"+id,n).putString("exam_goal_date_"+id,d).putStringSet("exam_goal_ids",ids);if(prefs.getString("exam_main_goal_id","").isEmpty())e.putString("exam_main_goal_id",id);e.apply();editing[0]=null;title.setText("");date.setText("");save.setText("＋  Добавить цель");render[0].run();showSavedBanner("Цель сохранена","Она появилась в твоём списке ♡");});
         render[0].run();
     }
     private long daysUntil(String isoDate) {
