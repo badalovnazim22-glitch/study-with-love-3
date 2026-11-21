@@ -155,44 +155,141 @@ public class MainActivity extends Activity {
     }
 
     private void base(String title, String subtitle) {
-        ScrollView scroll = new ScrollView(this); scroll.setFillViewport(true); scroll.setClipToPadding(false);
-        root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL); root.setPadding(dp(20), dp(18), dp(20), dp(30)); root.setBackgroundColor(BG);
+        LinearLayout shell = new LinearLayout(this);
+        shell.setOrientation(LinearLayout.VERTICAL);
+        shell.setBackgroundColor(BG);
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        scroll.setClipToPadding(false);
+        root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(20), dp(18), dp(20), dp(26));
+        root.setBackgroundColor(BG);
         scroll.addView(root);
-        scroll.setAlpha(0f); scroll.setTranslationY(dp(12)); setContentView(scroll);
+        shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
+        shell.addView(bottomNavigation(), lp(-1, 68, 0, 0, 0, 0));
+        setContentView(shell);
+        scroll.setAlpha(0f);
+        scroll.setTranslationY(dp(10));
         scroll.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-        scroll.animate().alpha(1f).translationY(0f).setDuration(280).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
-        LinearLayout brandRow = new LinearLayout(this); brandRow.setGravity(Gravity.CENTER_VERTICAL); brandRow.setPadding(dp(12), dp(7), dp(12), dp(7)); brandRow.setBackground(shape(0xFFFCEEF2, 30, 0x00FFFFFF));
-        TextView flower = text("✿", 16, PINK, true); brandRow.addView(flower, lp(24, 24, 0, 0, 7, 0));
-        TextView brand = text("STUDY WITH LOVE", 11, PINK, true); brand.setLetterSpacing(0.14f); brandRow.addView(brand, lp(-2, 24, 0, 0, 0, 0));
-        root.addView(brandRow, lp(-2, 34, 0, 0, 0, 20));
-        TextView h = text(title, 28, DARK, true); h.setLetterSpacing(-0.02f); root.addView(h, lp(-1, -2, 0, 0, 0, 6));
-        TextView sub = text(subtitle, 14, MUTED, false); sub.setLineSpacing(dp(2), 1f); root.addView(sub, lp(-1, -2, 0, 0, 0, 20));
+        scroll.animate().alpha(1f).translationY(0f).setDuration(240)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
+        LinearLayout brandRow = new LinearLayout(this);
+        brandRow.setGravity(Gravity.CENTER_VERTICAL);
+        brandRow.setPadding(dp(12), dp(7), dp(12), dp(7));
+        brandRow.setBackground(shape(0xFFFCEEF2, 30, 0));
+        TextView flower = text("✿", 16, PINK, true);
+        brandRow.addView(flower, lp(24, 24, 0, 0, 7, 0));
+        TextView brand = text("STUDY WITH LOVE", 11, PINK, true);
+        brand.setLetterSpacing(0.14f);
+        brandRow.addView(brand, lp(-2, 24, 0, 0, 0, 0));
+        root.addView(brandRow, lp(-2, 34, 0, 0, 0, 18));
+        TextView h = text(title, 27, DARK, true);
+        h.setLetterSpacing(-0.02f);
+        root.addView(h, lp(-1, -2, 0, 0, 0, 6));
+        TextView sub = text(subtitle, 14, MUTED, false);
+        sub.setLineSpacing(dp(2), 1f);
+        root.addView(sub, lp(-1, -2, 0, 0, 0, 18));
     }
+
+    private View bottomNavigation() {
+        LinearLayout bar = new LinearLayout(this);
+        bar.setOrientation(LinearLayout.HORIZONTAL);
+        bar.setGravity(Gravity.CENTER);
+        bar.setPadding(dp(8), dp(7), dp(8), dp(7));
+        bar.setBackground(shape(0xFFFFFFFF, 0, 0));
+        String[] icons = {"⌂", "▦", "▤", "♡", "◷"};
+        String[] labels = {"Главная", "Математика", "Прогресс", "Дневник", "Таймер"};
+        String active = currentScreen.equals("home") ? "home"
+                : (currentScreen.equals("chapters") || currentScreen.equals("topics") || currentScreen.equals("topic")) ? "math"
+                : (currentScreen.equals("progress") || currentScreen.equals("flower") || currentScreen.equals("achievements")) ? "progress"
+                : currentScreen.equals("diary") ? "diary"
+                : (currentScreen.equals("pomodoro") ? "timer" : "");
+        String[] keys = {"home", "math", "progress", "diary", "timer"};
+        for (int i = 0; i < keys.length; i++) {
+            final String key = keys[i];
+            boolean selected = key.equals(active);
+            LinearLayout item = new LinearLayout(this);
+            item.setOrientation(LinearLayout.VERTICAL);
+            item.setGravity(Gravity.CENTER);
+            item.setPadding(dp(2), dp(4), dp(2), dp(3));
+            item.setBackground(selected ? shape(0xFFFCEEF2, 17, 0) : shape(0x00FFFFFF, 17, 0));
+            TextView icon = text(icons[i], 21, selected ? PINK : MUTED, true);
+            icon.setGravity(Gravity.CENTER);
+            item.addView(icon, lp(-1, 27, 0, 0, 0, 1));
+            TextView label = text(labels[i], 9, selected ? PINK : MUTED, selected);
+            label.setGravity(Gravity.CENTER);
+            label.setMaxLines(1);
+            item.addView(label, lp(-1, 17, 0, 0, 0, 0));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, -1, 1f);
+            params.setMargins(dp(2), 0, dp(2), 0);
+            bar.addView(item, params);
+            item.setOnClickListener(v -> {
+                if (key.equals("home")) showHome();
+                else if (key.equals("math")) showChapters();
+                else if (key.equals("progress")) showProgress();
+                else if (key.equals("diary")) showDiary();
+                else if (key.equals("timer")) showPomodoro();
+            });
+        }
+        return bar;
+    }
+
     private void showHome() {
         currentScreen = "home";
-        base("Привет, Назка! ❤️", "Твой маленький помощник в учёбе. Каждый шаг — уже успех.");
+        base("Привет, Назка! ♡", "Сегодня — хороший день, чтобы сделать маленький шаг к своей цели.");
         int done = prefs.getInt("done_count", 0);
         int streak = currentStreak();
         int record = prefs.getInt("longest_streak", 0);
-        LinearLayout progress = card();
-        addText(progress, "🌸  ТВОЙ ПРОГРЕСС", 12, PINK, true);
-        addText(progress, "🔥  " + streak + " " + dayWord(streak) + " подряд!", 25, DARK, true);
-        addText(progress, "Рекорд: " + record + " " + dayWord(record) + "  ·  Завершено: " + done + " " + word(done), 13, MUTED, false);
-        addText(progress, "Занимайся каждый день и собирай свою серию!", 13, MUTED, false);
-        root.addView(progress, lp(-1, -2, 0, 0, 0, 18));
-        action("📐  Математика", "Выбрать раздел и тему", this::showChapters);
-        action("📊  Мой прогресс", "Посмотреть прогресс по разделам и темам", this::showProgress);
-        action("🍅  Таймер Pomodoro", "Занимайся небольшими подходами с перерывами", this::showPomodoro);
-        action("📔  Дневник успехов", "Записывай свои маленькие и большие победы", this::showDiary);
-        action("🌷  Мой цветочек", "Смотри, как растёт твой цветок", this::showFlower);
-        action("🏅  Коллекция достижений", "Твои маленькие и большие победы", this::showAchievements);
-        action("💌  Письмо себе в будущее", "Оставь себе доброе послание", this::showFutureLetters);
-        action("🗓️  Календарь привычек", "Отмечай регулярность занятий", this::showProgress);
-        action("🎧  Атмосфера учёбы", "Выбери уютный режим для занятий", this::showAtmosphere);
-        action("💌  Послание для тебя", "Немного поддержки на сегодня", this::showMessage);
-        action("🔔  Настроить напоминания", "Выбрать дни недели и удобное время", this::showReminderSettings);
-        LinearLayout note = card(); addText(note, "⏰  НАПОМИНАНИЯ", 13, PINK, true); addText(note, reminderSummary(), 14, DARK, false); root.addView(note, lp(-1, -2, 0, 8, 0, 0));
-        TextView made = text("Сделано с любовью ♡", 11, MUTED, false); made.setGravity(Gravity.CENTER); made.setAlpha(0.85f); root.addView(made, lp(-1, 34, 0, 16, 0, 0));
+        LinearLayout hero = card();
+        hero.setPadding(dp(19), dp(19), dp(19), dp(19));
+        hero.setBackground(shape(0xFFF8E8EE, 25, 0));
+        addText(hero, "ТВОЙ МАЛЕНЬКИЙ ПРОГРЕСС", 11, PINK, true);
+        addText(hero, "Ты справляешься.\nПродолжай в своём темпе.", 23, DARK, true);
+        addText(hero, "Каждое занятие — это забота о себе будущей.", 13, MUTED, false);
+        root.addView(hero, lp(-1, -2, 0, 0, 0, 15));
+        LinearLayout stats = new LinearLayout(this);
+        stats.setOrientation(LinearLayout.HORIZONTAL);
+        String[][] values = {{String.valueOf(streak), "дней подряд"}, {String.valueOf(done), "уроков"}, {String.valueOf(record), "личный рекорд"}};
+        for (String[] value : values) {
+            LinearLayout stat = card();
+            stat.setGravity(Gravity.CENTER);
+            stat.setPadding(dp(7), dp(12), dp(7), dp(12));
+            TextView number = text(value[0], 22, PINK, true);
+            number.setGravity(Gravity.CENTER);
+            stat.addView(number, lp(-1, 29, 0, 0, 0, 3));
+            TextView caption = text(value[1], 10, MUTED, false);
+            caption.setGravity(Gravity.CENTER);
+            caption.setMaxLines(2);
+            stat.addView(caption, lp(-1, 28, 0, 0, 0, 0));
+            LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, -2, 1f);
+            p.setMargins(dp(3), 0, dp(3), 0);
+            stats.addView(stat, p);
+        }
+        root.addView(stats, lp(-1, -2, 0, 0, 0, 22));
+        TextView section = text("Продолжим заниматься?", 19, DARK, true);
+        root.addView(section, lp(-1, -2, 0, 0, 0, 10));
+        action("Математика", "4 раздела · 33 учебные темы", this::showChapters);
+        action("Мой прогресс", "Твои занятия, календарь и результаты", this::showProgress);
+        action("Таймер Pomodoro", "Сосредоточься на одном небольшом шаге", this::showPomodoro);
+        TextView more = text("ТВОИ УЧЕБНЫЕ РИТУАЛЫ", 11, PINK, true);
+        more.setLetterSpacing(0.08f);
+        root.addView(more, lp(-1, -2, 0, 14, 0, 9));
+        action("Дневник успехов", "Записывай, чем можешь гордиться", this::showDiary);
+        action("Мой цветочек", "Смотри, как он растёт вместе с тобой", this::showFlower);
+        action("Коллекция достижений", "Собирай маленькие победы", this::showAchievements);
+        action("Письмо себе в будущее", "Оставь себе доброе послание", this::showFutureLetters);
+        action("Календарь привычек", "Отмечай регулярность занятий", this::showProgress);
+        action("Атмосфера учёбы", "Выбери уютное настроение", this::showAtmosphere);
+        action("Послание для тебя", "Немного поддержки на сегодня", this::showMessage);
+        action("Настроить напоминания", "Дни недели и удобное время", this::showReminderSettings);
+        LinearLayout reminder = card();
+        addText(reminder, "НАПОМИНАНИЯ", 11, PINK, true);
+        addText(reminder, reminderSummary(), 13, DARK, false);
+        root.addView(reminder, lp(-1, -2, 0, 10, 0, 0));
+        TextView made = text("Сделано с любовью ♡", 11, MUTED, false);
+        made.setGravity(Gravity.CENTER);
+        root.addView(made, lp(-1, 34, 0, 12, 0, 0));
     }
     private String word(int n) { int x=n%10, y=n%100; if(x==1 && y!=11)return "урок"; if(x>=2&&x<=4&&(y<12||y>14))return "урока"; return "уроков"; }
     private void showChapters() {
