@@ -457,7 +457,7 @@ private void showSettings() {
         }
         if (customLesson) { Button addTopic = button("＋  Добавить тему", true); addTopic.setOnClickListener(v -> addCustomTopic(chapter)); root.addView(addTopic, lp(-1, 50, 0, 10, 0, 8)); }
         Button back = button(customLesson ? "← К урокам" : "← К разделам", false);
-        back.setOnClickListener(v -> customLesson ? showChapters() : showMathChapters()); root.addView(back, lp(-1, 52, 0, 12, 0, 0));
+        back.setOnClickListener(v -> { if (customLesson) showChapters(); else showMathChapters(); }); root.addView(back, lp(-1, 52, 0, 12, 0, 0));
     }
     private void showTopic(String topic) {
         currentScreen = "topic";
