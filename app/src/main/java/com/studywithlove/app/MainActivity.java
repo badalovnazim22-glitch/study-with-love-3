@@ -1095,8 +1095,10 @@ private void showSettings() {
             p.setMargins(dp(3), 0, dp(3), 0);
             row.addView(tile, p);
             tile.setOnClickListener(v -> {
-                tile.animate().scaleX(0.97f).scaleY(0.97f).alpha(0.85f).setDuration(90)
-                    .withEndAction(() -> { tile.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(130).start(); run.go(); }).start();
+                symbol.animate().rotationBy(24f).scaleX(1.16f).scaleY(1.16f).setDuration(180)
+                    .withEndAction(() -> symbol.animate().rotationBy(-24f).scaleX(1f).scaleY(1f).setDuration(180).start()).start();
+                tile.animate().scaleX(0.97f).scaleY(0.97f).alpha(0.88f).setDuration(110)
+                    .withEndAction(() -> { tile.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(160).start(); run.go(); }).start();
             });
         }
 
