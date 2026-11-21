@@ -560,6 +560,7 @@ private void showSettings() {
         prevMonth.setOnClickListener(v -> { progressMonthOffset--; showProgress(); });
         nextMonth.setOnClickListener(v -> { if (progressMonthOffset < 0) { progressMonthOffset++; showProgress(); } });
         Set<String> studiedDays = new TreeSet<>(prefs.getStringSet("study_days", new TreeSet<String>()));
+        Set<String> visitedDays = new TreeSet<>(prefs.getStringSet("visit_days", new TreeSet<String>()));
         Calendar first = (Calendar) month.clone();
         first.set(Calendar.DAY_OF_MONTH, 1);
         int offset = (first.get(Calendar.DAY_OF_WEEK) + 5) % 7;
@@ -586,7 +587,6 @@ private void showSettings() {
                 int day = slot - offset + 1;
                 String dateKey = String.format(Locale.US, "%04d-%02d-%02d", yearNumber, monthNumber + 1, day);
                 boolean studied = studiedDays.contains(dateKey);
-                Set<String> visitedDays = new TreeSet<>(prefs.getStringSet("visit_days", new TreeSet<String>()));
                 boolean visited = visitedDays.contains(dateKey);
                 boolean isToday = progressMonthOffset == 0 && day == todayDay;
                 if (studied) { android.text.SpannableString mark = new android.text.SpannableString("♥\n" + day); mark.setSpan(new android.text.style.RelativeSizeSpan(0.58f), 0, 1, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); cell.setText(mark); }
