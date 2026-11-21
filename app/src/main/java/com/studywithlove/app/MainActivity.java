@@ -96,6 +96,11 @@ public class MainActivity extends Activity {
         add("2️⃣ Обыкновенные дроби", "2.1. Правильные и неправильные дроби", "2.2. Сравнение и упорядочивание", "2.3. Сложение и вычитание дробей с разными знаменателями", "2.4. Сложение смешанных чисел", "2.5. Вычитание смешанных чисел", "2.6. Умножение обыкновенных дробей", "2.7. Умножение смешанных чисел", "2.8. Деление обыкновенных дробей", "2.9. Деление смешанных чисел", "2.10. Нахождение части числа и числа по его части", "2.11. Сокращение дробей", "2.12. Приведение дробей к общему знаменателю");
         add("3️⃣ Десятичные дроби", "3.1. Десятичные дроби", "3.2. Сравнение и упорядочивание", "3.3. Округление десятичных дробей", "3.4. Перевод обыкновенной дроби в десятичную и наоборот", "3.5. Сложение и вычитание десятичных дробей", "3.6. Умножение и деление десятичных дробей на степени числа 10", "3.7. Умножение десятичной дроби на натуральное число", "3.8. Умножение десятичных дробей", "3.9. Деление десятичной дроби на натуральное число", "3.10. Деление числа на десятичную дробь", "3.11. Действия над обыкновенными и десятичными дробями", "3.12. Среднее арифметическое десятичных дробей", "3.13. Задачи на десятичные дроби");
         add("4️⃣ Процент", "4.1. Процент, обыкновенная дробь, десятичная дробь", "4.2. Процент от числа", "4.3. Нахождение числа по проценту", "4.4. Увеличение и уменьшение величины на определённый процент", "4.5. Отношение и пропорция", "4.6. Решение задач на проценты");
+        Set<String> ids = prefs.getStringSet("custom_lesson_ids", new TreeSet<String>());
+        for (String id : ids) {
+            String name = prefs.getString("custom_lesson_name_" + id, "Мой урок");
+            chapters.put("CUSTOM:" + id + ":" + name, new ArrayList<>(prefs.getStringSet("custom_lesson_topics_" + id, new TreeSet<String>())));
+        }
     }
     private void add(String name, String... topics) { List<String> list = new ArrayList<>(); for (String t : topics) list.add(t); chapters.put(name, list); }
 
@@ -206,7 +211,7 @@ public class MainActivity extends Activity {
         bar.setPadding(dp(8), dp(7), dp(8), dp(7));
         bar.setBackground(shape(0xFFFFFFFF, 0, 0));
         String[] icons = {"⌂", "▦", "▤", "♡", "◷"};
-        String[] labels = {"Главная", "Математика", "Прогресс", "Дневник", "Таймер"};
+        String[] labels = {"Главная", "Уроки", "Прогресс", "Дневник", "Таймер"};
         String active = currentScreen.equals("home") ? "home"
                 : (currentScreen.equals("chapters") || currentScreen.equals("topics") || currentScreen.equals("topic")) ? "math"
                 : (currentScreen.equals("progress") || currentScreen.equals("flower") || currentScreen.equals("achievements")) ? "progress"
@@ -356,7 +361,8 @@ private void showSettings() {
         for (int i = 0; i < values.length; i++) {
             String[] value = values[i];
             LinearLayout stat = card(); stat.setGravity(Gravity.CENTER);
-            stat.setPadding(dp(7), dp(13), dp(7), dp(13)); stat.setBackground(shape(colors[i], 22, 0));
+            stat.setPadding(dp(7), dp(13), dp(7), dp(13));
+            stat.setBackground(shape(i == 0 || i == 2 ? 0xFFFFF0F4 : colors[i], 22, 0));
             TextView number = text(value[0], 24, PINK, true); number.setGravity(Gravity.CENTER);
             stat.addView(number, lp(-1, 31, 0, 0, 0, 3));
             TextView caption = text(value[1], 12, MUTED, false); caption.setGravity(Gravity.CENTER); caption.setMaxLines(2);
@@ -401,24 +407,57 @@ private void showSettings() {
     private String word(int n) { int x=n%10, y=n%100; if(x==1 && y!=11)return "урок"; if(x>=2&&x<=4&&(y<12||y>14))return "урока"; return "уроков"; }
     private void showChapters() {
         currentScreen = "chapters";
-        base("Выбери раздел 📐", "Все темы из твоего учебного плана");
-        int chapterNumber = 1;
-        for (String chapter : chapters.keySet()) {
-            final String selected = chapter;
-            String prettyName = chapter.replaceFirst("^[^ ]+\\s*", "");
-            actionRegular("Раздел " + chapterNumber + "\n" + prettyName, chapters.get(chapter).size() + " учебных тем", () -> { selectedChapter = selected; showTopics(selected); });
-            chapterNumber++;
+        base("Уроки 📚", "Выбери предмет или создай свой урок");
+        actionRegular("📐  Математика", "Все разделы и темы по математике", () -> showMathChapters());
+        Set<String> ids = prefs.getStringSet("custom_lesson_ids", new TreeSet<String>());
+        for (String id : ids) {
+            String name = prefs.getString("custom_lesson_name_" + id, "Мой урок");
+            actionRegular("♡  " + name, chapters.get("CUSTOM:" + id + ":" + name).size() + " тем", () -> { selectedChapter = "CUSTOM:" + id + ":" + name; showTopics(selectedChapter); });
         }
-        backHome();
+        Button add = button("＋  Добавить свой урок", true); add.setOnClickListener(v -> addCustomLesson());
+        root.addView(add, lp(-1, 50, 0, 6, 0, 10)); backHome();
     }
+    private void showMathChapters() {
+        currentScreen = "chapters"; base("Математика 📐", "Выбери раздел и продолжай обучение");
+        int number = 1;
+        for (String chapter : chapters.keySet()) {
+            if (chapter.startsWith("CUSTOM:")) continue;
+            final String selected = chapter; String pretty = chapter.replaceFirst("^[^ ]+\\s*", "");
+            actionRegular("Раздел " + number + "\\n" + pretty, chapters.get(chapter).size() + " учебных тем", () -> { selectedChapter = selected; showTopics(selected); }); number++;
+        }
+        Button back = button("← К урокам", false); back.setOnClickListener(v -> showChapters()); root.addView(back, lp(-1, 50, 0, 12, 0, 0));
+    }
+    private void addCustomLesson() {
+        EditText input = new EditText(this); input.setSingleLine(true); input.setHint("Название урока");
+        new android.app.AlertDialog.Builder(this).setTitle("Новый урок").setMessage("Например: Английский, История, Биология").setView(input)
+            .setNegativeButton("Отмена", null).setPositiveButton("Создать", (d,w) -> {
+                String name=input.getText().toString().trim(); if(name.isEmpty()){Toast.makeText(this,"Введи название урока",Toast.LENGTH_SHORT).show();return;}
+                String id=String.valueOf(System.currentTimeMillis()); Set<String> ids=new TreeSet<>(prefs.getStringSet("custom_lesson_ids",new TreeSet<String>()));ids.add(id);
+                prefs.edit().putStringSet("custom_lesson_ids",ids).putString("custom_lesson_name_"+id,name).putStringSet("custom_lesson_topics_"+id,new TreeSet<String>()).apply();
+                selectedChapter="CUSTOM:"+id+":"+name;chapters.put(selectedChapter,new ArrayList<String>());showTopics(selectedChapter);
+            }).show();
+    }
+    private void addCustomTopic(String chapter) {
+        EditText input=new EditText(this);input.setSingleLine(true);input.setHint("Название темы");
+        new android.app.AlertDialog.Builder(this).setTitle("Новая тема").setView(input).setNegativeButton("Отмена",null).setPositiveButton("Добавить",(d,w)->{
+            String topic=input.getText().toString().trim();if(topic.isEmpty()){Toast.makeText(this,"Введи название темы",Toast.LENGTH_SHORT).show();return;}
+            String[] parts=chapter.split(":",3);if(parts.length<3)return;
+            Set<String> topics=new TreeSet<>(prefs.getStringSet("custom_lesson_topics_"+parts[1],new TreeSet<String>()));topics.add(topic);
+            prefs.edit().putStringSet("custom_lesson_topics_"+parts[1],topics).apply();chapters.put(chapter,new ArrayList<>(topics));showTopics(chapter);
+        }).show();
+    }
+
     private void showTopics(String chapter) {
         currentScreen = "topics";
-        base(chapter, "Выбери тему, которую хочешь изучить:");
+        boolean customLesson = chapter.startsWith("CUSTOM:");
+        base(customLesson ? chapter.split(":", 3)[2] : chapter, "Выбери тему, которую хочешь изучить:");
         for (String topic : chapters.get(chapter)) {
             int percent = topicProgress(topic);
             action((percent == 100 ? "✓  " : "♡  ") + topic, "Изучено на " + percent + "%", () -> { selectedTopic = topic; showTopic(topic); });
         }
-        Button back = button("← К разделам", false); back.setOnClickListener(v -> showChapters()); root.addView(back, lp(-1, 52, 0, 12, 0, 0));
+        if (customLesson) { Button addTopic = button("＋  Добавить тему", true); addTopic.setOnClickListener(v -> addCustomTopic(chapter)); root.addView(addTopic, lp(-1, 50, 0, 10, 0, 8)); }
+        Button back = button(customLesson ? "← К урокам" : "← К разделам", false);
+        back.setOnClickListener(v -> customLesson ? showChapters() : showMathChapters()); root.addView(back, lp(-1, 52, 0, 12, 0, 0));
     }
     private void showTopic(String topic) {
         currentScreen = "topic";
@@ -600,7 +639,7 @@ private void showSettings() {
                 cell.setElevation(dp(1));
                 if (isToday) cell.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             }
-            week.addView(cell, new LinearLayout.LayoutParams(0, dp(36), 1f));
+            week.addView(cell, new LinearLayout.LayoutParams(0, dp(29), 1f));
         }
         addText(calendarCard, "♥ Учебные дни: " + countStudyDaysThisMonth(studiedDays, yearNumber, monthNumber) + "   ·   Заходила: " + countStudyDaysThisMonth(visitedDays, yearNumber, monthNumber), 12, MUTED, false);
         root.addView(calendarCard, lp(-1, -2, 0, 0, 0, 14));
@@ -645,43 +684,25 @@ private void showSettings() {
     }
 
     private void showPomodoro() {
-        currentScreen = "pomodoro";
-        base("Таймер Pomodoro 🍅", "Выбери удобную продолжительность занятия");
-        addText(root, "ВРЕМЯ УЧЁБЫ · МИНУТЫ", 12, PINK, true);
-        customMinutesInput = new EditText(this);
-        customMinutesInput.setSingleLine(true); customMinutesInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
-        customMinutesInput.setHint("Например, 35"); customMinutesInput.setText(String.valueOf(selectedStudyMinutes));
-        customMinutesInput.setTextSize(18); customMinutesInput.setTextColor(DARK); customMinutesInput.setPadding(dp(14), dp(8), dp(14), dp(8));
-        customMinutesInput.setBackground(shape(0xFFFFFFFF, 16, 0xFFFFD5E1));
-        root.addView(customMinutesInput, lp(-1, 52, 0, 5, 0, 14));
-        addText(root, "ВРЕМЯ ПЕРЕРЫВА · МИНУТЫ", 12, PINK, true);
-        LinearLayout breakChoices = new LinearLayout(this);
-        int[] breakOptions = {1, 5, 10, 15, 20};
-        for (int minutes : breakOptions) {
-            Button b = button((selectedBreakMinutes == minutes ? "✓ " : "") + minutes + "м", selectedBreakMinutes == minutes);
-            LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(0, dp(42), 1f); bp.setMargins(dp(2),0,dp(2),0); breakChoices.addView(b, bp);
-            b.setOnClickListener(v -> { if (!timerRunning) { selectedBreakMinutes = minutes; if (timerIsBreak) timerRemainingMs = selectedBreakMinutes * 60000L; showPomodoro(); } });
-        }
-        root.addView(breakChoices, lp(-1, 46, 0, 4, 0, 18));
-        LinearLayout timerCard = card(); timerCard.setGravity(Gravity.CENTER);
-        timerStatus = text(timerIsBreak ? "Время отдохнуть 🌷" : "Время для себя и учёбы 💗", 15, PINK, true); timerStatus.setGravity(Gravity.CENTER);
-        timerCard.addView(timerStatus, lp(-1, 36, 0, 0, 0, 4));
-        timerDisplay = text(formatTimer(timerRemainingMs > 0 ? timerRemainingMs : selectedStudyMinutes * 60000L), 48, DARK, true); timerDisplay.setGravity(Gravity.CENTER);
-        timerCard.addView(timerDisplay, lp(-1, 84, 0, 0, 0, 4)); root.addView(timerCard, lp(-1, -2, 0, 0, 0, 14));
-        timerStartButton = button("▶  Начать", true);
-        timerStartButton.setOnClickListener(v -> {
-            if (!timerRunning && !timerIsBreak) {
-                String raw = customMinutesInput.getText().toString().trim();
-                try { int chosen = Integer.parseInt(raw); if (chosen < 1 || chosen > 600) throw new NumberFormatException(); selectedStudyMinutes = chosen; timerRemainingMs = chosen * 60000L; }
-                catch (NumberFormatException ex) { Toast.makeText(this, "Введи от 1 до 600 минут 💗", Toast.LENGTH_SHORT).show(); return; }
-            }
-            startTimer();
-        }); root.addView(timerStartButton, lp(-1, 52, 0, 0, 0, 8));
-        timerPauseButton = button("Ⅱ  Пауза", false); timerPauseButton.setEnabled(timerRunning);
-        timerPauseButton.setOnClickListener(v -> pauseTimer()); root.addView(timerPauseButton, lp(-1, 48, 0, 0, 0, 8));
-        Button reset = button("↺  Сбросить", false); reset.setOnClickListener(v -> { timerHandler.removeCallbacks(timerTick); timerRunning = false; timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; showPomodoro(); }); root.addView(reset, lp(-1, 48, 0, 0, 0, 8));
-        if (timerRemainingMs <= 0) timerRemainingMs = selectedStudyMinutes * 60000L;
-        if (timerRunning) { updateTimerDisplay(); if (timerStartButton != null) timerStartButton.setEnabled(false); if (timerPauseButton != null) timerPauseButton.setEnabled(true); }
+        currentScreen="pomodoro";base("Таймер фокуса","Настрой время и занимайся в своём ритме");
+        LinearLayout wrap=new LinearLayout(this);wrap.setGravity(Gravity.CENTER);wrap.setPadding(0,dp(8),0,dp(14));
+        timerDisplay=text(formatTimer(timerRemainingMs>0?timerRemainingMs:selectedStudyMinutes*60000L),42,DARK,true);timerDisplay.setGravity(Gravity.CENTER);
+        GradientDrawable face=new GradientDrawable();face.setShape(GradientDrawable.OVAL);face.setColor(PALE);face.setStroke(dp(5),PINK);timerDisplay.setBackground(face);timerDisplay.setElevation(dp(5));
+        wrap.addView(timerDisplay,lp(246,246,0,0,0,0));root.addView(wrap,lp(-1,260,0,0,0,6));
+        timerStatus=text(timerIsBreak?"🌷  Время отдохнуть":"♡  Время для учёбы",15,PINK,true);timerStatus.setGravity(Gravity.CENTER);root.addView(timerStatus,lp(-1,32,0,0,0,12));
+        LinearLayout settings=card();addText(settings,"ВРЕМЯ УЧЁБЫ",11,PINK,true);
+        LinearLayout study=new LinearLayout(this);study.setGravity(Gravity.CENTER);Button minus=button("−",false),pick=button(selectedStudyMinutes+" минут",true),plus=button("+",false);
+        study.addView(minus,lp(48,42,3,0,6,0));study.addView(pick,new LinearLayout.LayoutParams(0,dp(42),1f));study.addView(plus,lp(48,42,6,0,3,0));settings.addView(study,lp(-1,46,0,3,0,10));
+        minus.setOnClickListener(v->{if(!timerRunning){selectedStudyMinutes=Math.max(1,selectedStudyMinutes-5);timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();}});
+        plus.setOnClickListener(v->{if(!timerRunning){selectedStudyMinutes=Math.min(600,selectedStudyMinutes+5);timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();}});
+        pick.setOnClickListener(v->{if(!timerRunning)new TimePickerDialog(this,(p,h,m)->{selectedStudyMinutes=Math.max(1,h*60+m);timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();},selectedStudyMinutes/60,selectedStudyMinutes%60,true).show();});
+        addText(settings,"ВРЕМЯ ПЕРЕРЫВА",11,PINK,true);LinearLayout breaksRow=new LinearLayout(this);breaksRow.setGravity(Gravity.CENTER);
+        int[] choices={1,5,10,15,20};for(int n:choices){Button q=button(n+"м",selectedBreakMinutes==n);LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(40),1f);p.setMargins(dp(2),0,dp(2),0);breaksRow.addView(q,p);q.setOnClickListener(v->{if(!timerRunning){selectedBreakMinutes=n;if(timerIsBreak)timerRemainingMs=n*60000L;showPomodoro();}});}
+        settings.addView(breaksRow,lp(-1,44,0,3,0,0));root.addView(settings,lp(-1,-2,0,0,0,14));
+        timerStartButton=button(timerRunning?"Идёт занятие":"▶  Начать",true);timerStartButton.setEnabled(!timerRunning);timerStartButton.setOnClickListener(v->startTimer());root.addView(timerStartButton,lp(-1,52,0,0,0,8));
+        timerPauseButton=button("Ⅱ  Пауза",false);timerPauseButton.setEnabled(timerRunning);timerPauseButton.setOnClickListener(v->pauseTimer());root.addView(timerPauseButton,lp(-1,46,0,0,0,7));
+        Button reset=button("↺  Сбросить",false);reset.setOnClickListener(v->{timerHandler.removeCallbacks(timerTick);timerRunning=false;timerIsBreak=false;timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();});root.addView(reset,lp(-1,44,0,0,0,0));
+        if(timerRemainingMs<=0)timerRemainingMs=(timerIsBreak?selectedBreakMinutes:selectedStudyMinutes)*60000L;if(timerRunning)updateTimerDisplay();
     }
 
     private String formatTimer(long ms) {
@@ -1083,7 +1104,13 @@ private void showSettings() {
         LinearLayout c = new LinearLayout(this); c.setOrientation(LinearLayout.HORIZONTAL); c.setGravity(Gravity.CENTER_VERTICAL); c.setPadding(dp(16), dp(14), dp(14), dp(14));
         c.setBackground(shape(0xFFFFFFFF, 22, 0xFFF3E9EC));
         LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
-        TextView heading = text(title, 17, DARK, false); words.addView(heading, lp(-1, -2, 0, 0, 0, 4));
+        TextView heading = text(title, 17, DARK, false);
+        if (title.startsWith("Раздел ")) {
+            android.text.SpannableString styled = new android.text.SpannableString(title);
+            styled.setSpan(new android.text.style.StyleSpan(Typeface.BOLD), 0, 6, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            heading.setText(styled);
+        }
+        words.addView(heading, lp(-1, -2, 0, 0, 0, 4));
         TextView detail = text(sub, 13, MUTED, false); words.addView(detail, lp(-1, -2, 0, 0, 0, 0));
         c.addView(words, new LinearLayout.LayoutParams(0, -2, 1f));
         TextView arrow = text("›", 28, PINK, false); arrow.setGravity(Gravity.CENTER); c.addView(arrow, lp(24, 34, 8, 0, 0, 0));
