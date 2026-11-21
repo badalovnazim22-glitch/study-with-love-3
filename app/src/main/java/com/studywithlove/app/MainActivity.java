@@ -11,6 +11,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -63,6 +64,7 @@ public class MainActivity extends Activity {
     private boolean timerRunning = false, timerIsBreak = false;
     private long timerSessionStarted = 0L;
     private static final String PREFS = "study_progress";
+    private static final int PICK_BACKGROUND = 7412;
     private static final String[] DAY_NAMES = {"Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"};
     private final List<String> reminderTimes = new ArrayList<>();
     private final List<CheckBox> dayChecks = new ArrayList<>();
@@ -188,6 +190,8 @@ public class MainActivity extends Activity {
         scroll.setFillViewport(true); scroll.setClipToPadding(false);
         root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(20), dp(18), dp(20), dp(26)); root.setBackgroundColor(BG);
+        String customBg=prefs.getString("custom_background_uri","");
+        if(!customBg.isEmpty()){try{java.io.InputStream in=getContentResolver().openInputStream(android.net.Uri.parse(customBg));if(in!=null){Drawable photo=Drawable.createFromStream(in,null);in.close();if(photo!=null){photo.setAlpha(42);root.setBackground(photo);}}}catch(Exception ignored){}}
         scroll.addView(root);
         shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
         if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 78, 0, 0, 0, 0));
@@ -209,7 +213,7 @@ public class MainActivity extends Activity {
             TextView settings = text("⚙", 17, PINK, false); settings.setGravity(Gravity.CENTER);
             settings.setBackground(shape(PALE, 16, 0xFFF1DDE4));
             brandRow.addView(settings, lp(32, 30, 5, 0, 0, 0));
-            settings.setOnClickListener(v -> showSettings());
+            settings.setOnClickListener(v -> {settings.animate().rotationBy(90f).scaleX(1.18f).scaleY(1.18f).setDuration(170).withEndAction(()->{settings.animate().rotationBy(90f).scaleX(1f).scaleY(1f).setDuration(180).start();showSettings();}).start();});
         }
         root.addView(brandRow, lp(-1, 42, 0, 0, 0, 16));
         TextView h = text(title, 25, DARK, true);
@@ -233,6 +237,8 @@ public class MainActivity extends Activity {
         }return bar;
     }
 
+    @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){super.onActivityResult(requestCode,resultCode,data);if(requestCode==PICK_BACKGROUND&&resultCode==RESULT_OK&&data!=null&&data.getData()!=null){android.net.Uri uri=data.getData();try{getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);}catch(Exception ignored){}prefs.edit().putString("custom_background_uri",uri.toString()).apply();showSettings();Toast.makeText(this,"Фото установлено как фон ♡",Toast.LENGTH_SHORT).show();}}
+
     private void showSettings() {
         currentScreen = "settings";
         base("Настройки ⚙", "Настрой приложение под себя");
@@ -254,6 +260,8 @@ public class MainActivity extends Activity {
         });
         nameCard.addView(saveName, lp(-1, 46, 0, 0, 0, 0));
         root.addView(nameCard, lp(-1, -2, 0, 0, 0, 13));
+
+        LinearLayout photoCard=card();addText(photoCard,"СВОЙ ФОН",12,PINK,true);addText(photoCard,"Установи любимое фото как нежный фон приложения",13,MUTED,false);Button choosePhoto=button("＋  Выбрать своё фото",true);choosePhoto.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT);pick.addCategory(Intent.CATEGORY_OPENABLE);pick.setType("image/*");pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,PICK_BACKGROUND);});photoCard.addView(choosePhoto,lp(-1,48,0,9,0,5));Button clearPhoto=button("Убрать своё фото",false);clearPhoto.setOnClickListener(v->{prefs.edit().remove("custom_background_uri").apply();showSettings();});photoCard.addView(clearPhoto,lp(-1,42,0,0,0,0));root.addView(photoCard,lp(-1,-2,0,0,0,13));
 
         LinearLayout themeCard = card();
         addText(themeCard, "ТЕМА ОФОРМЛЕНИЯ", 12, PINK, true);
@@ -417,9 +425,9 @@ public class MainActivity extends Activity {
         Button back = button("← К урокам", false); back.setOnClickListener(v -> showChapters()); root.addView(back, lp(-1, 50, 0, 12, 0, 0));
     }
     private void addCustomLesson() {
-        EditText input = new EditText(this); input.setSingleLine(true); input.setHint("Название урока");
-        new android.app.AlertDialog.Builder(this).setTitle("Новый урок").setMessage("Например: Английский, История, Биология").setView(input)
-            .setNegativeButton("Отмена", null).setPositiveButton("Создать", (d,w) -> {
+        LinearLayout dialogBody=new LinearLayout(this);dialogBody.setOrientation(LinearLayout.VERTICAL);dialogBody.setPadding(dp(20),dp(8),dp(20),dp(4));TextView hint=text("Создай отдельный предмет и добавляй в него свои темы. Например: английский, история или биология.",13,MUTED,false);hint.setLineSpacing(dp(3),1f);dialogBody.addView(hint,lp(-1,-2,0,0,0,10));EditText input = new EditText(this); input.setSingleLine(true); input.setTextSize(16);input.setPadding(dp(14),dp(8),dp(14),dp(8));input.setTextColor(DARK);input.setHint("Как назовём урок?");input.setBackground(shape(0xFFFFF9F7,15,0xFFEADDE2));dialogBody.addView(input,lp(-1,52,0,0,0,0));
+        new android.app.AlertDialog.Builder(this).setTitle("♡  Добавить свой урок").setView(dialogBody)
+            .setNegativeButton("Отмена", null).setPositiveButton("Создать урок", (d,w) -> {
                 String name=input.getText().toString().trim(); if(name.isEmpty()){Toast.makeText(this,"Введи название урока",Toast.LENGTH_SHORT).show();return;}
                 String id=String.valueOf(System.currentTimeMillis()); Set<String> ids=new TreeSet<>(prefs.getStringSet("custom_lesson_ids",new TreeSet<String>()));ids.add(id);
                 prefs.edit().putStringSet("custom_lesson_ids",ids).putString("custom_lesson_name_"+id,name).putStringSet("custom_lesson_topics_"+id,new TreeSet<String>()).apply();
@@ -677,8 +685,8 @@ public class MainActivity extends Activity {
         plus.setOnClickListener(v->{if(!timerRunning){selectedStudyMinutes=Math.min(600,selectedStudyMinutes+5);timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();}});
         pick.setOnClickListener(v->{if(!timerRunning)new TimePickerDialog(this,(p,h,m)->{selectedStudyMinutes=Math.max(1,h*60+m);timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();},selectedStudyMinutes/60,selectedStudyMinutes%60,true).show();});
         addText(settings,"ВРЕМЯ ПЕРЕРЫВА",11,PINK,true);LinearLayout breaksRow=new LinearLayout(this);breaksRow.setGravity(Gravity.CENTER);
-        int[] choices={1,5,10,15,20};for(int n:choices){Button q=button(n+"м",selectedBreakMinutes==n);LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(40),1f);p.setMargins(dp(2),0,dp(2),0);breaksRow.addView(q,p);q.setOnClickListener(v->{if(!timerRunning){selectedBreakMinutes=n;if(timerIsBreak)timerRemainingMs=n*60000L;showPomodoro();}});}
-        settings.addView(breaksRow,lp(-1,44,0,3,0,0));root.addView(settings,lp(-1,-2,0,0,0,14));
+        int[] choices={1,5,10,15,20};Button breakPick=button(selectedBreakMinutes+" минут",true);breaksRow.addView(breakPick,new LinearLayout.LayoutParams(-1,dp(42)));breakPick.setOnClickListener(v->{if(!timerRunning)new TimePickerDialog(this,(p,h,m)->{selectedBreakMinutes=Math.max(1,h*60+m);if(timerIsBreak)timerRemainingMs=selectedBreakMinutes*60000L;showPomodoro();},selectedBreakMinutes/60,selectedBreakMinutes%60,true).show();});
+        settings.addView(breaksRow,lp(-1,46,0,3,0,0));root.addView(settings,lp(-1,-2,0,0,0,14));
         LinearLayout timerControls = new LinearLayout(this); timerControls.setOrientation(LinearLayout.HORIZONTAL); timerControls.setGravity(Gravity.CENTER);
         timerStartButton=button(timerRunning?"Идёт":"▶  Начать",true);timerStartButton.setEnabled(!timerRunning);timerStartButton.setOnClickListener(v->startTimer());
         timerPauseButton=button("Ⅱ  Пауза",false);timerPauseButton.setEnabled(timerRunning);timerPauseButton.setOnClickListener(v->pauseTimer());
@@ -713,6 +721,7 @@ public class MainActivity extends Activity {
         if (timerRemainingMs <= 0) timerRemainingMs = (timerIsBreak ? selectedBreakMinutes : selectedStudyMinutes) * 60000L;
         timerRunning = true; timerSessionStarted = SystemClock.elapsedRealtime(); timerEndElapsed = timerSessionStarted + timerRemainingMs;
         timerTick = new Runnable() { @Override public void run() { updateTimerDisplay(); long left = timerEndElapsed - SystemClock.elapsedRealtime(); if (left <= 0) finishTimerPhase(); else timerHandler.postDelayed(this, 250); } };
+        if (timerDisplay != null) timerDisplay.animate().scaleX(1.075f).scaleY(1.075f).setDuration(520).start();
         if (timerStartButton != null) timerStartButton.setEnabled(false);
         if (timerPauseButton != null) timerPauseButton.setEnabled(true);
         timerHandler.post(timerTick);
@@ -722,13 +731,13 @@ public class MainActivity extends Activity {
         if (!timerRunning) return;
         timerRemainingMs = Math.max(0, timerEndElapsed - SystemClock.elapsedRealtime());
         timerRunning = false; timerHandler.removeCallbacks(timerTick);
-        if (timerDisplay != null) timerDisplay.setText(formatTimer(timerRemainingMs));
+        if (timerDisplay != null) { timerDisplay.setText(formatTimer(timerRemainingMs)); timerDisplay.animate().scaleX(1f).scaleY(1f).setDuration(220).start(); }
         if (timerStartButton != null) { timerStartButton.setEnabled(true); timerStartButton.setText("▶  Продолжить"); }
         if (timerPauseButton != null) timerPauseButton.setEnabled(false);
     }
 
     private void updateTimerDisplay() {
-        if (timerDisplay != null) timerDisplay.setText(formatTimer(Math.max(0, timerEndElapsed - SystemClock.elapsedRealtime())));
+        if (timerDisplay != null) { timerDisplay.setText(formatTimer(Math.max(0, timerEndElapsed - SystemClock.elapsedRealtime()))); float pulse=1f+(float)Math.sin(SystemClock.elapsedRealtime()/420.0)*.018f; timerDisplay.setScaleX(pulse);timerDisplay.setScaleY(pulse); }
     }
 
     private void finishTimerPhase() {
@@ -817,7 +826,7 @@ public class MainActivity extends Activity {
                 LinearLayout item=card();item.setOrientation(LinearLayout.VERTICAL);
                 LinearLayout top=new LinearLayout(this);top.setGravity(Gravity.CENTER_VERTICAL);
                 LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);
-                addText(words,isMain?"ГЛАВНАЯ ЦЕЛЬ":"ТВОЯ ЦЕЛЬ",11,isMain?PINK:MUTED,true);addText(words,goalTitle,17,DARK,true);addText(words,"Дата: "+goalDate,12,MUTED,false);
+                addText(words,isMain?"ГЛАВНАЯ ЦЕЛЬ":"ТВОЯ ЦЕЛЬ",11,isMain?PINK:MUTED,true);addText(words,goalTitle,17,DARK,true);addText(words,"Экзамен: "+goalDate,12,MUTED,false);addText(words,"Добавлена: "+prefs.getString("exam_goal_created_"+id,"—"),11,MUTED,false);
                 top.addView(words,new LinearLayout.LayoutParams(0,-2,1f));
                 LinearLayout number=new LinearLayout(this);number.setOrientation(LinearLayout.VERTICAL);number.setGravity(Gravity.CENTER);number.setBackground(shape(isMain?0xFFFFF0F4:0xFFF7F4F2,18,0));TextView big=text(remain<0?"—":String.valueOf(remain),30,PINK,true);big.setGravity(Gravity.CENTER);TextView unit=text(remain==0?"СЕГОДНЯ":"ДНЕЙ",9,MUTED,true);unit.setGravity(Gravity.CENTER);number.addView(big);number.addView(unit);top.addView(number,lp(82,78,8,0,0,0));item.addView(top);
                 LinearLayout actions=new LinearLayout(this);actions.setOrientation(LinearLayout.HORIZONTAL);
@@ -929,6 +938,8 @@ public class MainActivity extends Activity {
         android.widget.FrameLayout garden=new android.widget.FrameLayout(this);garden.setClipChildren(false);garden.setClipToPadding(false);
         FlowerPotView pot=new FlowerPotView(this);android.widget.FrameLayout.LayoutParams potLp=new android.widget.FrameLayout.LayoutParams(dp(142),dp(112),Gravity.CENTER);potLp.topMargin=dp(70);garden.addView(pot,potLp);
         FlowerArtView art=new FlowerArtView(this,flowerIndex,count);android.widget.FrameLayout.LayoutParams flowerLp=new android.widget.FrameLayout.LayoutParams(dp(150),dp(150),Gravity.CENTER);flowerLp.topMargin=-dp(27);garden.addView(art,flowerLp);
+        // Draw the pot rim and soil in front of the lower stem so the flower visibly grows from inside the pot.
+        android.widget.FrameLayout.LayoutParams frontPotLp=new android.widget.FrameLayout.LayoutParams(dp(142),dp(112),Gravity.CENTER);frontPotLp.topMargin=dp(70);garden.addView(new FlowerPotView(this),frontPotLp);
         WaterCanView can=new WaterCanView(this);can.setVisibility(View.GONE);android.widget.FrameLayout.LayoutParams canLp=new android.widget.FrameLayout.LayoutParams(dp(66),dp(58),Gravity.RIGHT|Gravity.TOP);canLp.setMargins(0,dp(20),dp(12),0);garden.addView(can,canLp);
         WaterStreamView stream=new WaterStreamView(this);stream.setVisibility(View.GONE);android.widget.FrameLayout.LayoutParams streamLp=new android.widget.FrameLayout.LayoutParams(dp(74),dp(92),Gravity.RIGHT|Gravity.TOP);streamLp.setMargins(0,dp(65),dp(57),0);garden.addView(stream,streamLp);
         android.animation.ObjectAnimator breathe=android.animation.ObjectAnimator.ofFloat(art,View.SCALE_Y,.985f,1.025f,.985f);breathe.setDuration(2400);breathe.setRepeatCount(android.animation.ValueAnimator.INFINITE);breathe.start();
@@ -955,7 +966,7 @@ public class MainActivity extends Activity {
     private class FlowerPotView extends View {
         private final android.graphics.Paint p=new android.graphics.Paint(3);
         FlowerPotView(android.content.Context c){super(c);}
-        @Override protected void onDraw(android.graphics.Canvas canvas){super.onDraw(canvas);float w=getWidth(),h=getHeight();p.setShader(new android.graphics.LinearGradient(0,0,w,h,0xFFD58A68,0xFF9D5948,android.graphics.Shader.TileMode.CLAMP));android.graphics.Path pot=new android.graphics.Path();pot.moveTo(w*.12f,h*.12f);pot.lineTo(w*.88f,h*.12f);pot.lineTo(w*.76f,h*.94f);pot.quadTo(w*.5f,h*1.04f,w*.24f,h*.94f);pot.close();canvas.drawPath(pot,p);p.setShader(null);p.setColor(0xFFE8B08D);canvas.drawRoundRect(w*.08f,h*.08f,w*.92f,h*.24f,h*.08f,h*.08f,p);p.setColor(0xFF704638);canvas.drawOval(w*.18f,h*.13f,w*.82f,h*.23f,p);}
+        @Override protected void onDraw(android.graphics.Canvas canvas){super.onDraw(canvas);float w=getWidth(),h=getHeight();p.setShader(new android.graphics.LinearGradient(0,0,w,h,0xFFD58A68,0xFF9D5948,android.graphics.Shader.TileMode.CLAMP));android.graphics.Path pot=new android.graphics.Path();pot.moveTo(w*.12f,h*.12f);pot.lineTo(w*.88f,h*.12f);pot.lineTo(w*.76f,h*.94f);pot.quadTo(w*.5f,h*1.04f,w*.24f,h*.94f);pot.close();canvas.drawPath(pot,p);p.setShader(null);p.setColor(0xFFE8B08D);canvas.drawRoundRect(w*.08f,h*.08f,w*.92f,h*.24f,h*.08f,h*.08f,p);p.setColor(0xFF704638);canvas.drawOval(w*.18f,h*.13f,w*.82f,h*.23f,p);p.setColor(0xFF5D4933);canvas.drawOval(w*.19f,h*.145f,w*.81f,h*.225f,p);p.setColor(0xFF6D9B4C);for(int i=0;i<13;i++){float x=w*(.22f+i*.047f);float y=h*(.17f+(i%3)*.018f);canvas.drawLine(x,y,x-3,y-8,p);canvas.drawLine(x,y,x+4,y-7,p);}}
     }
     private class FlowerArtView extends View {
         private final android.graphics.Paint p=new android.graphics.Paint(3);private final int type,days;
