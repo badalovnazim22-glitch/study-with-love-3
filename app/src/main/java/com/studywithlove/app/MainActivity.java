@@ -595,11 +595,12 @@ private void showSettings() {
                 int day = slot - offset + 1;
                 String dateKey = String.format(Locale.US, "%04d-%02d-%02d", yearNumber, monthNumber + 1, day);
                 boolean studied = studiedDays.contains(dateKey);
+                boolean isToday = progressMonthOffset == 0 && day == todayDay;
                 cell.setText(studied ? "♥\n" + day : String.valueOf(day));
                 cell.setTextColor(studied ? PINK : DARK);
-                cell.setBackground(shape(studied ? 0xFFFFE7EF : (day == todayDay ? 0xFFFFF1F5 : 0xFFFFFFFF), 13, day == todayDay ? PINK : (studied ? 0xFFFFBFD1 : 0x00FFFFFF)));
+                cell.setBackground(shape(studied ? 0xFFFFE7EF : (isToday ? 0xFFFFF1F5 : 0xFFFFFFFF), 13, isToday ? PINK : (studied ? 0xFFFFBFD1 : 0x00FFFFFF)));
                 cell.setElevation(dp(1));
-                if (day == todayDay) cell.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+                if (isToday) cell.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             }
             week.addView(cell, new LinearLayout.LayoutParams(0, dp(36), 1f));
         }
