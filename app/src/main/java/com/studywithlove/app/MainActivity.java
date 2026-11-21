@@ -41,7 +41,8 @@ import java.util.Random;
 import java.util.TimeZone;
 
 public class MainActivity extends Activity {
-    private final int BG = 0xFFFFF9F7, PINK = 0xFFC97891, PALE = 0xFFFCEEF2, DARK = 0xFF3F3439, MUTED = 0xFF95878C;
+    private int BG = 0xFFFFF9F7, PINK = 0xFFC97891, PALE = 0xFFFCEEF2, DARK = 0xFF3F3439, MUTED = 0xFF95878C;
+    private int progressMonthOffset = 0;
     private LinearLayout root;
     private String currentScreen = "home";
     private SharedPreferences prefs;
@@ -73,6 +74,8 @@ public class MainActivity extends Activity {
         getWindow().setNavigationBarColor(0xFFFFF9F7);
         if (Build.VERSION.SDK_INT >= 23) getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+        applySavedTheme();
+        getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG);
         // Migrate the last recorded study date from older app versions into the calendar history.
         String previousStudyDate = prefs.getString("last_study_date", "");
         if (!previousStudyDate.isEmpty()) {
@@ -82,7 +85,7 @@ public class MainActivity extends Activity {
         }
         loadChapters();
         scheduleReminders(this);
-        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+        if (prefs.getBoolean("notifications_enabled", true) && Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 20);
         showHome();
     }
@@ -126,6 +129,7 @@ public class MainActivity extends Activity {
             PendingIntent pi = PendingIntent.getBroadcast(context, 300 + i, old, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
             am.cancel(pi); pi.cancel();
         }
+        if (!p.getBoolean("notifications_enabled", true)) { p.edit().putStringSet("scheduled_alarm_keys", new TreeSet<String>()).apply(); return; }
         Set<String> days = p.getStringSet("reminder_days", null);
         if (days == null) { days = new TreeSet<>(); for (int d = 1; d <= 7; d++) days.add(String.valueOf(d)); }
         Set<String> times = p.getStringSet("reminder_times", null);
@@ -145,7 +149,7 @@ public class MainActivity extends Activity {
                 if (next.getTimeInMillis() <= System.currentTimeMillis()) next.add(Calendar.DAY_OF_YEAR, 7);
                 int id = reminderRequestCode(day, hour, minute);
                 Intent intent = new Intent(context, ReminderReceiver.class).setAction("study_reminder_" + key)
-                        .putExtra("message", "🌸 Пора немного позаниматься! Ты сможешь, Назка!").putExtra("id", id);
+                        .putExtra("message", "🌸 Пора немного позаниматься! Ты сможешь!").putExtra("id", id);
                 PendingIntent pi = PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
                 am.setInexactRepeating(AlarmManager.RTC_WAKEUP, next.getTimeInMillis(), AlarmManager.INTERVAL_DAY * 7L, pi);
                 newKeys.add(key);
@@ -159,37 +163,39 @@ public class MainActivity extends Activity {
         shell.setOrientation(LinearLayout.VERTICAL);
         shell.setBackgroundColor(BG);
         ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.setClipToPadding(false);
-        root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(20), dp(18), dp(20), dp(26));
-        root.setBackgroundColor(BG);
+        scroll.setFillViewport(true); scroll.setClipToPadding(false);
+        root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(20), dp(18), dp(20), dp(26)); root.setBackgroundColor(BG);
         scroll.addView(root);
         shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
         shell.addView(bottomNavigation(), lp(-1, 68, 0, 0, 0, 0));
         setContentView(shell);
-        scroll.setAlpha(0f);
-        scroll.setTranslationY(dp(10));
+        scroll.setAlpha(0f); scroll.setTranslationY(dp(8));
         scroll.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-        scroll.animate().alpha(1f).translationY(0f).setDuration(320)
-                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator()).start();
+        scroll.animate().alpha(1f).translationY(0f).setDuration(280)
+            .setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
         LinearLayout brandRow = new LinearLayout(this);
         brandRow.setGravity(Gravity.CENTER_VERTICAL);
-        brandRow.setPadding(dp(12), dp(7), dp(12), dp(7));
+        brandRow.setPadding(dp(12), dp(7), dp(8), dp(7));
         brandRow.setBackground(shape(0xFFFCEEF2, 30, 0));
         TextView flower = text("✿", 16, PINK, true);
         brandRow.addView(flower, lp(24, 24, 0, 0, 7, 0));
         TextView brand = text("STUDY WITH LOVE", 11, PINK, true);
         brand.setLetterSpacing(0.14f);
-        brandRow.addView(brand, lp(-2, 24, 0, 0, 0, 0));
-        root.addView(brandRow, lp(-2, 34, 0, 0, 0, 18));
-        TextView h = text(title, 27, DARK, true);
+        brandRow.addView(brand, new LinearLayout.LayoutParams(0, dp(24), 1f));
+        if (currentScreen.equals("home")) {
+            TextView settings = text("⚙", 23, PINK, true); settings.setGravity(Gravity.CENTER);
+            settings.setBackground(shape(0xFFFFFFFF, 18, 0xFFF1DDE4));
+            brandRow.addView(settings, lp(42, 38, 5, 0, 0, 0));
+            settings.setOnClickListener(v -> showSettings());
+        }
+        root.addView(brandRow, lp(-1, 42, 0, 0, 0, 16));
+        TextView h = text(title, 25, DARK, true);
         h.setLetterSpacing(-0.02f);
         root.addView(h, lp(-1, -2, 0, 0, 0, 6));
-        TextView sub = text(subtitle, 14, MUTED, false);
+        TextView sub = text(subtitle, 13, MUTED, false);
         sub.setLineSpacing(dp(2), 1f);
-        root.addView(sub, lp(-1, -2, 0, 0, 0, 18));
+        root.addView(sub, lp(-1, -2, 0, 0, 0, 16));
     }
 
     private View bottomNavigation() {
@@ -235,9 +241,87 @@ public class MainActivity extends Activity {
         return bar;
     }
 
-    private void showHome() {
+private void showSettings() {
+        currentScreen = "settings";
+        base("Настройки ⚙", "Настрой приложение под себя");
+        LinearLayout nameCard = card();
+        addText(nameCard, "ТВОЁ ИМЯ", 12, PINK, true);
+        EditText name = new EditText(this);
+        name.setSingleLine(true); name.setTextSize(16); name.setTextColor(DARK);
+        name.setHint("Как к тебе обращаться?");
+        name.setText(prefs.getString("display_name", "Назка"));
+        name.setPadding(dp(13), dp(8), dp(13), dp(8));
+        name.setBackground(shape(0xFFFFF9F7, 15, 0xFFF1DDE4));
+        nameCard.addView(name, lp(-1, 50, 0, 7, 0, 8));
+        Button saveName = button("Сохранить имя", true);
+        saveName.setOnClickListener(v -> {
+            String value = name.getText().toString().trim();
+            if (value.isEmpty()) { Toast.makeText(this, "Введи имя 💗", Toast.LENGTH_SHORT).show(); return; }
+            prefs.edit().putString("display_name", value).apply();
+            Toast.makeText(this, "Имя сохранено", Toast.LENGTH_SHORT).show();
+        });
+        nameCard.addView(saveName, lp(-1, 46, 0, 0, 0, 0));
+        root.addView(nameCard, lp(-1, -2, 0, 0, 0, 13));
+
+        LinearLayout themeCard = card();
+        addText(themeCard, "ТЕМА ОФОРМЛЕНИЯ", 12, PINK, true);
+        addText(themeCard, "Выбери настроение приложения", 13, MUTED, false);
+        String[] themeNames = {"Розовая", "Лавандовая", "Мятная"};
+        String[] themeKeys = {"pink", "lavender", "mint"};
+        String current = prefs.getString("app_theme", "pink");
+        for (int i=0;i<themeNames.length;i++) {
+            final String key=themeKeys[i];
+            Button choice = button((current.equals(key) ? "✓  " : "") + themeNames[i], current.equals(key));
+            themeCard.addView(choice, lp(-1, 44, 0, 5, 0, 4));
+            choice.setOnClickListener(v -> {
+                prefs.edit().putString("app_theme", key).apply();
+                applySavedTheme();
+                showSettings();
+            });
+        }
+        root.addView(themeCard, lp(-1, -2, 0, 0, 0, 13));
+
+        LinearLayout notificationCard = card();
+        addText(notificationCard, "УВЕДОМЛЕНИЯ", 12, PINK, true);
+        CheckBox enabled = new CheckBox(this);
+        enabled.setText("Включить напоминания о занятиях");
+        enabled.setTextSize(14); enabled.setTextColor(DARK);
+        enabled.setChecked(prefs.getBoolean("notifications_enabled", true));
+        notificationCard.addView(enabled, lp(-1, 48, 0, 4, 0, 2));
+        enabled.setOnCheckedChangeListener((buttonView, checked) -> {
+            prefs.edit().putBoolean("notifications_enabled", checked).apply();
+            scheduleReminders(this);
+            if (checked && Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 20);
+        });
+        Button reminderSettings = button("Настроить дни и время", false);
+        reminderSettings.setOnClickListener(v -> showReminderSettings());
+        notificationCard.addView(reminderSettings, lp(-1, 46, 0, 4, 0, 0));
+        root.addView(notificationCard, lp(-1, -2, 0, 0, 0, 13));
+
+        LinearLayout other = card();
+        addText(other, "ДРУГИЕ НАСТРОЙКИ", 12, PINK, true);
+        Button reminder = button("Изменить расписание напоминаний", false);
+        reminder.setOnClickListener(v -> showReminderSettings());
+        other.addView(reminder, lp(-1, 46, 0, 5, 0, 5));
+        Button achievements = button("Моя коллекция достижений", false);
+        achievements.setOnClickListener(v -> showAchievements());
+        other.addView(achievements, lp(-1, 46, 0, 0, 0, 0));
+        root.addView(other, lp(-1, -2, 0, 0, 0, 12));
+        Button back = button("← На главную", true); back.setOnClickListener(v -> showHome());
+        root.addView(back, lp(-1, 50, 0, 0, 0, 0));
+    }
+
+    private void applySavedTheme() {
+        String theme = prefs == null ? "pink" : prefs.getString("app_theme", "pink");
+        if ("lavender".equals(theme)) { BG=0xFFF8F6FF; PINK=0xFF8979B8; PALE=0xFFF0ECFA; DARK=0xFF393448; MUTED=0xFF8E879E; }
+        else if ("mint".equals(theme)) { BG=0xFFF5FAF7; PINK=0xFF659B86; PALE=0xFFEAF5EF; DARK=0xFF34443D; MUTED=0xFF84958C; }
+        else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF95878C; }
+    }
+
+        private void showHome() {
         currentScreen = "home";
-        base("Привет, Назка! ♡", "Сегодня — хороший день, чтобы сделать маленький шаг к своей цели.");
+        base("Привет, " + prefs.getString("display_name", "Назка") + "! ♡", "Сегодня — хороший день, чтобы сделать маленький шаг к своей цели.");
         int done = prefs.getInt("done_count", 0);
         int streak = currentStreak();
         int record = prefs.getInt("longest_streak", 0);
@@ -251,7 +335,7 @@ public class MainActivity extends Activity {
         LinearLayout hero = card();
         hero.setPadding(dp(20), dp(20), dp(20), dp(18));
         hero.setBackground(shape(0xFFF8E8EE, 27, 0));
-        addText(hero, "ТВОЙ МАЛЕНЬКИЙ ПРОГРЕСС", 12, PINK, true);
+        addText(hero, "ТВОЙ ПРОГРЕСС", 12, PINK, true);
         addText(hero, "Ты справляешься.\\nПродолжай в своём темпе.", 25, DARK, true);
         addText(hero, "Каждое занятие — это забота о себе будущей.", 14, MUTED, false);
         LinearLayout progressHead = new LinearLayout(this);
@@ -288,8 +372,6 @@ public class MainActivity extends Activity {
         }
         root.addView(stats, lp(-1, -2, 0, 0, 0, 22));
 
-        TextView section = text("Продолжим заниматься?", 21, DARK, true);
-        root.addView(section, lp(-1, -2, 0, 0, 0, 10));
         action("Математика", "4 раздела · 33 учебные темы", this::showChapters);
         action("Мой прогресс", "Твои занятия, календарь и результаты", this::showProgress);
         action("Таймер Pomodoro", "Сосредоточься на одном небольшом шаге", this::showPomodoro);
@@ -402,14 +484,14 @@ public class MainActivity extends Activity {
     private void showPraise() {
         LinearLayout toastView = new LinearLayout(this);
         toastView.setGravity(Gravity.CENTER_VERTICAL);
-        toastView.setPadding(dp(18), dp(10), dp(20), dp(10));
-        toastView.setBackground(shape(0xFFFFF0F5, 28, 0xFFFFC6D7));
-        TextView flower = text("🌸", 22, PINK, true);
-        toastView.addView(flower, lp(34, 34, 0, 0, 9, 0));
-        TextView praise = text("Умничка! ❤️", 16, DARK, true);
+        toastView.setPadding(dp(12), dp(6), dp(14), dp(6));
+        toastView.setBackground(shape(0xFFFFF0F5, 22, 0xFFFFC6D7));
+        TextView flower = text("🌸", 17, PINK, true);
+        toastView.addView(flower, lp(25, 25, 0, 0, 6, 0));
+        TextView praise = text("Умничка! ❤️", 13, DARK, true);
         toastView.addView(praise, lp(-2, 38, 0, 0, 0, 0));
         Toast toast = new Toast(this);
-        toast.setDuration(Toast.LENGTH_LONG);
+        toast.setDuration(Toast.LENGTH_SHORT);
         toast.setView(toastView);
         toast.show();
     }
@@ -469,11 +551,28 @@ public class MainActivity extends Activity {
         LinearLayout calendarCard = card();
         addText(calendarCard, "📅  ДНИ ЗАНЯТИЙ", 12, PINK, true);
         Calendar month = Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));
+        month.add(Calendar.MONTH, progressMonthOffset);
         int todayDay = month.get(Calendar.DAY_OF_MONTH);
         int monthNumber = month.get(Calendar.MONTH);
         int yearNumber = month.get(Calendar.YEAR);
         String monthLabel = new SimpleDateFormat("LLLL yyyy", new Locale("ru")).format(month.getTime());
-        addText(calendarCard, monthLabel.substring(0, 1).toUpperCase(new Locale("ru")) + monthLabel.substring(1), 18, DARK, true);
+        LinearLayout monthNav = new LinearLayout(this); monthNav.setGravity(Gravity.CENTER_VERTICAL);
+        Button prevMonth = button("‹", false); prevMonth.setTextSize(22);
+        monthNav.addView(prevMonth, lp(48, 42, 0, 0, 8, 0));
+        TextView monthTitle = text(monthLabel.substring(0, 1).toUpperCase(new Locale("ru")) + monthLabel.substring(1), 17, DARK, true);
+        monthTitle.setGravity(Gravity.CENTER);
+        monthNav.addView(monthTitle, new LinearLayout.LayoutParams(0, dp(42), 1f));
+        Button nextMonth = button("›", false); nextMonth.setTextSize(22);
+        nextMonth.setEnabled(progressMonthOffset < 0);
+        monthNav.addView(nextMonth, lp(48, 42, 8, 0, 0, 0));
+        calendarCard.addView(monthNav, lp(-1, 44, 0, 5, 0, 2));
+        prevMonth.setOnClickListener(v -> { progressMonthOffset--; showProgress(); });
+        nextMonth.setOnClickListener(v -> { if (progressMonthOffset < 0) { progressMonthOffset++; showProgress(); } });
+        Set<String> studiedDays = new TreeSet<>(prefs.getStringSet("study_days", new TreeSet<String>()));
+        Calendar first = (Calendar) month.clone();
+        first.set(Calendar.DAY_OF_MONTH, 1);
+        int offset = (first.get(Calendar.DAY_OF_WEEK) + 5) % 7;
+        int daysInMonth = month.getActualMaximum(Calendar.DAY_OF_MONTH);
         LinearLayout weekHeader = new LinearLayout(this);
         weekHeader.setOrientation(LinearLayout.HORIZONTAL);
         String[] shortDays = {"Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"};
@@ -509,7 +608,7 @@ public class MainActivity extends Activity {
             }
             week.addView(cell, new LinearLayout.LayoutParams(0, dp(36), 1f));
         }
-        addText(calendarCard, "Отмечено дней в этом месяце: " + countStudyDaysThisMonth(studiedDays, yearNumber, monthNumber), 13, MUTED, false);
+        addText(calendarCard, "Отмечено дней: " + countStudyDaysThisMonth(studiedDays, yearNumber, monthNumber), 13, MUTED, false);
         root.addView(calendarCard, lp(-1, -2, 0, 0, 0, 14));
 
         LinearLayout summary = card();
@@ -663,35 +762,45 @@ public class MainActivity extends Activity {
         addText(composer, "МАЛЕНЬКАЯ ПОБЕДА СЕГОДНЯ", 12, PINK, true);
         EditText note = new EditText(this);
         note.setHint("Сегодня у меня получилось...");
-        note.setTextSize(17); note.setTextColor(DARK); note.setHintTextColor(MUTED);
+        note.setTextSize(16); note.setTextColor(DARK); note.setHintTextColor(MUTED);
         note.setGravity(Gravity.TOP); note.setMinLines(4);
         note.setPadding(dp(15), dp(14), dp(15), dp(14));
         note.setBackground(shape(0xFFFFFFFF, 19, 0xFFF1DDE4));
-        composer.addView(note, lp(-1, 132, 0, 9, 0, 10));
+        composer.addView(note, lp(-1, 126, 0, 9, 0, 10));
         final String[] editingId = {null};
         Button save = button("♡  Сохранить запись", true);
+        composer.addView(save, lp(-1, 50, 0, 0, 0, 0));
+        root.addView(composer, lp(-1, -2, 0, 0, 0, 18));
+        TextView heading = text("ТВОИ ЗАПИСИ", 13, PINK, true);
+        root.addView(heading, lp(-1, -2, 0, 0, 0, 10));
+        LinearLayout entries = new LinearLayout(this);
+        entries.setOrientation(LinearLayout.VERTICAL);
+        root.addView(entries, lp(-1, -2, 0, 0, 0, 0));
+        renderDiaryEntries(entries, note, save, editingId);
         save.setOnClickListener(v -> {
             String value = note.getText().toString().trim();
             if (value.isEmpty()) { Toast.makeText(this, "Напиши хотя бы пару слов 💗", Toast.LENGTH_SHORT).show(); return; }
             Set<String> ids = new TreeSet<>(prefs.getStringSet("diary_ids", new TreeSet<String>()));
             String id = editingId[0] == null ? String.valueOf(System.currentTimeMillis()) : editingId[0];
-            ids.add(id); prefs.edit().putString("diary_" + id, value).putStringSet("diary_ids", ids).apply();
+            ids.add(id);
+            prefs.edit().putString("diary_" + id, value).putStringSet("diary_ids", ids).apply();
+            editingId[0] = null; note.setText(""); save.setText("♡  Сохранить запись");
+            renderDiaryEntries(entries, note, save, editingId);
             Toast.makeText(this, "Запись сохранена ❤️", Toast.LENGTH_SHORT).show();
-            showDiary();
         });
-        composer.addView(save, lp(-1, 50, 0, 0, 0, 0));
-        root.addView(composer, lp(-1, -2, 0, 0, 0, 19));
+    }
 
+    private void renderDiaryEntries(LinearLayout entries, EditText note, Button save, String[] editingId) {
+        entries.removeAllViews();
         Set<String> ids = new TreeSet<>(prefs.getStringSet("diary_ids", new TreeSet<String>()));
-        List<String> sorted = new ArrayList<>(ids); java.util.Collections.sort(sorted, java.util.Collections.reverseOrder());
-        TextView heading = text("ТВОИ ЗАПИСИ", 13, PINK, true);
-        root.addView(heading, lp(-1, -2, 0, 0, 0, 10));
+        List<String> sorted = new ArrayList<>(ids);
+        java.util.Collections.sort(sorted, java.util.Collections.reverseOrder());
         if (sorted.isEmpty()) {
             LinearLayout empty = card(); empty.setGravity(Gravity.CENTER);
-            addText(empty, "🌷", 34, PINK, true);
+            addText(empty, "🌷", 30, PINK, true);
             addText(empty, "Здесь появятся твои маленькие победы", 15, DARK, true);
             addText(empty, "Сохрани первую запись — тебе будет приятно перечитать её позже.", 13, MUTED, false);
-            root.addView(empty, lp(-1, -2, 0, 0, 0, 10));
+            entries.addView(empty, lp(-1, -2, 0, 0, 0, 10));
         }
         for (String id : sorted) {
             String value = prefs.getString("diary_" + id, ""); if (value.isEmpty()) continue;
@@ -702,11 +811,16 @@ public class MainActivity extends Activity {
             addText(entry, value, 16, DARK, false);
             Button edit = button("Изменить", false);
             edit.setOnClickListener(v -> { note.setText(prefs.getString("diary_" + id, "")); editingId[0] = id; save.setText("♡  Сохранить изменения"); note.requestFocus(); });
-            entry.addView(edit, lp(-1, 44, 0, 8, 0, 5));
+            entry.addView(edit, lp(-1, 42, 0, 8, 0, 5));
             Button delete = button("Удалить запись", false);
-            delete.setOnClickListener(v -> { Set<String> updated = new TreeSet<>(prefs.getStringSet("diary_ids", new TreeSet<String>())); updated.remove(id); prefs.edit().remove("diary_" + id).putStringSet("diary_ids", updated).apply(); showDiary(); });
-            entry.addView(delete, lp(-1, 44, 0, 0, 0, 0));
-            root.addView(entry, lp(-1, -2, 0, 0, 0, 11));
+            delete.setOnClickListener(v -> {
+                Set<String> updated = new TreeSet<>(prefs.getStringSet("diary_ids", new TreeSet<String>()));
+                updated.remove(id); prefs.edit().remove("diary_" + id).putStringSet("diary_ids", updated).apply();
+                if (id.equals(editingId[0])) { editingId[0] = null; note.setText(""); save.setText("♡  Сохранить запись"); }
+                renderDiaryEntries(entries, note, save, editingId);
+            });
+            entry.addView(delete, lp(-1, 42, 0, 0, 0, 0));
+            entries.addView(entry, lp(-1, -2, 0, 0, 0, 10));
         }
     }
 
@@ -731,8 +845,40 @@ public class MainActivity extends Activity {
         int days = prefs.getStringSet("study_days", new TreeSet<String>()).size();
         int minutes = totalStudyMinutes();
         int completed = 0; for (List<String> topics : chapters.values()) completed += countCompleted(topics);
-        String[][] a = {{"🌱", "Первые шаги", "Первый день занятий", days >= 1 ? "Открыто" : "Пока закрыто"}, {"🌷", "Неделя стараний", "7 дней занятий", days >= 7 ? "Открыто" : "Пока закрыто"}, {"🌸", "Две недели", "14 дней занятий", days >= 14 ? "Открыто" : "Пока закрыто"}, {"💐", "Месяц успеха", "30 дней занятий", days >= 30 ? "Открыто" : "Пока закрыто"}, {"📚", "Маленький математик", "Завершена первая тема", completed >= 1 ? "Открыто" : "Пока закрыто"}, {"⏳", "10 часов учёбы", "600 минут занятий", minutes >= 600 ? "Открыто" : "Пока закрыто"}};
-        for (String[] x : a) { LinearLayout c = card(); addText(c, x[0] + "  " + x[1], 18, DARK, true); addText(c, x[2], 13, MUTED, false); addText(c, x[3], 12, x[3].equals("Открыто") ? PINK : MUTED, true); root.addView(c, lp(-1, -2, 0, 0, 0, 9)); }
+        int sessions = prefs.getInt("done_count", 0);
+        String[][] a = {
+            {"🌱","Первые шаги","Первый день занятий",days>=1},
+            {"🌷","Неделя стараний","7 дней занятий",days>=7},
+            {"🌸","Две недели","14 дней занятий",days>=14},
+            {"💐","Месяц успеха","30 дней занятий",days>=30},
+            {"🏵️","Два месяца","60 дней занятий",days>=60},
+            {"🌻","Сто дней","100 дней занятий",days>=100},
+            {"📚","Маленький математик","Завершена первая тема",completed>=1},
+            {"🧮","Счёт — это просто","Завершено 5 тем",completed>=5},
+            {"🎓","Знаток математики","Завершено 10 тем",completed>=10},
+            {"🏆","Мастер знаний","Завершены все 33 темы",completed>=33},
+            {"⏳","Первый час","60 минут занятий",minutes>=60},
+            {"⌛","10 часов учёбы","600 минут занятий",minutes>=600},
+            {"🚀","Настойчивость","25 учебных занятий",sessions>=25},
+            {"💎","Пятьдесят побед","50 завершённых тем или занятий",completed+sessions>=50},
+            {"💗","Возвращаюсь к цели","Занятия в 3 разных дня",days>=3},
+            {"✨","Ритм учёбы","Занятия в 5 разных дней",days>=5}
+        };
+        for (String[] x : a) {
+            boolean unlocked = Boolean.parseBoolean(x[3]);
+            LinearLayout c = card();
+            c.setOrientation(LinearLayout.HORIZONTAL); c.setGravity(Gravity.CENTER_VERTICAL);
+            c.setBackground(shape(unlocked ? 0xFFFFF0F4 : 0xFFF5F2F1, 22, 0));
+            TextView icon = text(x[0], 29, unlocked ? PINK : MUTED, true);
+            icon.setGravity(Gravity.CENTER);
+            c.addView(icon, lp(48, 52, 0, 0, 12, 0));
+            LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
+            addText(words, x[1], 16, DARK, true);
+            addText(words, x[2], 13, MUTED, false);
+            addText(words, unlocked ? "Открыто ✓" : "Ещё впереди", 12, unlocked ? PINK : MUTED, true);
+            c.addView(words, new LinearLayout.LayoutParams(0, -2, 1f));
+            root.addView(c, lp(-1, -2, 0, 0, 0, 9));
+        }
         backHome();
     }
 
