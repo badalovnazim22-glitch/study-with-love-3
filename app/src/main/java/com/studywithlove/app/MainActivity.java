@@ -881,30 +881,65 @@ public class MainActivity extends Activity {
     }
 
     private void showFlower() {
-        currentScreen="flower";Set<String> days=new TreeSet<>(prefs.getStringSet("study_days",new TreeSet<String>()));
+        currentScreen="flower";
+        Set<String> days=new TreeSet<>(prefs.getStringSet("study_days",new TreeSet<String>()));
         int count=days.size(),waterCount=prefs.getInt("flower_water_count",0),petals=prefs.getInt("flower_petals",0);
-        String[] flowers={"🌸","🌷","🌻","🌼","🪻"};int flowerIndex=prefs.getInt("flower_type",0)%flowers.length;
+        int flowerIndex=Math.floorMod(prefs.getInt("flower_type",0),5);
         String stage=count>=30?"Пышное цветение":count>=14?"Цветочек окреп":count>=7?"Появились бутоны":count>=3?"Первые листочки":"Маленький росток";
         base("Мой цветочек","Он растёт вместе с твоими учебными победами");
-        LinearLayout c=card();c.setGravity(Gravity.CENTER);android.widget.FrameLayout garden=new android.widget.FrameLayout(this);garden.setClipChildren(false);garden.setClipToPadding(false);
-        TextView pot=text("🪴",104,PINK,true);pot.setGravity(Gravity.CENTER);android.widget.FrameLayout.LayoutParams potLp=new android.widget.FrameLayout.LayoutParams(dp(150),dp(132),Gravity.CENTER);potLp.topMargin=dp(28);garden.addView(pot,potLp);
-        TextView art=text(count>=30?"🌸":flowers[flowerIndex],56,PINK,true);art.setGravity(Gravity.CENTER);android.widget.FrameLayout.LayoutParams flowerLp=new android.widget.FrameLayout.LayoutParams(dp(100),dp(78),Gravity.CENTER);flowerLp.topMargin=-dp(32);garden.addView(art,flowerLp);
-        TextView can=text("🪣",34,PINK,true);can.setGravity(Gravity.CENTER);android.widget.FrameLayout.LayoutParams canLp=new android.widget.FrameLayout.LayoutParams(dp(58),dp(54),Gravity.RIGHT|Gravity.TOP);canLp.setMargins(0,dp(20),dp(18),0);garden.addView(can,canLp);
-        TextView drops=text("💧  💧  💧",18,PINK,true);drops.setGravity(Gravity.CENTER);drops.setVisibility(View.GONE);android.widget.FrameLayout.LayoutParams dropsLp=new android.widget.FrameLayout.LayoutParams(dp(90),dp(40),Gravity.RIGHT|Gravity.TOP);dropsLp.setMargins(0,dp(68),dp(28),0);garden.addView(drops,dropsLp);
-        android.animation.ObjectAnimator grow=android.animation.ObjectAnimator.ofFloat(art,View.SCALE_X,.97f,1.03f,.97f);grow.setDuration(1900);grow.setRepeatCount(android.animation.ValueAnimator.INFINITE);grow.start();
-        android.animation.ObjectAnimator sway=android.animation.ObjectAnimator.ofFloat(art,View.SCALE_Y,.97f,1.03f,.97f);sway.setDuration(1900);sway.setRepeatCount(android.animation.ValueAnimator.INFINITE);sway.start();
-        c.addView(garden,lp(-1,190,0,0,0,8));addText(c,stage,21,DARK,true);addText(c,count+" дней занятий · "+totalStudyMinutes()+" минут вместе",13,MUTED,false);addText(c,"✿  "+petals+" лепестков заботы",14,PINK,true);root.addView(c,lp(-1,-2,0,0,0,12));
-        LinearLayout care=card();addText(care,"УХОД ЗА ЦВЕТОЧКОМ",12,PINK,true);addText(care,"Нажми на кнопку — появится вода и цветочек получит лепесток. Поливать можно раз в день.",13,MUTED,false);
-        boolean watered=prefs.getString("flower_water_date","").equals(todayKey());Button waterButton=button(watered?"Уже полит сегодня ✓":"💧  Полить цветочек",true);waterButton.setEnabled(!watered);
-        waterButton.setOnClickListener(v->{waterButton.setEnabled(false);waterButton.setText("Поливаем... 💧");drops.setVisibility(View.VISIBLE);
-            android.animation.ObjectAnimator pour=android.animation.ObjectAnimator.ofFloat(can,"rotation",0f,-24f,12f,0f);pour.setDuration(900);
-            android.animation.ObjectAnimator move=android.animation.ObjectAnimator.ofFloat(can,View.TRANSLATION_X,0f,-dp(16),0f);move.setDuration(900);
-            android.animation.ObjectAnimator rain=android.animation.ObjectAnimator.ofFloat(drops,View.TRANSLATION_Y,0f,dp(32));rain.setDuration(900);
-            android.animation.ObjectAnimator fade=android.animation.ObjectAnimator.ofFloat(drops,View.ALPHA,1f,.15f);fade.setDuration(900);pour.start();move.start();rain.start();fade.start();
+        LinearLayout c=card();c.setGravity(Gravity.CENTER);
+        android.widget.FrameLayout garden=new android.widget.FrameLayout(this);garden.setClipChildren(false);garden.setClipToPadding(false);
+        FlowerPotView pot=new FlowerPotView(this);android.widget.FrameLayout.LayoutParams potLp=new android.widget.FrameLayout.LayoutParams(dp(142),dp(112),Gravity.CENTER);potLp.topMargin=dp(70);garden.addView(pot,potLp);
+        FlowerArtView art=new FlowerArtView(this,flowerIndex,count);android.widget.FrameLayout.LayoutParams flowerLp=new android.widget.FrameLayout.LayoutParams(dp(150),dp(150),Gravity.CENTER);flowerLp.topMargin=-dp(27);garden.addView(art,flowerLp);
+        WaterCanView can=new WaterCanView(this);can.setVisibility(View.GONE);android.widget.FrameLayout.LayoutParams canLp=new android.widget.FrameLayout.LayoutParams(dp(66),dp(58),Gravity.RIGHT|Gravity.TOP);canLp.setMargins(0,dp(20),dp(12),0);garden.addView(can,canLp);
+        WaterStreamView stream=new WaterStreamView(this);stream.setVisibility(View.GONE);android.widget.FrameLayout.LayoutParams streamLp=new android.widget.FrameLayout.LayoutParams(dp(74),dp(92),Gravity.RIGHT|Gravity.TOP);streamLp.setMargins(0,dp(65),dp(57),0);garden.addView(stream,streamLp);
+        android.animation.ObjectAnimator breathe=android.animation.ObjectAnimator.ofFloat(art,View.SCALE_Y,.985f,1.025f,.985f);breathe.setDuration(2400);breathe.setRepeatCount(android.animation.ValueAnimator.INFINITE);breathe.start();
+        c.addView(garden,lp(-1,230,0,0,0,8));addText(c,stage,21,DARK,true);addText(c,count+" дней занятий · "+totalStudyMinutes()+" минут вместе",13,MUTED,false);addText(c,"✿  "+petals+" лепестков заботы",14,PINK,true);root.addView(c,lp(-1,-2,0,0,0,12));
+        LinearLayout care=card();addText(care,"УХОД ЗА ЦВЕТОЧКОМ",12,PINK,true);addText(care,"Поливай цветочек раз в день. Вода появится только после нажатия.",13,MUTED,false);
+        boolean watered=prefs.getString("flower_water_date","").equals(todayKey());Button waterButton=button(watered?"Уже полит сегодня ✓":"Полить цветочек",true);waterButton.setEnabled(!watered);
+        waterButton.setOnClickListener(v->{
+            waterButton.setEnabled(false);waterButton.setText("Цветочек пьёт воду…");
+            can.setVisibility(View.VISIBLE);stream.setVisibility(View.VISIBLE);
+            can.setPivotX(dp(55));can.setPivotY(dp(45));
+            android.animation.ObjectAnimator pour=android.animation.ObjectAnimator.ofFloat(can,"rotation",0f,-28f,-18f,0f);pour.setDuration(1150);
+            android.animation.ObjectAnimator streamMove=android.animation.ObjectAnimator.ofFloat(stream,View.TRANSLATION_Y,0f,dp(24));streamMove.setDuration(950);
+            android.animation.ObjectAnimator streamFade=android.animation.ObjectAnimator.ofFloat(stream,View.ALPHA,0f,1f,.9f,0f);streamFade.setDuration(1050);
+            android.animation.ObjectAnimator bloom=android.animation.ObjectAnimator.ofFloat(art,View.SCALE_X,1f,1.09f,1f);bloom.setDuration(900);
+            pour.start();streamMove.start();streamFade.start();bloom.start();
             prefs.edit().putString("flower_water_date",todayKey()).putInt("flower_water_count",waterCount+1).putInt("flower_petals",petals+1).apply();
-            new Handler().postDelayed(()->{if(!isFinishing()&&"flower".equals(currentScreen))showFlower();},1050);});
-        care.addView(waterButton,lp(-1,48,0,8,0,8));Button change=button("🌷  Изменить цветочек",false);change.setOnClickListener(v->{prefs.edit().putInt("flower_type",(flowerIndex+1)%flowers.length).apply();showFlower();});care.addView(change,lp(-1,46,0,0,0,0));root.addView(care,lp(-1,-2,0,0,0,12));
+            new Handler().postDelayed(()->{if(!isFinishing()&&"flower".equals(currentScreen))showFlower();},1450);
+        });
+        care.addView(waterButton,lp(-1,48,0,8,0,8));
+        Button change=button("Сменить вид цветка",false);change.setOnClickListener(v->{prefs.edit().putInt("flower_type",(flowerIndex+1)%5).apply();showFlower();});care.addView(change,lp(-1,46,0,0,0,0));root.addView(care,lp(-1,-2,0,0,0,12));
         addText(root,"Твой цветочек растёт в своём горшочке — так же, как твои маленькие победы ♡",14,MUTED,false);backHome();
+    }
+
+    private class FlowerPotView extends View {
+        private final android.graphics.Paint p=new android.graphics.Paint(3);
+        FlowerPotView(android.content.Context c){super(c);}
+        @Override protected void onDraw(android.graphics.Canvas canvas){super.onDraw(canvas);float w=getWidth(),h=getHeight();p.setShader(new android.graphics.LinearGradient(0,0,w,h,0xFFD58A68,0xFF9D5948,android.graphics.Shader.TileMode.CLAMP));android.graphics.Path pot=new android.graphics.Path();pot.moveTo(w*.12f,h*.12f);pot.lineTo(w*.88f,h*.12f);pot.lineTo(w*.76f,h*.94f);pot.quadTo(w*.5f,h*1.04f,w*.24f,h*.94f);pot.close();canvas.drawPath(pot,p);p.setShader(null);p.setColor(0xFFE8B08D);canvas.drawRoundRect(w*.08f,h*.08f,w*.92f,h*.24f,h*.08f,h*.08f,p);p.setColor(0xFF704638);canvas.drawOval(w*.18f,h*.13f,w*.82f,h*.23f,p);}
+    }
+    private class FlowerArtView extends View {
+        private final android.graphics.Paint p=new android.graphics.Paint(3);private final int type,days;
+        FlowerArtView(android.content.Context c,int t,int d){super(c);type=t;days=d;}
+        @Override protected void onDraw(android.graphics.Canvas canvas){super.onDraw(canvas);float cx=getWidth()/2f,cy=getHeight()*.78f,top=getHeight()*.25f;int[] colors={0xFFE88DAA,0xFFF2B6C8,0xFFF4C75E,0xFFD6A1D8,0xFFEFA27F};int petal=colors[type];
+            p.setColor(0xFF4D9360);p.setStrokeWidth(5);p.setStrokeCap(android.graphics.Paint.Cap.ROUND);canvas.drawLine(cx,cy,cx,top+25,p);
+            android.graphics.Path leaf=new android.graphics.Path();leaf.moveTo(cx,cy*.78f);leaf.cubicTo(cx-48,cy*.57f,cx-42,cy*.48f,cx-7,cy*.63f);leaf.cubicTo(cx+3,cy*.67f,cx+4,cy*.73f,cx,cy*.78f);p.setColor(0xFF65A875);canvas.drawPath(leaf,p);
+            android.graphics.Path leaf2=new android.graphics.Path();leaf2.moveTo(cx,cy*.68f);leaf2.cubicTo(cx+48,cy*.46f,cx+44,cy*.39f,cx+7,cy*.54f);leaf2.cubicTo(cx-2,cy*.59f,cx-3,cy*.64f,cx,cy*.68f);canvas.drawPath(leaf2,p);
+            float fx=cx,fy=top+12;for(int i=0;i<9;i++){canvas.save();canvas.rotate(i*40,fx,fy);p.setShader(new android.graphics.RadialGradient(fx,fy-20,32,new int[]{0xFFFFF7E8,petal,0xFFCA6F91},null,android.graphics.Shader.TileMode.CLAMP));canvas.drawOval(fx-13,fy-39,fx+13,fy+7,p);p.setShader(null);canvas.restore();}
+            p.setColor(0xFFF4C95D);canvas.drawCircle(fx,fy,13,p);p.setColor(0xFFB77A37);canvas.drawCircle(fx-4,fy-3,2,p);canvas.drawCircle(fx+4,fy+2,2,p);
+            if(days<3){p.setColor(0xFF6EA879);canvas.drawOval(cx-9,cy-46,cx+9,cy-13,p);}
+        }
+    }
+    private class WaterCanView extends View {
+        private final android.graphics.Paint p=new android.graphics.Paint(3);
+        WaterCanView(android.content.Context c){super(c);}
+        @Override protected void onDraw(android.graphics.Canvas c){super.onDraw(c);float w=getWidth(),h=getHeight();p.setColor(0xFF9AB9C8);p.setStyle(android.graphics.Paint.Style.STROKE);p.setStrokeWidth(5);c.drawArc(w*.02f,h*.15f,w*.55f,h*.92f,80,200,false,p);p.setStyle(android.graphics.Paint.Style.FILL);p.setColor(0xFF82AFC0);c.drawRoundRect(w*.2f,h*.35f,w*.82f,h*.85f,10,10,p);p.setColor(0xFFAED0DA);c.drawRoundRect(w*.17f,h*.27f,w*.83f,h*.42f,8,8,p);p.setColor(0xFF82AFC0);android.graphics.Path spout=new android.graphics.Path();spout.moveTo(w*.72f,h*.42f);spout.lineTo(w*.98f,h*.16f);spout.lineTo(w*.88f,h*.12f);spout.lineTo(w*.62f,h*.36f);spout.close();c.drawPath(spout,p);}
+    }
+    private class WaterStreamView extends View {
+        private final android.graphics.Paint p=new android.graphics.Paint(3);
+        WaterStreamView(android.content.Context c){super(c);}
+        @Override protected void onDraw(android.graphics.Canvas c){super.onDraw(c);p.setColor(0xFF70BDE0);p.setStrokeWidth(4);p.setStrokeCap(android.graphics.Paint.Cap.ROUND);for(int i=0;i<5;i++){float x=dp(10+i*11);c.drawLine(x,dp(i%2*8),x-5,dp(48+i%3*9),p);p.setStyle(android.graphics.Paint.Style.FILL);c.drawCircle(x-5,dp(53+i%3*9),dp(3),p);p.setStyle(android.graphics.Paint.Style.STROKE);}}
     }
 
     private void showAchievements() {
