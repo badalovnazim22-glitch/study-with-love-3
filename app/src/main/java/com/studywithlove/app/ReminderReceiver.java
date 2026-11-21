@@ -25,5 +25,6 @@ public class ReminderReceiver extends BroadcastReceiver {
                 .setContentText(message == null ? "Пора немного позаниматься!" : message)
                 .setAutoCancel(true).setContentIntent(pi);
         manager.notify(intent.getIntExtra("id", 1), builder.build());
+        MainActivity.scheduleReminders(context);
     }
 }
