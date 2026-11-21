@@ -660,7 +660,7 @@ private void showSettings() {
         for (int minutes : breakOptions) {
             Button b = button((selectedBreakMinutes == minutes ? "✓ " : "") + minutes + "м", selectedBreakMinutes == minutes);
             LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(0, dp(42), 1f); bp.setMargins(dp(2),0,dp(2),0); breakChoices.addView(b, bp);
-            b.setOnClickListener(v -> { if (!timerRunning) { selectedBreakMinutes = minutes; showPomodoro(); } });
+            b.setOnClickListener(v -> { if (!timerRunning) { selectedBreakMinutes = minutes; if (timerIsBreak) timerRemainingMs = selectedBreakMinutes * 60000L; showPomodoro(); } });
         }
         root.addView(breakChoices, lp(-1, 46, 0, 4, 0, 18));
         LinearLayout timerCard = card(); timerCard.setGravity(Gravity.CENTER);
