@@ -100,10 +100,10 @@ public class MainActivity extends Activity {
         EditText name=new EditText(this);name.setSingleLine(true);name.setTextSize(17);name.setTextColor(DARK);name.setHint("Как тебя зовут?");name.setPadding(dp(14),dp(8),dp(14),dp(8));name.setBackground(shape(0xFFFFFFFF,16,0xFFEADDE2));panel.addView(name,lp(-1,52,0,0,0,12));
         addText(panel,"КАК К ТЕБЕ ОБРАЩАТЬСЯ?",11,PINK,true);addText(panel,"Выбери обращение",13,MUTED,false);
         final String[] gender={""};LinearLayout choices=new LinearLayout(this);choices.setOrientation(LinearLayout.HORIZONTAL);
-        Button[] opts={button("Девушка",false),button("Парень",false),button("Не указывать",false)};String[] vals={"female","male","none"};
-        for(int i=0;i<3;i++){final int k=i;LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(48),1f);p.setMargins(dp(3),0,dp(3),0);choices.addView(opts[i],p);opts[i].setOnClickListener(v->{gender[0]=vals[k];for(Button q:opts)q.setAlpha(.65f);opts[k].setAlpha(1f);opts[k].setBackground(shape(PALE,18,PINK));opts[k].setTextColor(PINK);opts[k].animate().scaleX(1.05f).scaleY(1.05f).setDuration(160).withEndAction(()->opts[k].animate().scaleX(1f).scaleY(1f).setDuration(130).start()).start();});}
+        Button[] opts={button("Девушка",false),button("Парень",false)};String[] vals={"female","male"};
+        for(int i=0;i<2;i++){final int k=i;LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(48),1f);p.setMargins(dp(3),0,dp(3),0);choices.addView(opts[i],p);opts[i].setOnClickListener(v->{gender[0]=vals[k];for(Button q:opts)q.setAlpha(.65f);opts[k].setAlpha(1f);opts[k].setBackground(shape(PALE,18,PINK));opts[k].setTextColor(PINK);opts[k].animate().scaleX(1.05f).scaleY(1.05f).setDuration(160).withEndAction(()->opts[k].animate().scaleX(1f).scaleY(1f).setDuration(130).start()).start();});}
         panel.addView(choices,lp(-1,52,0,5,0,16));Button start=button("Начать путешествие ✨",true);panel.addView(start,lp(-1,54,0,4,0,0));root.addView(panel,lp(-1,-2,0,0,0,18));
-        start.setOnClickListener(v->{String n=name.getText().toString().trim();if(n.isEmpty()){name.setError("Введи имя");return;}if(gender[0].isEmpty()){Toast.makeText(this,"Выбери обращение или «Не указывать»",Toast.LENGTH_SHORT).show();return;}prefs.edit().putString("display_name",n).putString("profile_gender",gender[0]).putBoolean("welcome_done",true).apply();panel.animate().alpha(0f).translationY(dp(18)).setDuration(260).withEndAction(this::showHome).start();});
+        start.setOnClickListener(v->{String n=name.getText().toString().trim();if(n.isEmpty()){name.setError("Введи имя");return;}if(gender[0].isEmpty()){Toast.makeText(this,"Выбери пол",Toast.LENGTH_SHORT).show();return;}prefs.edit().putString("display_name",n).putString("profile_gender",gender[0]).putBoolean("welcome_done",true).apply();panel.animate().alpha(0f).translationY(dp(28)).scaleX(.97f).scaleY(.97f).setDuration(520).withEndAction(()->{showHome();View decor=getWindow().getDecorView();decor.setAlpha(0f);decor.setScaleX(1.025f);decor.setScaleY(1.025f);decor.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(720).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();}).start();});
         panel.setAlpha(0f);panel.setTranslationY(dp(24));panel.animate().alpha(1f).translationY(0).setDuration(520).start();
     }
 
@@ -190,11 +190,11 @@ public class MainActivity extends Activity {
         root.setPadding(dp(20), dp(18), dp(20), dp(26)); root.setBackgroundColor(BG);
         scroll.addView(root);
         shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
-        shell.addView(bottomNavigation(), lp(-1, 68, 0, 0, 0, 0));
+        if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 68, 0, 0, 0, 0));
         setContentView(shell);
         scroll.setAlpha(0f); scroll.setTranslationY(dp(8));
         scroll.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-        scroll.animate().alpha(1f).translationY(0f).setDuration(430)
+        scroll.animate().alpha(1f).translationY(0f).setDuration(650)
             .setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
         LinearLayout brandRow = new LinearLayout(this);
         brandRow.setGravity(Gravity.CENTER_VERTICAL);
@@ -221,49 +221,19 @@ public class MainActivity extends Activity {
     }
 
     private View bottomNavigation() {
-        LinearLayout bar = new LinearLayout(this);
-        bar.setOrientation(LinearLayout.HORIZONTAL);
-        bar.setGravity(Gravity.CENTER);
-        bar.setPadding(dp(8), dp(7), dp(8), dp(7));
-        bar.setBackground(shape(0xFFFFFFFF, 0, 0));
-        String[] icons = {"⌂", "▦", "▤", "♡", "◷"};
-        String[] labels = {"Главная", "Уроки", "Прогресс", "Дневник", "Таймер"};
-        String active = currentScreen.equals("home") ? "home"
-                : (currentScreen.equals("chapters") || currentScreen.equals("topics") || currentScreen.equals("topic")) ? "math"
-                : (currentScreen.equals("progress") || currentScreen.equals("flower") || currentScreen.equals("achievements")) ? "progress"
-                : currentScreen.equals("diary") ? "diary"
-                : (currentScreen.equals("pomodoro") ? "timer" : "");
-        String[] keys = {"home", "math", "progress", "diary", "timer"};
-        for (int i = 0; i < keys.length; i++) {
-            final String key = keys[i];
-            boolean selected = key.equals(active);
-            LinearLayout item = new LinearLayout(this);
-            item.setOrientation(LinearLayout.VERTICAL);
-            item.setGravity(Gravity.CENTER);
-            item.setPadding(dp(2), dp(4), dp(2), dp(3));
-            item.setBackground(selected ? shape(0xFFFCEEF2, 17, 0) : shape(0x00FFFFFF, 17, 0));
-            TextView icon = text(icons[i], 21, selected ? PINK : MUTED, true);
-            icon.setGravity(Gravity.CENTER);
-            item.addView(icon, lp(-1, 27, 0, 0, 0, 1));
-            TextView label = text(labels[i], 9, selected ? PINK : MUTED, selected);
-            label.setGravity(Gravity.CENTER);
-            label.setMaxLines(1);
-            item.addView(label, lp(-1, 17, 0, 0, 0, 0));
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, -1, 1f);
-            params.setMargins(dp(2), 0, dp(2), 0);
-            bar.addView(item, params);
-            item.setOnClickListener(v -> {
-                if (key.equals("home")) showHome();
-                else if (key.equals("math")) showChapters();
-                else if (key.equals("progress")) showProgress();
-                else if (key.equals("diary")) showDiary();
-                else if (key.equals("timer")) showPomodoro();
-            });
-        }
-        return bar;
+        LinearLayout bar=new LinearLayout(this);bar.setOrientation(LinearLayout.HORIZONTAL);bar.setGravity(Gravity.CENTER);bar.setPadding(dp(5),dp(7),dp(5),dp(7));bar.setBackground(shape(0xFFFFFFFF,0,0));
+        String[] icons={"⌂","▦","▤","✉","♡","◷"};String[] labels={"Главная","Уроки","Прогресс","Экзамен","Дневник","Таймер"};
+        String active=currentScreen.equals("home")?"home":(currentScreen.equals("chapters")||currentScreen.equals("topics")||currentScreen.equals("topic"))?"math":currentScreen.equals("progress")||currentScreen.equals("flower")||currentScreen.equals("achievements")?"progress":currentScreen.equals("exam")?"exam":currentScreen.equals("diary")||currentScreen.equals("letters")?"diary":currentScreen.equals("pomodoro")?"timer":"";
+        String[] keys={"home","math","progress","exam","diary","timer"};
+        for(int i=0;i<keys.length;i++){final String key=keys[i];boolean selected=key.equals(active);LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.VERTICAL);item.setGravity(Gravity.CENTER);item.setPadding(dp(1),dp(4),dp(1),dp(3));item.setBackground(selected?shape(PALE,14,0):shape(0x00FFFFFF,14,0));
+            TextView icon=text(icons[i],19,selected?PINK:MUTED,true);icon.setGravity(Gravity.CENTER);item.addView(icon,lp(-1,25,0,0,0,1));
+            TextView label=text(labels[i],8,selected?PINK:MUTED,selected);label.setGravity(Gravity.CENTER);label.setMaxLines(1);item.addView(label,lp(-1,15,0,0,0,0));
+            LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-1,1f);p.setMargins(dp(1),0,dp(1),0);bar.addView(item,p);
+            item.setOnClickListener(v->{if(key.equals("home"))showHome();else if(key.equals("math"))showChapters();else if(key.equals("progress"))showProgress();else if(key.equals("exam"))showExam();else if(key.equals("diary"))showDiary();else if(key.equals("timer"))showPomodoro();});
+        }return bar;
     }
 
-private void showSettings() {
+    private void showSettings() {
         currentScreen = "settings";
         base("Настройки ⚙", "Настрой приложение под себя");
         LinearLayout nameCard = card();
@@ -293,11 +263,7 @@ private void showSettings() {
         String current = prefs.getString("app_theme", "pink");
         android.widget.GridLayout themeGrid=new android.widget.GridLayout(this);themeGrid.setColumnCount(3);
         int[] swatches={0xFFC97891,0xFF8979B8,0xFF659B86,0xFF302735,0xFFFFFFFF,0xFF8B6046,0xFFB18A32,0xFF30251F,0xFF5D91B5,0xFFD88968,0xFFB32635,0xFF4B3428};
-        for(int i=0;i<themeNames.length;i++){final String key=themeKeys[i];final int color=swatches[i];LinearLayout tile=new LinearLayout(this);tile.setOrientation(LinearLayout.VERTICAL);tile.setGravity(Gravity.CENTER);tile.setPadding(dp(4),dp(7),dp(4),dp(7));tile.setBackground(shape(current.equals(key)?PALE:0xFFFFFFFF,15,current.equals(key)?PINK:0xFFEADDE2));
-            TextView sample=text(key.equals("lv")?"LV":(current.equals(key)?"✓":" "),21,color,true);sample.setGravity(Gravity.CENTER);sample.setBackground(shape(color,13,key.equals("white")?0xFFDCE1E8:0));tile.addView(sample,lp(48,42,0,0,0,5));
-            TextView label=text(themeNames[i],11,DARK,true);label.setGravity(Gravity.CENTER);label.setMaxLines(2);tile.addView(label,lp(-1,30,0,0,0,0));
-            android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(86);gp.columnSpec=android.widget.GridLayout.spec(i%3,1f);gp.setMargins(dp(3),dp(3),dp(3),dp(3));themeGrid.addView(tile,gp);
-            tile.setOnClickListener(v->{prefs.edit().putString("app_theme",key).apply();applySavedTheme();showSettings();});}
+        for(int i=0;i<themeNames.length;i++){final String key=themeKeys[i];final int color=swatches[i];LinearLayout tile=new LinearLayout(this);tile.setOrientation(LinearLayout.VERTICAL);tile.setGravity(Gravity.CENTER);tile.setPadding(dp(3),dp(5),dp(3),dp(5));int labelColor=(key.equals("white")||key.equals("gold")||key.equals("peach"))?0xFF40363A:0xFFFFFFFF;tile.setBackground(shape(color,16,current.equals(key)?PINK:0));tile.setElevation(dp(current.equals(key)?4:1));TextView label=text((current.equals(key)?"✓ ":"")+themeNames[i],11,labelColor,true);label.setGravity(Gravity.CENTER);label.setMaxLines(2);label.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);tile.addView(label,lp(-1,-1,0,0,0,0));android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(78);gp.columnSpec=android.widget.GridLayout.spec(i%3,1f);gp.setMargins(dp(3),dp(3),dp(3),dp(3));themeGrid.addView(tile,gp);tile.setOnClickListener(v->{prefs.edit().putString("app_theme",key).apply();applySavedTheme();showSettings();});}
         themeCard.addView(themeGrid,lp(-1,-2,0,8,0,0));
         root.addView(themeCard, lp(-1, -2, 0, 0, 0, 13));
 
@@ -630,7 +596,8 @@ private void showSettings() {
             if (slot % 7 == 0) {
                 week = new LinearLayout(this);
                 week.setOrientation(LinearLayout.HORIZONTAL);
-                calendarCard.addView(week, lp(-1, 38, 0, 1, 0, 1));
+                week.setGravity(Gravity.CENTER_VERTICAL);
+                calendarCard.addView(week, lp(-1, 34, 0, 1, 0, 1));
             }
             TextView cell = text("", 12, DARK, true);
             cell.setGravity(Gravity.CENTER);
@@ -651,7 +618,7 @@ private void showSettings() {
                 cell.setElevation(dp(1));
                 if (isToday) cell.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             }
-            week.addView(cell, new LinearLayout.LayoutParams(0, dp(35), 1f));
+            LinearLayout.LayoutParams dayCell=new LinearLayout.LayoutParams(0,dp(29),1f);dayCell.gravity=Gravity.CENTER;dayCell.setMargins(dp(2),0,dp(2),0);week.addView(cell,dayCell);
         }
         addText(calendarCard, "♥ Учебные дни: " + countStudyDaysThisMonth(studiedDays, yearNumber, monthNumber) + "   ·   Заходила: " + countStudyDaysThisMonth(visitedDays, yearNumber, monthNumber), 12, MUTED, false);
         progressCalendarHost.addView(calendarCard, lp(-1, -2, 0, 0, 0, 0));
@@ -813,6 +780,24 @@ private void showSettings() {
         Button generate = button("✨  Сгенерировать ещё послание", true);
         generate.setOnClickListener(v -> message.setText(messages[new Random().nextInt(messages.length)]));
         root.addView(generate, lp(-1, 52, 0, 0, 0, 10)); backHome();
+    }
+
+    private void showExam() {
+        currentScreen="exam";base("Мой экзамен ✨","Планируй подготовку и следи за оставшимся временем");
+        LinearLayout form=card();addText(form,"НАЗВАНИЕ ЭКЗАМЕНА",12,PINK,true);
+        EditText title=new EditText(this);title.setSingleLine(true);title.setTextSize(16);title.setTextColor(DARK);title.setHint("Например, математика");title.setPadding(dp(13),dp(8),dp(13),dp(8));title.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));title.setText(prefs.getString("exam_title",""));form.addView(title,lp(-1,50,0,7,0,12));
+        addText(form,"ДАТА ЭКЗАМЕНА",12,PINK,true);
+        EditText date=new EditText(this);date.setSingleLine(true);date.setFocusable(false);date.setClickable(true);date.setTextSize(15);date.setTextColor(DARK);date.setHint("Выбери дату");date.setPadding(dp(13),dp(8),dp(13),dp(8));date.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));date.setText(prefs.getString("exam_date",""));
+        date.setOnClickListener(v->{Calendar now=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));Calendar min=(Calendar)now.clone();min.set(Calendar.HOUR_OF_DAY,0);min.set(Calendar.MINUTE,0);min.set(Calendar.SECOND,0);min.set(Calendar.MILLISECOND,0);android.app.DatePickerDialog dialog=new android.app.DatePickerDialog(this,(p,y,m,d)->date.setText(String.format(Locale.US,"%04d-%02d-%02d",y,m+1,d)),now.get(Calendar.YEAR),now.get(Calendar.MONTH),now.get(Calendar.DAY_OF_MONTH));dialog.getDatePicker().setMinDate(min.getTimeInMillis());dialog.show();});
+        form.addView(date,lp(-1,50,0,7,0,12));
+        LinearLayout countdown=card();countdown.setGravity(Gravity.CENTER);countdown.setBackground(shape(PALE,22,0));TextView days=text("—",42,PINK,true);days.setGravity(Gravity.CENTER);countdown.addView(days,lp(-1,60,0,0,0,0));TextView caption=text("дней до экзамена",14,DARK,true);caption.setGravity(Gravity.CENTER);countdown.addView(caption,lp(-1,28,0,0,0,0));
+        String savedDate=prefs.getString("exam_date","");String savedTitle=prefs.getString("exam_title","");if(!savedDate.isEmpty()){long remain=daysUntil(savedDate);days.setText(remain<0?"0":String.valueOf(remain));caption.setText(remain==0?"Экзамен сегодня!":remain<0?"Дата уже прошла":"дней до экзамена");}
+        form.addView(countdown,lp(-1,104,0,8,0,8));Button save=button("Сохранить экзамен",true);form.addView(save,lp(-1,48,0,0,0,0));
+        save.setOnClickListener(v->{String n=title.getText().toString().trim(),d=date.getText().toString().trim();if(n.isEmpty()){title.setError("Введи название экзамена");return;}if(d.isEmpty()){Toast.makeText(this,"Выбери дату экзамена",Toast.LENGTH_SHORT).show();return;}if(daysUntil(d)<0){Toast.makeText(this,"Выбери сегодняшнюю или будущую дату",Toast.LENGTH_SHORT).show();return;}prefs.edit().putString("exam_title",n).putString("exam_date",d).apply();showExam();});
+        root.addView(form,lp(-1,-2,0,0,0,14));if(!savedTitle.isEmpty()&&!savedDate.isEmpty()){LinearLayout info=card();addText(info,"ТВОЯ ЦЕЛЬ",11,PINK,true);addText(info,savedTitle,19,DARK,true);addText(info,"Дата: "+savedDate,13,MUTED,false);root.addView(info,lp(-1,-2,0,0,0,12));}
+    }
+    private long daysUntil(String isoDate) {
+        try {SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd",Locale.US);f.setLenient(false);f.setTimeZone(TimeZone.getTimeZone("Asia/Baku"));Date target=f.parse(isoDate);Calendar a=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));a.set(Calendar.HOUR_OF_DAY,0);a.set(Calendar.MINUTE,0);a.set(Calendar.SECOND,0);a.set(Calendar.MILLISECOND,0);Calendar b=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));b.setTime(target);b.set(Calendar.HOUR_OF_DAY,0);b.set(Calendar.MINUTE,0);b.set(Calendar.SECOND,0);b.set(Calendar.MILLISECOND,0);return (b.getTimeInMillis()-a.getTimeInMillis())/86400000L;}catch(Exception e){return -1;}
     }
 
     private void showDiary() {
@@ -1005,6 +990,7 @@ private void showSettings() {
                 showChapters();
                 break;
             case "chapters":
+            case "exam":
             case "progress":
             case "reminders":
             case "message":
