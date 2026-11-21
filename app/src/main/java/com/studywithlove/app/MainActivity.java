@@ -582,11 +582,6 @@ private void showSettings() {
             weekHeader.addView(cell, new LinearLayout.LayoutParams(0, dp(30), 1f));
         }
         calendarCard.addView(weekHeader, lp(-1, 30, 0, 4, 0, 2));
-        Set<String> studiedDays = new TreeSet<>(prefs.getStringSet("study_days", new TreeSet<String>()));
-        Calendar first = (Calendar) month.clone();
-        first.set(Calendar.DAY_OF_MONTH, 1);
-        int offset = (first.get(Calendar.DAY_OF_WEEK) + 5) % 7; // Monday first
-        int daysInMonth = month.getActualMaximum(Calendar.DAY_OF_MONTH);
         LinearLayout week = null;
         for (int slot = 0; slot < offset + daysInMonth; slot++) {
             if (slot % 7 == 0) {
