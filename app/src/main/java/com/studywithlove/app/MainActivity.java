@@ -43,7 +43,7 @@ import java.util.Random;
 import java.util.TimeZone;
 
 public class MainActivity extends Activity {
-    private int BG = 0xFFFFF8FD, PINK = 0xFF9165D8, PALE = 0xFFF0E7FF, DARK = 0xFF302544, MUTED = 0xFF8D819E;
+    private int BG = 0xFFF4F6F8, PINK = 0xFF5865F2, PALE = 0xFFE8EBFF, DARK = 0xFF171B2B, MUTED = 0xFF7D8498;
     private int progressMonthOffset = 0;
     private LinearLayout progressCalendarHost;
     private LinearLayout root;
@@ -188,28 +188,26 @@ public class MainActivity extends Activity {
     }
 
     private void base(String title, String subtitle) {
-        LinearLayout shell=new LinearLayout(this);shell.setOrientation(LinearLayout.VERTICAL);shell.setBackground(gradientShape(BG,nightTint(BG),0));
-        ScrollView scroll=new ScrollView(this);scroll.setFillViewport(true);scroll.setClipToPadding(false);scroll.setVerticalScrollBarEnabled(false);
-        root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setPadding(dp(18),dp(15),dp(18),dp(28));root.setBackground(gradientShape(BG,nightTint(BG),0));
+        LinearLayout shell=new LinearLayout(this); shell.setOrientation(LinearLayout.VERTICAL); shell.setBackgroundColor(BG);
+        ScrollView scroll=new ScrollView(this); scroll.setFillViewport(true); scroll.setClipToPadding(false); scroll.setVerticalScrollBarEnabled(false);
+        root=new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL); root.setPadding(dp(20),dp(18),dp(20),dp(30)); root.setBackgroundColor(BG);
         String customBg=prefs.getString("custom_background_uri","");
-        if(!customBg.isEmpty()){try{java.io.InputStream in=getContentResolver().openInputStream(android.net.Uri.parse(customBg));if(in!=null){Drawable photo=Drawable.createFromStream(in,null);in.close();if(photo!=null){photo.setAlpha(35);root.setBackground(photo);}}}catch(Exception ignored){}}
-        scroll.addView(root);shell.addView(scroll,new LinearLayout.LayoutParams(-1,0,1f));
-        if(!currentScreen.equals("welcome"))shell.addView(bottomNavigation(),lp(-1,82,0,0,0,0));
-        setContentView(shell);scroll.setAlpha(0f);scroll.setTranslationY(dp(10));scroll.setLayerType(View.LAYER_TYPE_HARDWARE,null);
-        scroll.animate().alpha(1f).translationY(0f).setDuration(320).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
-        LinearLayout top=new LinearLayout(this);top.setGravity(Gravity.CENTER_VERTICAL);top.setPadding(dp(13),dp(9),dp(11),dp(9));
-        boolean night="night".equals(prefs.getString("app_theme","pink"));top.setBackground(shape(night?0xFF24212B:0xFFFFFDFF,24,night?0xFF51435F:0xFFEDE4F5));top.setElevation(dp(2));
-        TextView mark=text("✳",22,PINK,true);mark.setGravity(Gravity.CENTER);mark.setBackground(shape(PALE,14,0));top.addView(mark,lp(38,38,0,0,10,0));
-        LinearLayout brandBox=new LinearLayout(this);brandBox.setOrientation(LinearLayout.VERTICAL);
-        TextView brand=text("STUDY WITH LOVE",11,DARK,true);brand.setLetterSpacing(.12f);brandBox.addView(brand);
-        TextView tagline=text("YOUR LITTLE STEPS MATTER",8,MUTED,true);tagline.setLetterSpacing(.08f);brandBox.addView(tagline);
-        top.addView(brandBox,new LinearLayout.LayoutParams(0,-2,1f));
-        if(currentScreen.equals("home")){TextView settings=text("⚙",20,PINK,true);settings.setGravity(Gravity.CENTER);settings.setBackground(shape(PALE,14,0));top.addView(settings,lp(40,38,0,0,0,0));settings.setOnClickListener(v->settings.animate().rotationBy(90).setDuration(180).withEndAction(this::showSettings).start());}
-        else{TextView section=text(sectionLabel(currentScreen),10,PINK,true);section.setGravity(Gravity.CENTER);section.setPadding(dp(10),dp(7),dp(10),dp(7));section.setBackground(shape(PALE,14,0));top.addView(section);}
-        root.addView(top,lp(-1,58,0,0,0,22));
-        TextView eyebrow=text("ТВОЁ ПРОСТРАНСТВО ДЛЯ РОСТА",9,PINK,true);eyebrow.setLetterSpacing(.13f);root.addView(eyebrow,lp(-1,-2,0,0,0,5));
-        TextView heading=text(title,27,DARK,true);heading.setLetterSpacing(-.025f);heading.setLineSpacing(dp(1),1f);root.addView(heading,lp(-1,-2,0,0,0,6));
-        TextView sub=text(subtitle,13,MUTED,false);sub.setLineSpacing(dp(3),1.05f);root.addView(sub,lp(-1,-2,0,0,0,19));
+        if(!customBg.isEmpty()){try{java.io.InputStream in=getContentResolver().openInputStream(android.net.Uri.parse(customBg));if(in!=null){Drawable photo=Drawable.createFromStream(in,null);in.close();if(photo!=null){photo.setAlpha(22);root.setBackground(photo);}}}catch(Exception ignored){}}
+        scroll.addView(root); shell.addView(scroll,new LinearLayout.LayoutParams(-1,0,1f));
+        if(!currentScreen.equals("welcome")) shell.addView(bottomNavigation(),lp(-1,76,0,0,0,0));
+        setContentView(shell);
+        scroll.setAlpha(0f); scroll.setTranslationY(dp(14)); scroll.animate().alpha(1f).translationY(0).setDuration(260).start();
+        LinearLayout top=new LinearLayout(this); top.setGravity(Gravity.CENTER_VERTICAL); top.setPadding(0,dp(2),0,dp(18));
+        TextView brand=text("S / L",19,0xFF5865F2,true); brand.setGravity(Gravity.CENTER); brand.setBackground(shape(0xFFE8EBFF,15,0)); top.addView(brand,lp(48,44,0,0,12,0));
+        LinearLayout brandWords=new LinearLayout(this); brandWords.setOrientation(LinearLayout.VERTICAL);
+        TextView brandName=text("STUDY WITH LOVE",11,DARK,true); brandName.setLetterSpacing(.13f); brandWords.addView(brandName);
+        TextView brandSub=text("MAKE EVERY DAY COUNT",9,MUTED,true); brandSub.setLetterSpacing(.10f); brandWords.addView(brandSub);
+        top.addView(brandWords,new LinearLayout.LayoutParams(0,-2,1f));
+        if(currentScreen.equals("home")){TextView settings=text("•••",18,DARK,true);settings.setGravity(Gravity.CENTER);settings.setBackground(shape(0xFFFFFFFF,15,0xFFE5E8EF));top.addView(settings,lp(44,44,0,0,0,0));settings.setOnClickListener(v->showSettings());}
+        else {TextView tag=text(sectionLabel(currentScreen).toUpperCase(Locale.ROOT),10,0xFF5865F2,true);tag.setPadding(dp(12),dp(9),dp(12),dp(9));tag.setBackground(shape(0xFFE8EBFF,12,0));top.addView(tag);}
+        root.addView(top,lp(-1,-2,0,0,0,8));
+        TextView heading=text(title,29,DARK,true); heading.setLetterSpacing(-.035f); heading.setLineSpacing(dp(1),1f); root.addView(heading,lp(-1,-2,0,0,0,5));
+        TextView sub=text(subtitle,13,MUTED,false); sub.setLineSpacing(dp(3),1.05f); root.addView(sub,lp(-1,-2,0,0,0,22));
     }
     private String sectionLabel(String screen){
         if("chapters".equals(screen)||"topics".equals(screen)||"topic".equals(screen))return "УРОКИ";
@@ -222,18 +220,18 @@ public class MainActivity extends Activity {
     }
 
     private View bottomNavigation() {
-        LinearLayout outer=new LinearLayout(this);outer.setGravity(Gravity.CENTER);outer.setPadding(dp(10),dp(5),dp(10),dp(9));
-        LinearLayout bar=new LinearLayout(this);bar.setOrientation(LinearLayout.HORIZONTAL);bar.setGravity(Gravity.CENTER);bar.setPadding(dp(5),dp(6),dp(5),dp(6));
-        boolean night="night".equals(prefs.getString("app_theme","pink"));bar.setBackground(shape(night?0xFF25212B:0xFFFFFFFF,24,night?0xFF403541:0xFFECE5E9));bar.setElevation(dp(8));
-        String[] icons={"⌂","▦","◌","✧","♡","◷"};String[] labels={"Главная","Уроки","Прогресс","Экзамен","Дневник","Таймер"};
+        LinearLayout outer=new LinearLayout(this); outer.setGravity(Gravity.CENTER); outer.setPadding(dp(14),dp(8),dp(14),dp(10)); outer.setBackgroundColor(BG);
+        LinearLayout bar=new LinearLayout(this); bar.setOrientation(LinearLayout.HORIZONTAL); bar.setGravity(Gravity.CENTER); bar.setPadding(dp(7),dp(7),dp(7),dp(7)); bar.setBackground(shape(0xFF171B2B,23,0)); bar.setElevation(dp(9));
+        String[] icons={"⌂","▤","◉","✦","▣","◷"}; String[] labels={"Домой","Уроки","Рост","Цель","Дневник","Фокус"};
         String active=currentScreen.equals("home")?"home":(currentScreen.equals("chapters")||currentScreen.equals("topics")||currentScreen.equals("topic"))?"math":currentScreen.equals("progress")||currentScreen.equals("flower")||currentScreen.equals("achievements")||currentScreen.equals("stats")?"progress":currentScreen.equals("exam")?"exam":currentScreen.equals("diary")||currentScreen.equals("letters")?"diary":currentScreen.equals("pomodoro")?"timer":"";
         String[] keys={"home","math","progress","exam","diary","timer"};
-        for(int i=0;i<keys.length;i++){final String key=keys[i];boolean selected=key.equals(active);LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.VERTICAL);item.setGravity(Gravity.CENTER);item.setPadding(dp(1),dp(5),dp(1),dp(4));item.setBackground(shape(selected?PALE:0x00FFFFFF,17,0));
-            TextView icon=text(icons[i],21,selected?PINK:MUTED,true);icon.setGravity(Gravity.CENTER);icon.setIncludeFontPadding(false);item.addView(icon,lp(-1,27,0,0,0,1));
-            TextView label=text(labels[i],9,selected?PINK:MUTED,selected);label.setGravity(Gravity.CENTER);label.setMaxLines(1);label.setSingleLine(true);label.setIncludeFontPadding(false);item.addView(label,lp(-1,16,0,0,0,0));
+        for(int i=0;i<keys.length;i++){final String key=keys[i];boolean selected=key.equals(active);LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.VERTICAL);item.setGravity(Gravity.CENTER);item.setPadding(dp(2),dp(5),dp(2),dp(4));item.setBackground(selected?shape(0xFF5865F2,16,0):shape(0x00171B2B,16,0));
+            TextView icon=text(icons[i],20,selected?0xFFFFFFFF:0xFF9CA3B7,true);icon.setGravity(Gravity.CENTER);icon.setIncludeFontPadding(false);item.addView(icon,lp(-1,26,0,0,0,1));
+            TextView label=text(labels[i],8,selected?0xFFFFFFFF:0xFFB6BDCD,selected);label.setGravity(Gravity.CENTER);label.setSingleLine(true);label.setIncludeFontPadding(false);item.addView(label,lp(-1,15,0,0,0,0));
             LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-1,1f);p.setMargins(dp(2),0,dp(2),0);bar.addView(item,p);
             item.setOnClickListener(v->{if(key.equals("home"))showHome();else if(key.equals("math"))showChapters();else if(key.equals("progress"))showProgress();else if(key.equals("exam"))showExam();else if(key.equals("diary"))showDiary();else if(key.equals("timer"))showPomodoro();});
-        }outer.addView(bar,new LinearLayout.LayoutParams(-1,-1));return outer;
+        }
+        outer.addView(bar,new LinearLayout.LayoutParams(-1,-1)); return outer;
     }
 
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){super.onActivityResult(requestCode,resultCode,data);if(resultCode!=RESULT_OK||data==null||data.getData()==null)return;android.net.Uri uri=data.getData();if(requestCode==PICK_BACKGROUND){try{getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);}catch(Exception ignored){}prefs.edit().putString("custom_background_uri",uri.toString()).apply();showSettings();Toast.makeText(this,"Фото установлено как фон ♡",Toast.LENGTH_SHORT).show();}else if(requestCode==BACKUP_EXPORT){try{java.io.OutputStream out=getContentResolver().openOutputStream(uri);if(out==null)throw new Exception();out.write(createBackupJson().getBytes("UTF-8"));out.close();Toast.makeText(this,"Резервная копия сохранена ♡",Toast.LENGTH_LONG).show();}catch(Exception e){Toast.makeText(this,"Не удалось сохранить копию",Toast.LENGTH_LONG).show();}}else if(requestCode==BACKUP_IMPORT){try{java.io.InputStream in=getContentResolver().openInputStream(uri);java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();byte[] buffer=new byte[4096];int n;while((n=in.read(buffer))>0)bytes.write(buffer,0,n);in.close();restoreBackupJson(new String(bytes.toByteArray(),"UTF-8"));Toast.makeText(this,"Данные восстановлены ♡",Toast.LENGTH_LONG).show();loadChapters();showHome();}catch(Exception e){Toast.makeText(this,"Файл копии не удалось прочитать",Toast.LENGTH_LONG).show();}}}
@@ -319,97 +317,38 @@ public class MainActivity extends Activity {
     }
 
         private void showHome() {
-        currentScreen = "home";
-        base("Привет, " + prefs.getString("display_name", "Назка") + "! ♡", "Сегодня — хороший день, чтобы сделать маленький шаг к своей цели.");
-        int done = prefs.getInt("done_count", 0);
-        int streak = currentStreak();
-        int record = prefs.getInt("longest_streak", 0);
-        int totalTopics = 0, completedTopics = 0;
-        for (List<String> topics : chapters.values()) for (String topic : topics) {
-            totalTopics++;
-            if (topicProgress(topic) == 100) completedTopics++;
-        }
-        int overall = totalTopics == 0 ? 0 : completedTopics * 100 / totalTopics;
-
-        ImageView heroArt=new ImageView(this);heroArt.setImageResource(R.drawable.study_hero);heroArt.setScaleType(ImageView.ScaleType.CENTER_CROP);heroArt.setContentDescription("Уютная учебная комната в пастельных тонах");heroArt.setBackground(shape(0xFFEEDFFF,25,0xFFE4D6F4));heroArt.setClipToOutline(true);heroArt.setElevation(dp(5));root.addView(heroArt,lp(-1,150,0,0,0,14));
-
-        LinearLayout hero = card();
-        hero.setPadding(dp(20), dp(22), dp(20), dp(19));
-        hero.setBackground(gradientShape(0xFFEBDFFF,0xFFFFE8F2,29));
-        addText(hero, "✦  ТВОЁ МАЛЕНЬКОЕ ПРОСТРАНСТВО", 11, PINK, true);
-        addText(hero, "Ты справляешься.\nПродолжай в своём темпе.", 24, DARK, true);
-        addText(hero, "Каждый маленький шаг приближает тебя к мечте.", 13, MUTED, false);
-         addText(hero, dailyMotivation(), 14, PINK, true);
-        LinearLayout progressHead = new LinearLayout(this);
-        progressHead.setGravity(Gravity.CENTER_VERTICAL);
-        TextView progressTitle = text("Учебный план", 14, DARK, true);
-        progressHead.addView(progressTitle, new LinearLayout.LayoutParams(0, dp(28), 1f));
-        TextView progressValue = text(overall + "%", 18, PINK, true);
-        progressHead.addView(progressValue);
-        hero.addView(progressHead, lp(-1, 30, 0, 12, 0, 4));
-        ProgressBar overallBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-        overallBar.setMax(100); overallBar.setProgress(overall);
-        if (Build.VERSION.SDK_INT >= 21) {
-            overallBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
-            overallBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFDCE6));
-        }
-        hero.addView(overallBar, lp(-1, 9, 0, 0, 0, 5));
-        addText(hero, completedTopics + " из " + totalTopics + " тем завершено", 13, MUTED, false);
-        root.addView(hero, lp(-1, -2, 0, 0, 0, 15));
-
-        LinearLayout stats = new LinearLayout(this);
-        stats.setOrientation(LinearLayout.HORIZONTAL);
-        String[][] values = {{String.valueOf(streak), "дней подряд"}, {String.valueOf(done), "уроков"}, {String.valueOf(record), "личный рекорд"}};
-        int[] colors = {0xFFFFF0F4, 0xFFF1F0FF, 0xFFEFF7F1};
-        for (int i = 0; i < values.length; i++) {
-            String[] value = values[i];
-            LinearLayout stat = card(); stat.setGravity(Gravity.CENTER);
-            stat.setPadding(dp(5), dp(7), dp(5), dp(7));
-            stat.setBackground(shape(i == 0 || i == 2 ? 0xFFFFF0F4 : colors[i], 22, 0));
-            TextView number = text(value[0], 24, PINK, true); number.setGravity(Gravity.CENTER);
-            stat.addView(number, lp(-1, 30, 0, 0, 0, 3));
-            TextView caption = text(value[1], 12, MUTED, false); caption.setGravity(Gravity.CENTER); caption.setMaxLines(2);
-            stat.addView(caption, lp(-1, 38, 0, 0, 0, 0));
-            LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, dp(102), 1f);
-            p.setMargins(dp(3), 0, dp(3), 0); stats.addView(stat, p);
-        }
-        root.addView(stats, lp(-1, -2, 0, 0, 0, 22));
-
-        TextView more = text("ТВОИ УЧЕБНЫЕ РИТУАЛЫ", 13, PINK, true);
-        more.setLetterSpacing(0.08f);
-        root.addView(more, lp(-1, -2, 0, 16, 0, 10));
-        LinearLayout ritualRow1 = new LinearLayout(this); ritualRow1.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(ritualRow1, "♡", "Дневник успехов", "Записывай победы", this::showDiary);
-        ritualTile(ritualRow1, "✿", "Мой цветочек", "Растёт с тобой", this::showFlower);
-        root.addView(ritualRow1, lp(-1, -2, 0, 0, 0, 9));
-        LinearLayout ritualRow2 = new LinearLayout(this); ritualRow2.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(ritualRow2, "✧", "Достижения", "Твои маленькие победы", this::showAchievements);
-        ritualTile(ritualRow2, "✉", "Письмо себе", "Послание в будущее", this::showFutureLetters);
-        root.addView(ritualRow2, lp(-1, -2, 0, 0, 0, 9));
-        LinearLayout ritualRow3 = new LinearLayout(this); ritualRow3.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(ritualRow3, "▦", "Календарь привычек", "Отмечай свои занятия", this::showProgress);
-        ritualTile(ritualRow3, "☁", "Атмосфера учёбы", "Уютное настроение", this::showAtmosphere);
-        root.addView(ritualRow3, lp(-1, -2, 0, 0, 0, 9));
-         LinearLayout ritualRow4 = new LinearLayout(this); ritualRow4.setOrientation(LinearLayout.HORIZONTAL);
-         ritualTile(ritualRow4, "▣", "Планировщик", "План на сегодня", this::showPlanner);
-         ritualTile(ritualRow4, "📊", "Статистика", "Подробный разбор", this::showDetailedStats);
-         root.addView(ritualRow4, lp(-1, -2, 0, 0, 0, 14));
-
-        LinearLayout reminder = card();
-        reminder.setOrientation(LinearLayout.HORIZONTAL); reminder.setGravity(Gravity.CENTER_VERTICAL);
-        reminder.setBackground(shape(0xFFF3F0FF, 22, 0));
-        LinearLayout reminderWords = new LinearLayout(this); reminderWords.setOrientation(LinearLayout.VERTICAL);
-        addText(reminderWords, "НАПОМИНАНИЯ", 12, PINK, true);
-        addText(reminderWords, reminderSummary(), 13, DARK, false);
-        reminder.addView(reminderWords, new LinearLayout.LayoutParams(0, -2, 1f));
-        TextView reminderArrow = text("›", 29, PINK, true); reminderArrow.setGravity(Gravity.CENTER);
-        reminder.addView(reminderArrow, lp(30, 40, 5, 0, 0, 0));
-        reminder.setOnClickListener(v -> showReminderSettings());
-        root.addView(reminder, lp(-1, -2, 0, 2, 0, 0));
-
-        TextView made = text("Сделано с любовью ♡", 12, MUTED, false);
-        made.setGravity(Gravity.CENTER);
-        root.addView(made, lp(-1, 40, 0, 12, 0, 0));
+        currentScreen="home";
+        base("Привет, "+prefs.getString("display_name","Назка")+"!","Твой ритм. Твои цели. Твой прогресс.");
+        int done=prefs.getInt("done_count",0), streak=currentStreak(), record=prefs.getInt("longest_streak",0);
+        int totalTopics=0,completedTopics=0;
+        for(List<String> topics:chapters.values())for(String topic:topics){totalTopics++;if(topicProgress(topic)==100)completedTopics++;}
+        int overall=totalTopics==0?0:completedTopics*100/totalTopics;
+        LinearLayout hero=card(); hero.setPadding(dp(21),dp(22),dp(21),dp(20)); hero.setBackground(gradientShape(0xFF202943,0xFF394B79,25));
+        addText(hero,"ТВОЙ ФОКУС СЕГОДНЯ",10,0xFFBFC9FF,true);
+        addText(hero,"Маленький шаг —\nбольшая перемена.",25,0xFFFFFFFF,true);
+        addText(hero,dailyMotivation(),13,0xFFE0E5F5,false);
+        LinearLayout ph=new LinearLayout(this);ph.setGravity(Gravity.CENTER_VERTICAL);
+        TextView pt=text("Общий прогресс",13,0xFFFFFFFF,true);ph.addView(pt,new LinearLayout.LayoutParams(0,dp(28),1f));
+        ph.addView(text(overall+"%",18,0xFFBFC9FF,true));hero.addView(ph,lp(-1,30,0,13,0,4));
+        ProgressBar pb=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);pb.setMax(100);pb.setProgress(overall);
+        if(Build.VERSION.SDK_INT>=21){pb.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFF9DAAFF));pb.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF536184));}
+        hero.addView(pb,lp(-1,8,0,0,0,7));addText(hero,completedTopics+" из "+totalTopics+" тем завершено",12,0xFFD5DCF0,false);
+        root.addView(hero,lp(-1,-2,0,0,0,14));
+        LinearLayout stats=new LinearLayout(this);stats.setOrientation(LinearLayout.HORIZONTAL);
+        String[][] vals={{String.valueOf(streak),"дней подряд"},{String.valueOf(done),"уроков"},{String.valueOf(record),"рекорд"}};
+        for(int i=0;i<3;i++){LinearLayout tile=card();tile.setGravity(Gravity.CENTER);tile.setPadding(dp(5),dp(13),dp(5),dp(12));tile.setBackground(shape(0xFFFFFFFF,19,0xFFE6E9F0));
+            TextView num=text(vals[i][0],24,0xFF5865F2,true);num.setGravity(Gravity.CENTER);tile.addView(num,lp(-1,31,0,0,0,3));
+            TextView cap=text(vals[i][1],10,MUTED,false);cap.setGravity(Gravity.CENTER);tile.addView(cap,lp(-1,24,0,0,0,0));
+            LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(82),1f);p.setMargins(dp(3),0,dp(3),0);stats.addView(tile,p);}
+        root.addView(stats,lp(-1,-2,0,0,0,23));
+        TextView section=text("ТВОИ ИНСТРУМЕНТЫ",11,0xFF5865F2,true);section.setLetterSpacing(.12f);root.addView(section,lp(-1,-2,0,0,0,11));
+        LinearLayout r1=new LinearLayout(this);r1.setOrientation(LinearLayout.HORIZONTAL);ritualTile(r1,"▤","Математика","Темы и уроки",this::showChapters);ritualTile(r1,"◷","Фокус-таймер","Учёба и отдых",this::showPomodoro);root.addView(r1,lp(-1,-2,0,0,0,9));
+        LinearLayout r2=new LinearLayout(this);r2.setOrientation(LinearLayout.HORIZONTAL);ritualTile(r2,"✿","Мой цветочек","Растёт с тобой",this::showFlower);ritualTile(r2,"✦","Достижения","Твои победы",this::showAchievements);root.addView(r2,lp(-1,-2,0,0,0,9));
+        LinearLayout r3=new LinearLayout(this);r3.setOrientation(LinearLayout.HORIZONTAL);ritualTile(r3,"▦","Календарь","История занятий",this::showProgress);ritualTile(r3,"▣","Дневник","Мысли и победы",this::showDiary);root.addView(r3,lp(-1,-2,0,0,0,9));
+        LinearLayout r4=new LinearLayout(this);r4.setOrientation(LinearLayout.HORIZONTAL);ritualTile(r4,"✉","Письмо себе","В будущее",this::showFutureLetters);ritualTile(r4,"◈","Статистика","Твои результаты",this::showDetailedStats);root.addView(r4,lp(-1,-2,0,0,0,14));
+        LinearLayout reminder=card();reminder.setOrientation(LinearLayout.HORIZONTAL);reminder.setGravity(Gravity.CENTER_VERTICAL);reminder.setBackground(shape(0xFFE8EBFF,18,0));
+        LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,"НАПОМИНАНИЯ",10,0xFF5865F2,true);addText(words,reminderSummary(),12,DARK,false);reminder.addView(words,new LinearLayout.LayoutParams(0,-2,1f));
+        TextView arrow=text("→",22,0xFF5865F2,true);reminder.addView(arrow);reminder.setOnClickListener(v->showReminderSettings());root.addView(reminder,lp(-1,-2,0,0,0,8));
     }
     private String dailyMotivation() { return "✧  "+messages[Math.floorMod(todayKey().hashCode(),messages.length)]; }
      private String word(int n) { int x=n%10, y=n%100; if(x==1 && y!=11)return "урок"; if(x>=2&&x<=4&&(y<12||y>14))return "урока"; return "уроков"; }
@@ -1309,41 +1248,23 @@ public class MainActivity extends Activity {
             });
         }
 
-    private void actionRegular(String title, String sub, OnAction run) {
-        LinearLayout c = new LinearLayout(this); c.setOrientation(LinearLayout.HORIZONTAL); c.setGravity(Gravity.CENTER_VERTICAL); c.setPadding(dp(16), dp(14), dp(14), dp(14));
-        c.setBackground(shape("night".equals(prefs.getString("app_theme","pink"))?0xFF25212B:0xFFFFFFFF,24,"night".equals(prefs.getString("app_theme","pink"))?0xFF403541:0xFFECE6E9)); c.setElevation(dp(2));
-        LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
-        TextView heading = text(title, 17, DARK, false);
-        if (title.startsWith("РАЗДЕЛ ")) {
-            android.text.SpannableString styled = new android.text.SpannableString(title);
-            styled.setSpan(new android.text.style.StyleSpan(Typeface.BOLD), 0, 6, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            heading.setText(styled);
-        }
-        words.addView(heading, lp(-1, -2, 0, 0, 0, 4));
-        TextView detail = text(sub, 13, MUTED, false); words.addView(detail, lp(-1, -2, 0, 0, 0, 0));
-        c.addView(words, new LinearLayout.LayoutParams(0, -2, 1f));
-        TextView arrow = text("›", 28, PINK, false); arrow.setGravity(Gravity.CENTER); c.addView(arrow, lp(24, 34, 8, 0, 0, 0));
-        c.setOnClickListener(v -> { c.animate().scaleX(0.985f).scaleY(0.985f).setDuration(100).withEndAction(() -> { c.animate().scaleX(1f).scaleY(1f).setDuration(150).start(); run.go(); }).start(); });
-        root.addView(c, lp(-1, -2, 0, 0, 0, 9));
+    private void actionRegular(String title,String sub,OnAction run) {
+        LinearLayout c=new LinearLayout(this);c.setOrientation(LinearLayout.HORIZONTAL);c.setGravity(Gravity.CENTER_VERTICAL);c.setPadding(dp(17),dp(16),dp(15),dp(16));c.setBackground(shape(0xFFFFFFFF,20,0xFFE5E8EF));
+        LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);TextView h=text(title,16,DARK,false);if(title.startsWith("РАЗДЕЛ ")){android.text.SpannableString z=new android.text.SpannableString(title);z.setSpan(new android.text.style.StyleSpan(Typeface.BOLD),0,6,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);h.setText(z);}words.addView(h,lp(-1,-2,0,0,0,4));words.addView(text(sub,12,MUTED,false));c.addView(words,new LinearLayout.LayoutParams(0,-2,1f));
+        TextView a=text("↗",20,0xFF5865F2,true);c.addView(a);c.setOnClickListener(v->{c.animate().scaleX(.98f).scaleY(.98f).setDuration(90).withEndAction(()->{c.animate().scaleX(1f).scaleY(1f).setDuration(130).start();run.go();}).start();});root.addView(c,lp(-1,-2,0,0,0,9));
     }
 
-    private void action(String title, String sub, OnAction run) {
-        LinearLayout c = new LinearLayout(this); c.setOrientation(LinearLayout.HORIZONTAL); c.setGravity(Gravity.CENTER_VERTICAL); c.setPadding(dp(16), dp(14), dp(14), dp(14));
-        c.setBackground(shape(0xFFFFFFFF, 22, 0xFFF3E9EC)); c.setElevation(dp(2));
-        LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL); words.setGravity(Gravity.CENTER_VERTICAL);
-        TextView heading = text(title, 17, DARK, true); heading.setMaxLines(2); words.addView(heading, lp(-1, -2, 0, 0, 0, 4));
-        TextView detail = text(sub, 13, MUTED, false); detail.setMaxLines(2); words.addView(detail, lp(-1, -2, 0, 0, 0, 0));
-        c.addView(words, new LinearLayout.LayoutParams(0, -2, 1f));
-        TextView arrow = text("›", 28, PINK, false); arrow.setGravity(Gravity.CENTER); c.addView(arrow, lp(24, 34, 8, 0, 0, 0));
-        c.setOnClickListener(v -> { c.animate().scaleX(0.985f).scaleY(0.985f).setDuration(100).withEndAction(() -> { c.animate().scaleX(1f).scaleY(1f).setDuration(150).start(); run.go(); }).start(); });
-        root.addView(c, lp(-1, -2, 0, 0, 0, 9));
+    private void action(String title,String sub,OnAction run) {
+        LinearLayout c=new LinearLayout(this);c.setOrientation(LinearLayout.HORIZONTAL);c.setGravity(Gravity.CENTER_VERTICAL);c.setPadding(dp(17),dp(16),dp(15),dp(16));c.setBackground(shape(0xFFFFFFFF,20,0xFFE5E8EF));
+        LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);words.setGravity(Gravity.CENTER_VERTICAL);TextView h=text(title,16,DARK,true);h.setMaxLines(2);words.addView(h,lp(-1,-2,0,0,0,4));TextView d=text(sub,12,MUTED,false);d.setMaxLines(2);words.addView(d);c.addView(words,new LinearLayout.LayoutParams(0,-2,1f));c.addView(text("↗",20,0xFF5865F2,true));
+        c.setOnClickListener(v->{c.animate().scaleX(.98f).scaleY(.98f).setDuration(90).withEndAction(()->{c.animate().scaleX(1f).scaleY(1f).setDuration(130).start();run.go();}).start();});root.addView(c,lp(-1,-2,0,0,0,9));
     }
     private GradientDrawable gradientShape(int start,int end,int radius){ GradientDrawable d=new GradientDrawable(GradientDrawable.Orientation.TL_BR,new int[]{start,end}); d.setCornerRadius(dp(radius)); d.setStroke(dp(1),0x22A98BD6); return d; }
     private int nightTint(int color){ if("night".equals(prefs==null?"pink":prefs.getString("app_theme","pink"))) return color; return color==BG?0xFFFFF3FB:color; }
-    private LinearLayout card() { LinearLayout l=new LinearLayout(this);l.setOrientation(LinearLayout.VERTICAL);l.setPadding(dp(18),dp(17),dp(18),dp(17));boolean night=prefs!=null&&"night".equals(prefs.getString("app_theme","pink"));l.setBackground(shape(night?0xFF25212B:0xFFFFFCFF,26,night?0xFF51435F:0xFFEDE3F7));l.setElevation(dp(4));return l; }
+    private LinearLayout card() { LinearLayout l=new LinearLayout(this);l.setOrientation(LinearLayout.VERTICAL);l.setPadding(dp(17),dp(16),dp(17),dp(16));l.setBackground(shape(0xFFFFFFFF,22,0xFFE5E8EF));l.setElevation(dp(1));return l; }
     private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, size, color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
     private TextView text(String value, int size, int color, boolean bold) { value=translate(value); TextView t = new TextView(this); t.setText(value); t.setTextSize(size); t.setTextColor(color); if (bold) t.setTypeface(Typeface.DEFAULT, Typeface.BOLD); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
-    private Button button(String label, boolean primary) { label=translate(label);Button b=new Button(this);b.setText(label);b.setTextSize(14);b.setTypeface(Typeface.DEFAULT,Typeface.BOLD);b.setAllCaps(false);b.setLetterSpacing(.015f);b.setMinHeight(dp(48));b.setPadding(dp(16),dp(9),dp(16),dp(9));b.setElevation(primary?dp(3):0);b.setTextColor(primary?0xFFFFFFFF:PINK);b.setBackground(primary?gradientShape(0xFF9A70E0,0xFF7950C8,18):shape(PALE,18,0xFFE7DDF5));b.setStateListAnimator(null);b.setOnTouchListener((v,e)->{if(e.getAction()==android.view.MotionEvent.ACTION_DOWN)v.animate().scaleX(.97f).scaleY(.97f).setDuration(80).start();else if(e.getAction()==android.view.MotionEvent.ACTION_UP||e.getAction()==android.view.MotionEvent.ACTION_CANCEL)v.animate().scaleX(1f).scaleY(1f).setDuration(110).start();return false;});return b; }
+    private Button button(String label,boolean primary) { label=translate(label);Button b=new Button(this);b.setText(label);b.setTextSize(14);b.setTypeface(Typeface.DEFAULT,Typeface.BOLD);b.setAllCaps(false);b.setMinHeight(dp(48));b.setPadding(dp(17),dp(9),dp(17),dp(9));b.setElevation(primary?dp(2):0);b.setTextColor(primary?0xFFFFFFFF:0xFF5865F2);b.setBackground(primary?gradientShape(0xFF6875FF,0xFF4E5BE0,15):shape(0xFFE8EBFF,15,0));b.setStateListAnimator(null);b.setOnTouchListener((v,e)->{if(e.getAction()==android.view.MotionEvent.ACTION_DOWN)v.animate().scaleX(.97f).scaleY(.97f).setDuration(80).start();else if(e.getAction()==android.view.MotionEvent.ACTION_UP||e.getAction()==android.view.MotionEvent.ACTION_CANCEL)v.animate().scaleX(1f).scaleY(1f).setDuration(110).start();return false;});return b; }
     private String translate(String value){
         String lang=prefs==null?"ru":prefs.getString("app_language","ru");if("ru".equals(lang)||value==null)return value;
         String[][] pairs={
