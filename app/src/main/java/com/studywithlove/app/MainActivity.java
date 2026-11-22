@@ -52,6 +52,7 @@ public class MainActivity extends Activity {
     private String renderedScreen = "";
     private final List<String> screenHistory = new ArrayList<>();
     private boolean navigatingBack = false;
+    private long lastBackPressedAt=0L;
     private SharedPreferences prefs;
     private String selectedTopic = null, selectedChapter = null;
     private TextView topicProgressLabel;
@@ -1519,7 +1520,10 @@ public class MainActivity extends Activity {
             return;
         }
         if (!"home".equals(currentScreen)) { showHome(); return; }
-        Toast.makeText(this, "Ты уже на главной странице ❤️", Toast.LENGTH_SHORT).show();
+        long now=SystemClock.elapsedRealtime();
+        if(now-lastBackPressedAt<2000L){finish();return;}
+        lastBackPressedAt=now;
+        Toast.makeText(this, "Нажми ещё раз, чтобы выйти", Toast.LENGTH_SHORT).show();
     }
 
     private void showScreenByKey(String key) {
