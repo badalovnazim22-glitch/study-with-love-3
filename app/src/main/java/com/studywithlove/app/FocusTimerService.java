@@ -46,7 +46,7 @@ public class FocusTimerService extends Service {
         handler.removeCallbacks(tick);
         if(!rest)recordFocus(segmentDuration);
         clearSavedTimer();
-        try{((android.os.Vibrator)getSystemService(VIBRATOR_SERVICE)).vibrate(Build.VERSION.SDK_INT>=26?VibrationEffect.createWaveform(new long[]{0,350,180,550},-1):new long[]{0,350,180,550},-1);}catch(Exception ignored){}
+        try{android.os.Vibrator vibrator=(android.os.Vibrator)getSystemService(VIBRATOR_SERVICE);if(Build.VERSION.SDK_INT>=26)vibrator.vibrate(VibrationEffect.createWaveform(new long[]{0,350,180,550},-1));else vibrator.vibrate(new long[]{0,350,180,550},-1);}catch(Exception ignored){}
         Uri sound=RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         Notification.Builder b=Build.VERSION.SDK_INT>=26?new Notification.Builder(this,FINISH_CHANNEL):new Notification.Builder(this);
         b.setSmallIcon(android.R.drawable.ic_lock_idle_alarm).setContentTitle(rest?"Перерыв окончен":"Фокус-сессия завершена")
