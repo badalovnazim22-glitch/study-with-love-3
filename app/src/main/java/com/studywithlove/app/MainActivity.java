@@ -83,7 +83,7 @@ public class MainActivity extends Activity {
     private final List<String> reminderTimes = new ArrayList<>();
     private final List<CheckBox> dayChecks = new ArrayList<>();
     private final Map<String, List<String>> chapters = new LinkedHashMap<>();
-    private final String[] messages = {"Ты большая умничка! ❤️", "Я верю в тебя, у тебя всё получится! 🌸", "Не сдавайся: маленькие шаги приводят к большим результатам! 💗", "Ты справишься! И не забывай улыбаться ❤️"};
+    private final String[] messages = {"Ты отлично справляешься! ❤️", "Я верю в тебя, у тебя всё получится! 🌸", "Не сдавайся: маленькие шаги приводят к большим результатам! 💗", "Ты справишься! И не забывай улыбаться ❤️"};
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -381,7 +381,7 @@ public class MainActivity extends Activity {
         hero.setBackground(shape(0xFFF8E8EE, 27, 0));
         addText(hero, "ТВОЙ ПРОГРЕСС", 12, PINK, true);
         addText(hero, "Ты справляешься.\nПродолжай в своём темпе.", 24, DARK, true);
-        addText(hero, "Каждое занятие — это забота о себе будущей.", 14, MUTED, false);
+        addText(hero, isMaleProfile()?"Каждое занятие — это забота о себе будущем.":"Каждое занятие — это забота о себе будущей.", 14, MUTED, false);
          addText(hero, dailyMotivation(), 14, PINK, true);
         LinearLayout progressHead = new LinearLayout(this);
         progressHead.setGravity(Gravity.CENTER_VERTICAL);
@@ -1412,7 +1412,7 @@ public class MainActivity extends Activity {
     }
 
     private void showFutureLetters() {
-        currentScreen="letters";base("✉ Письмо себе в будущее","Запечатай важные мысли для себя будущей");
+        currentScreen="letters";base("✉ Письмо себе в будущее",isMaleProfile()?"Запечатай важные мысли для себя будущего":"Запечатай важные мысли для себя будущей");
         LinearLayout steps=new LinearLayout(this);steps.setOrientation(LinearLayout.HORIZONTAL);String[] stepLabels={"1. Напиши","2. Выбери дату","3. Отправь"};for(int i=0;i<3;i++){TextView st=text(stepLabels[i],10,i==0?PINK:MUTED,true);st.setGravity(Gravity.CENTER);st.setPadding(dp(5),dp(9),dp(5),dp(9));st.setBackground(shape(i==0?0xFFFFE8EF:0xFFF7F3F4,14,0));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(38),1f);p.setMargins(dp(2),0,dp(2),0);steps.addView(st,p);}root.addView(steps,lp(-1,42,0,0,0,18));
         TextView prompt=text("✒  Напиши письмо",17,DARK,true);root.addView(prompt,lp(-1,-2,0,0,0,5));
         EditText body=new EditText(this);body.setHint("Дорогая я, хочу сказать тебе...");body.setMinLines(5);body.setGravity(Gravity.TOP);body.setTextSize(16);body.setTextColor(DARK);body.setHintTextColor(MUTED);body.setPadding(dp(2),dp(12),dp(2),dp(12));body.setBackgroundColor(0x00000000);root.addView(body,lp(-1,145,0,0,0,18));
