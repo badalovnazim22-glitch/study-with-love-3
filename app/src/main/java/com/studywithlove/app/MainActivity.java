@@ -244,80 +244,75 @@ public class MainActivity extends Activity {
 
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){super.onActivityResult(requestCode,resultCode,data);if(resultCode!=RESULT_OK||data==null||data.getData()==null)return;android.net.Uri uri=data.getData();if(requestCode==PICK_BACKGROUND){try{getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);}catch(Exception ignored){}prefs.edit().putString("custom_background_uri",uri.toString()).apply();showSettings();Toast.makeText(this,"Фото установлено как фон ♡",Toast.LENGTH_SHORT).show();}else if(requestCode==BACKUP_EXPORT){try{java.io.OutputStream out=getContentResolver().openOutputStream(uri);if(out==null)throw new Exception();out.write(createBackupJson().getBytes("UTF-8"));out.close();Toast.makeText(this,"Резервная копия сохранена ♡",Toast.LENGTH_LONG).show();}catch(Exception e){Toast.makeText(this,"Не удалось сохранить копию",Toast.LENGTH_LONG).show();}}else if(requestCode==BACKUP_IMPORT){try{java.io.InputStream in=getContentResolver().openInputStream(uri);java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();byte[] buffer=new byte[4096];int n;while((n=in.read(buffer))>0)bytes.write(buffer,0,n);in.close();restoreBackupJson(new String(bytes.toByteArray(),"UTF-8"));Toast.makeText(this,"Данные восстановлены ♡",Toast.LENGTH_LONG).show();loadChapters();showHome();}catch(Exception e){Toast.makeText(this,"Файл копии не удалось прочитать",Toast.LENGTH_LONG).show();}}}
 
+    private LinearLayout settingsGroup(String title) {
+        LinearLayout group=new LinearLayout(this);group.setOrientation(LinearLayout.VERTICAL);
+        group.setPadding(0,dp(9),0,dp(13));
+        addText(group,title,12,PINK,true);
+        View line=new View(this);line.setBackgroundColor(0xFFEEDFE4);
+        group.addView(line,lp(-1,1,0,5,0,9));
+        return group;
+    }
+
     private void showSettings() {
-        currentScreen = "settings";
-        base("Настройки ⚙", "Настрой приложение под себя");
-        LinearLayout nameCard = card();
-        addText(nameCard, "ТВОЁ ИМЯ", 12, PINK, true);
-        EditText name = new EditText(this);
-        name.setSingleLine(true); name.setTextSize(16); name.setTextColor(DARK);
-        name.setHint("Как к тебе обращаться?");
-        name.setText(prefs.getString("display_name", "Назка"));
-        name.setPadding(dp(13), dp(8), dp(13), dp(8));
-        name.setBackground(shape(0xFFFFF9F7, 15, 0xFFF1DDE4));
-        nameCard.addView(name, lp(-1, 50, 0, 7, 0, 8));
-        Button saveName = button("Сохранить имя", true);
-        saveName.setOnClickListener(v -> {
-            String value = name.getText().toString().trim();
-            if (value.isEmpty()) { Toast.makeText(this, "Введи имя 💗", Toast.LENGTH_SHORT).show(); return; }
-            prefs.edit().putString("display_name", value).apply();
-            Toast.makeText(this, "Имя сохранено", Toast.LENGTH_SHORT).show();
-        });
-        nameCard.addView(saveName, lp(-1, 46, 0, 0, 0, 0));
-        root.addView(nameCard, lp(-1, -2, 0, 0, 0, 13));
+        currentScreen="settings";
+        base("Настройки ⚙","Всё нужное — в одном месте");
 
-        LinearLayout photoCard=card();addText(photoCard,"СВОЙ ФОН",12,PINK,true);addText(photoCard,"Установи любимое фото как нежный фон приложения",13,MUTED,false);Button choosePhoto=button("＋  Выбрать своё фото",true);choosePhoto.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT);pick.addCategory(Intent.CATEGORY_OPENABLE);pick.setType("image/*");pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,PICK_BACKGROUND);});photoCard.addView(choosePhoto,lp(-1,48,0,9,0,5));Button clearPhoto=button("Убрать своё фото",false);clearPhoto.setOnClickListener(v->{prefs.edit().remove("custom_background_uri").apply();showSettings();});photoCard.addView(clearPhoto,lp(-1,42,0,0,0,0));root.addView(photoCard,lp(-1,-2,0,0,0,13));
+        LinearLayout profile=settingsGroup("ПРОФИЛЬ");
+        EditText name=new EditText(this);name.setSingleLine(true);name.setTextSize(16);name.setTextColor(DARK);
+        name.setHint(translate("Как к тебе обращаться?"));name.setText(prefs.getString("display_name",""));
+        name.setPadding(dp(14),dp(8),dp(14),dp(8));name.setBackground(shape(0xFFFFF9F7,15,0xFFEADDE2));
+        profile.addView(name,lp(-1,50,0,2,0,8));
+        Button saveName=button("Сохранить имя",true);saveName.setOnClickListener(v->{String value=name.getText().toString().trim();if(value.isEmpty()){name.setError("Введи имя");return;}prefs.edit().putString("display_name",value).apply();Toast.makeText(this,"Имя сохранено ♡",Toast.LENGTH_SHORT).show();});
+        profile.addView(saveName,lp(-1,44,0,0,0,0));root.addView(profile,lp(-1,-2,0,0,0,4));
 
-        LinearLayout themeCard = card();
-        addText(themeCard, "ТЕМА ОФОРМЛЕНИЯ", 12, PINK, true);
-        addText(themeCard, "Выбери настроение приложения", 13, MUTED, false);
-        String[] themeNames = {"Розовая", "Лавандовая", "Мятная", "Ночная", "Белая", "Кофейная", "Золотая", "Люкс-монограмма", "Небесная", "Персиковая", "Красная", "Louis Vuitton"};
-        String[] themeKeys = {"pink", "lavender", "mint", "night", "white", "brown", "gold", "luxury", "sky", "peach", "red", "lv"};
-        String current = prefs.getString("app_theme", "pink");
-        android.widget.GridLayout themeGrid=new android.widget.GridLayout(this);themeGrid.setColumnCount(3);
-        int[] swatches={0xFFC97891,0xFF8979B8,0xFF659B86,0xFF302735,0xFFFFFFFF,0xFF8B6046,0xFFC49318,0xFF30251F,0xFF5D91B5,0xFFD88968,0xFFB32635,0xFFD9C19A};
-        for(int i=0;i<themeNames.length;i++){final String key=themeKeys[i];final int color=swatches[i];LinearLayout tile=new LinearLayout(this);tile.setOrientation(LinearLayout.VERTICAL);tile.setGravity(Gravity.CENTER);tile.setPadding(dp(3),dp(5),dp(3),dp(5));int labelColor=(key.equals("white")||key.equals("gold")||key.equals("peach")||key.equals("lv"))?0xFF403020:0xFFFFFFFF;tile.setBackground(shape(color,16,current.equals(key)?PINK:0));tile.setElevation(dp(current.equals(key)?4:1));TextView label=text((current.equals(key)?"✓ ":"")+themeNames[i],11,labelColor,true);label.setGravity(Gravity.CENTER);label.setMaxLines(2);label.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);tile.addView(label,lp(-1,-1,0,0,0,0));android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(78);gp.columnSpec=android.widget.GridLayout.spec(i%3,1f);gp.setMargins(dp(3),dp(3),dp(3),dp(3));themeGrid.addView(tile,gp);tile.setOnClickListener(v->{tile.animate().alpha(.35f).scaleX(.96f).scaleY(.96f).setDuration(120).withEndAction(()->{prefs.edit().putString("app_theme",key).apply();applySavedTheme();showSettings();getWindow().getDecorView().setAlpha(0f);getWindow().getDecorView().animate().alpha(1f).setDuration(220).start();}).start();});}
-        themeCard.addView(themeGrid,lp(-1,-2,0,8,0,0));
-        root.addView(themeCard, lp(-1, -2, 0, 0, 0, 13));
+        LinearLayout appearance=settingsGroup("ВНЕШНИЙ ВИД");
+        addText(appearance,"Тема приложения",14,DARK,true);
+        addText(appearance,"Нажми на палитру, чтобы сразу применить оформление.",12,MUTED,false);
+        String[] names={"Розовая","Лавандовая","Мятная","Ночная","Белая","Кофейная","Золотая","Люкс","Небесная","Персиковая","Красная","LV"};
+        String[] keys={"pink","lavender","mint","night","white","brown","gold","luxury","sky","peach","red","lv"};
+        int[] colors={0xFFC97891,0xFF8979B8,0xFF659B86,0xFF302735,0xFFFFFFFF,0xFF8B6046,0xFFC49318,0xFF30251F,0xFF5D91B5,0xFFD88968,0xFFB32635,0xFFD9C19A};
+        android.widget.GridLayout palette=new android.widget.GridLayout(this);palette.setColumnCount(3);
+        String activeTheme=prefs.getString("app_theme","pink");
+        for(int i=0;i<keys.length;i++){final String key=keys[i];final int color=colors[i];final String label=names[i];LinearLayout option=new LinearLayout(this);option.setGravity(Gravity.CENTER_VERTICAL);option.setPadding(dp(8),dp(7),dp(5),dp(7));option.setBackground(shape(activeTheme.equals(key)?0xFFFFF0F4:0x00FFFFFF,15,activeTheme.equals(key)?PINK:0xFFEFE4E8));
+            TextView swatch=text(activeTheme.equals(key)?"✓":"",12,0xFFFFFFFF,true);swatch.setGravity(Gravity.CENTER);swatch.setBackground(shape(color,30,activeTheme.equals(key)?PINK:0));option.addView(swatch,lp(28,28,0,0,7,0));TextView labelView=text(label,11,DARK,true);option.addView(labelView,new LinearLayout.LayoutParams(0,dp(30),1f));
+            android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(46);gp.columnSpec=android.widget.GridLayout.spec(i%3,1f);gp.setMargins(dp(2),dp(3),dp(2),dp(3));palette.addView(option,gp);
+            option.setOnClickListener(v->{prefs.edit().putString("app_theme",key).apply();applySavedTheme();showSettings();});
+        }
+        appearance.addView(palette,lp(-1,-2,0,7,0,8));
+        Button choosePhoto=button("＋  Выбрать фото фона",false);choosePhoto.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT);pick.addCategory(Intent.CATEGORY_OPENABLE);pick.setType("image/*");pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,PICK_BACKGROUND);});
+        appearance.addView(choosePhoto,lp(-1,44,0,3,0,4));
+        Button clearPhoto=button("Убрать фото фона",false);clearPhoto.setOnClickListener(v->{prefs.edit().remove("custom_background_uri").apply();showSettings();});appearance.addView(clearPhoto,lp(-1,40,0,0,0,0));
+        root.addView(appearance,lp(-1,-2,0,0,0,4));
 
-        LinearLayout languageCard=card();addText(languageCard,"ЯЗЫК ПРИЛОЖЕНИЯ",12,PINK,true);addText(languageCard,"Выбери язык интерфейса",13,MUTED,false);String[] languageNames={"Русский","English","Azərbaycan dili"};String[] languageKeys={"ru","en","az"};for(int li=0;li<languageKeys.length;li++){final String lk=languageKeys[li];Button lb=button((prefs.getString("app_language","ru").equals(lk)?"✓  ":"")+languageNames[li],prefs.getString("app_language","ru").equals(lk));languageCard.addView(lb,lp(-1,44,0,6,0,0));lb.setOnClickListener(v->{prefs.edit().putString("app_language",lk).apply();showSettings();});}root.addView(languageCard,lp(-1,-2,0,0,0,13));
+        LinearLayout language=settingsGroup("ЯЗЫК ПРИЛОЖЕНИЯ");
+        addText(language,"После выбора язык применяется ко всем экранам приложения.",12,MUTED,false);
+        String[] languageNames={"Русский","English","Azərbaycan dili"};String[] languageKeys={"ru","en","az"};String selectedLanguage=prefs.getString("app_language","ru");
+        for(int i=0;i<languageKeys.length;i++){final String key=languageKeys[i];Button choice=button((selectedLanguage.equals(key)?"✓  ":"")+languageNames[i],selectedLanguage.equals(key));language.addView(choice,lp(-1,42,0,5,0,0));choice.setOnClickListener(v->{prefs.edit().putString("app_language",key).apply();showSettings();});}
+        root.addView(language,lp(-1,-2,0,0,0,4));
 
-        LinearLayout progressStyleCard=card();
-        addText(progressStyleCard,"ОТОБРАЖЕНИЕ ПРОГРЕССА",12,PINK,true);
-        addText(progressStyleCard,"Выбери, как показывать ход обучения.",13,MUTED,false);
-        String progressMode=prefs.getString("progress_display","percent");
-        LinearLayout progressModes=new LinearLayout(this);progressModes.setOrientation(LinearLayout.HORIZONTAL);
-        Button percentMode=button("С процентами",!"slider".equals(progressMode));
-        Button sliderMode=button("Ползунок","slider".equals(progressMode));
-        LinearLayout.LayoutParams modeLp=new LinearLayout.LayoutParams(0,dp(46),1f);modeLp.setMargins(dp(3),dp(7),dp(3),0);progressModes.addView(percentMode,modeLp);
-        LinearLayout.LayoutParams modeLp2=new LinearLayout.LayoutParams(0,dp(46),1f);modeLp2.setMargins(dp(3),dp(7),dp(3),0);progressModes.addView(sliderMode,modeLp2);
-        percentMode.setOnClickListener(v->{prefs.edit().putString("progress_display","percent").apply();showSettings();});
-        sliderMode.setOnClickListener(v->{prefs.edit().putString("progress_display","slider").apply();showSettings();});
-        progressStyleCard.addView(progressModes,lp(-1,54,0,0,0,0));root.addView(progressStyleCard,lp(-1,-2,0,0,0,13));
+        LinearLayout progress=settingsGroup("ОТОБРАЖЕНИЕ ПРОГРЕССА");
+        addText(progress,"Выбери удобный формат отображения учебных результатов.",12,MUTED,false);
+        String mode=prefs.getString("progress_display","percent");LinearLayout modes=new LinearLayout(this);modes.setOrientation(LinearLayout.HORIZONTAL);
+        Button percent=button("С процентами",!"slider".equals(mode));Button slider=button("Полосы прогресса","slider".equals(mode));
+        LinearLayout.LayoutParams m1=new LinearLayout.LayoutParams(0,dp(46),1f);m1.setMargins(dp(2),dp(7),dp(3),0);modes.addView(percent,m1);
+        LinearLayout.LayoutParams m2=new LinearLayout.LayoutParams(0,dp(46),1f);m2.setMargins(dp(3),dp(7),dp(2),0);modes.addView(slider,m2);
+        percent.setOnClickListener(v->{prefs.edit().putString("progress_display","percent").apply();showSettings();});slider.setOnClickListener(v->{prefs.edit().putString("progress_display","slider").apply();showSettings();});
+        progress.addView(modes,lp(-1,54,0,0,0,0));root.addView(progress,lp(-1,-2,0,0,0,4));
 
-        LinearLayout notificationCard = card();
-        addText(notificationCard, "УВЕДОМЛЕНИЯ", 12, PINK, true);
-        CheckBox enabled = new CheckBox(this);
-        enabled.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));
-        enabled.setText("Включить напоминания о занятиях");
-        enabled.setTextSize(14); enabled.setTextColor(DARK);
-        enabled.setChecked(prefs.getBoolean("notifications_enabled", true));
-        notificationCard.addView(enabled, lp(-1, 48, 0, 4, 0, 2));
-        enabled.setOnCheckedChangeListener((buttonView, checked) -> {
-            prefs.edit().putBoolean("notifications_enabled", checked).apply();
-            scheduleReminders(this);
-            if (checked && Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
-                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 20);
-        });
-        Button reminderSettings = button("Настроить дни и время", false);
-        reminderSettings.setOnClickListener(v -> showReminderSettings());
-        notificationCard.addView(reminderSettings, lp(-1, 46, 0, 4, 0, 0));
-        root.addView(notificationCard, lp(-1, -2, 0, 0, 0, 13));
+        LinearLayout reminders=settingsGroup("НАПОМИНАНИЯ");
+        CheckBox enabled=new CheckBox(this);enabled.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));enabled.setText(translate("Включить напоминания о занятиях"));enabled.setTextSize(14);enabled.setTextColor(DARK);enabled.setChecked(prefs.getBoolean("notifications_enabled",true));reminders.addView(enabled,lp(-1,46,0,0,0,4));
+        enabled.setOnCheckedChangeListener((buttonView,checked)->{prefs.edit().putBoolean("notifications_enabled",checked).apply();scheduleReminders(this);if(checked&&Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},20);});
+        Button reminderSettings=button("Настроить дни и время",false);reminderSettings.setOnClickListener(v->showReminderSettings());reminders.addView(reminderSettings,lp(-1,44,0,0,0,0));root.addView(reminders,lp(-1,-2,0,0,0,4));
 
-        LinearLayout focusCard=card();addText(focusCard,"РЕЖИМ «НЕ ОТВЛЕКАТЬ»",12,PINK,true);addText(focusCard,"При включении приложение временно отключит свои учебные напоминания.",13,MUTED,false);CheckBox focus=new CheckBox(this);focus.setText("Включить режим фокуса");focus.setTextColor(DARK);focus.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));focus.setChecked(prefs.getBoolean("do_not_disturb",false));focusCard.addView(focus,lp(-1,48,0,4,0,0));focus.setOnCheckedChangeListener((b,on)->{prefs.edit().putBoolean("do_not_disturb",on).apply();scheduleReminders(this);Toast.makeText(this,on?"Режим фокуса включён":"Режим фокуса выключен",Toast.LENGTH_SHORT).show();});root.addView(focusCard,lp(-1,-2,0,0,0,13));
-         LinearLayout backupCard=card();addText(backupCard,"РЕЗЕРВНАЯ КОПИЯ",12,PINK,true);addText(backupCard,"Сохрани уроки, цели, дневник и прогресс в один файл.",13,MUTED,false);Button export=button("Экспортировать копию",true);export.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");i.putExtra(Intent.EXTRA_TITLE,"study_with_love_backup.json");startActivityForResult(i,BACKUP_EXPORT);});backupCard.addView(export,lp(-1,46,0,8,0,5));Button restore=button("Восстановить из копии",false);restore.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");startActivityForResult(i,BACKUP_IMPORT);});backupCard.addView(restore,lp(-1,44,0,0,0,0));root.addView(backupCard,lp(-1,-2,0,0,0,13));
-         Button back = button("← На главную", true); back.setOnClickListener(v -> showHome());
-        root.addView(back, lp(-1, 50, 0, 0, 0, 0));
+        LinearLayout focus=settingsGroup("РЕЖИМ ФОКУСА");
+        addText(focus,"Временно отключает учебные напоминания.",12,MUTED,false);CheckBox focusToggle=new CheckBox(this);focusToggle.setText("Не отвлекать");focusToggle.setTextColor(DARK);focusToggle.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));focusToggle.setChecked(prefs.getBoolean("do_not_disturb",false));focus.addView(focusToggle,lp(-1,44,0,0,0,0));focusToggle.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("do_not_disturb",on).apply();scheduleReminders(this);});root.addView(focus,lp(-1,-2,0,0,0,4));
+
+        LinearLayout backup=settingsGroup("РЕЗЕРВНАЯ КОПИЯ");
+        addText(backup,"Сохрани уроки, цели, дневник и прогресс в один файл.",12,MUTED,false);
+        Button export=button("Экспортировать копию",true);export.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");i.putExtra(Intent.EXTRA_TITLE,"study_with_love_backup.json");startActivityForResult(i,BACKUP_EXPORT);});backup.addView(export,lp(-1,44,0,7,0,5));
+        Button restore=button("Восстановить из копии",false);restore.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");startActivityForResult(i,BACKUP_IMPORT);});backup.addView(restore,lp(-1,42,0,0,0,0));root.addView(backup,lp(-1,-2,0,0,0,4));
+
+        Button back=button("← На главную",true);back.setOnClickListener(v->showHome());root.addView(back,lp(-1,48,0,8,0,4));
     }
 
     private void applySavedTheme() {
