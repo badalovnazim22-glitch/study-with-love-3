@@ -42,24 +42,30 @@ android.sourceSets.main.res.srcDir(ambienceResDir)
 
 tasks.register("downloadAmbienceAssets") {
     outputs.files(
-        ambienceResDir.map { it.file("raw/ambience_rain.mp3") },
-        ambienceResDir.map { it.file("raw/ambience_cafe.mp3") },
-        ambienceResDir.map { it.file("raw/ambience_forest.mp3") },
-        ambienceResDir.map { it.file("raw/ambience_library.mp3") }
+        ambienceResDir.map { it.file("raw/ambience_rain.ogg") },
+        ambienceResDir.map { it.file("raw/ambience_cafe.ogg") },
+        ambienceResDir.map { it.file("raw/ambience_forest.ogg") },
+        ambienceResDir.map { it.file("raw/ambience_library.ogg") }
     )
     doLast {
         def rawDir = file("$buildDir/generated/ambienceRes/raw")
         rawDir.mkdirs()
         def sounds = [
-            ambience_rain: "https://sfxmint.com/dl/ambience-rain-72.mp3",
-            ambience_cafe: "https://sfxmint.com/dl/cafe-interior-ambience-06.mp3",
-            ambience_forest: "https://sfxmint.com/dl/ambience-forest-55.mp3",
-            ambience_library: "https://sfxmint.com/dl/ambience-room-tone-58.mp3"
+            ambience_rain: "https://upload.wikimedia.org/wikipedia/commons/3/3d/Rain.ogg",
+            ambience_cafe: "https://upload.wikimedia.org/wikipedia/commons/5/54/Cafe_ambiance.ogg",
+            ambience_forest: "https://upload.wikimedia.org/wikipedia/commons/3/38/Birds_forest.ogg",
+            ambience_library: "https://upload.wikimedia.org/wikipedia/commons/f/fb/20121112_TU_Delft_Library%2C_quiet_study_room_-_general_ambience_-_SoundCloud_-_el_mar.ogg"
         ]
         sounds.each { name, url ->
-            def output = new File(rawDir, name + ".mp3")
+            def output = new File(rawDir, name + ".ogg")
             if (!output.exists() || output.length() < 10000) {
-                new URL(url).withInputStream { input -> output.withOutputStream { out -> out << input } }
+                def connection = new URL(url).openConnection()
+                connection.setConnectTimeout(20000)
+                connection.setReadTimeout(120000)
+                connection.setRequestProperty("User-Agent", "StudyWithLove Android build/1.0")
+                connection.getInputStream().withCloseable { input ->
+                    output.withOutputStream { out -> out << input }
+                }
             }
         }
     }
