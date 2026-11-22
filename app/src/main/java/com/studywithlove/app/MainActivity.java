@@ -143,6 +143,7 @@ public class MainActivity extends Activity {
             String name = prefs.getString("custom_lesson_name_" + id, "Мой урок");
             chapters.put("CUSTOM:" + id + ":" + name, new ArrayList<>(prefs.getStringSet("custom_lesson_topics_" + id, new TreeSet<String>())));
         }
+        SharedPreferences.Editor reviewMigration=prefs.edit();boolean migratedReviewDates=false;for(Map.Entry<String,List<String>> entry:chapters.entrySet())for(String topic:entry.getValue())if(topicProgressForChapter(entry.getKey(),topic)==100){String key="topic_completed_at_"+topicStorageSuffix(entry.getKey(),topic);if(!prefs.contains(key)){reviewMigration.putLong(key,System.currentTimeMillis());migratedReviewDates=true;}}if(migratedReviewDates)reviewMigration.apply();
     }
     private void add(String name, String... topics) { List<String> list = new ArrayList<>(); for (String t : topics) list.add(t); chapters.put(name, list); }
 
