@@ -882,6 +882,26 @@ public class MainActivity extends Activity {
     }
 
     private void showDiary() {
+        currentScreen="diary";
+        base("Дневник успехов ♡","Сохраняй моменты, которыми ты гордишься");
+        addText(root,"МАЛЕНЬКАЯ ПОБЕДА СЕГОДНЯ",11,PINK,true);
+        EditText note=new EditText(this);note.setHint("Сегодня у меня получилось...");note.setTextSize(17);note.setTextColor(DARK);note.setHintTextColor(MUTED);note.setGravity(Gravity.TOP);note.setMinLines(4);note.setPadding(dp(2),dp(12),dp(2),dp(12));note.setBackgroundColor(0x00000000);
+        root.addView(note,lp(-1,132,0,0,0,8));
+        final String[] selectedTag={"Учёба"};final String[] editingId={null};
+        LinearLayout tags=new LinearLayout(this);tags.setOrientation(LinearLayout.HORIZONTAL);tags.setGravity(Gravity.CENTER_VERTICAL);
+        String[] tagNames={"Учёба","Дисциплина","Отдых","Прогресс"};
+        for(String tag:tagNames){TextView chip=text("#"+tag,12,tag.equals(selectedTag[0])?PINK:MUTED,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(10),dp(8),dp(10),dp(8));chip.setBackground(shape(tag.equals(selectedTag[0])?0xFFFFE8EF:0xFFF7F3F4,18,tag.equals(selectedTag[0])?PINK:0xFFEDE3E7));LinearLayout.LayoutParams cp=lp(-2,36,0,0,6,0);tags.addView(chip,cp);chip.setOnClickListener(v->{selectedTag[0]=tag;for(int k=0;k<tags.getChildCount();k++){TextView q=(TextView)tags.getChildAt(k);boolean on=q.getText().toString().equals("#"+tag);q.setTextColor(on?PINK:MUTED);q.setBackground(shape(on?0xFFFFE8EF:0xFFF7F3F4,18,on?PINK:0xFFEDE3E7));}});}
+        root.addView(tags,lp(-1,42,0,0,0,14));
+        Button save=button("✦  Сохранить победу",true);save.setTextSize(15);save.setElevation(dp(5));root.addView(save,lp(-1,54,0,0,0,20));
+        TextView memoryTitle=text("Вспомнить успех ✨",17,DARK,true);root.addView(memoryTitle,lp(-1,-2,0,0,0,8));
+        Set<String> all=new TreeSet<>(prefs.getStringSet("diary_ids",new TreeSet<String>()));List<String> old=new ArrayList<>(all);java.util.Collections.sort(old,java.util.Collections.reverseOrder());
+        if(old.size()>1){String pick=old.get(1);LinearLayout memory=new LinearLayout(this);memory.setOrientation(LinearLayout.VERTICAL);memory.setPadding(dp(14),dp(12),dp(14),dp(12));memory.setBackground(shape(0xFFFFF2F6,18,0));addText(memory,prefs.getString("diary_"+pick,""),14,DARK,false);addText(memory,"Твоя прошлая маленькая победа ♡",11,PINK,true);root.addView(memory,lp(-1,-2,0,0,0,18));}
+        else addText(root,"Здесь появится одна из твоих прошлых записей — пока сохрани первую победу.",12,MUTED,false);
+        TextView heading=text("ТВОИ ЗАПИСИ",12,PINK,true);root.addView(heading,lp(-1,-2,0,0,0,9));
+        LinearLayout entries=new LinearLayout(this);entries.setOrientation(LinearLayout.VERTICAL);root.addView(entries,lp(-1,-2,0,0,0,0));
+        renderDiaryEntries(entries,note,save,editingId);
+        save.setOnClickListener(v->{String value=note.getText().toString().trim();if(value.isEmpty()){note.setError("Напиши хотя бы пару слов");return;}Set<String> ids=new TreeSet<>(prefs.getStringSet("diary_ids",new TreeSet<String>()));String id=editingId[0]==null?String.valueOf(System.currentTimeMillis()):editingId[0];ids.add(id);prefs.edit().putString("diary_"+id,value).putString("diary_tag_"+id,selectedTag[0]).putStringSet("diary_ids",ids).apply();editingId[0]=null;note.setText("");save.setText("✦  Сохранить победу");renderDiaryEntries(entries,note,save,editingId);showSavedBanner("Запись сохранена","Твоя маленькая победа осталась в дневнике ♡");});
+    }
         currentScreen = "diary";
         base("Дневник успехов ♡", "Сохраняй моменты, которыми ты гордишься");
         LinearLayout composer = card();
@@ -928,6 +948,23 @@ public class MainActivity extends Activity {
     }
 
     private void renderDiaryEntries(LinearLayout entries,EditText note,Button save,String[] editingId){
+        entries.removeAllViews();Set<String> ids=new TreeSet<>(prefs.getStringSet("diary_ids",new TreeSet<String>()));List<String> sorted=new ArrayList<>(ids);java.util.Collections.sort(sorted,java.util.Collections.reverseOrder());
+        if(sorted.isEmpty()){addText(entries,"🌷 Здесь появятся твои маленькие победы. Сохрани первую запись — и возвращайся к ней в трудные дни.",14,MUTED,false);}
+        for(String id:sorted){String value=prefs.getString("diary_"+id,"");if(value.isEmpty())continue;
+            LinearLayout entry=new LinearLayout(this);entry.setOrientation(LinearLayout.VERTICAL);entry.setPadding(dp(2),dp(9),dp(2),dp(12));
+            LinearLayout top=new LinearLayout(this);top.setGravity(Gravity.CENTER_VERTICAL);
+            TextView date=text("✿  "+new SimpleDateFormat("d MMMM yyyy · HH:mm",new Locale("ru")).format(new Date(Long.parseLong(id))),11,PINK,true);top.addView(date,new LinearLayout.LayoutParams(0,dp(34),1f));
+            TextView edit=text("✎",21,MUTED,true);edit.setGravity(Gravity.CENTER);top.addView(edit,lp(38,34,0,0,2,0));
+            TextView del=text("⌫",20,MUTED,true);del.setGravity(Gravity.CENTER);top.addView(del,lp(38,34,0,0,0,0));
+            entry.addView(top,lp(-1,36,0,0,0,3));
+            String tag=prefs.getString("diary_tag_"+id,"Учёба");TextView tagView=text("#"+tag,11,PINK,true);entry.addView(tagView,lp(-1,22,0,0,0,4));
+            TextView body=text(value,15,DARK,false);body.setGravity(Gravity.TOP);body.setPadding(0,dp(3),0,dp(8));entry.addView(body,lp(-1,-2,0,0,0,0));
+            LinearLayout editArea=new LinearLayout(this);editArea.setOrientation(LinearLayout.VERTICAL);editArea.setVisibility(View.GONE);EditText editText=new EditText(this);editText.setText(value);editText.setTextSize(15);editText.setTextColor(DARK);editText.setGravity(Gravity.TOP);editText.setMinLines(3);editText.setBackground(shape(0xFFFFF9F7,14,0xFFEADDE2));editArea.addView(editText,lp(-1,100,0,0,0,7));Button saveInline=button("Сохранить",true),cancel=button("Отмена",false);editArea.addView(saveInline,lp(-1,42,0,0,0,4));editArea.addView(cancel,lp(-1,40,0,0,0,0));entry.addView(editArea,lp(-1,-2,0,0,0,0));
+            edit.setOnClickListener(v->{body.setVisibility(View.GONE);tagView.setVisibility(View.GONE);editArea.setVisibility(View.VISIBLE);});cancel.setOnClickListener(v->{editArea.setVisibility(View.GONE);body.setVisibility(View.VISIBLE);tagView.setVisibility(View.VISIBLE);});saveInline.setOnClickListener(v->{String updated=editText.getText().toString().trim();if(updated.isEmpty()){editText.setError("Напиши пару слов");return;}prefs.edit().putString("diary_"+id,updated).apply();renderDiaryEntries(entries,note,save,editingId);});
+            del.setOnClickListener(v->new android.app.AlertDialog.Builder(this).setMessage("Удалить эту запись?").setNegativeButton("Отмена",null).setPositiveButton("Удалить",(d,w)->{Set<String> latest=new TreeSet<>(prefs.getStringSet("diary_ids",new TreeSet<String>()));latest.remove(id);prefs.edit().remove("diary_"+id).remove("diary_tag_"+id).putStringSet("diary_ids",latest).apply();renderDiaryEntries(entries,note,save,editingId);}).show());
+            View line=new View(this);line.setBackgroundColor(0xFFEFE5E8);entry.addView(line,lp(-1,1,0,5,0,0));entries.addView(entry,lp(-1,-2,0,0,0,7));
+        }
+    }
         entries.removeAllViews();Set<String> ids=new TreeSet<>(prefs.getStringSet("diary_ids",new TreeSet<String>()));List<String> sorted=new ArrayList<>(ids);java.util.Collections.sort(sorted,java.util.Collections.reverseOrder());
         if(sorted.isEmpty()){LinearLayout empty=card();empty.setGravity(Gravity.CENTER);addText(empty,"🌷",30,PINK,true);addText(empty,"Здесь появятся твои маленькие победы",15,DARK,true);addText(empty,"Сохрани первую запись — тебе будет приятно перечитать её позже.",13,MUTED,false);entries.addView(empty,lp(-1,-2,0,0,0,10));}
         for(String id:sorted){String value=prefs.getString("diary_"+id,"");if(value.isEmpty())continue;LinearLayout entry=card();entry.setBackground(shape(0xFFFFFFFF,23,0xFFF0E4E8));String date=new SimpleDateFormat("d MMMM yyyy · HH:mm",new Locale("ru")).format(new Date(Long.parseLong(id)));addText(entry,"✿  "+date,13,PINK,true);
@@ -1008,6 +1045,22 @@ public class MainActivity extends Activity {
     }
 
     private void showAchievements() {
+        currentScreen="achievements";base("Коллекция достижений","Каждый маленький шаг достоин похвалы");
+        int days=prefs.getStringSet("study_days",new TreeSet<String>()).size(),minutes=totalStudyMinutes(),completed=0;for(List<String> topics:chapters.values())completed+=countCompleted(topics);int sessions=prefs.getInt("done_count",0);
+        String[][] a={{"🌱","Первые шаги","Первый день занятий",String.valueOf(days>=1),"1"},{"🌷","Неделя стараний","7 дней занятий",String.valueOf(days>=7),"7"},{"🌸","Две недели","14 дней занятий",String.valueOf(days>=14),"14"},{"💐","Месяц успеха","30 дней занятий",String.valueOf(days>=30),"30"},{"🏵️","Два месяца","60 дней занятий",String.valueOf(days>=60),"60"},{"🌻","Сто дней","100 дней занятий",String.valueOf(days>=100),"100"},{"📚","Маленький математик","Завершена первая тема",String.valueOf(completed>=1),"1"},{"🧮","Счёт — это просто","Завершено 5 тем",String.valueOf(completed>=5),"5"},{"🎓","Знаток математики","Завершено 10 тем",String.valueOf(completed>=10),"10"},{"🏆","Мастер знаний","Завершены все 41 темы",String.valueOf(completed>=41),"41"},{"⏳","Первый час","60 минут занятий",String.valueOf(minutes>=60),"60"},{"⌛","10 часов учёбы","600 минут занятий",String.valueOf(minutes>=600),"600"},{"🚀","Настойчивость","25 учебных занятий",String.valueOf(sessions>=25),"25"},{"💎","Пятьдесят побед","50 тем или занятий",String.valueOf(completed+sessions>=50),"50"},{"💗","Возвращаюсь к цели","Занятия в 3 разных дня",String.valueOf(days>=3),"3"},{"✨","Ритм учёбы","Занятия в 5 разных дней",String.valueOf(days>=5),"5"}};
+        int unlocked=0;for(String[] x:a)if(Boolean.parseBoolean(x[3]))unlocked++;
+        addText(root,unlocked+" / "+a.length+" открыто",16,DARK,true);
+        ProgressBar overall=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);overall.setMax(a.length);overall.setProgress(unlocked);overall.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));overall.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));root.addView(overall,lp(-1,9,0,8,0,8));
+        addText(root,"До следующей награды: "+(unlocked==a.length?"Все награды собраны!":"ещё "+Math.max(0,(unlocked+1)*7-days)+" дней до нового рубежа"),12,MUTED,false);
+        for(String[] x:a){boolean open=Boolean.parseBoolean(x[3]);int target=Integer.parseInt(x[4]);int current=x[1].contains("дней")||x[1].equals("Первые шаги")?days:x[1].contains("час")?minutes:x[1].contains("побед")||x[1].equals("Настойчивость")?sessions:completed;
+            LinearLayout c=card();c.setOrientation(LinearLayout.HORIZONTAL);c.setGravity(Gravity.CENTER_VERTICAL);c.setAlpha(open?1f:.62f);c.setBackground(shape(open?0xFFFFF0F5:0xFFF5F2F1,22,open?PINK:0xFFE8E1E4));
+            TextView icon=text(open?x[0]:"🔒",28,open?PINK:MUTED,true);icon.setGravity(Gravity.CENTER);c.addView(icon,lp(48,54,0,0,10,0));
+            LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,x[1],15,DARK,true);addText(words,x[2],12,MUTED,false);
+            if(open){String unlockedDate=prefs.getString("achievement_date_"+x[1],"");if(unlockedDate.isEmpty()){unlockedDate=new SimpleDateFormat("d MMMM yyyy",new Locale("ru")).format(new Date());prefs.edit().putString("achievement_date_"+x[1],unlockedDate).apply();}addText(words,"Открыто ✓  ·  "+unlockedDate,11,PINK,true);}
+            else{addText(words,Math.min(current,target)+" / "+target,11,MUTED,true);ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(Math.max(1,target));bar.setProgress(Math.min(current,target));bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));words.addView(bar,lp(-1,6,0,4,0,0));}
+            c.addView(words,new LinearLayout.LayoutParams(0,-2,1f));root.addView(c,lp(-1,-2,0,0,0,9));
+        }backHome();
+    }
         currentScreen = "achievements";
         base("Коллекция достижений", "Каждый маленький шаг достоин похвалы");
         int days = prefs.getStringSet("study_days", new TreeSet<String>()).size();
@@ -1051,6 +1104,24 @@ public class MainActivity extends Activity {
     }
 
     private void showFutureLetters() {
+        currentScreen="letters";base("✉ Письмо себе в будущее","Запечатай важные мысли для себя будущей");
+        LinearLayout steps=new LinearLayout(this);steps.setOrientation(LinearLayout.HORIZONTAL);String[] stepLabels={"1. Напиши","2. Выбери дату","3. Отправь"};for(int i=0;i<3;i++){TextView st=text(stepLabels[i],10,i==0?PINK:MUTED,true);st.setGravity(Gravity.CENTER);st.setPadding(dp(5),dp(9),dp(5),dp(9));st.setBackground(shape(i==0?0xFFFFE8EF:0xFFF7F3F4,14,0));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(38),1f);p.setMargins(dp(2),0,dp(2),0);steps.addView(st,p);}root.addView(steps,lp(-1,42,0,0,0,18));
+        TextView prompt=text("✒  Напиши письмо",17,DARK,true);root.addView(prompt,lp(-1,-2,0,0,0,5));
+        EditText body=new EditText(this);body.setHint("Дорогая я, хочу сказать тебе...");body.setMinLines(5);body.setGravity(Gravity.TOP);body.setTextSize(16);body.setTextColor(DARK);body.setHintTextColor(MUTED);body.setPadding(dp(2),dp(12),dp(2),dp(12));body.setBackgroundColor(0x00000000);root.addView(body,lp(-1,145,0,0,0,18));
+        TextView dateLabel=text("📅  Когда открыть письмо?",15,DARK,true);root.addView(dateLabel,lp(-1,-2,0,0,0,7));
+        EditText date=new EditText(this);date.setHint("Например, 14 июня 2027");date.setSingleLine(true);date.setFocusable(false);date.setClickable(true);date.setTextSize(15);date.setTextColor(DARK);date.setPadding(dp(14),dp(8),dp(14),dp(8));date.setBackground(shape(0xFFFFFFFF,16,0xFFEADDE2));root.addView(date,lp(-1,50,0,0,0,5));
+        TextView countdown=text("Выбери дату — я посчитаю, сколько осталось дней",12,MUTED,false);root.addView(countdown,lp(-1,26,0,0,0,8));
+        final Calendar[] chosen={null};Runnable updateCountdown=()->{if(chosen[0]==null)return;Calendar now=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));Calendar target=(Calendar)chosen[0].clone();long daysLeft=Math.max(0,(target.getTimeInMillis()-now.getTimeInMillis())/86400000L);countdown.setText("До открытия: через "+daysLeft+" дней");date.setText(new SimpleDateFormat("d MMMM yyyy",new Locale("ru")).format(target.getTime()));};
+        date.setOnClickListener(v->{Calendar now=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));Calendar initial=chosen[0]==null?(Calendar)now.clone():(Calendar)chosen[0].clone();android.app.DatePickerDialog picker=new android.app.DatePickerDialog(this,(p,y,m,d)->{Calendar c=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));c.set(y,m,d,9,0,0);c.set(Calendar.MILLISECOND,0);chosen[0]=c;updateCountdown.run();},initial.get(Calendar.YEAR),initial.get(Calendar.MONTH),initial.get(Calendar.DAY_OF_MONTH));picker.getDatePicker().setMinDate(now.getTimeInMillis());picker.show();});
+        LinearLayout quick=new LinearLayout(this);quick.setOrientation(LinearLayout.HORIZONTAL);String[] quickNames={"Через месяц","Через полгода","Через год","В конце уч. года"};int[] months={1,6,12,7};for(int i=0;i<quickNames.length;i++){final int index=i;TextView chip=text(quickNames[i],10,PINK,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(7),dp(8),dp(7),dp(8));chip.setBackground(shape(0xFFFFF0F4,14,0));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(42),1f);p.setMargins(dp(2),0,dp(2),0);quick.addView(chip,p);chip.setOnClickListener(v->{Calendar c=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));if(index==3){int y=c.get(Calendar.YEAR);int m=c.get(Calendar.MONTH);c.set(y,m<=5?Calendar.JUNE:Calendar.JUNE,m<=5?30:30);if(m>5)c.add(Calendar.YEAR,1);}else c.add(Calendar.MONTH,months[index]);chosen[0]=c;updateCountdown.run();});}root.addView(quick,lp(-1,46,0,0,0,15));
+        CheckBox hidden=new CheckBox(this);hidden.setText("🔒  Скрыть письмо до даты открытия");hidden.setTextColor(DARK);hidden.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));hidden.setChecked(true);root.addView(hidden,lp(-1,42,0,0,0,2));
+        CheckBox remind=new CheckBox(this);remind.setText("🔔  Напомнить, когда придёт время");remind.setTextColor(DARK);remind.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));root.addView(remind,lp(-1,42,0,0,0,14));
+        Button save=button("✉  Запечатать письмо",true);save.setTextSize(15);root.addView(save,lp(-1,54,0,0,0,18));
+        save.setOnClickListener(v->{String msg=body.getText().toString().trim();if(msg.isEmpty()||chosen[0]==null){Toast.makeText(this,"Напиши письмо и выбери дату",Toast.LENGTH_SHORT).show();return;}String id=String.valueOf(System.currentTimeMillis());String d=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(chosen[0].getTime());Set<String> ids=new TreeSet<>(prefs.getStringSet("future_letter_ids",new TreeSet<String>()));ids.add(id);prefs.edit().putString("future_letter_"+id,msg).putString("future_date_"+id,d).putBoolean("future_hidden_"+id,hidden.isChecked()).putBoolean("future_remind_"+id,remind.isChecked()).putStringSet("future_letter_ids",ids).apply();body.setText("");chosen[0]=null;date.setText("");countdown.setText("Выбери дату — я посчитаю, сколько осталось дней");showSavedBanner("Письмо запечатано","Оно будет ждать тебя в назначенный день ✉");showFutureLetters();});
+        Set<String> ids=new TreeSet<>(prefs.getStringSet("future_letter_ids",new TreeSet<String>()));List<String> sorted=new ArrayList<>(ids);java.util.Collections.sort(sorted,java.util.Collections.reverseOrder());addText(root,"📬 ТВОИ ЗАПЕЧАТАННЫЕ ПИСЬМА",11,PINK,true);
+        for(String id:sorted){String d=prefs.getString("future_date_"+id,"");String msg=prefs.getString("future_letter_"+id,"");boolean open=d.compareTo(todayKey())<=0;LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.VERTICAL);item.setPadding(dp(13),dp(12),dp(13),dp(12));item.setBackground(shape(0xFFFFF5F8,18,0));addText(item,(open?"✉️  Можно открыть":"🔒  Открывается "+d),13,PINK,true);if(open)addText(item,msg,14,DARK,false);else addText(item,"Твоё письмо ждёт назначенного дня ♡",12,MUTED,false);root.addView(item,lp(-1,-2,0,0,0,8));}
+        addText(root,"📬 У тебя уже есть "+ids.size()+" запечатанное письмо"+(ids.size()==1?"":"(а)")+".",12,MUTED,false);backHome();
+    }
         currentScreen = "letters";
         base("Письмо себе в будущее", "Оставь доброе напоминание для себя будущей");
         EditText body = new EditText(this); body.setHint("Дорогая я, хочу сказать тебе..."); body.setMinLines(4); body.setGravity(Gravity.TOP); body.setTextSize(16); body.setTextColor(DARK); body.setPadding(dp(14),dp(12),dp(14),dp(12)); body.setBackground(shape(0xFFFFFFFF,18,0xFFEADDE2)); root.addView(body, lp(-1,130,0,0,0,10));
