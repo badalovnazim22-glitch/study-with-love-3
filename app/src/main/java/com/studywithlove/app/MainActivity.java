@@ -43,7 +43,7 @@ import java.util.Random;
 import java.util.TimeZone;
 
 public class MainActivity extends Activity {
-    private int BG = 0xFFFFF9F7, PINK = 0xFFC97891, PALE = 0xFFFCEEF2, DARK = 0xFF3F3439, MUTED = 0xFF95878C;
+    private int BG = 0xFFFFF8FD, PINK = 0xFF9165D8, PALE = 0xFFF0E7FF, DARK = 0xFF302544, MUTED = 0xFF8D819E;
     private int progressMonthOffset = 0;
     private LinearLayout progressCalendarHost;
     private LinearLayout root;
@@ -188,9 +188,9 @@ public class MainActivity extends Activity {
     }
 
     private void base(String title, String subtitle) {
-        LinearLayout shell=new LinearLayout(this);shell.setOrientation(LinearLayout.VERTICAL);shell.setBackgroundColor(BG);
+        LinearLayout shell=new LinearLayout(this);shell.setOrientation(LinearLayout.VERTICAL);shell.setBackground(gradientShape(BG,nightTint(BG),0));
         ScrollView scroll=new ScrollView(this);scroll.setFillViewport(true);scroll.setClipToPadding(false);scroll.setVerticalScrollBarEnabled(false);
-        root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setPadding(dp(18),dp(15),dp(18),dp(28));root.setBackgroundColor(BG);
+        root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setPadding(dp(18),dp(15),dp(18),dp(28));root.setBackground(gradientShape(BG,nightTint(BG),0));
         String customBg=prefs.getString("custom_background_uri","");
         if(!customBg.isEmpty()){try{java.io.InputStream in=getContentResolver().openInputStream(android.net.Uri.parse(customBg));if(in!=null){Drawable photo=Drawable.createFromStream(in,null);in.close();if(photo!=null){photo.setAlpha(35);root.setBackground(photo);}}}catch(Exception ignored){}}
         scroll.addView(root);shell.addView(scroll,new LinearLayout.LayoutParams(-1,0,1f));
@@ -198,7 +198,7 @@ public class MainActivity extends Activity {
         setContentView(shell);scroll.setAlpha(0f);scroll.setTranslationY(dp(10));scroll.setLayerType(View.LAYER_TYPE_HARDWARE,null);
         scroll.animate().alpha(1f).translationY(0f).setDuration(320).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
         LinearLayout top=new LinearLayout(this);top.setGravity(Gravity.CENTER_VERTICAL);top.setPadding(dp(13),dp(9),dp(11),dp(9));
-        boolean night="night".equals(prefs.getString("app_theme","pink"));top.setBackground(shape(night?0xFF24212B:0xFFFFFFFF,22,night?0xFF393340:0x00FFFFFF));top.setElevation(dp(2));
+        boolean night="night".equals(prefs.getString("app_theme","pink"));top.setBackground(shape(night?0xFF24212B:0xFFFFFDFF,24,night?0xFF51435F:0xFFEDE4F5));top.setElevation(dp(2));
         TextView mark=text("✳",22,PINK,true);mark.setGravity(Gravity.CENTER);mark.setBackground(shape(PALE,14,0));top.addView(mark,lp(38,38,0,0,10,0));
         LinearLayout brandBox=new LinearLayout(this);brandBox.setOrientation(LinearLayout.VERTICAL);
         TextView brand=text("STUDY WITH LOVE",11,DARK,true);brand.setLetterSpacing(.12f);brandBox.addView(brand);
@@ -248,7 +248,7 @@ public class MainActivity extends Activity {
         name.setHint("Как к тебе обращаться?");
         name.setText(prefs.getString("display_name", "Назка"));
         name.setPadding(dp(13), dp(8), dp(13), dp(8));
-        name.setBackground(shape(0xFFFFF9F7, 15, 0xFFF1DDE4));
+        name.setBackground(shape(0xFFFFFCFF, 17, 0xFFE7DDF5));
         nameCard.addView(name, lp(-1, 50, 0, 7, 0, 8));
         Button saveName = button("Сохранить имя", true);
         saveName.setOnClickListener(v -> {
@@ -314,7 +314,7 @@ public class MainActivity extends Activity {
         else if ("peach".equals(theme)) { BG=0xFFFFF5EF; PINK=0xFFD88968; PALE=0xFFFBE5D9; DARK=0xFF513D34; MUTED=0xFFA88D80; }
         else if ("red".equals(theme)) { BG=0xFFFFF5F4; PINK=0xFFB32635; PALE=0xFFF8E2E3; DARK=0xFF4B2026; MUTED=0xFF9D777B; }
         else if ("lv".equals(theme)) { BG=0xFFF4E8D5; PINK=0xFF76502F; PALE=0xFFE7D2B3; DARK=0xFF3B281C; MUTED=0xFF92775E; }
-        else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF95878C; }
+        else { BG=0xFFFFF8FD; PINK=0xFF9165D8; PALE=0xFFF0E7FF; DARK=0xFF302544; MUTED=0xFF8D819E; }
         if (getWindow() != null) { getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG); }
     }
 
@@ -332,11 +332,11 @@ public class MainActivity extends Activity {
         int overall = totalTopics == 0 ? 0 : completedTopics * 100 / totalTopics;
 
         LinearLayout hero = card();
-        hero.setPadding(dp(20), dp(20), dp(20), dp(18));
-        hero.setBackground(shape(0xFFF8E8EE, 27, 0));
-        addText(hero, "ТВОЙ ПРОГРЕСС", 12, PINK, true);
+        hero.setPadding(dp(20), dp(22), dp(20), dp(19));
+        hero.setBackground(gradientShape(0xFFEBDFFF,0xFFFFE8F2,29));
+        addText(hero, "✦  ТВОЁ МАЛЕНЬКОЕ ПРОСТРАНСТВО", 11, PINK, true);
         addText(hero, "Ты справляешься.\nПродолжай в своём темпе.", 24, DARK, true);
-        addText(hero, "Каждое занятие — это забота о себе будущей.", 14, MUTED, false);
+        addText(hero, "Каждый маленький шаг приближает тебя к мечте.", 13, MUTED, false);
          addText(hero, dailyMotivation(), 14, PINK, true);
         LinearLayout progressHead = new LinearLayout(this);
         progressHead.setGravity(Gravity.CENTER_VERTICAL);
@@ -695,7 +695,7 @@ public class MainActivity extends Activity {
         currentScreen="pomodoro";base("Таймер фокуса","Настрой время и занимайся в своём ритме");
         LinearLayout wrap=new LinearLayout(this);wrap.setGravity(Gravity.CENTER);wrap.setPadding(0,dp(14),0,dp(18));
         timerDisplay=text(formatTimer(timerRemainingMs>0?timerRemainingMs:selectedStudyMinutes*60000L),42,DARK,true);timerDisplay.setGravity(Gravity.CENTER);
-        GradientDrawable face=new GradientDrawable();face.setShape(GradientDrawable.OVAL);face.setColor(PALE);face.setStroke(dp(5),PINK);timerDisplay.setBackground(face);timerDisplay.setElevation(dp(5));
+        GradientDrawable face=new GradientDrawable(GradientDrawable.Orientation.TL_BR,new int[]{0xFFF1E7FF,0xFFFFEAF4});face.setShape(GradientDrawable.OVAL);face.setStroke(dp(6),0xFFB18BEA);timerDisplay.setBackground(face);timerDisplay.setElevation(dp(9));timerDisplay.setShadowLayer(dp(12),0,dp(4),0x559B75D5);
         wrap.addView(timerDisplay,lp(208,208,0,0,0,0));root.addView(wrap,lp(-1,246,0,0,0,8));
         timerStatus=text(timerIsBreak?"🌷  Время отдохнуть":"♡  Время для учёбы",15,PINK,true);timerStatus.setGravity(Gravity.CENTER);root.addView(timerStatus,lp(-1,32,0,0,0,12));
         LinearLayout settings=card();addText(settings,"ВРЕМЯ УЧЁБЫ",11,PINK,true);
@@ -803,7 +803,7 @@ public class MainActivity extends Activity {
             String legacy="legacy_exam";savedIds.add(legacy);
             prefs.edit().putString("exam_goal_title_"+legacy,prefs.getString("exam_title","")).putString("exam_goal_date_"+legacy,prefs.getString("exam_date","")).putStringSet("exam_goal_ids",savedIds).apply();
         }
-        LinearLayout hero=card();hero.setBackground(shape(0xFFFFF0F4,24,0xFFF4DCE5));hero.setPadding(dp(18),dp(16),dp(18),dp(16));
+        LinearLayout hero=card();hero.setBackground(gradientShape(0xFFF0E6FF,0xFFFFEAF3,26));hero.setPadding(dp(18),dp(16),dp(18),dp(16));
         addText(hero,"ГЛАВНЫЙ ЭКЗАМЕН",11,PINK,true);
         LinearLayout heroRow=new LinearLayout(this);heroRow.setGravity(Gravity.CENTER_VERTICAL);
         LinearLayout heroWords=new LinearLayout(this);heroWords.setOrientation(LinearLayout.VERTICAL);
@@ -817,7 +817,7 @@ public class MainActivity extends Activity {
         hero.addView(heroRow,lp(-1,-2,0,5,0,0));root.addView(hero,lp(-1,-2,0,0,0,14));
         final String[] editing={null};
         LinearLayout form=card();addText(form,"НАЗВАНИЕ ЦЕЛИ",12,PINK,true);
-        EditText title=new EditText(this);title.setSingleLine(true);title.setTextSize(16);title.setTextColor(DARK);title.setHint("Например, экзамен по математике");title.setPadding(dp(13),dp(8),dp(13),dp(8));title.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));form.addView(title,lp(-1,50,0,7,0,12));
+        EditText title=new EditText(this);title.setSingleLine(true);title.setTextSize(16);title.setTextColor(DARK);title.setHint("Например, экзамен по математике");title.setPadding(dp(13),dp(8),dp(13),dp(8));title.setBackground(shape(0xFFFFFCFF,17,0xFFE7DDF5));form.addView(title,lp(-1,50,0,7,0,12));
         addText(form,"ДАТА",12,PINK,true);
         EditText date=new EditText(this);date.setSingleLine(true);date.setFocusable(false);date.setClickable(true);date.setTextSize(15);date.setTextColor(DARK);date.setHint("Выбери дату");date.setPadding(dp(13),dp(8),dp(13),dp(8));date.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));form.addView(date,lp(-1,50,0,7,0,12));
         date.setOnClickListener(v->{Calendar now=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));Calendar min=(Calendar)now.clone();min.set(Calendar.HOUR_OF_DAY,0);min.set(Calendar.MINUTE,0);min.set(Calendar.SECOND,0);min.set(Calendar.MILLISECOND,0);android.app.DatePickerDialog dialog=new android.app.DatePickerDialog(this,(p,y,m,d)->date.setText(String.format(Locale.US,"%04d-%02d-%02d",y,m+1,d)),now.get(Calendar.YEAR),now.get(Calendar.MONTH),now.get(Calendar.DAY_OF_MONTH));dialog.getDatePicker().setMinDate(min.getTimeInMillis());dialog.show();});
@@ -871,7 +871,7 @@ public class MainActivity extends Activity {
         currentScreen = "diary";
         base("Дневник успехов ♡", "Сохраняй моменты, которыми ты гордишься");
         LinearLayout composer = card();
-        composer.setBackground(shape(0xFFF8E8EE, 25, 0));
+        composer.setBackground(gradientShape(0xFFF0E7FF,0xFFFFEAF3,26));
         addText(composer, "МАЛЕНЬКАЯ ПОБЕДА СЕГОДНЯ", 12, PINK, true);
         EditText note = new EditText(this);
         note.setHint("Сегодня у меня получилось...");
@@ -1336,10 +1336,10 @@ public class MainActivity extends Activity {
         c.setOnClickListener(v -> { c.animate().scaleX(0.985f).scaleY(0.985f).setDuration(100).withEndAction(() -> { c.animate().scaleX(1f).scaleY(1f).setDuration(150).start(); run.go(); }).start(); });
         root.addView(c, lp(-1, -2, 0, 0, 0, 9));
     }
-    private LinearLayout card() { LinearLayout l=new LinearLayout(this);l.setOrientation(LinearLayout.VERTICAL);l.setPadding(dp(18),dp(17),dp(18),dp(17));boolean night=prefs!=null&&"night".equals(prefs.getString("app_theme","pink"));l.setBackground(shape(night?0xFF25212B:0xFFFFFFFF,24,night?0xFF403541:0xFFECE6E9));l.setElevation(dp(3));return l; }
+    private GradientDrawable gradientShape(int start,int end,int radius){ GradientDrawable d=new GradientDrawable(GradientDrawable.Orientation.TL_BR,new int[]{start,end}); d.setCornerRadius(dp(radius)); d.setStroke(dp(1),0x22A98BD6); return d; }\n    private int nightTint(int color){ if("night".equals(prefs==null?"pink":prefs.getString("app_theme","pink"))) return color; return color==BG?0xFFFFF3FB:color; }\n    private LinearLayout card() { LinearLayout l=new LinearLayout(this);l.setOrientation(LinearLayout.VERTICAL);l.setPadding(dp(18),dp(17),dp(18),dp(17));boolean night=prefs!=null&&"night".equals(prefs.getString("app_theme","pink"));l.setBackground(shape(night?0xFF25212B:0xFFFFFCFF,26,night?0xFF51435F:0xFFEDE3F7));l.setElevation(dp(4));return l; }
     private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, size, color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
     private TextView text(String value, int size, int color, boolean bold) { value=translate(value); TextView t = new TextView(this); t.setText(value); t.setTextSize(size); t.setTextColor(color); if (bold) t.setTypeface(Typeface.DEFAULT, Typeface.BOLD); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
-    private Button button(String label, boolean primary) { label=translate(label);Button b=new Button(this);b.setText(label);b.setTextSize(14);b.setTypeface(Typeface.DEFAULT,Typeface.BOLD);b.setAllCaps(false);b.setLetterSpacing(.015f);b.setMinHeight(dp(48));b.setPadding(dp(16),dp(9),dp(16),dp(9));b.setElevation(primary?dp(3):0);b.setTextColor(primary?0xFFFFFFFF:PINK);b.setBackground(shape(primary?PINK:PALE,16,primary?PINK:0));b.setStateListAnimator(null);b.setOnTouchListener((v,e)->{if(e.getAction()==android.view.MotionEvent.ACTION_DOWN)v.animate().scaleX(.97f).scaleY(.97f).setDuration(80).start();else if(e.getAction()==android.view.MotionEvent.ACTION_UP||e.getAction()==android.view.MotionEvent.ACTION_CANCEL)v.animate().scaleX(1f).scaleY(1f).setDuration(110).start();return false;});return b; }
+    private Button button(String label, boolean primary) { label=translate(label);Button b=new Button(this);b.setText(label);b.setTextSize(14);b.setTypeface(Typeface.DEFAULT,Typeface.BOLD);b.setAllCaps(false);b.setLetterSpacing(.015f);b.setMinHeight(dp(48));b.setPadding(dp(16),dp(9),dp(16),dp(9));b.setElevation(primary?dp(3):0);b.setTextColor(primary?0xFFFFFFFF:PINK);b.setBackground(primary?gradientShape(0xFF9A70E0,0xFF7950C8,18):shape(PALE,18,0xFFE7DDF5));b.setStateListAnimator(null);b.setOnTouchListener((v,e)->{if(e.getAction()==android.view.MotionEvent.ACTION_DOWN)v.animate().scaleX(.97f).scaleY(.97f).setDuration(80).start();else if(e.getAction()==android.view.MotionEvent.ACTION_UP||e.getAction()==android.view.MotionEvent.ACTION_CANCEL)v.animate().scaleX(1f).scaleY(1f).setDuration(110).start();return false;});return b; }
     private String translate(String value){
         String lang=prefs==null?"ru":prefs.getString("app_language","ru");if("ru".equals(lang)||value==null)return value;
         String[][] pairs={
