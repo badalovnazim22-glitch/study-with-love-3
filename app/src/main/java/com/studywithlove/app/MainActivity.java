@@ -480,12 +480,16 @@ public class MainActivity extends Activity {
         TextView note=text("Название и материал темы можно будет изменить позже.",12,MUTED,false);body.addView(note,lp(-1,-2,0,0,0,8));
         EditText name=new EditText(this);name.setSingleLine(true);name.setTextSize(16);name.setTextColor(DARK);name.setHint("Название темы");name.setText(oldName==null?"":oldName);name.setPadding(dp(13),dp(8),dp(13),dp(8));name.setBackground(shape(0xFFFFF9F7,14,0xFFEADDE2));body.addView(name,lp(-1,50,0,0,0,9));
         EditText content=new EditText(this);content.setTextSize(15);content.setTextColor(DARK);content.setHint("Добавь конспект, объяснение или заметки…");content.setGravity(Gravity.TOP);content.setMinLines(4);content.setText(oldContent);content.setPadding(dp(13),dp(12),dp(13),dp(12));content.setBackground(shape(0xFFFFF9F7,14,0xFFEADDE2));body.addView(content,lp(-1,118,0,0,0,0));
-        new android.app.AlertDialog.Builder(this).setTitle(oldName==null?"♡  Новая тема":"✎  Изменить тему").setView(body).setNegativeButton("Отмена",null).setPositiveButton(oldName==null?"Добавить":"Сохранить",(d,w)->{
-            String n=name.getText().toString().trim();if(n.isEmpty()){name.setError("Введи название");return;}
-            Set<String> topics=new TreeSet<>(prefs.getStringSet("custom_lesson_topics_"+lessonId,new TreeSet<String>()));SharedPreferences.Editor e=prefs.edit();
+        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle(oldName==null?"♡  Новая тема":"✎  Изменить тему").setView(body).setNegativeButton("Отмена",null).setPositiveButton(oldName==null?"Добавить":"Сохранить",null).create();
+        dialog.setOnShowListener(v->dialog.getButton(-1).setOnClickListener(q->{
+            String n=name.getText().toString().trim();if(n.isEmpty()){name.setError("Введи название");name.requestFocus();return;}
+            Set<String> topics=new TreeSet<>(prefs.getStringSet("custom_lesson_topics_"+lessonId,new TreeSet<String>()));
+            if(topics.contains(n)&&(oldName==null||!oldName.equals(n))){name.setError("Такая тема уже существует");name.requestFocus();return;}
+            SharedPreferences.Editor e=prefs.edit();
             if(oldName!=null&&!oldName.equals(n)){topics.remove(oldName);topics.add(n);int oldProgress=prefs.getInt("progress_"+oldName,0);e.remove("progress_"+oldName).remove("done_"+oldName);if(oldProgress>0)e.putInt("progress_"+n,oldProgress);e.remove(topicContentKey(lessonId,oldName));}else topics.add(n);
-            e.putStringSet("custom_lesson_topics_"+lessonId,topics).putString(topicContentKey(lessonId,n),content.getText().toString().trim()).apply();chapters.put(chapter,new ArrayList<>(topics));if(oldName!=null&&oldName.equals(selectedTopic))selectedTopic=n;showTopics(chapter);
-        }).show();
+            e.putStringSet("custom_lesson_topics_"+lessonId,topics).putString(topicContentKey(lessonId,n),content.getText().toString().trim()).apply();chapters.put(chapter,new ArrayList<>(topics));if(oldName!=null&&oldName.equals(selectedTopic))selectedTopic=n;dialog.dismiss();showTopics(chapter);
+        }));
+        dialog.show();
     }
     private void addCustomTopic(String chapter){openCustomTopicDialog(chapter,null,"");}
 
