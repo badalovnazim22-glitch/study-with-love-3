@@ -1160,18 +1160,7 @@ public class MainActivity extends Activity {
     }
 
     // App usage is tracked separately; only an explicit study action records a study day.
-    private void saveForegroundUsage() {
-        if (appUsageStartedElapsed == 0L || prefs == null) return;
-        long elapsed = Math.max(0L, SystemClock.elapsedRealtime() - appUsageStartedElapsed);
-        appUsageStartedElapsed = SystemClock.elapsedRealtime();
-        String date = todayKey();
-        String remainderKey = "app_usage_remainder_" + date;
-        long combined = prefs.getLong(remainderKey, 0L) + elapsed;
-        int addMinutes = (int)(combined / 60000L);
-        prefs.edit().putLong(remainderKey, combined % 60000L)
-                .putInt("app_minutes_" + date, prefs.getInt("app_minutes_" + date, 0) + addMinutes).apply();
-        // Foreground app time is usage time, not verified study time.
-    }
+    private void saveForegroundUsage() { appUsageStartedElapsed=0L; }
 
     @Override protected void onResume() { super.onResume(); appUsageStartedElapsed = SystemClock.elapsedRealtime(); if (prefs != null) {scheduleReminders(this);WeeklyReportReceiver.schedule(this);StudyWidgetProvider.updateAll(this);} }
     @Override protected void onPause() { saveForegroundUsage(); appUsageStartedElapsed = 0L; super.onPause(); }
