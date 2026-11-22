@@ -35,3 +35,33 @@ android {
         }
     }
 }
+
+
+def ambienceResDir = layout.buildDirectory.dir("generated/ambienceRes")
+android.sourceSets.main.res.srcDir(ambienceResDir)
+
+tasks.register("downloadAmbienceAssets") {
+    outputs.files(
+        ambienceResDir.map { it.file("raw/ambience_rain.mp3") },
+        ambienceResDir.map { it.file("raw/ambience_cafe.mp3") },
+        ambienceResDir.map { it.file("raw/ambience_forest.mp3") },
+        ambienceResDir.map { it.file("raw/ambience_library.mp3") }
+    )
+    doLast {
+        def rawDir = file("$buildDir/generated/ambienceRes/raw")
+        rawDir.mkdirs()
+        def sounds = [
+            ambience_rain: "https://sfxmint.com/dl/ambience-rain-72.mp3",
+            ambience_cafe: "https://sfxmint.com/dl/cafe-interior-ambience-06.mp3",
+            ambience_forest: "https://sfxmint.com/dl/ambience-forest-55.mp3",
+            ambience_library: "https://sfxmint.com/dl/ambience-room-tone-58.mp3"
+        ]
+        sounds.each { name, url ->
+            def output = new File(rawDir, name + ".mp3")
+            if (!output.exists() || output.length() < 10000) {
+                new URL(url).withInputStream { input -> output.withOutputStream { out -> out << input } }
+            }
+        }
+    }
+}
+tasks.named("preBuild").configure { dependsOn("downloadAmbienceAssets") }
