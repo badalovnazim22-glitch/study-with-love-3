@@ -294,6 +294,13 @@ public class MainActivity extends Activity {
         name.setHint(translate("Как к тебе обращаться?"));name.setText(prefs.getString("display_name",""));
         name.setPadding(dp(14),dp(8),dp(14),dp(8));name.setBackground(shape(0xFFFFF9F7,15,0xFFEADDE2));
         profile.addView(name,lp(-1,50,0,2,0,8));
+        addText(profile,"ФОРМА ОБРАЩЕНИЯ",11,PINK,true);
+        String gender=prefs.getString("profile_gender","female");LinearLayout genderRow=new LinearLayout(this);genderRow.setOrientation(LinearLayout.HORIZONTAL);
+        Button female=button("Девушка","female".equals(gender)),male=button("Парень","male".equals(gender));
+        genderRow.addView(female,new LinearLayout.LayoutParams(0,dp(44),1f));genderRow.addView(male,new LinearLayout.LayoutParams(0,dp(44),1f));
+        female.setOnClickListener(v->{prefs.edit().putString("profile_gender","female").apply();showSettings();});
+        male.setOnClickListener(v->{prefs.edit().putString("profile_gender","male").apply();showSettings();});
+        profile.addView(genderRow,lp(-1,48,0,4,0,8));
         Button saveName=button("Сохранить имя",true);saveName.setOnClickListener(v->{String value=name.getText().toString().trim();if(value.isEmpty()){name.setError("Введи имя");return;}prefs.edit().putString("display_name",value).apply();Toast.makeText(this,"Имя сохранено ♡",Toast.LENGTH_SHORT).show();});
         profile.addView(saveName,lp(-1,44,0,0,0,0));root.addView(profile,lp(-1,-2,0,0,0,4));
 
