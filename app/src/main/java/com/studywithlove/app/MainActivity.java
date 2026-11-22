@@ -428,6 +428,7 @@ public class MainActivity extends Activity {
     private void showChapters() {
         currentScreen = "chapters";
         base("Уроки 📚", "Выбери предмет или создай свой урок");
+        LinearLayout searchRow=new LinearLayout(this);searchRow.setGravity(Gravity.RIGHT|Gravity.CENTER_VERTICAL);TextView search=text("⌕",29,PINK,true);search.setGravity(Gravity.CENTER);search.setBackground(shape(PALE,16,0xFFF2DDE4));search.setContentDescription("Поиск уроков и тем");searchRow.addView(search,lp(46,44,0,0,0,0));search.setOnClickListener(v->showSearchDialog());root.addView(searchRow,lp(-1,46,0,0,0,7));
         LinearLayout lessonHead=new LinearLayout(this);lessonHead.setGravity(Gravity.CENTER_VERTICAL);TextView orderLabel=text("МОИ ПРЕДМЕТЫ",11,PINK,true);lessonHead.addView(orderLabel,new LinearLayout.LayoutParams(0,dp(34),1f));Button orderButton=button("⋮",false);orderButton.setTextSize(23);orderButton.setPadding(0,0,0,0);lessonHead.addView(orderButton,lp(44,38,0,0,0,0));root.addView(lessonHead,lp(-1,40,0,0,0,8));orderButton.setOnClickListener(v->{android.widget.PopupMenu menu=new android.widget.PopupMenu(this,orderButton);menu.getMenu().add(0,1,0,"По умолчанию");menu.getMenu().add(0,2,1,"По названию А—Я");menu.getMenu().add(0,3,2,"Сначала новые");menu.setOnMenuItemClickListener(mi->{prefs.edit().putString("lesson_sort",mi.getItemId()==2?"alpha":mi.getItemId()==3?"new":"default").apply();showChapters();return true;});menu.show();});
         actionRegular("📐  Математика", "Все разделы и темы по математике", () -> showMathChapters());
         Set<String> ids = prefs.getStringSet("custom_lesson_ids", new TreeSet<String>());
@@ -436,7 +437,6 @@ public class MainActivity extends Activity {
             String name = prefs.getString("custom_lesson_name_" + id, "Мой урок");
             actionRegular(prefs.getString("custom_lesson_emoji_"+id,"📚")+"  " + name, chapters.get("CUSTOM:" + id + ":" + name).size() + " тем", () -> { selectedChapter = "CUSTOM:" + id + ":" + name; showTopics(selectedChapter); });
         }
-        TextView search = text("⌕", 29, PINK, true); search.setGravity(Gravity.CENTER); search.setBackground(shape(PALE, 16, 0xFFF2DDE4)); search.setContentDescription("Поиск уроков и тем"); root.addView(search,lp(46,44,0,0,0,8)); search.setOnClickListener(v -> showSearchDialog());
          Button add = button("＋  Добавить свой урок", true); add.setOnClickListener(v -> addCustomLesson());
         root.addView(add, lp(-1, 50, 0, 6, 0, 10)); backHome();
     }
