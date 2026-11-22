@@ -62,6 +62,7 @@ public class MainActivity extends Activity {
     private Runnable timerTick;
     private TextView timerDisplay, timerStatus, studyTimeValue, breakTimeValue;
     private android.animation.ValueAnimator timerPulseAnimator;
+    private android.animation.ObjectAnimator flowerBreatheAnimator;
     private Button timerStartButton, timerPauseButton;
     private EditText customMinutesInput;
     private long appUsageStartedElapsed = 0L;
@@ -125,7 +126,7 @@ public class MainActivity extends Activity {
     private void loadChapters() {
         chapters.clear();
         add("1️⃣ Натуральные числа и действия с ними", "1.1. Натуральные числа", "1.2. Сравнение и упорядочивание", "1.3. Округление натуральных чисел", "1.4. Сложение и вычитание натуральных чисел", "1.5. Квадрат и куб натурального числа", "1.6. Умножение и деление натуральных чисел", "1.7. Числовые выражения", "1.8. Делители и кратные числа", "1.9. Простые и составные числа", "1.10. Признаки делимости");
-        add("2️⃣ Обыкновенные дроби", "2.1. Правильные и неправильные дроби", "2.2. Сравнение и упорядочивание", "2.3. Сложение и вычитание дробей с разными знаменателями", "2.4. Сложение смешанных чисел", "2.5. Вычитание смешанных чисел", "2.6. Умножение обыкновенных дробей", "2.7. Умножение смешанных чисел", "2.8. Деление обыкновенных дробей", "2.9. Деление смешанных чисел", "2.10. Нахождение части числа и числа по его части", "2.11. Сокращение дробей", "2.12. Приведение дробей к общему знаменателю");
+        add("2️⃣ Обыкновенные дроби", "2.1. Правильные и неправильные дроби", "2.2. Сравнение и упорядочивание", "2.11. Сокращение дробей", "2.12. Приведение дробей к общему знаменателю", "2.3. Сложение и вычитание дробей с разными знаменателями", "2.4. Сложение смешанных чисел", "2.5. Вычитание смешанных чисел", "2.6. Умножение обыкновенных дробей", "2.7. Умножение смешанных чисел", "2.8. Деление обыкновенных дробей", "2.9. Деление смешанных чисел", "2.10. Нахождение части числа и числа по его части");
         add("3️⃣ Десятичные дроби", "3.1. Десятичные дроби", "3.2. Сравнение и упорядочивание", "3.3. Округление десятичных дробей", "3.4. Перевод обыкновенной дроби в десятичную и наоборот", "3.5. Сложение и вычитание десятичных дробей", "3.6. Умножение и деление десятичных дробей на степени числа 10", "3.7. Умножение десятичной дроби на натуральное число", "3.8. Умножение десятичных дробей", "3.9. Деление десятичной дроби на натуральное число", "3.10. Деление числа на десятичную дробь", "3.11. Действия над обыкновенными и десятичными дробями", "3.12. Среднее арифметическое десятичных дробей", "3.13. Задачи на десятичные дроби");
         add("4️⃣ Процент", "4.1. Процент, обыкновенная дробь, десятичная дробь", "4.2. Процент от числа", "4.3. Нахождение числа по проценту", "4.4. Увеличение и уменьшение величины на определённый процент", "4.5. Отношение и пропорция", "4.6. Решение задач на проценты");
         Set<String> ids = prefs.getStringSet("custom_lesson_ids", new TreeSet<String>());
@@ -197,6 +198,7 @@ public class MainActivity extends Activity {
     }
 
     private void base(String title, String subtitle) {
+        if (!"flower".equals(currentScreen) && flowerBreatheAnimator!=null) { flowerBreatheAnimator.cancel(); flowerBreatheAnimator=null; }
         if (!currentScreen.equals(renderedScreen)) { if (!renderedScreen.isEmpty() && !navigatingBack) screenHistory.add(renderedScreen); renderedScreen=currentScreen; }
         navigatingBack=false;
         LinearLayout shell = new LinearLayout(this);
@@ -756,7 +758,7 @@ public class MainActivity extends Activity {
                 Set<String> ids=new TreeSet<>(prefs.getStringSet("custom_lesson_ids",new TreeSet<String>()));ids.remove(id);
                 Set<String> topics=new TreeSet<>(prefs.getStringSet("custom_lesson_topics_"+id,new TreeSet<String>()));
                 SharedPreferences.Editor e=prefs.edit().putStringSet("custom_lesson_ids",ids).remove("custom_lesson_name_"+id).remove("custom_lesson_emoji_"+id).remove("custom_lesson_topics_"+id);
-                for(String t:topics)e.remove(topicContentKey(id,t)).remove("progress_"+t).remove("done_"+t);
+                int removedCompleted=0;for(String t:topics){if(prefs.getInt("progress_"+t,0)>=100||prefs.getBoolean("done_"+t,false))removedCompleted++;e.remove(topicContentKey(id,t)).remove("progress_"+t).remove("done_"+t);}if(removedCompleted>0)e.putInt("done_count",Math.max(0,prefs.getInt("done_count",0)-removedCompleted));
                 e.apply();chapters.remove("CUSTOM:"+id+":"+name);
                 if(selectedChapter!=null&&selectedChapter.startsWith("CUSTOM:"+id+":")){selectedChapter=null;selectedTopic=null;}
                 showChapters();Toast.makeText(this,"Предмет удалён",Toast.LENGTH_SHORT).show();
@@ -809,7 +811,7 @@ public class MainActivity extends Activity {
         }
         root.addView(levels, lp(-1, -2, 0, 0, 0, 8));
 
-        Button done = button("✅  Я позанималась сегодня", true);
+        Button done = button("✅  "+(isMaleProfile()?"Я позанимался сегодня":"Я позанималась сегодня"), true);
         done.setOnClickListener(v -> markDone());
         root.addView(done, lp(-1, 54, 0, 4, 0, 10));
         Button back = button("← К темам", false);
@@ -1043,6 +1045,8 @@ public class MainActivity extends Activity {
         if (timerRunning) return;
         if (timerRemainingMs <= 0) timerRemainingMs = (timerIsBreak ? selectedBreakMinutes : selectedStudyMinutes) * 60000L;
         timerRunning = true; timerSessionStarted = SystemClock.elapsedRealtime(); timerEndElapsed = timerSessionStarted + timerRemainingMs;
+        getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        scheduleTimerFinishAlarm(timerRemainingMs);
         timerTick = new Runnable() { @Override public void run() { updateTimerDisplay(); long left = timerEndElapsed - SystemClock.elapsedRealtime(); if (left <= 0) finishTimerPhase(); else timerHandler.postDelayed(this, 250); } };
         if(timerPulseAnimator!=null)timerPulseAnimator.cancel();if(timerDisplay!=null){timerPulseAnimator=android.animation.ValueAnimator.ofFloat(1f,1.045f);timerPulseAnimator.setDuration(1050);timerPulseAnimator.setRepeatMode(android.animation.ValueAnimator.REVERSE);timerPulseAnimator.setRepeatCount(android.animation.ValueAnimator.INFINITE);timerPulseAnimator.addUpdateListener(a->{if(timerDisplay!=null){float s=(float)a.getAnimatedValue();timerDisplay.setScaleX(s);timerDisplay.setScaleY(s);}});timerPulseAnimator.start();}
         if (timerStartButton != null) timerStartButton.setEnabled(false);
@@ -1053,14 +1057,30 @@ public class MainActivity extends Activity {
     private void pauseTimer() {
         if (!timerRunning) return;
         timerRemainingMs = Math.max(0, timerEndElapsed - SystemClock.elapsedRealtime());
-        timerRunning = false; timerHandler.removeCallbacks(timerTick);
+        timerRunning = false; timerHandler.removeCallbacks(timerTick); cancelTimerFinishAlarm(); getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}if (timerDisplay != null) { timerDisplay.setText(formatTimer(timerRemainingMs)); timerDisplay.animate().scaleX(1f).scaleY(1f).setDuration(220).start(); }
         if (timerStartButton != null) { timerStartButton.setEnabled(true); timerStartButton.setText("▶  Продолжить"); }
         if (timerPauseButton != null) timerPauseButton.setEnabled(false);
     }
 
+    private boolean isMaleProfile(){return prefs!=null && "male".equals(prefs.getString("profile_gender","female"));}
     private void updateTimerDisplay() {
         if (timerDisplay != null) timerDisplay.setText(formatTimer(Math.max(0, timerEndElapsed - SystemClock.elapsedRealtime())));
+    }
+
+    private void scheduleTimerFinishAlarm(long delayMs) {
+        try {
+            AlarmManager alarm=(AlarmManager)getSystemService(ALARM_SERVICE);
+            Intent intent=new Intent(this,ReminderReceiver.class).setAction("study_timer_finish")
+                    .putExtra("message","Время таймера закончилось. Возвращайся в Study with Love 🌸")
+                    .putExtra("id",910);
+            PendingIntent pi=PendingIntent.getBroadcast(this,910,intent,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
+            long at=System.currentTimeMillis()+Math.max(1000L,delayMs);
+            if(Build.VERSION.SDK_INT>=23)alarm.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,at,pi);else alarm.setExact(AlarmManager.RTC_WAKEUP,at,pi);
+        } catch(Exception ignored) { }
+    }
+    private void cancelTimerFinishAlarm() {
+        try { Intent intent=new Intent(this,ReminderReceiver.class).setAction("study_timer_finish");PendingIntent pi=PendingIntent.getBroadcast(this,910,intent,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);((AlarmManager)getSystemService(ALARM_SERVICE)).cancel(pi);pi.cancel(); } catch(Exception ignored) { }
     }
 
     private void showTimerNotification(String title,String message) {
@@ -1075,9 +1095,9 @@ public class MainActivity extends Activity {
     }
 
     private void finishTimerPhase() {
-        timerHandler.removeCallbacks(timerTick); timerRunning = false; if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;} timerRemainingMs = 0;
-        if (!timerIsBreak) { recordStudyDay(); showTimerNotification("Время отдохнуть 🌸","Фокус-сессия завершена. Ты молодец!"); timerIsBreak = true; timerRemainingMs = selectedBreakMinutes * 60000L; Toast.makeText(this, "Ты большая умничка! Время отдохнуть 🌸", Toast.LENGTH_LONG).show(); }
-        else { showTimerNotification("Перерыв окончен 💗","Можно возвращаться к занятиям"); timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; Toast.makeText(this, "Перерыв окончен. Ты готова продолжать! 💗", Toast.LENGTH_LONG).show(); }
+        timerHandler.removeCallbacks(timerTick); timerRunning = false; cancelTimerFinishAlarm(); getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;} timerRemainingMs = 0;
+        if (!timerIsBreak) { recordStudyDay(); showTimerNotification("Время отдохнуть 🌸","Фокус-сессия завершена. Ты молодец!"); timerIsBreak = true; timerRemainingMs = selectedBreakMinutes * 60000L; Toast.makeText(this, isMaleProfile()?"Ты большой молодец! Время отдохнуть 🌸":"Ты большая умничка! Время отдохнуть 🌸", Toast.LENGTH_LONG).show(); }
+        else { showTimerNotification("Перерыв окончен 💗","Можно возвращаться к занятиям"); timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; Toast.makeText(this, isMaleProfile()?"Перерыв окончен. Ты готов продолжать! 💗":"Перерыв окончен. Ты готова продолжать! 💗", Toast.LENGTH_LONG).show(); }
         if ("pomodoro".equals(currentScreen)) showPomodoro();
     }
 
@@ -1296,7 +1316,7 @@ public class MainActivity extends Activity {
         android.widget.FrameLayout.LayoutParams frontPotLp=new android.widget.FrameLayout.LayoutParams(dp(142),dp(112),Gravity.CENTER);frontPotLp.topMargin=dp(70);garden.addView(new FlowerPotView(this),frontPotLp);
         WaterCanView can=new WaterCanView(this);can.setVisibility(View.GONE);android.widget.FrameLayout.LayoutParams canLp=new android.widget.FrameLayout.LayoutParams(dp(66),dp(58),Gravity.RIGHT|Gravity.TOP);canLp.setMargins(0,dp(20),dp(12),0);garden.addView(can,canLp);
         WaterStreamView stream=new WaterStreamView(this);stream.setVisibility(View.GONE);android.widget.FrameLayout.LayoutParams streamLp=new android.widget.FrameLayout.LayoutParams(dp(74),dp(92),Gravity.RIGHT|Gravity.TOP);streamLp.setMargins(0,dp(65),dp(57),0);garden.addView(stream,streamLp);
-        android.animation.ObjectAnimator breathe=android.animation.ObjectAnimator.ofFloat(art,View.SCALE_Y,.985f,1.025f,.985f);breathe.setDuration(2400);breathe.setRepeatCount(android.animation.ValueAnimator.INFINITE);breathe.start();
+        if(flowerBreatheAnimator!=null){flowerBreatheAnimator.cancel();flowerBreatheAnimator=null;} flowerBreatheAnimator=android.animation.ObjectAnimator.ofFloat(art,View.SCALE_Y,.985f,1.025f,.985f);flowerBreatheAnimator.setDuration(2400);flowerBreatheAnimator.setRepeatCount(android.animation.ValueAnimator.INFINITE);flowerBreatheAnimator.start();
         c.addView(garden,lp(-1,230,0,0,0,8));addText(c,stage,21,DARK,true);addText(c,count+" дней занятий · "+totalStudyMinutes()+" минут вместе",13,MUTED,false);addText(c,"✿  "+petals+" лепестков заботы",14,PINK,true);root.addView(c,lp(-1,-2,0,0,0,12));
         LinearLayout care=card();addText(care,"УХОД ЗА ЦВЕТОЧКОМ",12,PINK,true);addText(care,"Поливай цветочек раз в день. Вода появится только после нажатия.",13,MUTED,false);
         boolean watered=prefs.getString("flower_water_date","").equals(todayKey());Button waterButton=button(watered?"Уже полит сегодня ✓":"Полить цветочек",true);waterButton.setEnabled(!watered);
@@ -1354,6 +1374,7 @@ public class MainActivity extends Activity {
         int days=prefs.getStringSet("study_days",new TreeSet<String>()).size(),minutes=totalStudyMinutes(),completed=0;for(List<String> topics:chapters.values())completed+=countCompleted(topics);int sessions=prefs.getInt("done_count",0);
         String[][] a={{"🌱","Первые шаги","Первый день занятий",String.valueOf(days>=1),"1"},{"🌷","Неделя стараний","7 дней занятий",String.valueOf(days>=7),"7"},{"🌸","Две недели","14 дней занятий",String.valueOf(days>=14),"14"},{"💐","Месяц успеха","30 дней занятий",String.valueOf(days>=30),"30"},{"🏵️","Два месяца","60 дней занятий",String.valueOf(days>=60),"60"},{"🌻","Сто дней","100 дней занятий",String.valueOf(days>=100),"100"},{"📚","Маленький математик","Завершена первая тема",String.valueOf(completed>=1),"1"},{"🧮","Счёт — это просто","Завершено 5 тем",String.valueOf(completed>=5),"5"},{"🎓","Знаток математики","Завершено 10 тем",String.valueOf(completed>=10),"10"},{"🏆","Мастер знаний","Завершены все 41 темы",String.valueOf(completed>=41),"41"},{"⏳","Первый час","60 минут занятий",String.valueOf(minutes>=60),"60"},{"⌛","10 часов учёбы","600 минут занятий",String.valueOf(minutes>=600),"600"},{"🚀","Настойчивость","25 учебных занятий",String.valueOf(sessions>=25),"25"},{"💎","Пятьдесят побед","50 тем или занятий",String.valueOf(completed+sessions>=50),"50"},{"💗","Возвращаюсь к цели","Занятия в 3 разных дня",String.valueOf(days>=3),"3"},{"✨","Ритм учёбы","Занятия в 5 разных дней",String.valueOf(days>=5),"5"}};
         int unlocked=0;for(String[] x:a)if(Boolean.parseBoolean(x[3]))unlocked++;
+        for(int i=0;i<a.length;i++)if(Boolean.parseBoolean(a[i][3])){String dateKey="achievement_date_"+a[i][1];if(!prefs.contains(dateKey))prefs.edit().putString(dateKey,new SimpleDateFormat("d MMMM yyyy",new Locale("ru")).format(new Date())).apply();}
         addText(root,unlocked+" / "+a.length+" открыто",15,DARK,true);
         ProgressBar overall=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);overall.setMax(a.length);overall.setProgress(unlocked);overall.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));overall.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFE9D4DE));root.addView(overall,lp(-1,10,0,7,0,9));
         int nextIndex=-1;for(int i=0;i<a.length;i++)if(!Boolean.parseBoolean(a[i][3])){nextIndex=i;break;}
@@ -1368,12 +1389,27 @@ public class MainActivity extends Activity {
             TextView state=text(open?"Открыто ✓":progress,10,open?PINK:0xFF625A61,true);state.setGravity(Gravity.CENTER);tile.addView(state,lp(-1,18,0,0,0,2));
             if(!open){ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(Math.max(1,target));bar.setProgress(Math.min(current,target));bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFE6DFE2));tile.addView(bar,lp(-1,5,0,2,0,0));}
             android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(116);gp.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);gp.setMargins(dp(4),dp(4),dp(4),dp(4));grid.addView(tile,gp);
-            tile.setOnClickListener(v->{String detail=x[2];if(open){String date=prefs.getString("achievement_date_"+x[1],"");if(date.isEmpty()){date=new SimpleDateFormat("d MMMM yyyy",new Locale("ru")).format(new Date());prefs.edit().putString("achievement_date_"+x[1],date).apply();}detail+="\n\nОткрыто ✓ · "+date;}else detail+="\n\nПрогресс: "+Math.min(current,target)+" из "+target;new android.app.AlertDialog.Builder(this).setTitle(x[0]+"  "+x[1]).setMessage(detail).setPositiveButton("Понятно",null).show();});
+            tile.setOnClickListener(v->{String detail=x[2];if(open){String date=prefs.getString("achievement_date_"+x[1],"");if(date.isEmpty())date=new SimpleDateFormat("d MMMM yyyy",new Locale("ru")).format(new Date());detail+="\n\nОткрыто ✓ · "+date;}else detail+="\n\nПрогресс: "+Math.min(current,target)+" из "+target;new android.app.AlertDialog.Builder(this).setTitle(x[0]+"  "+x[1]).setMessage(detail).setPositiveButton("Понятно",null).show();});
         }
         root.addView(grid,lp(-1,-2,0,8,0,8));backHome();
     }
 
     private int achievementCurrent(int index,int days,int minutes,int completed,int sessions){if(index<=5||index>=14)return days;if(index<=9)return completed;if(index<=11)return minutes;if(index==12)return sessions;if(index==13)return completed+sessions;return 0;}
+
+    private void scheduleFutureLetterReminder(String id,String date) {
+        try {
+            java.text.SimpleDateFormat f=new java.text.SimpleDateFormat("yyyy-MM-dd",Locale.US);
+            f.setTimeZone(TimeZone.getTimeZone("Asia/Baku"));
+            Date parsed=f.parse(date);if(parsed==null)return;
+            Calendar when=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));when.setTime(parsed);when.set(Calendar.HOUR_OF_DAY,9);when.set(Calendar.MINUTE,0);when.set(Calendar.SECOND,0);when.set(Calendar.MILLISECOND,0);
+            if(when.getTimeInMillis()<=System.currentTimeMillis())return;
+            Intent intent=new Intent(this,ReminderReceiver.class).setAction("future_letter_"+id)
+                    .putExtra("message","Твоё письмо себе уже можно открыть ✉").putExtra("id",Math.abs(id.hashCode())+10000);
+            PendingIntent pi=PendingIntent.getBroadcast(this,Math.abs(id.hashCode())+10000,intent,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
+            AlarmManager am=(AlarmManager)getSystemService(ALARM_SERVICE);
+            if(Build.VERSION.SDK_INT>=23)am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,when.getTimeInMillis(),pi);else am.setExact(AlarmManager.RTC_WAKEUP,when.getTimeInMillis(),pi);
+        } catch(Exception ignored) { }
+    }
 
     private void showFutureLetters() {
         currentScreen="letters";base("✉ Письмо себе в будущее","Запечатай важные мысли для себя будущей");
@@ -1389,7 +1425,7 @@ public class MainActivity extends Activity {
         CheckBox hidden=new CheckBox(this);hidden.setText("🔒  Скрыть письмо до даты открытия");hidden.setTextColor(DARK);hidden.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));hidden.setChecked(true);root.addView(hidden,lp(-1,42,0,0,0,2));
         CheckBox remind=new CheckBox(this);remind.setText("🔔  Напомнить, когда придёт время");remind.setTextColor(DARK);remind.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));root.addView(remind,lp(-1,42,0,0,0,14));
         Button save=button("✉  Запечатать письмо",true);save.setTextSize(15);root.addView(save,lp(-1,54,0,0,0,18));
-        save.setOnClickListener(v->{String msg=body.getText().toString().trim();if(msg.isEmpty()||chosen[0]==null){Toast.makeText(this,"Напиши письмо и выбери дату",Toast.LENGTH_SHORT).show();return;}String id=String.valueOf(System.currentTimeMillis());String d=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(chosen[0].getTime());Set<String> ids=new TreeSet<>(prefs.getStringSet("future_letter_ids",new TreeSet<String>()));ids.add(id);prefs.edit().putString("future_letter_"+id,msg).putString("future_date_"+id,d).putBoolean("future_hidden_"+id,hidden.isChecked()).putBoolean("future_remind_"+id,remind.isChecked()).putStringSet("future_letter_ids",ids).apply();body.setText("");chosen[0]=null;date.setText("");countdown.setText("Выбери дату — я посчитаю, сколько осталось дней");showSavedBanner("Письмо запечатано","Оно будет ждать тебя в назначенный день ✉");showFutureLetters();});
+        save.setOnClickListener(v->{String msg=body.getText().toString().trim();if(msg.isEmpty()||chosen[0]==null){Toast.makeText(this,"Напиши письмо и выбери дату",Toast.LENGTH_SHORT).show();return;}String id=String.valueOf(System.currentTimeMillis());String d=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(chosen[0].getTime());Set<String> ids=new TreeSet<>(prefs.getStringSet("future_letter_ids",new TreeSet<String>()));ids.add(id);prefs.edit().putString("future_letter_"+id,msg).putString("future_date_"+id,d).putBoolean("future_hidden_"+id,hidden.isChecked()).putBoolean("future_remind_"+id,remind.isChecked()).putStringSet("future_letter_ids",ids).apply();if(remind.isChecked())scheduleFutureLetterReminder(id,d);body.setText("");chosen[0]=null;date.setText("");countdown.setText("Выбери дату — я посчитаю, сколько осталось дней");showSavedBanner("Письмо запечатано","Оно будет ждать тебя в назначенный день ✉");showFutureLetters();});
         Set<String> ids=new TreeSet<>(prefs.getStringSet("future_letter_ids",new TreeSet<String>()));List<String> sorted=new ArrayList<>(ids);java.util.Collections.sort(sorted,java.util.Collections.reverseOrder());addText(root,"📬 ТВОИ ЗАПЕЧАТАННЫЕ ПИСЬМА",11,PINK,true);
         for(String id:sorted){String d=prefs.getString("future_date_"+id,"");String msg=prefs.getString("future_letter_"+id,"");boolean open=d.compareTo(todayKey())<=0;boolean concealed=prefs.getBoolean("future_hidden_"+id,true)&&!open;LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.VERTICAL);item.setPadding(dp(13),dp(12),dp(13),dp(12));item.setBackground(shape(0xFFFFF5F8,18,0));addText(item,(open?"✉️  Можно открыть":"🔒  Открывается "+d),13,PINK,true);if(!concealed)addText(item,msg,14,DARK,false);else addText(item,"Твоё письмо ждёт назначенного дня ♡",12,MUTED,false);root.addView(item,lp(-1,-2,0,0,0,8));}
         addText(root,"📬 У тебя уже есть "+ids.size()+" запечатанное письмо"+(ids.size()==1?"":"(а)")+".",12,MUTED,false);backHome();
@@ -1507,7 +1543,7 @@ public class MainActivity extends Activity {
             }catch(Exception ignored){}finally{try{if(local!=null){local.pause();local.flush();local.release();}}catch(Exception ignored){}if(generation==ambienceGeneration){ambienceTrack=null;ambiencePlaying=false;ambienceThread=null;}}},"StudyAmbience");ambienceThread.setDaemon(true);ambienceThread.start();
     }
     private void stopAmbience(){ambienceGeneration++;ambiencePlaying=false;android.media.AudioTrack active=ambienceTrack;if(active!=null){try{active.pause();}catch(Exception ignored){}}Thread old=ambienceThread;if(old!=null){old.interrupt();ambienceThread=null;}}
-    @Override protected void onDestroy(){stopAmbience();super.onDestroy();}
+    @Override protected void onDestroy(){if(flowerBreatheAnimator!=null){flowerBreatheAnimator.cancel();flowerBreatheAnimator=null;}if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}stopAmbience();super.onDestroy();}
 
     private void showAtmosphere() {
         currentScreen = "atmosphere";
