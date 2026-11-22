@@ -322,7 +322,7 @@ public class MainActivity extends Activity {
         Button export=button("Экспортировать копию",true);export.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");i.putExtra(Intent.EXTRA_TITLE,"study_with_love_backup.json");startActivityForResult(i,BACKUP_EXPORT);});backup.addView(export,lp(-1,44,0,7,0,5));
         Button restore=button("Восстановить из копии",false);restore.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");startActivityForResult(i,BACKUP_IMPORT);});backup.addView(restore,lp(-1,42,0,0,0,0));root.addView(backup,lp(-1,-2,0,0,0,4));
 
-        Button back=button("← На главную",true);back.setOnClickListener(v->showHome());root.addView(back,lp(-1,48,0,8,0,4));
+        Button back=button("← Назад",true);back.setOnClickListener(v->onBackPressed());root.addView(back,lp(-1,48,0,8,0,4));
     }
 
     private void applySavedTheme() {
@@ -596,7 +596,7 @@ public class MainActivity extends Activity {
         root.addView(result,lp(-1,-2,0,0,0,15));
         Button retry=button("↻  Играть ещё раз",true);retry.setOnClickListener(v->showMathQuiz());root.addView(retry,lp(-1,52,0,0,0,8));
         Button awards=button("🏅  Мои достижения",false);awards.setOnClickListener(v->showMathQuizAchievements());root.addView(awards,lp(-1,48,0,0,0,8));
-        Button home=button("← На главную",false);home.setOnClickListener(v->showHome());root.addView(home,lp(-1,48,0,0,0,0));
+        Button home=button("← Назад",false);home.setOnClickListener(v->onBackPressed());root.addView(home,lp(-1,48,0,0,0,0));
     }
 
     private void unlockQuizAwards() {
@@ -964,8 +964,8 @@ public class MainActivity extends Activity {
             }
             root.addView(section, lp(-1, -2, 0, 0, 0, 12));
         }
-        Button back = button("← На главную", true);
-        back.setOnClickListener(v -> showHome());
+        Button back = button("← Назад", true);
+        back.setOnClickListener(v -> onBackPressed());
         root.addView(back, lp(-1, 52, 0, 4, 0, 0));
     }
 
@@ -1697,7 +1697,7 @@ public class MainActivity extends Activity {
         }catch(Exception ignored){Toast.makeText(this,"Не удалось изменить время",Toast.LENGTH_SHORT).show();}
     }
 
-    private void backHome() { Button b = button("← Главное меню", false); b.setOnClickListener(v -> showHome()); root.addView(b, lp(-1, 50, 0, 18, 0, 0)); }
+    private void backHome() { Button b = button("← Назад", false); b.setOnClickListener(v -> onBackPressed()); root.addView(b, lp(-1, 50, 0, 18, 0, 0)); }
     private void ritualTile(LinearLayout row, String icon, String title, String subtitle, OnAction run) {
             LinearLayout tile = new LinearLayout(this);
             tile.setOrientation(LinearLayout.VERTICAL);
