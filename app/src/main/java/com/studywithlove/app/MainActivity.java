@@ -349,9 +349,9 @@ public class MainActivity extends Activity {
         int streak = currentStreak();
         int record = prefs.getInt("longest_streak", 0);
         int totalTopics = 0, completedTopics = 0;
-        for (List<String> topics : chapters.values()) for (String topic : topics) {
+        for (Map.Entry<String,List<String>> entry : chapters.entrySet()) for (String topic : entry.getValue()) {
             totalTopics++;
-            if (topicProgress(topic) == 100) completedTopics++;
+            if (topicProgressForChapter(entry.getKey(),topic) == 100) completedTopics++;
         }
         int overall = totalTopics == 0 ? 0 : completedTopics * 100 / totalTopics;
 
@@ -662,7 +662,7 @@ public class MainActivity extends Activity {
         LinearLayout mathTop=new LinearLayout(this);mathTop.setGravity(Gravity.CENTER_VERTICAL);TextView mathIcon=text("📐",27,PINK,true);mathTop.addView(mathIcon,lp(42,42,0,0,10,0));LinearLayout mathWords=new LinearLayout(this);mathWords.setOrientation(LinearLayout.VERTICAL);addText(mathWords,"Математика",16,DARK,true);addText(mathWords,"Все разделы и темы по математике",11,MUTED,false);mathTop.addView(mathWords,new LinearLayout.LayoutParams(0,-2,1f));TextView arrow=text("›",25,PINK,false);mathTop.addView(arrow);math.addView(mathTop,lp(-1,-2,0,0,0,7));
         addText(math,mathDone+" из "+mathTotal+" тем пройдено",10,MUTED,true);ProgressBar mathBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);mathBar.setMax(Math.max(1,mathTotal));mathBar.setProgress(mathDone);mathBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));mathBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));math.addView(mathBar,lp(-1,6,0,3,0,0));root.addView(math,lp(-1,-2,0,0,0,8));
         Set<String> ids=prefs.getStringSet("custom_lesson_ids",new TreeSet<String>());List<String> lessonOrder=new ArrayList<>(ids);String sort=prefs.getString("lesson_sort","default");if("alpha".equals(sort))java.util.Collections.sort(lessonOrder,(a,b)->prefs.getString("custom_lesson_name_"+a,"").compareToIgnoreCase(prefs.getString("custom_lesson_name_"+b,"")));else if("new".equals(sort))java.util.Collections.sort(lessonOrder,java.util.Collections.reverseOrder());else if("progress".equals(sort))java.util.Collections.sort(lessonOrder,(a,b)->{String na=prefs.getString("custom_lesson_name_"+a,""),nb=prefs.getString("custom_lesson_name_"+b,"");List<String> ta=chapters.get("CUSTOM:"+a+":"+na),tb=chapters.get("CUSTOM:"+b+":"+nb);int ca=ta==null?0:countCompleted(ta),cb=tb==null?0:countCompleted(tb);int sa=ta==null?0:ta.size(),sb=tb==null?0:tb.size();double pa=sa==0?0:(double)ca/sa,pb=sb==0?0:(double)cb/sb;return Double.compare(pb,pa);});
-        for(String id:lessonOrder){String name=prefs.getString("custom_lesson_name_"+id,"Мой урок");List<String> topics=chapters.get("CUSTOM:"+id+":"+name);if(topics==null)topics=new ArrayList<>();int c=countCompleted(topics),n=topics.size();LinearLayout item=card();item.setOrientation(LinearLayout.VERTICAL);item.setPadding(dp(14),dp(11),dp(14),dp(11));LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);TextView emoji=text(prefs.getString("custom_lesson_emoji_"+id,"📚"),25,PINK,true);row.addView(emoji,lp(40,40,0,0,9,0));LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,name,15,DARK,true);addText(words,c+" из "+n+" тем пройдено",11,MUTED,false);row.addView(words,new LinearLayout.LayoutParams(0,-2,1f));TextView go=text("›",24,PINK,false);row.addView(go);item.addView(row);ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(Math.max(1,n));bar.setProgress(c);bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));item.addView(bar,lp(-1,5,0,7,0,0));item.setOnClickListener(v->{selectedChapter="CUSTOM:"+id+":"+name;showTopics(selectedChapter);});item.setOnLongClickListener(v->{confirmDeleteCustomLesson(id,name);return true;});root.addView(item,lp(-1,-2,0,0,0,7));}
+        for(String id:lessonOrder){String name=prefs.getString("custom_lesson_name_"+id,"Мой урок");List<String> topics=chapters.get("CUSTOM:"+id+":"+name);if(topics==null)topics=new ArrayList<>();int c=countCompleted("CUSTOM:"+id+":"+name,topics),n=topics.size();LinearLayout item=card();item.setOrientation(LinearLayout.VERTICAL);item.setPadding(dp(14),dp(11),dp(14),dp(11));LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);TextView emoji=text(prefs.getString("custom_lesson_emoji_"+id,"📚"),25,PINK,true);row.addView(emoji,lp(40,40,0,0,9,0));LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,name,15,DARK,true);addText(words,c+" из "+n+" тем пройдено",11,MUTED,false);row.addView(words,new LinearLayout.LayoutParams(0,-2,1f));TextView go=text("›",24,PINK,false);row.addView(go);item.addView(row);ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(Math.max(1,n));bar.setProgress(c);bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));item.addView(bar,lp(-1,5,0,7,0,0));item.setOnClickListener(v->{selectedChapter="CUSTOM:"+id+":"+name;showTopics(selectedChapter);});item.setOnLongClickListener(v->{confirmDeleteCustomLesson(id,name);return true;});root.addView(item,lp(-1,-2,0,0,0,7));}
         Button add=button("＋  Добавить свой урок",true);add.setOnClickListener(v->addCustomLesson());root.addView(add,lp(-1,49,0,7,0,12));
         LinearLayout stats=card();stats.setPadding(dp(14),dp(12),dp(14),dp(12));addText(stats,"ТВОЙ УЧЕБНЫЙ РИТМ",11,PINK,true);addText(stats,done+" из "+total+" тем завершено",17,DARK,true);addText(stats,"Продолжай в своём темпе — каждый пройденный раздел приближает к цели ♡",11,MUTED,false);ProgressBar allBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);allBar.setMax(Math.max(1,total));allBar.setProgress(done);allBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));stats.addView(allBar,lp(-1,6,0,7,0,0));root.addView(stats,lp(-1,-2,0,0,0,10));
         String recent=prefs.getString("recent_topic","");String recentChapter=prefs.getString("recent_chapter","");if(!recent.isEmpty()&&!recentChapter.isEmpty()&&chapters.containsKey(recentChapter)){Button last=button("↗  Продолжить: "+recent,false);last.setOnClickListener(v->{selectedChapter=recentChapter;selectedTopic=recent;showTopic(recent);});root.addView(last,lp(-1,45,0,0,0,4));}
@@ -721,7 +721,7 @@ public class MainActivity extends Activity {
         List<String> topicOrder=new ArrayList<>(chapters.get(chapter));
         if(customLesson&&"alpha".equals(prefs.getString("lesson_sort","default")))java.util.Collections.sort(topicOrder,String.CASE_INSENSITIVE_ORDER);
         for(String topic:topicOrder){
-            int percent=topicProgress(topic);
+            int percent=topicProgressForChapter(chapter,topic);
             LinearLayout topicItem=action((percent==100?"✓  ":"♡  ")+topic,"Изучено на "+percent+"%",()->{selectedTopic=topic;showTopic(topic);});
             if(customLesson)topicItem.setOnLongClickListener(v->{confirmDeleteCustomTopic(chapter,topic);return true;});
         }
@@ -825,19 +825,22 @@ public class MainActivity extends Activity {
         toast.show();
     }
 
-    private int topicProgress(String topic) {
-        if (prefs.getBoolean("done_" + topic, false)) return 100;
-        return Math.max(0, Math.min(100, prefs.getInt("progress_" + topic, 0)));
+    private String topicStorageSuffix(String chapter,String topic) {
+        if(chapter!=null&&chapter.startsWith("CUSTOM:")){String[] p=chapter.split(":",3);if(p.length>=2)return "custom_"+p[1]+"_"+android.util.Base64.encodeToString(topic.getBytes(java.nio.charset.StandardCharsets.UTF_8),android.util.Base64.URL_SAFE|android.util.Base64.NO_WRAP);}
+        return topic;
     }
-
-    private void saveTopicProgress(String topic, int value) {
-        int old = topicProgress(topic);
-        int next = Math.max(0, Math.min(100, value));
-        SharedPreferences.Editor e = prefs.edit().putInt("progress_" + topic, next).putBoolean("done_" + topic, next == 100);
-        if (old < 100 && next == 100) e.putInt("done_count", prefs.getInt("done_count", 0) + 1);
-        if (old == 100 && next < 100) e.putInt("done_count", Math.max(0, prefs.getInt("done_count", 0) - 1));
-        e.apply();
+    private int topicProgressForChapter(String chapter,String topic) {
+        String suffix=topicStorageSuffix(chapter,topic),pk="progress_"+suffix,dk="done_"+suffix;
+        if(chapter!=null&&chapter.startsWith("CUSTOM:")&&!prefs.contains(pk)&&!prefs.contains(dk)){int old=prefs.getInt("progress_"+topic,0);boolean wasDone=prefs.getBoolean("done_"+topic,false);if(old>0||wasDone)prefs.edit().putInt(pk,old).putBoolean(dk,wasDone).remove("progress_"+topic).remove("done_"+topic).apply();}
+        if(prefs.getBoolean(dk,false))return 100;return Math.max(0,Math.min(100,prefs.getInt(pk,0)));
     }
+    private int topicProgress(String topic){return topicProgressForChapter(selectedChapter,topic);}
+    private void saveTopicProgressForChapter(String chapter,String topic,int value){
+        int old=topicProgressForChapter(chapter,topic),next=Math.max(0,Math.min(100,value));String suffix=topicStorageSuffix(chapter,topic);
+        SharedPreferences.Editor e=prefs.edit().putInt("progress_"+suffix,next).putBoolean("done_"+suffix,next==100);
+        if(old<100&&next==100)e.putInt("done_count",prefs.getInt("done_count",0)+1);if(old==100&&next<100)e.putInt("done_count",Math.max(0,prefs.getInt("done_count",0)-1));e.apply();
+    }
+    private void saveTopicProgress(String topic,int value){saveTopicProgressForChapter(selectedChapter,topic,value);}
 
     private void recordStudyDay() {
         String today = todayKey();
@@ -944,7 +947,7 @@ public class MainActivity extends Activity {
         for (String chapter : chapters.keySet()) {
             List<String> topics = chapters.get(chapter);
             int sum = 0;
-            for (String topic : topics) sum += topicProgress(topic);
+            for (String topic : topics) sum += topicProgressForChapter(chapter,topic);
             int chapterPercent = topics.isEmpty() ? 0 : sum / topics.size();
             LinearLayout section = card();
             TextView chapterBadge = text("✿  РАЗДЕЛ " + (new ArrayList<>(chapters.keySet()).indexOf(chapter) + 1), 12, PINK, true);
@@ -955,7 +958,7 @@ public class MainActivity extends Activity {
             addText(section, chapterPercent + "% · " + countCompleted(topics) + " из " + topics.size() + " тем полностью изучено", 13, MUTED, false);
             addProgressLine(section, "Прогресс раздела", chapterPercent);
             for (String topic : topics) {
-                int value = topicProgress(topic);
+                int value = topicProgressForChapter(chapter,topic);
                 addProgressLine(section, topic + " — " + value + "%", value);
             }
             root.addView(section, lp(-1, -2, 0, 0, 0, 12));
@@ -1545,11 +1548,8 @@ public class MainActivity extends Activity {
         }
     }
 
-    private int countCompleted(List<String> topics) {
-        int count = 0;
-        for (String topic : topics) if (topicProgress(topic) == 100) count++;
-        return count;
-    }
+    private int countCompleted(List<String> topics){return countCompleted(selectedChapter,topics);}
+    private int countCompleted(String chapter,List<String> topics){int count=0;for(String topic:topics)if(topicProgressForChapter(chapter,topic)==100)count++;return count;}
 
     private void addProgressLine(LinearLayout parent, String label, int percent) {
         boolean sliderMode=prefs!=null&&"slider".equals(prefs.getString("progress_display","percent"));
