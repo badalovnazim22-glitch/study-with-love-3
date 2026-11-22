@@ -428,18 +428,23 @@ public class MainActivity extends Activity {
     private void showChapters() {
         currentScreen = "chapters";
         base("Уроки 📚", "Выбери предмет или создай свой урок");
-        LinearLayout searchRow=new LinearLayout(this);searchRow.setGravity(Gravity.RIGHT|Gravity.CENTER_VERTICAL);TextView search=text("⌕",29,PINK,true);search.setGravity(Gravity.CENTER);search.setBackground(shape(PALE,16,0xFFF2DDE4));search.setContentDescription("Поиск уроков и тем");searchRow.addView(search,lp(46,44,0,0,0,0));search.setOnClickListener(v->showSearchDialog());root.addView(searchRow,lp(-1,46,0,0,0,7));
-        LinearLayout lessonHead=new LinearLayout(this);lessonHead.setGravity(Gravity.CENTER_VERTICAL);TextView orderLabel=text("МОИ ПРЕДМЕТЫ",11,PINK,true);lessonHead.addView(orderLabel,new LinearLayout.LayoutParams(0,dp(34),1f));Button orderButton=button("⋮",false);orderButton.setTextSize(23);orderButton.setPadding(0,0,0,0);lessonHead.addView(orderButton,lp(44,38,0,0,0,0));root.addView(lessonHead,lp(-1,40,0,0,0,8));orderButton.setOnClickListener(v->{android.widget.PopupMenu menu=new android.widget.PopupMenu(this,orderButton);menu.getMenu().add(0,1,0,"По умолчанию");menu.getMenu().add(0,2,1,"По названию А—Я");menu.getMenu().add(0,3,2,"Сначала новые");menu.setOnMenuItemClickListener(mi->{prefs.edit().putString("lesson_sort",mi.getItemId()==2?"alpha":mi.getItemId()==3?"new":"default").apply();showChapters();return true;});menu.show();});
-        actionRegular("📐  Математика", "Все разделы и темы по математике", () -> showMathChapters());
-        Set<String> ids = prefs.getStringSet("custom_lesson_ids", new TreeSet<String>());
-        List<String> lessonOrder=new ArrayList<>(ids);String sort=prefs.getString("lesson_sort","default");if("alpha".equals(sort))java.util.Collections.sort(lessonOrder,(a,b)->prefs.getString("custom_lesson_name_"+a,"").compareToIgnoreCase(prefs.getString("custom_lesson_name_"+b,"")));else if("new".equals(sort))java.util.Collections.sort(lessonOrder,java.util.Collections.reverseOrder());
-        for (String id : lessonOrder) {
-            String name = prefs.getString("custom_lesson_name_" + id, "Мой урок");
-            actionRegular(prefs.getString("custom_lesson_emoji_"+id,"📚")+"  " + name, chapters.get("CUSTOM:" + id + ":" + name).size() + " тем", () -> { selectedChapter = "CUSTOM:" + id + ":" + name; showTopics(selectedChapter); });
-        }
-         Button add = button("＋  Добавить свой урок", true); add.setOnClickListener(v -> addCustomLesson());
-        root.addView(add, lp(-1, 50, 0, 6, 0, 10)); backHome();
+        LinearLayout lessonHead=new LinearLayout(this);lessonHead.setGravity(Gravity.CENTER_VERTICAL);
+        TextView orderLabel=text("МОИ ПРЕДМЕТЫ",11,PINK,true);lessonHead.addView(orderLabel,new LinearLayout.LayoutParams(0,dp(38),1f));
+        TextView search=text("⌕",25,PINK,true);search.setGravity(Gravity.CENTER);search.setBackground(shape(PALE,14,0xFFF2DDE4));search.setContentDescription("Поиск уроков и тем");lessonHead.addView(search,lp(40,38,0,0,7,0));search.setOnClickListener(v->showSearchDialog());
+        Button orderButton=button("⋮",false);orderButton.setTextSize(22);orderButton.setPadding(0,0,0,0);lessonHead.addView(orderButton,lp(40,38,0,0,0,0));root.addView(lessonHead,lp(-1,42,0,0,0,8));
+        orderButton.setOnClickListener(v->{android.widget.PopupMenu menu=new android.widget.PopupMenu(this,orderButton);menu.getMenu().add(0,1,0,"По умолчанию");menu.getMenu().add(0,2,1,"По названию А—Я");menu.getMenu().add(0,3,2,"Сначала новые");menu.setOnMenuItemClickListener(mi->{prefs.edit().putString("lesson_sort",mi.getItemId()==2?"alpha":mi.getItemId()==3?"new":"default").apply();showChapters();return true;});menu.show();});
+        List<String> mathTopics=chapters.get("1️⃣ Натуральные числа и действия с ними");int total=0,done=0;for(List<String> topics:chapters.values()){total+=topics.size();done+=countCompleted(topics);}
+        int mathTotal=0,mathDone=0;for(Map.Entry<String,List<String>> e:chapters.entrySet())if(!e.getKey().startsWith("CUSTOM:")){mathTotal+=e.getValue().size();mathDone+=countCompleted(e.getValue());}
+        LinearLayout math=card();math.setOrientation(LinearLayout.VERTICAL);math.setPadding(dp(15),dp(13),dp(15),dp(12));math.setOnClickListener(v->showMathChapters());
+        LinearLayout mathTop=new LinearLayout(this);mathTop.setGravity(Gravity.CENTER_VERTICAL);TextView mathIcon=text("📐",27,PINK,true);mathTop.addView(mathIcon,lp(42,42,0,0,10,0));LinearLayout mathWords=new LinearLayout(this);mathWords.setOrientation(LinearLayout.VERTICAL);addText(mathWords,"Математика",16,DARK,true);addText(mathWords,"Все разделы и темы по математике",11,MUTED,false);mathTop.addView(mathWords,new LinearLayout.LayoutParams(0,-2,1f));TextView arrow=text("›",25,PINK,false);mathTop.addView(arrow);math.addView(mathTop,lp(-1,-2,0,0,0,7));
+        addText(math,mathDone+" из "+mathTotal+" тем пройдено",10,MUTED,true);ProgressBar mathBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);mathBar.setMax(Math.max(1,mathTotal));mathBar.setProgress(mathDone);mathBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));mathBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));math.addView(mathBar,lp(-1,6,0,3,0,0));root.addView(math,lp(-1,-2,0,0,0,8));
+        Set<String> ids=prefs.getStringSet("custom_lesson_ids",new TreeSet<String>());List<String> lessonOrder=new ArrayList<>(ids);String sort=prefs.getString("lesson_sort","default");if("alpha".equals(sort))java.util.Collections.sort(lessonOrder,(a,b)->prefs.getString("custom_lesson_name_"+a,"").compareToIgnoreCase(prefs.getString("custom_lesson_name_"+b,"")));else if("new".equals(sort))java.util.Collections.sort(lessonOrder,java.util.Collections.reverseOrder());
+        for(String id:lessonOrder){String name=prefs.getString("custom_lesson_name_"+id,"Мой урок");List<String> topics=chapters.get("CUSTOM:"+id+":"+name);if(topics==null)topics=new ArrayList<>();int c=countCompleted(topics),n=topics.size();LinearLayout item=card();item.setOrientation(LinearLayout.VERTICAL);item.setPadding(dp(14),dp(11),dp(14),dp(11));LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);TextView emoji=text(prefs.getString("custom_lesson_emoji_"+id,"📚"),25,PINK,true);row.addView(emoji,lp(40,40,0,0,9,0));LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,name,15,DARK,true);addText(words,c+" из "+n+" тем пройдено",11,MUTED,false);row.addView(words,new LinearLayout.LayoutParams(0,-2,1f));TextView go=text("›",24,PINK,false);row.addView(go);item.addView(row);ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(Math.max(1,n));bar.setProgress(c);bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));item.addView(bar,lp(-1,5,0,7,0,0));item.setOnClickListener(v->{selectedChapter="CUSTOM:"+id+":"+name;showTopics(selectedChapter);});root.addView(item,lp(-1,-2,0,0,0,7));}
+        Button add=button("＋  Добавить свой урок",true);add.setOnClickListener(v->addCustomLesson());root.addView(add,lp(-1,49,0,7,0,12));
+        LinearLayout stats=card();stats.setPadding(dp(14),dp(12),dp(14),dp(12));addText(stats,"ТВОЙ УЧЕБНЫЙ РИТМ",11,PINK,true);addText(stats,done+" из "+total+" тем завершено",17,DARK,true);addText(stats,"Продолжай в своём темпе — каждый пройденный раздел приближает к цели ♡",11,MUTED,false);ProgressBar allBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);allBar.setMax(Math.max(1,total));allBar.setProgress(done);allBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));stats.addView(allBar,lp(-1,6,0,7,0,0));root.addView(stats,lp(-1,-2,0,0,0,10));
+        String recent=prefs.getString("recent_topic","");String recentChapter=prefs.getString("recent_chapter","");if(!recent.isEmpty()&&!recentChapter.isEmpty()&&chapters.containsKey(recentChapter)){Button last=button("↗  Продолжить: "+recent,false);last.setOnClickListener(v->{selectedChapter=recentChapter;selectedTopic=recent;showTopic(recent);});root.addView(last,lp(-1,45,0,0,0,4));}
     }
+
     private void showMathChapters() {
         currentScreen = "chapters"; base("Математика 📐", "Выбери раздел и продолжай обучение");
         int number = 1;
@@ -491,6 +496,7 @@ public class MainActivity extends Activity {
     }
     private void showTopic(String topic) {
         currentScreen = "topic";
+        if(selectedChapter!=null)prefs.edit().putString("recent_chapter",selectedChapter).putString("recent_topic",topic).apply();
         base("Твоя тема 📖", "Учись в своём темпе — каждый шаг важен");
         int percent = topicProgress(topic);
         LinearLayout box = card();
@@ -885,23 +891,75 @@ public class MainActivity extends Activity {
         currentScreen="diary";
         base("Дневник успехов ♡","Сохраняй моменты, которыми ты гордишься");
         addText(root,"МАЛЕНЬКАЯ ПОБЕДА СЕГОДНЯ",11,PINK,true);
-        EditText note=new EditText(this);note.setHint("Сегодня у меня получилось...");note.setTextSize(17);note.setTextColor(DARK);note.setHintTextColor(MUTED);note.setGravity(Gravity.TOP);note.setMinLines(4);note.setPadding(dp(2),dp(12),dp(2),dp(12));note.setBackgroundColor(0x00000000);
-        root.addView(note,lp(-1,132,0,0,0,8));
-        final String[] selectedTag={"Учёба"};final String[] editingId={null};
+        EditText note=new EditText(this);note.setHint("Сегодня у меня получилось...");note.setTextSize(17);note.setTextColor(DARK);note.setHintTextColor(MUTED);note.setGravity(Gravity.TOP);note.setMinLines(3);note.setPadding(dp(2),dp(10),dp(2),dp(10));note.setBackgroundColor(0x00000000);
+        root.addView(note,lp(-1,104,0,0,0,7));
+        final String[] selectedTag={"Учёба"}, editingId={null}, activeFilter={"Все"}, queryValue={""};
+        Set<String> customTags=new TreeSet<>(prefs.getStringSet("diary_custom_tags",new TreeSet<String>()));
         LinearLayout tags=new LinearLayout(this);tags.setOrientation(LinearLayout.HORIZONTAL);tags.setGravity(Gravity.CENTER_VERTICAL);
-        String[] tagNames={"Учёба","Дисциплина","Отдых","Прогресс"};
-        for(String tag:tagNames){TextView chip=text("#"+tag,12,tag.equals(selectedTag[0])?PINK:MUTED,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(10),dp(8),dp(10),dp(8));chip.setBackground(shape(tag.equals(selectedTag[0])?0xFFFFE8EF:0xFFF7F3F4,18,tag.equals(selectedTag[0])?PINK:0xFFEDE3E7));LinearLayout.LayoutParams cp=lp(-2,36,0,0,6,0);tags.addView(chip,cp);chip.setOnClickListener(v->{selectedTag[0]=tag;for(int k=0;k<tags.getChildCount();k++){TextView q=(TextView)tags.getChildAt(k);boolean on=q.getText().toString().equals("#"+tag);q.setTextColor(on?PINK:MUTED);q.setBackground(shape(on?0xFFFFE8EF:0xFFF7F3F4,18,on?PINK:0xFFEDE3E7));}});}
-        root.addView(tags,lp(-1,42,0,0,0,14));
-        Button save=button("✦  Сохранить победу",true);save.setTextSize(15);save.setElevation(dp(5));root.addView(save,lp(-1,54,0,0,0,20));
-        TextView memoryTitle=text("Вспомнить успех ✨",17,DARK,true);root.addView(memoryTitle,lp(-1,-2,0,0,0,8));
+        HorizontalScrollView tagScroll=new HorizontalScrollView(this);tagScroll.setHorizontalScrollBarEnabled(false);tagScroll.addView(tags);root.addView(tagScroll,lp(-1,43,0,0,0,7));
+        Runnable[] refreshTags=new Runnable[1];
+        refreshTags[0]=()->{
+            tags.removeAllViews();
+            List<String> names=new ArrayList<>();names.add("Учёба");names.add("Дисциплина");names.add("Отдых");names.add("Прогресс");for(String t:customTags)if(!names.contains(t))names.add(t);
+            for(String tag:names){TextView chip=text("#"+tag,11,tag.equals(selectedTag[0])?PINK:MUTED,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(11),dp(7),dp(11),dp(7));chip.setBackground(shape(tag.equals(selectedTag[0])?0xFFFFE8EF:0xFFF7F3F4,18,tag.equals(selectedTag[0])?PINK:0xFFEDE3E7));tags.addView(chip,lp(-2,34,0,0,6,0));chip.setOnClickListener(v->{selectedTag[0]=tag;for(int k=0;k<tags.getChildCount();k++){TextView q=(TextView)tags.getChildAt(k);boolean on=q.getText().toString().equals("#"+tag);q.setTextColor(on?PINK:MUTED);q.setBackground(shape(on?0xFFFFE8EF:0xFFF7F3F4,18,on?PINK:0xFFEDE3E7));}});}
+            TextView addTag=text("＋ Свой тег",11,PINK,true);addTag.setGravity(Gravity.CENTER);addTag.setPadding(dp(11),dp(7),dp(11),dp(7));addTag.setBackground(shape(PALE,18,0xFFEADDE2));tags.addView(addTag,lp(-2,34,0,0,0,0));
+            addTag.setOnClickListener(v->{EditText input=new EditText(this);input.setSingleLine(true);input.setTextSize(15);input.setTextColor(DARK);input.setHint("Например: Книги");input.setPadding(dp(12),dp(8),dp(12),dp(8));input.setBackground(shape(0xFFFFFFFF,14,0xFFEADDE2));LinearLayout wrap=new LinearLayout(this);wrap.setPadding(dp(20),dp(8),dp(20),0);wrap.addView(input,lp(-1,48,0,0,0,0));new android.app.AlertDialog.Builder(this).setTitle("Новый хэштег").setView(wrap).setNegativeButton("Отмена",null).setPositiveButton("Добавить",(d,w)->{String tag=input.getText().toString().trim().replace("#","").replaceAll("\\s+","");if(tag.isEmpty()){Toast.makeText(this,"Введи название тега",Toast.LENGTH_SHORT).show();return;}customTags.add(tag);prefs.edit().putStringSet("diary_custom_tags",customTags).apply();selectedTag[0]=tag;refreshTags[0].run();}).show();});
+        };
+        refreshTags[0].run();
+        Button save=button("✦  Сохранить победу",true);save.setTextSize(15);save.setElevation(dp(4));root.addView(save,lp(-1,51,0,4,0,15));
+        TextView memoryTitle=text("Вспомнить успех ✨",16,DARK,true);root.addView(memoryTitle,lp(-1,-2,0,0,0,7));
         Set<String> all=new TreeSet<>(prefs.getStringSet("diary_ids",new TreeSet<String>()));List<String> old=new ArrayList<>(all);java.util.Collections.sort(old,java.util.Collections.reverseOrder());
-        if(old.size()>1){String pick=old.get(1);LinearLayout memory=new LinearLayout(this);memory.setOrientation(LinearLayout.VERTICAL);memory.setPadding(dp(14),dp(12),dp(14),dp(12));memory.setBackground(shape(0xFFFFF2F6,18,0));addText(memory,prefs.getString("diary_"+pick,""),14,DARK,false);addText(memory,"Твоя прошлая маленькая победа ♡",11,PINK,true);root.addView(memory,lp(-1,-2,0,0,0,18));}
-        else addText(root,"Здесь появится одна из твоих прошлых записей — пока сохрани первую победу.",12,MUTED,false);
-        TextView heading=text("ТВОИ ЗАПИСИ",12,PINK,true);root.addView(heading,lp(-1,-2,0,0,0,9));
+        if(old.size()>1){String pick=old.get(1);LinearLayout memory=new LinearLayout(this);memory.setOrientation(LinearLayout.VERTICAL);memory.setPadding(dp(13),dp(10),dp(13),dp(10));memory.setBackground(shape(0xFFFFF2F6,17,0));addText(memory,prefs.getString("diary_"+pick,""),13,DARK,false);addText(memory,"Твоя прошлая маленькая победа ♡",10,PINK,true);root.addView(memory,lp(-1,-2,0,0,0,14));}
+        else addText(root,"Здесь появится одна из твоих прошлых записей — пока сохрани первую победу.",11,MUTED,false);
+        LinearLayout heading=new LinearLayout(this);heading.setGravity(Gravity.CENTER_VERTICAL);
+        TextView title=text("ТВОИ ЗАПИСИ",11,PINK,true);heading.addView(title,new LinearLayout.LayoutParams(0,dp(30),1f));
+        TextView counter=text("",11,MUTED,true);heading.addView(counter,lp(-2,30,0,0,0,0));
+        root.addView(heading,lp(-1,34,0,0,0,4));
+        LinearLayout searchWrap=new LinearLayout(this);searchWrap.setGravity(Gravity.CENTER_VERTICAL);searchWrap.setPadding(dp(11),0,dp(8),0);searchWrap.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));
+        TextView magnify=text("⌕",23,PINK,true);magnify.setGravity(Gravity.CENTER);searchWrap.addView(magnify,lp(27,42,0,0,5,0));
+        EditText search=new EditText(this);search.setSingleLine(true);search.setTextSize(13);search.setTextColor(DARK);search.setHintTextColor(MUTED);search.setHint("Поиск по победам...");search.setPadding(0,0,0,0);search.setBackgroundColor(0x00000000);searchWrap.addView(search,new LinearLayout.LayoutParams(0,dp(42),1f));
+        TextView clear=text("×",22,MUTED,true);clear.setGravity(Gravity.CENTER);clear.setVisibility(View.GONE);searchWrap.addView(clear,lp(28,40,0,0,0,0));root.addView(searchWrap,lp(-1,44,0,0,0,7));
+        LinearLayout filterRow=new LinearLayout(this);filterRow.setGravity(Gravity.CENTER_VERTICAL);
+        HorizontalScrollView filterScroll=new HorizontalScrollView(this);filterScroll.setHorizontalScrollBarEnabled(false);filterScroll.addView(filterRow);root.addView(filterScroll,lp(-1,40,0,0,0,4));
         LinearLayout entries=new LinearLayout(this);entries.setOrientation(LinearLayout.VERTICAL);root.addView(entries,lp(-1,-2,0,0,0,0));
-        renderDiaryEntries(entries,note,save,editingId);
-        save.setOnClickListener(v->{String value=note.getText().toString().trim();if(value.isEmpty()){note.setError("Напиши хотя бы пару слов");return;}Set<String> ids=new TreeSet<>(prefs.getStringSet("diary_ids",new TreeSet<String>()));String id=editingId[0]==null?String.valueOf(System.currentTimeMillis()):editingId[0];ids.add(id);prefs.edit().putString("diary_"+id,value).putString("diary_tag_"+id,selectedTag[0]).putStringSet("diary_ids",ids).apply();editingId[0]=null;note.setText("");save.setText("✦  Сохранить победу");renderDiaryEntries(entries,note,save,editingId);showSavedBanner("Запись сохранена","Твоя маленькая победа осталась в дневнике ♡");});
+        Runnable[] render={null};
+        render[0]=()->{
+            entries.removeAllViews();filterRow.removeAllViews();
+            List<String> filters=new ArrayList<>();filters.add("Все");filters.add("Учёба");filters.add("Дисциплина");filters.add("Отдых");filters.add("Прогресс");for(String t:customTags)if(!filters.contains(t))filters.add(t);
+            for(String filter:filters){TextView chip=text(filter.equals("Все")?"Все":"#"+filter,10,activeFilter[0].equals(filter)?PINK:MUTED,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(10),dp(6),dp(10),dp(6));chip.setBackground(shape(activeFilter[0].equals(filter)?0xFFFFE8EF:0xFFF7F3F4,16,activeFilter[0].equals(filter)?PINK:0xFFEDE3E7));filterRow.addView(chip,lp(-2,31,0,0,5,0));chip.setOnClickListener(v->{activeFilter[0]=filter;render[0].run();});}
+            String q=queryValue[0].trim().toLowerCase(new Locale("ru"));
+            Set<String> ids=new TreeSet<>(prefs.getStringSet("diary_ids",new TreeSet<String>()));List<String> sorted=new ArrayList<>(ids);java.util.Collections.sort(sorted,java.util.Collections.reverseOrder());
+            List<String> matches=new ArrayList<>();
+            for(String id:sorted){String value=prefs.getString("diary_"+id,"");if(value.isEmpty())continue;String tag=prefs.getString("diary_tag_"+id,"Учёба");String date=new SimpleDateFormat("d MMMM yyyy · HH:mm",new Locale("ru")).format(new Date(Long.parseLong(id)));String iso=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(new Date(Long.parseLong(id)));if(!activeFilter[0].equals("Все")&&!activeFilter[0].equals(tag))continue;if(!q.isEmpty()&&!value.toLowerCase(new Locale("ru")).contains(q)&&!date.toLowerCase(new Locale("ru")).contains(q)&&!iso.contains(q))continue;matches.add(id);}
+            boolean filtering=!q.isEmpty()||!activeFilter[0].equals("Все");
+            counter.setText(filtering?"Найдено: "+matches.size():"Всего: "+ids.size());
+            if(filtering){TextView reset=text("Сбросить",10,PINK,true);reset.setGravity(Gravity.CENTER);reset.setPadding(dp(8),0,0,0);heading.addView(reset,lp(-2,30,5,0,0,0));reset.setOnClickListener(v->{queryValue[0]="";search.setText("");activeFilter[0]="Все";render[0].run();});}
+            if(matches.isEmpty()){addText(entries,filtering?"Ничего не найдено. Попробуй изменить запрос или фильтр.":"🌷 Здесь появятся твои маленькие победы. Сохрани первую запись — и возвращайся к ней в трудные дни.",13,MUTED,false);return;}
+            String currentMonth="";
+            Set<String> collapsed=new TreeSet<>(prefs.getStringSet("diary_collapsed_months",new TreeSet<String>()));
+            for(String id:matches){long stamp=Long.parseLong(id);Calendar cal=Calendar.getInstance();cal.setTimeInMillis(stamp);String monthKey=new SimpleDateFormat("yyyy-MM",Locale.US).format(new Date(stamp));
+                if(!monthKey.equals(currentMonth)){currentMonth=monthKey;String monthTitle=new SimpleDateFormat("LLLL yyyy",new Locale("ru")).format(new Date(stamp));monthTitle=monthTitle.substring(0,1).toUpperCase(new Locale("ru"))+monthTitle.substring(1);LinearLayout monthHead=new LinearLayout(this);monthHead.setGravity(Gravity.CENTER_VERTICAL);TextView month=text(monthTitle,12,PINK,true);monthHead.addView(month,new LinearLayout.LayoutParams(0,dp(36),1f));TextView arrow=text(collapsed.contains(monthKey)?"＋":"−",17,MUTED,true);arrow.setGravity(Gravity.CENTER);monthHead.addView(arrow,lp(30,34,0,0,0,0));entries.addView(monthHead,lp(-1,38,0,5,0,2));monthHead.setOnClickListener(v->{Set<String> state=new TreeSet<>(prefs.getStringSet("diary_collapsed_months",new TreeSet<String>()));if(state.contains(monthKey))state.remove(monthKey);else state.add(monthKey);prefs.edit().putStringSet("diary_collapsed_months",state).apply();render[0].run();});}
+                if(collapsed.contains(monthKey))continue;
+                String value=prefs.getString("diary_"+id,""),tag=prefs.getString("diary_tag_"+id,"Учёба");
+                LinearLayout entry=new LinearLayout(this);entry.setOrientation(LinearLayout.VERTICAL);entry.setPadding(dp(2),dp(7),dp(2),dp(10));
+                LinearLayout top=new LinearLayout(this);top.setGravity(Gravity.CENTER_VERTICAL);TextView date=text("✿  "+new SimpleDateFormat("d MMMM yyyy · HH:mm",new Locale("ru")).format(new Date(stamp)),10,PINK,true);top.addView(date,new LinearLayout.LayoutParams(0,dp(32),1f));
+                TextView edit=text("✎",19,MUTED,true);edit.setGravity(Gravity.CENTER);top.addView(edit,lp(34,32,0,0,2,0));TextView del=text("⌫",18,MUTED,true);del.setGravity(Gravity.CENTER);top.addView(del,lp(34,32,0,0,0,0));entry.addView(top,lp(-1,34,0,0,0,2));
+                TextView tagView=text("#"+tag,10,PINK,true);entry.addView(tagView,lp(-1,19,0,0,0,2));TextView body=text(value,14,DARK,false);body.setGravity(Gravity.TOP);body.setPadding(0,dp(2),0,dp(7));entry.addView(body,lp(-1,-2,0,0,0,0));
+                LinearLayout editArea=new LinearLayout(this);editArea.setOrientation(LinearLayout.VERTICAL);editArea.setVisibility(View.GONE);EditText editText=new EditText(this);editText.setText(value);editText.setTextSize(14);editText.setTextColor(DARK);editText.setGravity(Gravity.TOP);editText.setMinLines(3);editText.setBackground(shape(0xFFFFF9F7,14,0xFFEADDE2));editArea.addView(editText,lp(-1,92,0,0,0,6));
+                Button saveInline=button("Сохранить",true),cancel=button("Отмена",false);editArea.addView(saveInline,lp(-1,40,0,0,0,3));editArea.addView(cancel,lp(-1,38,0,0,0,0));entry.addView(editArea,lp(-1,-2,0,0,0,0));
+                edit.setOnClickListener(v->{body.setVisibility(View.GONE);tagView.setVisibility(View.GONE);editArea.setVisibility(View.VISIBLE);});cancel.setOnClickListener(v->{editArea.setVisibility(View.GONE);body.setVisibility(View.VISIBLE);tagView.setVisibility(View.VISIBLE);});saveInline.setOnClickListener(v->{String updated=editText.getText().toString().trim();if(updated.isEmpty()){editText.setError("Напиши пару слов");return;}prefs.edit().putString("diary_"+id,updated).apply();render[0].run();});
+                del.setOnClickListener(v->new android.app.AlertDialog.Builder(this).setMessage("Удалить эту запись?").setNegativeButton("Отмена",null).setPositiveButton("Удалить",(d,w)->{Set<String> latest=new TreeSet<>(prefs.getStringSet("diary_ids",new TreeSet<String>()));latest.remove(id);prefs.edit().remove("diary_"+id).remove("diary_tag_"+id).putStringSet("diary_ids",latest).apply();render[0].run();}).show());
+                View line=new View(this);line.setBackgroundColor(0xFFEFE5E8);entry.addView(line,lp(-1,1,0,5,0,0));entries.addView(entry,lp(-1,-2,0,0,0,5));
+            }
+        };
+        search.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int st,int c,int a){}public void onTextChanged(CharSequence s,int st,int before,int count){queryValue[0]=s.toString();clear.setVisibility(s.length()>0?View.VISIBLE:View.GONE);render[0].run();}public void afterTextChanged(android.text.Editable e){}});
+        clear.setOnClickListener(v->search.setText(""));
+        save.setOnClickListener(v->{String value=note.getText().toString().trim();if(value.isEmpty()){note.setError("Напиши хотя бы пару слов");return;}Set<String> ids=new TreeSet<>(prefs.getStringSet("diary_ids",new TreeSet<String>()));String id=editingId[0]==null?String.valueOf(System.currentTimeMillis()):editingId[0];ids.add(id);prefs.edit().putString("diary_"+id,value).putString("diary_tag_"+id,selectedTag[0]).putStringSet("diary_ids",ids).apply();editingId[0]=null;note.setText("");save.setText("✦  Сохранить победу");render[0].run();showSavedBanner("Запись сохранена","Твоя маленькая победа осталась в дневнике ♡");});
+        render[0].run();
     }
+
+    private void showSavedBanner(String title, String subtitle) {
+
     private void showSavedBanner(String title, String subtitle) {
         LinearLayout banner=new LinearLayout(this);banner.setOrientation(LinearLayout.HORIZONTAL);banner.setGravity(Gravity.CENTER_VERTICAL);
         banner.setPadding(dp(16),dp(11),dp(18),dp(11));banner.setBackground(shape(PALE,20,0));banner.setElevation(dp(8));
@@ -1004,17 +1062,20 @@ public class MainActivity extends Activity {
         int days=prefs.getStringSet("study_days",new TreeSet<String>()).size(),minutes=totalStudyMinutes(),completed=0;for(List<String> topics:chapters.values())completed+=countCompleted(topics);int sessions=prefs.getInt("done_count",0);
         String[][] a={{"🌱","Первые шаги","Первый день занятий",String.valueOf(days>=1),"1"},{"🌷","Неделя стараний","7 дней занятий",String.valueOf(days>=7),"7"},{"🌸","Две недели","14 дней занятий",String.valueOf(days>=14),"14"},{"💐","Месяц успеха","30 дней занятий",String.valueOf(days>=30),"30"},{"🏵️","Два месяца","60 дней занятий",String.valueOf(days>=60),"60"},{"🌻","Сто дней","100 дней занятий",String.valueOf(days>=100),"100"},{"📚","Маленький математик","Завершена первая тема",String.valueOf(completed>=1),"1"},{"🧮","Счёт — это просто","Завершено 5 тем",String.valueOf(completed>=5),"5"},{"🎓","Знаток математики","Завершено 10 тем",String.valueOf(completed>=10),"10"},{"🏆","Мастер знаний","Завершены все 41 темы",String.valueOf(completed>=41),"41"},{"⏳","Первый час","60 минут занятий",String.valueOf(minutes>=60),"60"},{"⌛","10 часов учёбы","600 минут занятий",String.valueOf(minutes>=600),"600"},{"🚀","Настойчивость","25 учебных занятий",String.valueOf(sessions>=25),"25"},{"💎","Пятьдесят побед","50 тем или занятий",String.valueOf(completed+sessions>=50),"50"},{"💗","Возвращаюсь к цели","Занятия в 3 разных дня",String.valueOf(days>=3),"3"},{"✨","Ритм учёбы","Занятия в 5 разных дней",String.valueOf(days>=5),"5"}};
         int unlocked=0;for(String[] x:a)if(Boolean.parseBoolean(x[3]))unlocked++;
-        addText(root,unlocked+" / "+a.length+" открыто",16,DARK,true);
-        ProgressBar overall=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);overall.setMax(a.length);overall.setProgress(unlocked);overall.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));overall.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));root.addView(overall,lp(-1,9,0,8,0,8));
-        addText(root,"До следующей награды: "+(unlocked==a.length?"Все награды собраны!":"ещё "+Math.max(0,(unlocked+1)*7-days)+" дней до нового рубежа"),12,MUTED,false);
+        addText(root,unlocked+" / "+a.length+" открыто",15,DARK,true);
+        ProgressBar overall=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);overall.setMax(a.length);overall.setProgress(unlocked);overall.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));overall.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));root.addView(overall,lp(-1,8,0,7,0,7));
+        addText(root,"До следующей награды: "+(unlocked==a.length?"Все награды собраны!":"ещё "+Math.max(0,(unlocked+1)*7-days)+" дней до нового рубежа"),11,MUTED,false);
+        android.widget.GridLayout grid=new android.widget.GridLayout(this);grid.setColumnCount(3);grid.setUseDefaultMargins(false);
         for(String[] x:a){boolean open=Boolean.parseBoolean(x[3]);int target=Integer.parseInt(x[4]);int current=x[1].contains("дней")||x[1].equals("Первые шаги")?days:x[1].contains("час")?minutes:x[1].contains("побед")||x[1].equals("Настойчивость")?sessions:completed;
-            LinearLayout c=card();c.setOrientation(LinearLayout.HORIZONTAL);c.setGravity(Gravity.CENTER_VERTICAL);c.setAlpha(open?1f:.62f);c.setBackground(shape(open?0xFFFFF0F5:0xFFF5F2F1,22,open?PINK:0xFFE8E1E4));
-            TextView icon=text(open?x[0]:"🔒",28,open?PINK:MUTED,true);icon.setGravity(Gravity.CENTER);c.addView(icon,lp(48,54,0,0,10,0));
-            LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,x[1],15,DARK,true);addText(words,x[2],12,MUTED,false);
-            if(open){String unlockedDate=prefs.getString("achievement_date_"+x[1],"");if(unlockedDate.isEmpty()){unlockedDate=new SimpleDateFormat("d MMMM yyyy",new Locale("ru")).format(new Date());prefs.edit().putString("achievement_date_"+x[1],unlockedDate).apply();}addText(words,"Открыто ✓  ·  "+unlockedDate,11,PINK,true);}
-            else{addText(words,Math.min(current,target)+" / "+target,11,MUTED,true);ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(Math.max(1,target));bar.setProgress(Math.min(current,target));bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));words.addView(bar,lp(-1,6,0,4,0,0));}
-            c.addView(words,new LinearLayout.LayoutParams(0,-2,1f));root.addView(c,lp(-1,-2,0,0,0,9));
-        }backHome();
+            LinearLayout tile=new LinearLayout(this);tile.setOrientation(LinearLayout.VERTICAL);tile.setGravity(Gravity.CENTER);tile.setPadding(dp(5),dp(8),dp(5),dp(7));tile.setBackground(shape(open?0xFFFFF0F5:0xFFF5F2F1,17,open?PINK:0xFFE8E1E4));tile.setAlpha(open?1f:.68f);
+            TextView icon=text(open?x[0]:"🔒",24,open?PINK:MUTED,true);icon.setGravity(Gravity.CENTER);tile.addView(icon,lp(-1,34,0,0,0,3));
+            TextView name=text(x[1],10,DARK,true);name.setGravity(Gravity.CENTER);name.setMaxLines(2);name.setMinHeight(dp(29));tile.addView(name,lp(-1,-2,0,0,0,2));
+            TextView state=text(open?"Открыто ✓":Math.min(current,target)+"/"+target,9,open?PINK:MUTED,true);state.setGravity(Gravity.CENTER);tile.addView(state,lp(-1,17,0,0,0,2));
+            if(!open){ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(Math.max(1,target));bar.setProgress(Math.min(current,target));bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));tile.addView(bar,lp(-1,4,0,2,0,0));}
+            android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(112);gp.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);gp.setMargins(dp(3),dp(3),dp(3),dp(3));grid.addView(tile,gp);
+            tile.setOnClickListener(v->{String detail=x[2];if(open){String date=prefs.getString("achievement_date_"+x[1],"");if(date.isEmpty()){date=new SimpleDateFormat("d MMMM yyyy",new Locale("ru")).format(new Date());prefs.edit().putString("achievement_date_"+x[1],date).apply();}detail+="\n\nОткрыто ✓ · "+date;}else detail+="\n\nПрогресс: "+Math.min(current,target)+" из "+target;new android.app.AlertDialog.Builder(this).setTitle(x[0]+"  "+x[1]).setMessage(detail).setPositiveButton("Понятно",null).show();});
+        }
+        root.addView(grid,lp(-1,-2,0,8,0,8));backHome();
     }
 
     private void showFutureLetters() {
