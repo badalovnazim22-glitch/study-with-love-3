@@ -63,6 +63,11 @@ public class MainActivity extends Activity {
     private TextView timerDisplay, timerStatus, studyTimeValue, breakTimeValue;
     private android.animation.ValueAnimator timerPulseAnimator;
     private android.animation.ObjectAnimator flowerBreatheAnimator;
+    private final List<MiniQuestion> miniQuestions=new ArrayList<>();
+    private final List<MiniQuestion> miniWrongQuestions=new ArrayList<>();
+    private int miniScore=0;
+    private String miniTopic="";
+    private static class MiniQuestion { String prompt,explanation; String[] options; int correct; MiniQuestion(String p,String[] o,int c,String e){prompt=p;options=o;correct=c;explanation=e;} }
     private Button timerStartButton, timerPauseButton;
     private EditText customMinutesInput;
     private long appUsageStartedElapsed = 0L;
@@ -103,7 +108,7 @@ public class MainActivity extends Activity {
             prefs.edit().putStringSet("study_days", history).apply();
         }
         loadChapters();
-        scheduleReminders(this);
+        scheduleReminders(this); WeeklyReportReceiver.schedule(this); StudyWidgetProvider.updateAll(this);
         if (prefs.getBoolean("notifications_enabled", true) && Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 20);
         if (!prefs.getBoolean("welcome_done", false)) showWelcome(); else showHome();
@@ -484,6 +489,7 @@ public class MainActivity extends Activity {
         addText(intro,"ТВОЙ МАТЕМАТИЧЕСКИЙ ЧЕЛЛЕНДЖ",11,PINK,true);
         addText(intro,"Сколько примеров ты решишь подряд?",22,DARK,true);
         addText(intro,"Выбери режим и сложность. Набирай очки, проходи уровни и собирай достижения. Ошибка завершит забег.",13,MUTED,false);
+        Button sections=button("📚  Викторина по темам: дроби · проценты · десятичные",false);sections.setOnClickListener(v->showTopicQuizCategories());root.addView(sections,lp(-1,48,0,0,0,12));
         root.addView(intro,lp(-1,-2,0,0,0,14));
         addText(root,"РЕЖИМ ИГРЫ",12,PINK,true);
         LinearLayout modes=new LinearLayout(this);modes.setOrientation(LinearLayout.HORIZONTAL);
@@ -668,7 +674,7 @@ public class MainActivity extends Activity {
         int n=0;for(String key:keys)if(prefs.getBoolean(key,false))n++;return n;
     }
 
-    private String dailyMotivation() { return "✧  "+messages[Math.floorMod(todayKey().hashCode(),messages.length)]; }
+    private String dailyMotivation() {String last=prefs.getString("last_study_date","");if(!last.isEmpty()&&!todayKey().equals(last)&&!isYesterday(last))return "♡  Давно не занимались? Ничего страшного — начни с 5 минут. Ты справишься.";return "✧  "+messages[Math.floorMod(todayKey().hashCode(),messages.length)]; }
      private String word(int n) { int x=n%10, y=n%100; if(x==1 && y!=11)return "урок"; if(x>=2&&x<=4&&(y<12||y>14))return "урока"; return "уроков"; }
     private void showChapters() {
         currentScreen = "chapters";
@@ -860,7 +866,7 @@ public class MainActivity extends Activity {
     private void saveTopicProgressForChapter(String chapter,String topic,int value){
         int old=topicProgressForChapter(chapter,topic),next=Math.max(0,Math.min(100,value));String suffix=topicStorageSuffix(chapter,topic);
         SharedPreferences.Editor e=prefs.edit().putInt("progress_"+suffix,next).putBoolean("done_"+suffix,next==100);
-        if(old<100&&next==100)e.putInt("done_count",prefs.getInt("done_count",0)+1);if(old==100&&next<100)e.putInt("done_count",Math.max(0,prefs.getInt("done_count",0)-1));e.apply();
+        if(old<100&&next==100)e.putInt("done_count",prefs.getInt("done_count",0)+1).putLong("topic_completed_at_"+suffix,System.currentTimeMillis());if(old==100&&next<100)e.putInt("done_count",Math.max(0,prefs.getInt("done_count",0)-1)).remove("topic_completed_at_"+suffix);e.apply();
     }
     private void saveTopicProgress(String topic,int value){saveTopicProgressForChapter(selectedChapter,topic,value);}
 
@@ -871,11 +877,12 @@ public class MainActivity extends Activity {
         history.add(today);
         if (!today.equals(last)) {
             int streak = prefs.getInt("current_streak", 0);
-            if (isYesterday(last)) streak++; else streak = 1;
+            if (isYesterday(last)) streak++; else if(isOneDayGap(last)&&!weekKey().equals(prefs.getString("streak_freeze_week",""))){streak++;prefs.edit().putString("streak_freeze_week",weekKey()).putString("streak_freeze_used_date",today).apply();}else streak = 1;
             prefs.edit().putInt("current_streak", streak)
                     .putInt("longest_streak", Math.max(streak, prefs.getInt("longest_streak", 0)))
                     .putString("last_study_date", today)
                     .putStringSet("study_days", history).apply();
+            StudyWidgetProvider.updateAll(this);
         } else {
             prefs.edit().putStringSet("study_days", history).apply();
         }
@@ -1015,7 +1022,7 @@ public class MainActivity extends Activity {
         LinearLayout timerControls = new LinearLayout(this); timerControls.setOrientation(LinearLayout.HORIZONTAL); timerControls.setGravity(Gravity.CENTER);
         timerStartButton=button(timerRunning?"Идёт":"▶  Начать",true);timerStartButton.setEnabled(!timerRunning);timerStartButton.setOnClickListener(v->startTimer());
         timerPauseButton=button("Ⅱ  Пауза",false);timerPauseButton.setEnabled(timerRunning);timerPauseButton.setOnClickListener(v->pauseTimer());
-        Button reset=button("↺  Сброс",false);reset.setOnClickListener(v->{timerHandler.removeCallbacks(timerTick);timerRunning=false;if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}if(timerDisplay!=null)timerDisplay.animate().cancel();timerIsBreak=false;timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();});
+        Button reset=button("↺  Сброс",false);reset.setOnClickListener(v->{timerHandler.removeCallbacks(timerTick);timerRunning=false;cancelTimerFinishAlarm();try{stopService(new Intent(this,FocusTimerService.class));}catch(Exception ignored){}getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}if(timerDisplay!=null)timerDisplay.animate().cancel();timerIsBreak=false;timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();});
         Button[] controls={timerStartButton,timerPauseButton,reset};
         for(Button control:controls){
             LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(48),1f); cp.setMargins(dp(3),0,dp(3),0);
@@ -1045,6 +1052,7 @@ public class MainActivity extends Activity {
         if (timerRunning) return;
         if (timerRemainingMs <= 0) timerRemainingMs = (timerIsBreak ? selectedBreakMinutes : selectedStudyMinutes) * 60000L;
         timerRunning = true; timerSessionStarted = SystemClock.elapsedRealtime(); timerEndElapsed = timerSessionStarted + timerRemainingMs;
+        try{Intent service=new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_START).putExtra("duration_ms",timerRemainingMs).putExtra("break",timerIsBreak);if(Build.VERSION.SDK_INT>=26)startForegroundService(service);else startService(service);}catch(Exception ignored){}
         getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         scheduleTimerFinishAlarm(timerRemainingMs);
         timerTick = new Runnable() { @Override public void run() { updateTimerDisplay(); long left = timerEndElapsed - SystemClock.elapsedRealtime(); if (left <= 0) finishTimerPhase(); else timerHandler.postDelayed(this, 250); } };
@@ -1057,13 +1065,14 @@ public class MainActivity extends Activity {
     private void pauseTimer() {
         if (!timerRunning) return;
         timerRemainingMs = Math.max(0, timerEndElapsed - SystemClock.elapsedRealtime());
-        timerRunning = false; timerHandler.removeCallbacks(timerTick); cancelTimerFinishAlarm(); getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        timerRunning = false; timerHandler.removeCallbacks(timerTick); cancelTimerFinishAlarm(); try{Intent stop=new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_STOP);startService(stop);}catch(Exception ignored){} getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}if (timerDisplay != null) { timerDisplay.setText(formatTimer(timerRemainingMs)); timerDisplay.animate().scaleX(1f).scaleY(1f).setDuration(220).start(); }
         if (timerStartButton != null) { timerStartButton.setEnabled(true); timerStartButton.setText("▶  Продолжить"); }
         if (timerPauseButton != null) timerPauseButton.setEnabled(false);
     }
 
     private boolean isMaleProfile(){return prefs!=null && "male".equals(prefs.getString("profile_gender","female"));}
+    private String g(String feminine,String masculine){return isMaleProfile()?masculine:feminine;}
     private void updateTimerDisplay() {
         if (timerDisplay != null) timerDisplay.setText(formatTimer(Math.max(0, timerEndElapsed - SystemClock.elapsedRealtime())));
     }
@@ -1095,7 +1104,7 @@ public class MainActivity extends Activity {
     }
 
     private void finishTimerPhase() {
-        timerHandler.removeCallbacks(timerTick); timerRunning = false; cancelTimerFinishAlarm(); getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;} timerRemainingMs = 0;
+        timerHandler.removeCallbacks(timerTick); timerRunning = false; cancelTimerFinishAlarm(); try{stopService(new Intent(this,FocusTimerService.class));}catch(Exception ignored){} getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;} timerRemainingMs = 0;
         if (!timerIsBreak) { recordStudyDay(); showTimerNotification("Время отдохнуть 🌸","Фокус-сессия завершена. Ты молодец!"); timerIsBreak = true; timerRemainingMs = selectedBreakMinutes * 60000L; Toast.makeText(this, isMaleProfile()?"Ты большой молодец! Время отдохнуть 🌸":"Ты большая умничка! Время отдохнуть 🌸", Toast.LENGTH_LONG).show(); }
         else { showTimerNotification("Перерыв окончен 💗","Можно возвращаться к занятиям"); timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; Toast.makeText(this, isMaleProfile()?"Перерыв окончен. Ты готов продолжать! 💗":"Перерыв окончен. Ты готова продолжать! 💗", Toast.LENGTH_LONG).show(); }
         if ("pomodoro".equals(currentScreen)) showPomodoro();
@@ -1115,7 +1124,7 @@ public class MainActivity extends Activity {
         // Foreground app time is usage time, not verified study time.
     }
 
-    @Override protected void onResume() { super.onResume(); appUsageStartedElapsed = SystemClock.elapsedRealtime(); if (prefs != null) scheduleReminders(this); }
+    @Override protected void onResume() { super.onResume(); appUsageStartedElapsed = SystemClock.elapsedRealtime(); if (prefs != null) {scheduleReminders(this);WeeklyReportReceiver.schedule(this);StudyWidgetProvider.updateAll(this);} }
     @Override protected void onPause() { saveForegroundUsage(); appUsageStartedElapsed = 0L; super.onPause(); }
 
     private void showMessage() {
@@ -1643,6 +1652,8 @@ public class MainActivity extends Activity {
         return 0;
     }
 
+    private boolean isOneDayGap(String date){try{SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd",Locale.US);f.setTimeZone(TimeZone.getTimeZone("Asia/Baku"));Date d=f.parse(date);Calendar c=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));c.setTime(d);c.add(Calendar.DAY_OF_YEAR,2);return todayKey().equals(f.format(c.getTime()));}catch(Exception e){return false;}}
+    private String weekKey(){Calendar c=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));return c.get(Calendar.YEAR)+"-"+c.get(Calendar.WEEK_OF_YEAR);}
     private String dayWord(int n) {
         int x = Math.abs(n) % 10, y = Math.abs(n) % 100;
         if (x == 1 && y != 11) return "день";
