@@ -66,6 +66,9 @@ public class MainActivity extends Activity {
     private boolean timerRunning = false, timerIsBreak = false;
     private long timerSessionStarted = 0L;
     private volatile boolean ambiencePlaying=false;
+    private volatile int ambienceGeneration=0;
+    private android.graphics.Bitmap cachedBackgroundBitmap;
+    private String cachedBackgroundUri="";
     private Thread ambienceThread;
     private android.media.AudioTrack ambienceTrack;
     private static final String PREFS = "study_progress";
@@ -198,7 +201,7 @@ public class MainActivity extends Activity {
         root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(20), dp(18), dp(20), dp(26)); root.setBackgroundColor(BG);
         String customBg=prefs.getString("custom_background_uri","");
-        if(!customBg.isEmpty()){try{java.io.InputStream in=getContentResolver().openInputStream(android.net.Uri.parse(customBg));if(in!=null){Drawable photo=Drawable.createFromStream(in,null);in.close();if(photo!=null){photo.setAlpha(42);root.setBackground(photo);}}}catch(Exception ignored){}}
+        if(!customBg.isEmpty()){try{if(!customBg.equals(cachedBackgroundUri)||cachedBackgroundBitmap==null){java.io.InputStream in=getContentResolver().openInputStream(android.net.Uri.parse(customBg));if(in!=null){android.graphics.Bitmap decoded=android.graphics.BitmapFactory.decodeStream(in);in.close();cachedBackgroundBitmap=decoded;cachedBackgroundUri=customBg;}}if(cachedBackgroundBitmap!=null){Drawable photo=new android.graphics.drawable.BitmapDrawable(getResources(),cachedBackgroundBitmap);photo.setAlpha(42);root.setBackground(photo);}}catch(Exception ignored){}}
         scroll.addView(root);
         shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
         if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 78, 0, 0, 0, 0));
@@ -1221,12 +1224,13 @@ public class MainActivity extends Activity {
     }
 
     private void startAmbience() {
-        stopAmbience();ambiencePlaying=true;ambienceThread=new Thread(()->{int rate=22050,chunk=2048;short[] samples=new short[chunk];java.util.Random random=new java.util.Random();double phase=0;String mode=prefs.getString("study_atmosphere","🌧️  Дождь за окном");int min=android.media.AudioTrack.getMinBufferSize(rate,android.media.AudioFormat.CHANNEL_OUT_MONO,android.media.AudioFormat.ENCODING_PCM_16BIT);int size=Math.max(min,chunk*4);
-            try{ambienceTrack=new android.media.AudioTrack(android.media.AudioManager.STREAM_MUSIC,rate,android.media.AudioFormat.CHANNEL_OUT_MONO,android.media.AudioFormat.ENCODING_PCM_16BIT,size,android.media.AudioTrack.MODE_STREAM);ambienceTrack.setVolume(.22f);ambienceTrack.play();double filtered=0;
-                while(ambiencePlaying){for(int i=0;i<chunk;i++){double noise=random.nextDouble()*2-1;filtered=filtered*.92+noise*.08;double value=0;if(mode.contains("Дождь"))value=filtered*.22+noise*.035;else if(mode.contains("кафе"))value=filtered*.13+Math.sin(phase)*.012;else if(mode.contains("природы"))value=filtered*.16+Math.sin(phase)*.025;else value=filtered*.09;phase+=2*Math.PI*110/rate;if(phase>Math.PI*2)phase-=Math.PI*2;samples[i]=(short)Math.max(-32767,Math.min(32767,value*12000));}ambienceTrack.write(samples,0,chunk);}
-            }catch(Exception ignored){}finally{try{if(ambienceTrack!=null){ambienceTrack.pause();ambienceTrack.flush();ambienceTrack.release();}}catch(Exception ignored){}ambienceTrack=null;ambiencePlaying=false;}},"StudyAmbience");ambienceThread.setDaemon(true);ambienceThread.start();
+        stopAmbience();ambiencePlaying=true;final int generation=++ambienceGeneration;
+        ambienceThread=new Thread(()->{int rate=22050,chunk=2048;short[] samples=new short[chunk];java.util.Random random=new java.util.Random();double phase=0;String mode=prefs.getString("study_atmosphere","🌧️  Дождь за окном");int min=android.media.AudioTrack.getMinBufferSize(rate,android.media.AudioFormat.CHANNEL_OUT_MONO,android.media.AudioFormat.ENCODING_PCM_16BIT);int size=Math.max(min,chunk*4);android.media.AudioTrack local=null;
+            try{local=new android.media.AudioTrack(android.media.AudioManager.STREAM_MUSIC,rate,android.media.AudioFormat.CHANNEL_OUT_MONO,android.media.AudioFormat.ENCODING_PCM_16BIT,size,android.media.AudioTrack.MODE_STREAM);ambienceTrack=local;local.setVolume(.22f);local.play();double filtered=0;
+                while(ambiencePlaying&&generation==ambienceGeneration){for(int i=0;i<chunk;i++){double noise=random.nextDouble()*2-1;filtered=filtered*.92+noise*.08;double value=0;if(mode.contains("Дождь"))value=filtered*.22+noise*.035;else if(mode.contains("кафе"))value=filtered*.13+Math.sin(phase)*.012;else if(mode.contains("природы"))value=filtered*.16+Math.sin(phase)*.025;else value=filtered*.09;phase+=2*Math.PI*110/rate;if(phase>Math.PI*2)phase-=Math.PI*2;samples[i]=(short)Math.max(-32767,Math.min(32767,value*12000));}if(generation==ambienceGeneration)local.write(samples,0,chunk);}
+            }catch(Exception ignored){}finally{try{if(local!=null){local.pause();local.flush();local.release();}}catch(Exception ignored){}if(generation==ambienceGeneration){ambienceTrack=null;ambiencePlaying=false;ambienceThread=null;}}},"StudyAmbience");ambienceThread.setDaemon(true);ambienceThread.start();
     }
-    private void stopAmbience(){ambiencePlaying=false;if(ambienceTrack!=null){try{ambienceTrack.pause();}catch(Exception ignored){}}if(ambienceThread!=null){ambienceThread.interrupt();ambienceThread=null;}}
+    private void stopAmbience(){ambienceGeneration++;ambiencePlaying=false;android.media.AudioTrack active=ambienceTrack;if(active!=null){try{active.pause();}catch(Exception ignored){}}Thread old=ambienceThread;if(old!=null){old.interrupt();ambienceThread=null;}}
     @Override protected void onDestroy(){stopAmbience();super.onDestroy();}
 
     private void showAtmosphere() {
