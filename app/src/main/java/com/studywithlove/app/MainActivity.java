@@ -1593,8 +1593,17 @@ public class MainActivity extends Activity {
     private void startAmbience() {
         stopAmbience();
         String mode=prefs.getString("study_atmosphere","🌧️  Дождь за окном");
-        int raw=mode.contains("Дождь")?R.raw.ambience_rain:mode.contains("кафе")?R.raw.ambience_cafe:mode.contains("природы")?R.raw.ambience_forest:R.raw.ambience_library;
-        try{ambiencePlayer=android.media.MediaPlayer.create(this,raw);if(ambiencePlayer==null)throw new IllegalStateException("Audio resource unavailable");float volume=prefs.getInt("ambience_volume",35)/100f;ambiencePlayer.setLooping(true);ambiencePlayer.setVolume(volume,volume);ambiencePlayer.setOnErrorListener((mp,what,extra)->{stopAmbience();return true;});ambiencePlayer.start();ambiencePlaying=true;}catch(Exception e){ambiencePlaying=false;Toast.makeText(this,"Не удалось загрузить звук атмосферы",Toast.LENGTH_SHORT).show();}
+        String url=mode.contains("Дождь")?"https://upload.wikimedia.org/wikipedia/commons/3/3d/Rain.ogg":
+                mode.contains("кафе")?"https://upload.wikimedia.org/wikipedia/commons/5/54/Cafe_ambiance.ogg":
+                mode.contains("природы")?"https://upload.wikimedia.org/wikipedia/commons/3/38/Birds_forest.ogg":
+                "https://upload.wikimedia.org/wikipedia/commons/f/fb/20121112_TU_Delft_Library%2C_quiet_study_room_-_general_ambience_-_SoundCloud_-_el_mar.ogg";
+        try{
+            android.media.MediaPlayer player=new android.media.MediaPlayer();ambiencePlayer=player;
+            float volume=prefs.getInt("ambience_volume",35)/100f;player.setVolume(volume,volume);player.setLooping(true);
+            player.setOnPreparedListener(mp->{if(ambiencePlayer==mp){mp.start();ambiencePlaying=true;}});
+            player.setOnErrorListener((mp,what,extra)->{if(ambiencePlayer==mp)stopAmbience();runOnUiThread(()->Toast.makeText(this,"Не удалось загрузить звук. Проверь интернет.",Toast.LENGTH_SHORT).show());return true;});
+            player.setDataSource(url);player.prepareAsync();
+        }catch(Exception e){stopAmbience();Toast.makeText(this,"Не удалось загрузить звук атмосферы",Toast.LENGTH_SHORT).show();}
     }
     private void stopAmbience(){ambiencePlaying=false;android.media.MediaPlayer player=ambiencePlayer;ambiencePlayer=null;if(player!=null){try{if(player.isPlaying())player.stop();}catch(Exception ignored){}try{player.release();}catch(Exception ignored){}}}
     @Override protected void onDestroy(){if(flowerBreatheAnimator!=null){flowerBreatheAnimator.cancel();flowerBreatheAnimator=null;}if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}stopAmbience();super.onDestroy();}
