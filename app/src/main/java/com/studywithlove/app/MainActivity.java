@@ -1395,6 +1395,7 @@ public class MainActivity extends Activity {
             {"Или введи свой эмодзи с клавиатуры ✨","Or type your own emoji ✨","Və ya klaviaturadan öz emojini yaz ✨"},{"Поиск уроков и тем","Search lessons and topics","Dərs və mövzu axtarışı"},
             {"Математика 📐","Mathematics 📐","Riyaziyyat 📐"},{"Все разделы и темы по математике","All math sections and topics","Riyaziyyatın bütün bölmələri və mövzuları"},
             {"Добавить свой урок","Add your own lesson","Öz dərsini əlavə et"},{"Создать урок","Create lesson","Dərs yarat"},{"Выбери предмет или создай свой урок","Choose a subject or create your own lesson","Fənn seç və ya öz dərsini yarat"}
+        };
         for(String[] p:pairs){String from=p[0],to="en".equals(lang)?p[1]:p[2];if(value.equals(from))return to;if(value.startsWith(from+" "))return to+value.substring(from.length());}
         return value;
     }
