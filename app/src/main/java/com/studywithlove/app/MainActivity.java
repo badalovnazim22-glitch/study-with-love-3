@@ -1087,7 +1087,7 @@ public class MainActivity extends Activity {
         int nextIndex=-1;for(int i=0;i<a.length;i++)if(!Boolean.parseBoolean(a[i][3])){nextIndex=i;break;}
         if(nextIndex<0)addText(root,"Все достижения открыты — невероятно! ♡",12,PINK,true);else{String nextName=a[nextIndex][1];int target=Integer.parseInt(a[nextIndex][4]);int current=achievementCurrent(nextIndex,days,minutes,completed,sessions);addText(root,"До достижения «"+nextName+"»: осталось "+Math.max(0,target-current)+(nextIndex>=10&&nextIndex<=11?" мин":(nextIndex<=5||nextIndex>=14)?" дней":" шагов"),12,DARK,true);}
         android.widget.GridLayout grid=new android.widget.GridLayout(this);grid.setColumnCount(3);grid.setUseDefaultMargins(false);
-        for(String[] x:a){boolean open=Boolean.parseBoolean(x[3]);int target=Integer.parseInt(x[4]);int current=x[1].contains("дней")||x[1].equals("Первые шаги")?days:x[1].contains("час")?minutes:x[1].contains("побед")||x[1].equals("Настойчивость")?sessions:completed;
+        for(int ai=0;ai<a.length;ai++){String[] x=a[ai];boolean open=Boolean.parseBoolean(x[3]);int target=Integer.parseInt(x[4]);int current=achievementCurrent(ai,days,minutes,completed,sessions);
             LinearLayout tile=new LinearLayout(this);tile.setOrientation(LinearLayout.VERTICAL);tile.setGravity(Gravity.CENTER);tile.setPadding(dp(7),dp(7),dp(7),dp(7));tile.setBackground(shape(open?0xFFFFF0F5:0xFFF7F5F5,16,open?PINK:0xFFE4DDE0));
             TextView icon=text(x[0],23,open?PINK:0xFF8F8790,true);icon.setGravity(Gravity.CENTER);tile.addView(icon,lp(-1,34,0,0,0,3));
             if(!open){TextView lock=text("🔒",11,MUTED,true);lock.setGravity(Gravity.CENTER);lock.setTranslationY(dp(-27));lock.setElevation(dp(3));tile.addView(lock,lp(-1,12,0,0,0,-1));}
