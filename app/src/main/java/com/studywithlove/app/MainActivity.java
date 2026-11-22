@@ -49,6 +49,9 @@ public class MainActivity extends Activity {
     private LinearLayout progressCalendarHost;
     private LinearLayout root;
     private String currentScreen = "home";
+    private String renderedScreen = "";
+    private final List<String> screenHistory = new ArrayList<>();
+    private boolean navigatingBack = false;
     private SharedPreferences prefs;
     private String selectedTopic = null, selectedChapter = null;
     private TextView topicProgressLabel;
@@ -193,6 +196,8 @@ public class MainActivity extends Activity {
     }
 
     private void base(String title, String subtitle) {
+        if (!currentScreen.equals(renderedScreen)) { if (!renderedScreen.isEmpty() && !navigatingBack) screenHistory.add(renderedScreen); renderedScreen=currentScreen; }
+        navigatingBack=false;
         LinearLayout shell = new LinearLayout(this);
         shell.setOrientation(LinearLayout.VERTICAL);
         shell.setBackgroundColor(BG);
@@ -206,9 +211,9 @@ public class MainActivity extends Activity {
         shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
         if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 78, 0, 0, 0, 0));
         setContentView(shell);
-        scroll.setAlpha(0f); scroll.setTranslationY(dp(8));
+        scroll.setAlpha(0f); scroll.setTranslationY(dp(7));
         scroll.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-        scroll.animate().alpha(1f).translationY(0f).setDuration(650)
+        scroll.animate().alpha(1f).translationY(0f).setDuration(230)
             .setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
         LinearLayout brandRow = new LinearLayout(this);
         brandRow.setGravity(Gravity.CENTER_VERTICAL);
@@ -237,7 +242,7 @@ public class MainActivity extends Activity {
     private View bottomNavigation() {
         LinearLayout bar=new LinearLayout(this);bar.setOrientation(LinearLayout.HORIZONTAL);bar.setGravity(Gravity.CENTER);bar.setPadding(dp(5),dp(7),dp(5),dp(7));bar.setBackground(shape(0xFFFFFFFF,0,0));
         String[] icons={"⌂","▦","▤","▣","♡","◷"};String[] labels={"Главная","Уроки","Прогресс","Экзамен","Дневник","Таймер"};
-        String active=currentScreen.equals("home")?"home":(currentScreen.equals("chapters")||currentScreen.equals("topics")||currentScreen.equals("topic"))?"math":currentScreen.equals("progress")||currentScreen.equals("flower")||currentScreen.equals("achievements")||currentScreen.equals("stats")?"progress":currentScreen.equals("exam")?"exam":currentScreen.equals("diary")||currentScreen.equals("letters")?"diary":currentScreen.equals("pomodoro")?"timer":"";
+        String active=currentScreen.equals("home")?"home":(currentScreen.equals("chapters")||currentScreen.equals("math_chapters")||currentScreen.equals("topics")||currentScreen.equals("topic"))?"math":currentScreen.equals("progress")||currentScreen.equals("flower")||currentScreen.equals("achievements")||currentScreen.equals("stats")?"progress":currentScreen.equals("exam")?"exam":currentScreen.equals("diary")||currentScreen.equals("letters")?"diary":currentScreen.equals("pomodoro")?"timer":"";
         String[] keys={"home","math","progress","exam","diary","timer"};
         for(int i=0;i<keys.length;i++){final String key=keys[i];boolean selected=key.equals(active);LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.VERTICAL);item.setGravity(Gravity.CENTER);item.setPadding(dp(1),dp(4),dp(1),dp(3));item.setBackground(selected?shape(PALE,14,0):shape(0x00FFFFFF,14,0));
             TextView icon=text(icons[i],22,selected?PINK:MUTED,true);icon.setGravity(Gravity.CENTER);icon.setIncludeFontPadding(false);item.addView(icon,lp(-1,29,0,0,0,2));
@@ -413,7 +418,6 @@ public class MainActivity extends Activity {
          root.addView(ritualRow4, lp(-1, -2, 0, 0, 0, 14));
          LinearLayout ritualRow5 = new LinearLayout(this); ritualRow5.setOrientation(LinearLayout.HORIZONTAL);
          ritualTile(ritualRow5, "🧮", "Математическая викторина", "Играй, повышай уровни и открывай награды", this::showMathQuiz);
-         ritualTile(ritualRow5, "🏅", "Награды викторины", "Твои игровые достижения", this::showMathQuizAchievements);
          root.addView(ritualRow5, lp(-1, -2, 0, 0, 0, 14));
 
         LinearLayout reminder = card();
@@ -626,7 +630,7 @@ public class MainActivity extends Activity {
         base("Уроки 📚", "Выбери предмет или создай свой урок");
         LinearLayout lessonHead=new LinearLayout(this);lessonHead.setGravity(Gravity.CENTER_VERTICAL);
         TextView orderLabel=text("МОИ ПРЕДМЕТЫ",11,PINK,true);lessonHead.addView(orderLabel,new LinearLayout.LayoutParams(0,dp(38),1f));
-        TextView search=text("⌕",25,PINK,true);search.setGravity(Gravity.CENTER);search.setBackground(shape(PALE,14,0xFFF2DDE4));search.setContentDescription("Поиск уроков и тем");lessonHead.addView(search,lp(40,38,0,0,7,0));search.setOnClickListener(v->showSearchDialog());
+        TextView search=text("⌕",24,PINK,true);search.setGravity(Gravity.CENTER);search.setBackground(shape(0xFFFFF0F4,14,0xFFF2DDE4));search.setElevation(dp(1));search.setContentDescription("Поиск уроков и тем");lessonHead.addView(search,lp(42,40,0,0,7,0));search.setOnClickListener(v->showSearchDialog());
         Button orderButton=button("⋮",false);orderButton.setTextSize(22);orderButton.setPadding(0,0,0,0);lessonHead.addView(orderButton,lp(40,38,0,0,0,0));root.addView(lessonHead,lp(-1,42,0,0,0,8));
         orderButton.setOnClickListener(v->{android.widget.PopupMenu menu=new android.widget.PopupMenu(this,orderButton);menu.getMenu().add(0,1,0,"По умолчанию");menu.getMenu().add(0,2,1,"По названию А—Я");menu.getMenu().add(0,3,2,"Сначала новые");menu.getMenu().add(0,4,3,"По прогрессу");menu.setOnMenuItemClickListener(mi->{prefs.edit().putString("lesson_sort",mi.getItemId()==2?"alpha":mi.getItemId()==3?"new":mi.getItemId()==4?"progress":"default").apply();showChapters();return true;});menu.show();});
         List<String> mathTopics=chapters.get("1️⃣ Натуральные числа и действия с ними");int total=0,done=0;for(List<String> topics:chapters.values()){total+=topics.size();done+=countCompleted(topics);}
@@ -635,14 +639,14 @@ public class MainActivity extends Activity {
         LinearLayout mathTop=new LinearLayout(this);mathTop.setGravity(Gravity.CENTER_VERTICAL);TextView mathIcon=text("📐",27,PINK,true);mathTop.addView(mathIcon,lp(42,42,0,0,10,0));LinearLayout mathWords=new LinearLayout(this);mathWords.setOrientation(LinearLayout.VERTICAL);addText(mathWords,"Математика",16,DARK,true);addText(mathWords,"Все разделы и темы по математике",11,MUTED,false);mathTop.addView(mathWords,new LinearLayout.LayoutParams(0,-2,1f));TextView arrow=text("›",25,PINK,false);mathTop.addView(arrow);math.addView(mathTop,lp(-1,-2,0,0,0,7));
         addText(math,mathDone+" из "+mathTotal+" тем пройдено",10,MUTED,true);ProgressBar mathBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);mathBar.setMax(Math.max(1,mathTotal));mathBar.setProgress(mathDone);mathBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));mathBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));math.addView(mathBar,lp(-1,6,0,3,0,0));root.addView(math,lp(-1,-2,0,0,0,8));
         Set<String> ids=prefs.getStringSet("custom_lesson_ids",new TreeSet<String>());List<String> lessonOrder=new ArrayList<>(ids);String sort=prefs.getString("lesson_sort","default");if("alpha".equals(sort))java.util.Collections.sort(lessonOrder,(a,b)->prefs.getString("custom_lesson_name_"+a,"").compareToIgnoreCase(prefs.getString("custom_lesson_name_"+b,"")));else if("new".equals(sort))java.util.Collections.sort(lessonOrder,java.util.Collections.reverseOrder());else if("progress".equals(sort))java.util.Collections.sort(lessonOrder,(a,b)->{String na=prefs.getString("custom_lesson_name_"+a,""),nb=prefs.getString("custom_lesson_name_"+b,"");List<String> ta=chapters.get("CUSTOM:"+a+":"+na),tb=chapters.get("CUSTOM:"+b+":"+nb);int ca=ta==null?0:countCompleted(ta),cb=tb==null?0:countCompleted(tb);int sa=ta==null?0:ta.size(),sb=tb==null?0:tb.size();double pa=sa==0?0:(double)ca/sa,pb=sb==0?0:(double)cb/sb;return Double.compare(pb,pa);});
-        for(String id:lessonOrder){String name=prefs.getString("custom_lesson_name_"+id,"Мой урок");List<String> topics=chapters.get("CUSTOM:"+id+":"+name);if(topics==null)topics=new ArrayList<>();int c=countCompleted(topics),n=topics.size();LinearLayout item=card();item.setOrientation(LinearLayout.VERTICAL);item.setPadding(dp(14),dp(11),dp(14),dp(11));LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);TextView emoji=text(prefs.getString("custom_lesson_emoji_"+id,"📚"),25,PINK,true);row.addView(emoji,lp(40,40,0,0,9,0));LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,name,15,DARK,true);addText(words,c+" из "+n+" тем пройдено",11,MUTED,false);row.addView(words,new LinearLayout.LayoutParams(0,-2,1f));TextView go=text("›",24,PINK,false);row.addView(go);item.addView(row);ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(Math.max(1,n));bar.setProgress(c);bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));item.addView(bar,lp(-1,5,0,7,0,0));item.setOnClickListener(v->{selectedChapter="CUSTOM:"+id+":"+name;showTopics(selectedChapter);});root.addView(item,lp(-1,-2,0,0,0,7));}
+        for(String id:lessonOrder){String name=prefs.getString("custom_lesson_name_"+id,"Мой урок");List<String> topics=chapters.get("CUSTOM:"+id+":"+name);if(topics==null)topics=new ArrayList<>();int c=countCompleted(topics),n=topics.size();LinearLayout item=card();item.setOrientation(LinearLayout.VERTICAL);item.setPadding(dp(14),dp(11),dp(14),dp(11));LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);TextView emoji=text(prefs.getString("custom_lesson_emoji_"+id,"📚"),25,PINK,true);row.addView(emoji,lp(40,40,0,0,9,0));LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,name,15,DARK,true);addText(words,c+" из "+n+" тем пройдено",11,MUTED,false);row.addView(words,new LinearLayout.LayoutParams(0,-2,1f));TextView go=text("›",24,PINK,false);row.addView(go);item.addView(row);ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(Math.max(1,n));bar.setProgress(c);bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));item.addView(bar,lp(-1,5,0,7,0,0));item.setOnClickListener(v->{selectedChapter="CUSTOM:"+id+":"+name;showTopics(selectedChapter);});item.setOnLongClickListener(v->{confirmDeleteCustomLesson(id,name);return true;});root.addView(item,lp(-1,-2,0,0,0,7));}
         Button add=button("＋  Добавить свой урок",true);add.setOnClickListener(v->addCustomLesson());root.addView(add,lp(-1,49,0,7,0,12));
         LinearLayout stats=card();stats.setPadding(dp(14),dp(12),dp(14),dp(12));addText(stats,"ТВОЙ УЧЕБНЫЙ РИТМ",11,PINK,true);addText(stats,done+" из "+total+" тем завершено",17,DARK,true);addText(stats,"Продолжай в своём темпе — каждый пройденный раздел приближает к цели ♡",11,MUTED,false);ProgressBar allBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);allBar.setMax(Math.max(1,total));allBar.setProgress(done);allBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));stats.addView(allBar,lp(-1,6,0,7,0,0));root.addView(stats,lp(-1,-2,0,0,0,10));
         String recent=prefs.getString("recent_topic","");String recentChapter=prefs.getString("recent_chapter","");if(!recent.isEmpty()&&!recentChapter.isEmpty()&&chapters.containsKey(recentChapter)){Button last=button("↗  Продолжить: "+recent,false);last.setOnClickListener(v->{selectedChapter=recentChapter;selectedTopic=recent;showTopic(recent);});root.addView(last,lp(-1,45,0,0,0,4));}
     }
 
     private void showMathChapters() {
-        currentScreen = "chapters"; base("Математика 📐", "Выбери раздел и продолжай обучение");
+        currentScreen = "math_chapters"; base("Математика 📐", "Выбери раздел и продолжай обучение");
         int number = 1;
         for (String chapter : chapters.keySet()) {
             if (chapter.startsWith("CUSTOM:")) continue;
@@ -691,14 +695,42 @@ public class MainActivity extends Activity {
         currentScreen = "topics";
         boolean customLesson = chapter.startsWith("CUSTOM:");
         base(customLesson ? chapter.split(":", 3)[2] : chapter, "Выбери тему, которую хочешь изучить:");
-        List<String> topicOrder=new ArrayList<>(chapters.get(chapter));if(customLesson&&"alpha".equals(prefs.getString("lesson_sort","default")))java.util.Collections.sort(topicOrder,String.CASE_INSENSITIVE_ORDER);for (String topic : topicOrder) {
-            int percent = topicProgress(topic);
-            action((percent == 100 ? "✓  " : "♡  ") + topic, "Изучено на " + percent + "%", () -> { selectedTopic = topic; showTopic(topic); });
+        List<String> topicOrder=new ArrayList<>(chapters.get(chapter));
+        if(customLesson&&"alpha".equals(prefs.getString("lesson_sort","default")))java.util.Collections.sort(topicOrder,String.CASE_INSENSITIVE_ORDER);
+        for(String topic:topicOrder){
+            int percent=topicProgress(topic);
+            LinearLayout topicItem=action((percent==100?"✓  ":"♡  ")+topic,"Изучено на "+percent+"%",()->{selectedTopic=topic;showTopic(topic);});
+            if(customLesson)topicItem.setOnLongClickListener(v->{confirmDeleteCustomTopic(chapter,topic);return true;});
         }
-        if (customLesson) { Button addTopic = button("＋  Добавить тему", true); addTopic.setOnClickListener(v -> addCustomTopic(chapter)); root.addView(addTopic, lp(-1, 50, 0, 10, 0, 8)); }
-        Button back = button(customLesson ? "← К урокам" : "← К разделам", false);
-        back.setOnClickListener(v -> { if (customLesson) showChapters(); else showMathChapters(); }); root.addView(back, lp(-1, 52, 0, 12, 0, 0));
+        if(customLesson){Button addTopic=button("＋  Добавить тему",true);addTopic.setOnClickListener(v->addCustomTopic(chapter));root.addView(addTopic,lp(-1,50,0,10,0,8));}
+        Button back=button(customLesson?"← К урокам":"← К разделам",false);back.setOnClickListener(v->onBackPressed());root.addView(back,lp(-1,52,0,12,0,0));
     }
+
+    private void confirmDeleteCustomLesson(String id,String name){
+        new android.app.AlertDialog.Builder(this).setTitle("Удалить предмет?")
+            .setMessage("«"+name+"» и все его темы будут удалены. Это действие нельзя отменить.")
+            .setNegativeButton("Отмена",null).setPositiveButton("Удалить",(d,w)->{
+                Set<String> ids=new TreeSet<>(prefs.getStringSet("custom_lesson_ids",new TreeSet<String>()));ids.remove(id);
+                Set<String> topics=new TreeSet<>(prefs.getStringSet("custom_lesson_topics_"+id,new TreeSet<String>()));
+                SharedPreferences.Editor e=prefs.edit().putStringSet("custom_lesson_ids",ids).remove("custom_lesson_name_"+id).remove("custom_lesson_emoji_"+id).remove("custom_lesson_topics_"+id);
+                for(String t:topics)e.remove(topicContentKey(id,t)).remove("progress_"+t).remove("done_"+t);
+                e.apply();chapters.remove("CUSTOM:"+id+":"+name);
+                if(selectedChapter!=null&&selectedChapter.startsWith("CUSTOM:"+id+":")){selectedChapter=null;selectedTopic=null;}
+                showChapters();Toast.makeText(this,"Предмет удалён",Toast.LENGTH_SHORT).show();
+            }).show();
+    }
+
+    private void confirmDeleteCustomTopic(String chapter,String topic){
+        String[] parts=chapter.split(":",3);if(parts.length<2)return;String id=parts[1];
+        new android.app.AlertDialog.Builder(this).setTitle("Удалить тему?")
+            .setMessage("Тема «"+topic+"» и её учебный материал будут удалены.")
+            .setNegativeButton("Отмена",null).setPositiveButton("Удалить",(d,w)->{
+                Set<String> topics=new TreeSet<>(prefs.getStringSet("custom_lesson_topics_"+id,new TreeSet<String>()));topics.remove(topic);
+                prefs.edit().putStringSet("custom_lesson_topics_"+id,topics).remove(topicContentKey(id,topic)).remove("progress_"+topic).remove("done_"+topic).apply();
+                chapters.put(chapter,new ArrayList<>(topics));showTopics(chapter);Toast.makeText(this,"Тема удалена",Toast.LENGTH_SHORT).show();
+            }).show();
+    }
+
     private void showTopic(String topic) {
         currentScreen = "topic";
         if(selectedChapter!=null)prefs.edit().putString("recent_chapter",selectedChapter).putString("recent_topic",topic).apply();
@@ -726,8 +758,8 @@ public class MainActivity extends Activity {
             params.setMargins(dp(2), dp(4), dp(2), dp(10));
             levels.addView(b, params);
             b.setOnClickListener(v -> {
-                saveTopicProgress(topic, value);
-                if (value == 100) recordStudyDay();
+                int oldProgress=topicProgress(topic); saveTopicProgress(topic,value);
+                if(value==100)recordStudyDay(); if(oldProgress<100&&value==100)playTopicCompleteSound();
                 refreshTopicProgress(value);
                 if (value == 100) showPraise();
             });
@@ -738,7 +770,7 @@ public class MainActivity extends Activity {
         done.setOnClickListener(v -> markDone());
         root.addView(done, lp(-1, 54, 0, 4, 0, 10));
         Button back = button("← К темам", false);
-        back.setOnClickListener(v -> showTopics(selectedChapter));
+        back.setOnClickListener(v -> onBackPressed());
         root.addView(back, lp(-1, 50, 0, 0, 0, 0));
     }
 
@@ -751,6 +783,8 @@ public class MainActivity extends Activity {
             if (progressButtons[i] != null) progressButtons[i].setTextColor(value >= values[i] ? 0xFFFFFFFF : PINK);
         }
     }
+
+    private void playTopicCompleteSound(){try{android.media.ToneGenerator tone=new android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION,55);tone.startTone(android.media.ToneGenerator.TONE_PROP_ACK,135);new Handler().postDelayed(tone::release,220);}catch(Exception ignored){}}
 
     private void showPraise() {
         LinearLayout toastView = new LinearLayout(this);
@@ -800,7 +834,9 @@ public class MainActivity extends Activity {
     }
 
     private void markDone() {
-        if (selectedTopic != null) saveTopicProgress(selectedTopic, 100);
+        int oldProgress=selectedTopic==null?100:topicProgress(selectedTopic);
+        if(selectedTopic!=null)saveTopicProgress(selectedTopic,100);
+        if(oldProgress<100)playTopicCompleteSound();
         recordStudyDay();
         if (selectedTopic != null) refreshTopicProgress(100);
         showPraise();
@@ -1348,22 +1384,28 @@ public class MainActivity extends Activity {
         editor.commit();scheduleReminders(this);
     }
     private void showSearchDialog() {
-        EditText query=new EditText(this);query.setSingleLine(true);query.setHint("Предмет или тема");query.setTextColor(DARK);
-        LinearLayout wrap=new LinearLayout(this);wrap.setPadding(dp(18),dp(8),dp(18),dp(4));wrap.addView(query,lp(-1,50,0,0,0,0));
-        new android.app.AlertDialog.Builder(this).setTitle("Поиск уроков и тем").setView(wrap).setPositiveButton("Найти",(d,w)->{
+        LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(dp(18),dp(10),dp(18),dp(6));
+        LinearLayout field=new LinearLayout(this);field.setGravity(Gravity.CENTER_VERTICAL);field.setPadding(dp(12),0,dp(8),0);field.setBackground(shape(0xFFFFF5F7,17,0xFFF0DCE4));
+        TextView icon=text("⌕",23,PINK,true);field.addView(icon,lp(28,48,0,0,7,0));
+        EditText query=new EditText(this);query.setSingleLine(true);query.setTextSize(15);query.setTextColor(DARK);query.setHintTextColor(MUTED);query.setHint("Найти предмет или тему");query.setBackgroundColor(0x00000000);query.setPadding(0,0,0,0);field.addView(query,new LinearLayout.LayoutParams(0,dp(48),1f));
+        TextView clear=text("×",22,MUTED,true);clear.setGravity(Gravity.CENTER);clear.setVisibility(View.GONE);field.addView(clear,lp(28,44,0,0,0,0));clear.setOnClickListener(v->query.setText(""));
+        body.addView(field,lp(-1,50,0,0,0,8));addText(body,"Поиск по названию предмета или любой теме",11,MUTED,false);
+        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("Поиск уроков").setView(body).setNegativeButton("Закрыть",null).setPositiveButton("Найти",(d,w)->{
             String q=query.getText().toString().trim().toLowerCase(Locale.ROOT);if(q.isEmpty())return;List<String> matches=new ArrayList<>();
             for(Map.Entry<String,List<String>> e:chapters.entrySet()){
                 String ch=e.getKey();String display=ch.startsWith("CUSTOM:")?ch.split(":",3)[2]:ch.replaceFirst("^[^ ]+\\s*","");
-                if(display.toLowerCase(Locale.ROOT).contains(q))matches.add(display+"\t"+ch);
-                for(String topic:e.getValue())if(topic.toLowerCase(Locale.ROOT).contains(q))matches.add(display+"  •  "+topic+"\t"+ch+"\n"+topic);
+                if(display.toLowerCase(Locale.ROOT).contains(q))matches.add(display+"\\t"+ch);
+                for(String topic:e.getValue())if(topic.toLowerCase(Locale.ROOT).contains(q))matches.add(display+"  •  "+topic+"\\t"+ch+"\\n"+topic);
             }
-            if(matches.isEmpty()){new android.app.AlertDialog.Builder(this).setMessage("Ничего не найдено").setPositiveButton("OK",null).show();return;}
+            if(matches.isEmpty()){new android.app.AlertDialog.Builder(MainActivity.this).setTitle("Ничего не найдено").setMessage("Попробуй изменить запрос ♡").setPositiveButton("Понятно",null).show();return;}
             String[] items=matches.toArray(new String[0]);
-            new android.app.AlertDialog.Builder(this).setTitle("Результаты поиска").setItems(items,(dlg,which)->{
-                String[] parts=items[which].split("\t",2);if(parts.length<2)return;String ch=parts[1];selectedChapter=ch;
-                if(items[which].contains("\n")){selectedTopic=items[which].substring(items[which].indexOf("\n")+1);showTopic(selectedTopic);}else showTopics(ch);
+            new android.app.AlertDialog.Builder(MainActivity.this).setTitle("Результаты поиска").setItems(items,(dlg,which)->{
+                String[] parts=items[which].split("\\t",2);if(parts.length<2)return;selectedChapter=parts[1];
+                if(items[which].contains("\\n")){selectedTopic=items[which].substring(items[which].indexOf("\\n")+1);showTopic(selectedTopic);}else showTopics(selectedChapter);
             }).show();
-        }).setNegativeButton("Отмена",null).show();
+        }).create();
+        query.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int st,int count,int after){}public void onTextChanged(CharSequence s,int st,int before,int count){clear.setVisibility(s.length()>0?View.VISIBLE:View.GONE);}public void afterTextChanged(android.text.Editable e){}});
+        dialog.show();
     }
     private void showPlanner() {
         currentScreen="planner";base("Умный планировщик","Небольшой план — уже хороший шаг");
@@ -1445,36 +1487,41 @@ public class MainActivity extends Activity {
     @Override
     @SuppressWarnings("deprecation")
     public void onBackPressed() {
-        // Hardware/system Back navigates inside the app instead of closing it.
-        switch (currentScreen) {
-            case "topic":
-                if (selectedChapter != null) showTopics(selectedChapter); else showHome();
-                break;
-            case "topics":
-                showChapters();
-                break;
-            case "chapters":
-            case "exam":
-            case "progress":
-            case "reminders":
-            case "message":
-            case "pomodoro":
-            case "diary":
-            case "flower":
-            case "achievements":
-            case "letters":
-            case "planner":
-            case "stats":
-            case "atmosphere":
-            case "math_quiz":
-            case "math_quiz_result":
-            case "math_quiz_awards":
-                stopQuizTimer(); quizActive=false; showHome();
-                break;
-            case "home":
-            default:
-                Toast.makeText(this, "Ты уже на главной странице ❤️", Toast.LENGTH_SHORT).show();
-                break;
+        if (!screenHistory.isEmpty()) {
+            String target = screenHistory.remove(screenHistory.size() - 1);
+            navigatingBack = true;
+            if (currentScreen.startsWith("math_quiz")) { quizActive = false; stopQuizTimer(); }
+            showScreenByKey(target);
+            return;
+        }
+        if (!"home".equals(currentScreen)) { showHome(); return; }
+        Toast.makeText(this, "Ты уже на главной странице ❤️", Toast.LENGTH_SHORT).show();
+    }
+
+    private void showScreenByKey(String key) {
+        switch (key) {
+            case "home": showHome(); break;
+            case "chapters": showChapters(); break;
+            case "math_chapters": showMathChapters(); break;
+            case "topics": if(selectedChapter!=null)showTopics(selectedChapter);else showChapters(); break;
+            case "topic": if(selectedTopic!=null)showTopic(selectedTopic);else if(selectedChapter!=null)showTopics(selectedChapter);else showChapters(); break;
+            case "settings": showSettings(); break;
+            case "progress": showProgress(); break;
+            case "pomodoro": showPomodoro(); break;
+            case "exam": showExam(); break;
+            case "diary": showDiary(); break;
+            case "flower": showFlower(); break;
+            case "achievements": showAchievements(); break;
+            case "letters": showFutureLetters(); break;
+            case "planner": showPlanner(); break;
+            case "stats": showDetailedStats(); break;
+            case "atmosphere": showAtmosphere(); break;
+            case "reminders": showReminderSettings(); break;
+            case "message": showMessage(); break;
+            case "math_quiz": showMathQuiz(); break;
+            case "math_quiz_result": endMathQuiz(false); break;
+            case "math_quiz_awards": showMathQuizAchievements(); break;
+            default: showHome(); break;
         }
     }
 
@@ -1557,13 +1604,13 @@ public class MainActivity extends Activity {
         String[] dayShort = {"Пн","Вт","Ср","Чт","Пт","Сб","Вс"};
         int[] calendarDays = {2,3,4,5,6,7,1};
         for (int d = 0; d < 7; d++) {
-            CheckBox cb = new CheckBox(this); cb.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK)); cb.setText(dayShort[d]); cb.setSingleLine(true); cb.setMinWidth(0); cb.setTextSize(11); cb.setTypeface(Typeface.DEFAULT,Typeface.BOLD); cb.setTextColor(DARK); cb.setGravity(Gravity.CENTER); cb.setPadding(dp(2),0,dp(2),0); cb.setBackground(shape(PALE,14,0xFFF0DCE4));
+            CheckBox cb = new CheckBox(this); cb.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK)); cb.setText(dayShort[d]); cb.setSingleLine(true); cb.setMinWidth(0); cb.setTextSize(9); cb.setTypeface(Typeface.DEFAULT,Typeface.BOLD); cb.setTextColor(DARK); cb.setGravity(Gravity.CENTER); cb.setPadding(dp(2),0,dp(2),0); cb.setBackground(shape(PALE,14,0xFFF0DCE4));
             cb.setChecked(savedDays.contains(String.valueOf(calendarDays[d])));
             cb.setBackground(shape(cb.isChecked()?0xFFF7DCE6:PALE,14,cb.isChecked()?PINK:0xFFF0DCE4));
             cb.setOnCheckedChangeListener((button,checked)->cb.setBackground(shape(checked?0xFFF7DCE6:PALE,14,checked?PINK:0xFFF0DCE4)));
-            dayChecks.add(cb); LinearLayout.LayoutParams dayLp=new LinearLayout.LayoutParams(0,dp(46),1f);dayLp.setMargins(dp(2),0,dp(2),0);daysRow.addView(cb,dayLp);
+            dayChecks.add(cb); LinearLayout.LayoutParams dayLp=new LinearLayout.LayoutParams(0,dp(36),1f);dayLp.setMargins(dp(2),0,dp(2),0);daysRow.addView(cb,dayLp);
         }
-        LinearLayout daysCard = card(); daysCard.addView(daysRow, lp(-1, 44, 0, 0, 0, 0)); root.addView(daysCard, lp(-1, -2, 0, 2, 0, 6));
+        LinearLayout daysCard = card(); daysCard.addView(daysRow, lp(-1, 38, 0, 0, 0, 0)); root.addView(daysCard, lp(-1, -2, 0, 2, 0, 6));
         LinearLayout presets=new LinearLayout(this);presets.setGravity(Gravity.CENTER_VERTICAL);
         String[] presetNames={"Каждый день","Будни","Выходные"};
         for(String preset:presetNames){TextView chip=text(preset,10,PINK,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(10),dp(7),dp(10),dp(7));chip.setBackground(shape(0xFFFFF0F4,15,0));presets.addView(chip,lp(-2,32,0,0,5,0));chip.setOnClickListener(v->{for(int k=0;k<dayChecks.size();k++){boolean checked=preset.equals("Каждый день")||(preset.equals("Будни")&&k<5)||(preset.equals("Выходные")&&k>=5);dayChecks.get(k).setChecked(checked);}});}
@@ -1578,11 +1625,12 @@ public class MainActivity extends Activity {
             for (String time : new ArrayList<>(reminderTimes)) {
                 LinearLayout row = new LinearLayout(this); row.setGravity(Gravity.CENTER_VERTICAL); row.setBackground(shape(PALE, 16, 0)); row.setPadding(dp(12),0,dp(6),0);
                 LinearLayout timeInfo=new LinearLayout(this);timeInfo.setOrientation(LinearLayout.VERTICAL);timeInfo.setGravity(Gravity.CENTER_VERTICAL);
-                TextView label = text("◷  " + time, 16, DARK, true);timeInfo.addView(label,lp(-1,24,0,0,0,0));
+                TextView label = text("◷  " + time, 16, DARK, true);timeInfo.addView(label,lp(-1,24,0,0,0,0)); label.setOnClickListener(v->editReminderTime(time,renderTimes[0]));
                 String slot=time.startsWith("10:")?"Утро":time.startsWith("15:")?"День":time.startsWith("19:")?"Вечер":time.startsWith("21:")?"Перед сном":"Напоминание";
                 TextView sub=text(slot,10,MUTED,false);timeInfo.addView(sub,lp(-1,16,0,0,0,0));row.addView(timeInfo,new LinearLayout.LayoutParams(0,dp(46),1));
+                Button edit = button("✎", false); edit.setTextSize(14); edit.setMinWidth(dp(30)); edit.setPadding(0,0,0,0); edit.setOnClickListener(v -> editReminderTime(time,renderTimes[0]));
                 Button remove = button("×", false); remove.setTextSize(16); remove.setMinWidth(dp(30)); remove.setPadding(0,0,0,0); remove.setOnClickListener(v -> { reminderTimes.remove(time); renderTimes[0].run(); });
-                row.addView(remove, lp(32, 34, 4, 0, 0, 0)); timeList.addView(row, lp(-1, 52, 0, 3, 0, 3));
+                row.addView(edit,lp(32,34,2,0,2,0)); row.addView(remove,lp(32,34,2,0,0,0)); timeList.addView(row, lp(-1, 52, 0, 3, 0, 3));
             }
         };
         renderTimes[0].run();
@@ -1617,6 +1665,15 @@ public class MainActivity extends Activity {
         root.addView(save, lp(-1, 54, 0, 4, 0, 8));
 
     }
+    private void editReminderTime(String oldTime,Runnable refresh){
+        try{String[] p=oldTime.split(":");int h=Integer.parseInt(p[0]),m=Integer.parseInt(p[1]);
+            new TimePickerDialog(this,(picker,hour,minute)->{String value=String.format(Locale.US,"%02d:%02d",hour,minute);
+                if(!oldTime.equals(value)&&reminderTimes.contains(value)){Toast.makeText(this,"Такое время уже добавлено",Toast.LENGTH_SHORT).show();return;}
+                int index=reminderTimes.indexOf(oldTime);if(index>=0){reminderTimes.set(index,value);java.util.Collections.sort(reminderTimes);refresh.run();}
+            },h,m,true).show();
+        }catch(Exception ignored){Toast.makeText(this,"Не удалось изменить время",Toast.LENGTH_SHORT).show();}
+    }
+
     private void backHome() { Button b = button("← Главное меню", false); b.setOnClickListener(v -> showHome()); root.addView(b, lp(-1, 50, 0, 18, 0, 0)); }
     private void ritualTile(LinearLayout row, String icon, String title, String subtitle, OnAction run) {
             LinearLayout tile = new LinearLayout(this);
@@ -1664,7 +1721,7 @@ public class MainActivity extends Activity {
         root.addView(c, lp(-1, -2, 0, 0, 0, 9));
     }
 
-    private void action(String title, String sub, OnAction run) {
+    private LinearLayout action(String title, String sub, OnAction run) {
         LinearLayout c = new LinearLayout(this); c.setOrientation(LinearLayout.HORIZONTAL); c.setGravity(Gravity.CENTER_VERTICAL); c.setPadding(dp(16), dp(14), dp(14), dp(14));
         c.setBackground(shape(0xFFFFFFFF, 22, 0xFFF3E9EC)); c.setElevation(dp(2));
         LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL); words.setGravity(Gravity.CENTER_VERTICAL);
@@ -1674,6 +1731,7 @@ public class MainActivity extends Activity {
         TextView arrow = text("›", 28, PINK, false); arrow.setGravity(Gravity.CENTER); c.addView(arrow, lp(24, 34, 8, 0, 0, 0));
         c.setOnClickListener(v -> { c.animate().scaleX(0.985f).scaleY(0.985f).setDuration(100).withEndAction(() -> { c.animate().scaleX(1f).scaleY(1f).setDuration(150).start(); run.go(); }).start(); });
         root.addView(c, lp(-1, -2, 0, 0, 0, 9));
+        return c;
     }
     private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(17), dp(16), dp(17), dp(16)); boolean night = prefs != null && "night".equals(prefs.getString("app_theme", "pink")); l.setBackground(shape(night ? 0xFF25212B : 0xFFFFFFFF, 23, night ? 0xFF403541 : 0xFFF3E9EC)); l.setElevation(dp(2)); return l; }
     private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, size, color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
