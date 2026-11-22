@@ -239,7 +239,7 @@ public class MainActivity extends Activity {
         }return bar;
     }
 
-    @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){super.onActivityResult(requestCode,resultCode,data);if(requestCode==PICK_BACKGROUND&&resultCode==RESULT_OK&&data!=null&&data.getData()!=null){android.net.Uri uri=data.getData();try{getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);}catch(Exception ignored){}prefs.edit().putString("custom_background_uri",uri.toString()).apply();showSettings();Toast.makeText(this,"Фото установлено как фон ♡",Toast.LENGTH_SHORT).show();}}
+    @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){super.onActivityResult(requestCode,resultCode,data);if(resultCode!=RESULT_OK||data==null||data.getData()==null)return;android.net.Uri uri=data.getData();if(requestCode==PICK_BACKGROUND){try{getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);}catch(Exception ignored){}prefs.edit().putString("custom_background_uri",uri.toString()).apply();showSettings();Toast.makeText(this,"Фото установлено как фон ♡",Toast.LENGTH_SHORT).show();}else if(requestCode==BACKUP_EXPORT){try{java.io.OutputStream out=getContentResolver().openOutputStream(uri);if(out==null)throw new Exception();out.write(createBackupJson().getBytes("UTF-8"));out.close();Toast.makeText(this,"Резервная копия сохранена ♡",Toast.LENGTH_LONG).show();}catch(Exception e){Toast.makeText(this,"Не удалось сохранить копию",Toast.LENGTH_LONG).show();}}else if(requestCode==BACKUP_IMPORT){try{java.io.InputStream in=getContentResolver().openInputStream(uri);java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();byte[] buffer=new byte[4096];int n;while((n=in.read(buffer))>0)bytes.write(buffer,0,n);in.close();restoreBackupJson(new String(bytes.toByteArray(),"UTF-8"));Toast.makeText(this,"Данные восстановлены ♡",Toast.LENGTH_LONG).show();loadChapters();showHome();}catch(Exception e){Toast.makeText(this,"Файл копии не удалось прочитать",Toast.LENGTH_LONG).show();}}}
 
     private void showSettings() {
         currentScreen = "settings";
@@ -1051,6 +1051,18 @@ public class MainActivity extends Activity {
     }
 
     
+    
+    private String createBackupJson() throws Exception {
+        org.json.JSONObject json=new org.json.JSONObject();json.put("app","Study with Love");json.put("version",1);org.json.JSONObject data=new org.json.JSONObject();
+        for(Map.Entry<String,?> entry:prefs.getAll().entrySet()){Object value=entry.getValue();if(value instanceof Set){org.json.JSONArray arr=new org.json.JSONArray();for(Object item:(Set<?>)value)arr.put(String.valueOf(item));data.put(entry.getKey(),arr);}else data.put(entry.getKey(),value);}
+        json.put("data",data);return json.toString(2);
+    }
+    private void restoreBackupJson(String raw) throws Exception {
+        org.json.JSONObject json=new org.json.JSONObject(raw);if(!"Study with Love".equals(json.optString("app")))throw new Exception("Wrong backup");org.json.JSONObject data=json.getJSONObject("data");SharedPreferences.Editor editor=prefs.edit();java.util.Iterator<String> keys=data.keys();
+        while(keys.hasNext()){String key=keys.next();Object value=data.get(key);if(value instanceof org.json.JSONArray){org.json.JSONArray arr=(org.json.JSONArray)value;Set<String> set=new TreeSet<>();for(int i=0;i<arr.length();i++)set.add(arr.getString(i));editor.putStringSet(key,set);}else if(value instanceof Boolean)editor.putBoolean(key,(Boolean)value);else if(value instanceof Integer)editor.putInt(key,(Integer)value);else if(value instanceof Long)editor.putLong(key,(Long)value);else if(value instanceof Number)editor.putFloat(key,((Number)value).floatValue());else if(value instanceof String)editor.putString(key,(String)value);}
+        editor.apply();scheduleReminders(this);
+    }
+
     private void showSearchDialog() {
         EditText query=new EditText(this);query.setSingleLine(true);query.setHint("Предмет или тема");query.setTextColor(DARK);
         LinearLayout wrap=new LinearLayout(this);wrap.setPadding(dp(18),dp(8),dp(18),dp(4));wrap.addView(query,lp(-1,50,0,0,0,0));
