@@ -618,15 +618,16 @@ public class MainActivity extends Activity {
         Button home=button("← Назад",false);home.setOnClickListener(v->onBackPressed());root.addView(home,lp(-1,48,0,0,0,0));
     }
 
+    private void unlockQuizAward(String key){if(!prefs.getBoolean(key,false)){String date=new SimpleDateFormat("d MMMM yyyy",new Locale("ru")).format(new Date());prefs.edit().putBoolean(key,true).putString("achievement_date_"+key,date).apply();}}
     private void unlockQuizAwards() {
         int total=prefs.getInt("quiz_total_correct",0),best=prefs.getInt("quiz_best_score",0);
         int[] thresholds={1,5,10,25,50,100};
-        for(int i=0;i<thresholds.length;i++)if(total>=thresholds[i])prefs.edit().putBoolean("quiz_award_correct_"+thresholds[i],true).apply();
-        if(quizBestStreak>=5)prefs.edit().putBoolean("quiz_award_streak_5",true).apply();
-        if(quizBestStreak>=10)prefs.edit().putBoolean("quiz_award_streak_10",true).apply();
-        if(best>=100)prefs.edit().putBoolean("quiz_award_score_100",true).apply();
-        if(best>=250)prefs.edit().putBoolean("quiz_award_score_250",true).apply();
-        if(quizDifficulty==2&&quizScore>=100)prefs.edit().putBoolean("quiz_award_hard",true).apply();
+        for(int i=0;i<thresholds.length;i++)if(total>=thresholds[i])unlockQuizAward("quiz_award_correct_"+thresholds[i]);
+        if(quizBestStreak>=5)unlockQuizAward("quiz_award_streak_5");
+        if(quizBestStreak>=10)unlockQuizAward("quiz_award_streak_10");
+        if(best>=100)unlockQuizAward("quiz_award_score_100");
+        if(best>=250)unlockQuizAward("quiz_award_score_250");
+        if(quizDifficulty==2&&quizScore>=100)unlockQuizAward("quiz_award_hard");
     }
 
     private void showMathQuizAchievements() {
@@ -1076,8 +1077,8 @@ public class MainActivity extends Activity {
 
     private void finishTimerPhase() {
         timerHandler.removeCallbacks(timerTick); timerRunning = false; if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;} timerRemainingMs = 0;
-        if (!timerIsBreak) { timerIsBreak = true; timerRemainingMs = selectedBreakMinutes * 60000L; Toast.makeText(this, "Ты большая умничка! Время отдохнуть 🌸", Toast.LENGTH_LONG).show(); }
-        else { timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; Toast.makeText(this, "Перерыв окончен. Ты готова продолжать! 💗", Toast.LENGTH_LONG).show(); }
+        if (!timerIsBreak) { recordStudyDay(); showTimerNotification("Время отдохнуть 🌸","Фокус-сессия завершена. Ты молодец!"); timerIsBreak = true; timerRemainingMs = selectedBreakMinutes * 60000L; Toast.makeText(this, "Ты большая умничка! Время отдохнуть 🌸", Toast.LENGTH_LONG).show(); }
+        else { showTimerNotification("Перерыв окончен 💗","Можно возвращаться к занятиям"); timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; Toast.makeText(this, "Перерыв окончен. Ты готова продолжать! 💗", Toast.LENGTH_LONG).show(); }
         if ("pomodoro".equals(currentScreen)) showPomodoro();
     }
 
