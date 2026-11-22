@@ -188,58 +188,52 @@ public class MainActivity extends Activity {
     }
 
     private void base(String title, String subtitle) {
-        LinearLayout shell = new LinearLayout(this);
-        shell.setOrientation(LinearLayout.VERTICAL);
-        shell.setBackgroundColor(BG);
-        ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true); scroll.setClipToPadding(false);
-        root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(20), dp(18), dp(20), dp(26)); root.setBackgroundColor(BG);
+        LinearLayout shell=new LinearLayout(this);shell.setOrientation(LinearLayout.VERTICAL);shell.setBackgroundColor(BG);
+        ScrollView scroll=new ScrollView(this);scroll.setFillViewport(true);scroll.setClipToPadding(false);scroll.setVerticalScrollBarEnabled(false);
+        root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setPadding(dp(18),dp(15),dp(18),dp(28));root.setBackgroundColor(BG);
         String customBg=prefs.getString("custom_background_uri","");
-        if(!customBg.isEmpty()){try{java.io.InputStream in=getContentResolver().openInputStream(android.net.Uri.parse(customBg));if(in!=null){Drawable photo=Drawable.createFromStream(in,null);in.close();if(photo!=null){photo.setAlpha(42);root.setBackground(photo);}}}catch(Exception ignored){}}
-        scroll.addView(root);
-        shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
-        if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 78, 0, 0, 0, 0));
-        setContentView(shell);
-        scroll.setAlpha(0f); scroll.setTranslationY(dp(8));
-        scroll.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-        scroll.animate().alpha(1f).translationY(0f).setDuration(650)
-            .setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
-        LinearLayout brandRow = new LinearLayout(this);
-        brandRow.setGravity(Gravity.CENTER_VERTICAL);
-        brandRow.setPadding(dp(12), dp(7), dp(8), dp(7));
-        brandRow.setBackground(shape(0xFFFCEEF2, 30, 0));
-        TextView flower = text("✿", 16, PINK, true);
-        brandRow.addView(flower, lp(24, 24, 0, 0, 7, 0));
-        TextView brand = text("STUDY WITH LOVE", 11, PINK, true);
-        brand.setLetterSpacing(0.14f);
-        brandRow.addView(brand, new LinearLayout.LayoutParams(0, dp(24), 1f));
-        if (currentScreen.equals("home")) {
-            TextView settings = text("⚙", 17, PINK, false); settings.setGravity(Gravity.CENTER);
-            settings.setBackground(shape(PALE, 16, "night".equals(prefs.getString("app_theme","pink"))?0xFF65566A:0xFFF1DDE4));
-            brandRow.addView(settings, lp(32, 30, 5, 0, 0, 0));
-            settings.setOnClickListener(v -> {settings.animate().rotationBy(90f).scaleX(1.18f).scaleY(1.18f).setDuration(170).withEndAction(()->{settings.animate().rotationBy(90f).scaleX(1f).scaleY(1f).setDuration(180).start();showSettings();}).start();});
-        }
-        root.addView(brandRow, lp(-1, 42, 0, 0, 0, 16));
-        TextView h = text(title, 25, DARK, true);
-        h.setLetterSpacing(-0.02f);
-        root.addView(h, lp(-1, -2, 0, 0, 0, 6));
-        TextView sub = text(subtitle, 13, MUTED, false);
-        sub.setLineSpacing(dp(2), 1f);
-        root.addView(sub, lp(-1, -2, 0, 0, 0, 16));
+        if(!customBg.isEmpty()){try{java.io.InputStream in=getContentResolver().openInputStream(android.net.Uri.parse(customBg));if(in!=null){Drawable photo=Drawable.createFromStream(in,null);in.close();if(photo!=null){photo.setAlpha(35);root.setBackground(photo);}}}catch(Exception ignored){}}
+        scroll.addView(root);shell.addView(scroll,new LinearLayout.LayoutParams(-1,0,1f));
+        if(!currentScreen.equals("welcome"))shell.addView(bottomNavigation(),lp(-1,82,0,0,0,0));
+        setContentView(shell);scroll.setAlpha(0f);scroll.setTranslationY(dp(10));scroll.setLayerType(View.LAYER_TYPE_HARDWARE,null);
+        scroll.animate().alpha(1f).translationY(0f).setDuration(320).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
+        LinearLayout top=new LinearLayout(this);top.setGravity(Gravity.CENTER_VERTICAL);top.setPadding(dp(13),dp(9),dp(11),dp(9));
+        boolean night="night".equals(prefs.getString("app_theme","pink"));top.setBackground(shape(night?0xFF24212B:0xFFFFFFFF,22,night?0xFF393340:0x00FFFFFF));top.setElevation(dp(2));
+        TextView mark=text("✳",22,PINK,true);mark.setGravity(Gravity.CENTER);mark.setBackground(shape(PALE,14,0));top.addView(mark,lp(38,38,0,0,10,0));
+        LinearLayout brandBox=new LinearLayout(this);brandBox.setOrientation(LinearLayout.VERTICAL);
+        TextView brand=text("STUDY WITH LOVE",11,DARK,true);brand.setLetterSpacing(.12f);brandBox.addView(brand);
+        TextView tagline=text("YOUR LITTLE STEPS MATTER",8,MUTED,true);tagline.setLetterSpacing(.08f);brandBox.addView(tagline);
+        top.addView(brandBox,new LinearLayout.LayoutParams(0,-2,1f));
+        if(currentScreen.equals("home")){TextView settings=text("⚙",20,PINK,true);settings.setGravity(Gravity.CENTER);settings.setBackground(shape(PALE,14,0));top.addView(settings,lp(40,38,0,0,0,0));settings.setOnClickListener(v->settings.animate().rotationBy(90).setDuration(180).withEndAction(this::showSettings).start());}
+        else{TextView section=text(sectionLabel(currentScreen),10,PINK,true);section.setGravity(Gravity.CENTER);section.setPadding(dp(10),dp(7),dp(10),dp(7));section.setBackground(shape(PALE,14,0));top.addView(section);}
+        root.addView(top,lp(-1,58,0,0,0,22));
+        TextView eyebrow=text("ТВОЁ ПРОСТРАНСТВО ДЛЯ РОСТА",9,PINK,true);eyebrow.setLetterSpacing(.13f);root.addView(eyebrow,lp(-1,-2,0,0,0,5));
+        TextView heading=text(title,27,DARK,true);heading.setLetterSpacing(-.025f);heading.setLineSpacing(dp(1),1f);root.addView(heading,lp(-1,-2,0,0,0,6));
+        TextView sub=text(subtitle,13,MUTED,false);sub.setLineSpacing(dp(3),1.05f);root.addView(sub,lp(-1,-2,0,0,0,19));
+    }
+    private String sectionLabel(String screen){
+        if("chapters".equals(screen)||"topics".equals(screen)||"topic".equals(screen))return "УРОКИ";
+        if("progress".equals(screen)||"flower".equals(screen)||"achievements".equals(screen)||"stats".equals(screen))return "ПРОГРЕСС";
+        if("exam".equals(screen))return "ЭКЗАМЕН";
+        if("diary".equals(screen)||"letters".equals(screen))return "ДНЕВНИК";
+        if("pomodoro".equals(screen))return "ФОКУС";
+        if("settings".equals(screen))return "ПАРАМЕТРЫ";
+        return "STUDY MODE";
     }
 
     private View bottomNavigation() {
-        LinearLayout bar=new LinearLayout(this);bar.setOrientation(LinearLayout.HORIZONTAL);bar.setGravity(Gravity.CENTER);bar.setPadding(dp(5),dp(7),dp(5),dp(7));bar.setBackground(shape(0xFFFFFFFF,0,0));
-        String[] icons={"⌂","▦","▤","✉","♡","◷"};String[] labels={"Главная","Уроки","Прогресс","Экзамен","Дневник","Таймер"};
+        LinearLayout outer=new LinearLayout(this);outer.setGravity(Gravity.CENTER);outer.setPadding(dp(10),dp(5),dp(10),dp(9));
+        LinearLayout bar=new LinearLayout(this);bar.setOrientation(LinearLayout.HORIZONTAL);bar.setGravity(Gravity.CENTER);bar.setPadding(dp(5),dp(6),dp(5),dp(6));
+        boolean night="night".equals(prefs.getString("app_theme","pink"));bar.setBackground(shape(night?0xFF25212B:0xFFFFFFFF,24,night?0xFF403541:0xFFECE5E9));bar.setElevation(dp(8));
+        String[] icons={"⌂","▦","◌","✧","♡","◷"};String[] labels={"Главная","Уроки","Прогресс","Экзамен","Дневник","Таймер"};
         String active=currentScreen.equals("home")?"home":(currentScreen.equals("chapters")||currentScreen.equals("topics")||currentScreen.equals("topic"))?"math":currentScreen.equals("progress")||currentScreen.equals("flower")||currentScreen.equals("achievements")||currentScreen.equals("stats")?"progress":currentScreen.equals("exam")?"exam":currentScreen.equals("diary")||currentScreen.equals("letters")?"diary":currentScreen.equals("pomodoro")?"timer":"";
         String[] keys={"home","math","progress","exam","diary","timer"};
-        for(int i=0;i<keys.length;i++){final String key=keys[i];boolean selected=key.equals(active);LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.VERTICAL);item.setGravity(Gravity.CENTER);item.setPadding(dp(1),dp(4),dp(1),dp(3));item.setBackground(selected?shape(PALE,14,0):shape(0x00FFFFFF,14,0));
-            TextView icon=text(icons[i],22,selected?PINK:MUTED,true);icon.setGravity(Gravity.CENTER);icon.setIncludeFontPadding(false);item.addView(icon,lp(-1,29,0,0,0,2));
-            TextView label=text(labels[i],10,selected?PINK:MUTED,selected);label.setGravity(Gravity.CENTER);label.setMaxLines(1);label.setSingleLine(true);label.setIncludeFontPadding(false);item.addView(label,lp(-1,19,0,0,0,0));
-            LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-1,1f);p.setMargins(dp(1),0,dp(1),0);bar.addView(item,p);
+        for(int i=0;i<keys.length;i++){final String key=keys[i];boolean selected=key.equals(active);LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.VERTICAL);item.setGravity(Gravity.CENTER);item.setPadding(dp(1),dp(5),dp(1),dp(4));item.setBackground(shape(selected?PALE:0x00FFFFFF,17,0));
+            TextView icon=text(icons[i],21,selected?PINK:MUTED,true);icon.setGravity(Gravity.CENTER);icon.setIncludeFontPadding(false);item.addView(icon,lp(-1,27,0,0,0,1));
+            TextView label=text(labels[i],9,selected?PINK:MUTED,selected);label.setGravity(Gravity.CENTER);label.setMaxLines(1);label.setSingleLine(true);label.setIncludeFontPadding(false);item.addView(label,lp(-1,16,0,0,0,0));
+            LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-1,1f);p.setMargins(dp(2),0,dp(2),0);bar.addView(item,p);
             item.setOnClickListener(v->{if(key.equals("home"))showHome();else if(key.equals("math"))showChapters();else if(key.equals("progress"))showProgress();else if(key.equals("exam"))showExam();else if(key.equals("diary"))showDiary();else if(key.equals("timer"))showPomodoro();});
-        }return bar;
+        }outer.addView(bar,new LinearLayout.LayoutParams(-1,-1));return outer;
     }
 
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){super.onActivityResult(requestCode,resultCode,data);if(resultCode!=RESULT_OK||data==null||data.getData()==null)return;android.net.Uri uri=data.getData();if(requestCode==PICK_BACKGROUND){try{getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);}catch(Exception ignored){}prefs.edit().putString("custom_background_uri",uri.toString()).apply();showSettings();Toast.makeText(this,"Фото установлено как фон ♡",Toast.LENGTH_SHORT).show();}else if(requestCode==BACKUP_EXPORT){try{java.io.OutputStream out=getContentResolver().openOutputStream(uri);if(out==null)throw new Exception();out.write(createBackupJson().getBytes("UTF-8"));out.close();Toast.makeText(this,"Резервная копия сохранена ♡",Toast.LENGTH_LONG).show();}catch(Exception e){Toast.makeText(this,"Не удалось сохранить копию",Toast.LENGTH_LONG).show();}}else if(requestCode==BACKUP_IMPORT){try{java.io.InputStream in=getContentResolver().openInputStream(uri);java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();byte[] buffer=new byte[4096];int n;while((n=in.read(buffer))>0)bytes.write(buffer,0,n);in.close();restoreBackupJson(new String(bytes.toByteArray(),"UTF-8"));Toast.makeText(this,"Данные восстановлены ♡",Toast.LENGTH_LONG).show();loadChapters();showHome();}catch(Exception e){Toast.makeText(this,"Файл копии не удалось прочитать",Toast.LENGTH_LONG).show();}}}
@@ -1315,7 +1309,7 @@ public class MainActivity extends Activity {
 
     private void actionRegular(String title, String sub, OnAction run) {
         LinearLayout c = new LinearLayout(this); c.setOrientation(LinearLayout.HORIZONTAL); c.setGravity(Gravity.CENTER_VERTICAL); c.setPadding(dp(16), dp(14), dp(14), dp(14));
-        c.setBackground(shape(0xFFFFFFFF, 22, 0xFFF3E9EC));
+        c.setBackground(shape("night".equals(prefs.getString("app_theme","pink"))?0xFF25212B:0xFFFFFFFF,24,"night".equals(prefs.getString("app_theme","pink"))?0xFF403541:0xFFECE6E9)); c.setElevation(dp(2));
         LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
         TextView heading = text(title, 17, DARK, false);
         if (title.startsWith("РАЗДЕЛ ")) {
@@ -1342,10 +1336,10 @@ public class MainActivity extends Activity {
         c.setOnClickListener(v -> { c.animate().scaleX(0.985f).scaleY(0.985f).setDuration(100).withEndAction(() -> { c.animate().scaleX(1f).scaleY(1f).setDuration(150).start(); run.go(); }).start(); });
         root.addView(c, lp(-1, -2, 0, 0, 0, 9));
     }
-    private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(17), dp(16), dp(17), dp(16)); boolean night = prefs != null && "night".equals(prefs.getString("app_theme", "pink")); l.setBackground(shape(night ? 0xFF25212B : 0xFFFFFFFF, 23, night ? 0xFF403541 : 0xFFF3E9EC)); l.setElevation(dp(2)); return l; }
+    private LinearLayout card() { LinearLayout l=new LinearLayout(this);l.setOrientation(LinearLayout.VERTICAL);l.setPadding(dp(18),dp(17),dp(18),dp(17));boolean night=prefs!=null&&"night".equals(prefs.getString("app_theme","pink"));l.setBackground(shape(night?0xFF25212B:0xFFFFFFFF,24,night?0xFF403541:0xFFECE6E9));l.setElevation(dp(3));return l; }
     private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, size, color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
     private TextView text(String value, int size, int color, boolean bold) { value=translate(value); TextView t = new TextView(this); t.setText(value); t.setTextSize(size); t.setTextColor(color); if (bold) t.setTypeface(Typeface.DEFAULT, Typeface.BOLD); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
-    private Button button(String label, boolean primary) { label=translate(label); Button b = new Button(this); b.setText(label); b.setTextSize(14); b.setTypeface(Typeface.DEFAULT, Typeface.BOLD); b.setAllCaps(false); b.setLetterSpacing(0.01f); b.setMinHeight(dp(48)); b.setPadding(dp(14), dp(8), dp(14), dp(8)); b.setElevation(primary ? dp(2) : 0); b.setTextColor(primary ? 0xFFFFFFFF : PINK); b.setBackground(shape(primary ? PINK : PALE, 22, primary ? PINK : 0xFFF2DDE4)); return b; }
+    private Button button(String label, boolean primary) { label=translate(label);Button b=new Button(this);b.setText(label);b.setTextSize(14);b.setTypeface(Typeface.DEFAULT,Typeface.BOLD);b.setAllCaps(false);b.setLetterSpacing(.015f);b.setMinHeight(dp(48));b.setPadding(dp(16),dp(9),dp(16),dp(9));b.setElevation(primary?dp(3):0);b.setTextColor(primary?0xFFFFFFFF:PINK);b.setBackground(shape(primary?PINK:PALE,16,primary?PINK:0));b.setStateListAnimator(null);b.setOnTouchListener((v,e)->{if(e.getAction()==android.view.MotionEvent.ACTION_DOWN)v.animate().scaleX(.97f).scaleY(.97f).setDuration(80).start();else if(e.getAction()==android.view.MotionEvent.ACTION_UP||e.getAction()==android.view.MotionEvent.ACTION_CANCEL)v.animate().scaleX(1f).scaleY(1f).setDuration(110).start();return false;});return b; }
     private String translate(String value){
         String lang=prefs==null?"ru":prefs.getString("app_language","ru");if("ru".equals(lang)||value==null)return value;
         String[][] pairs={
