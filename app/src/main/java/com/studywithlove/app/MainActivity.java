@@ -252,7 +252,7 @@ public class MainActivity extends Activity {
         }return bar;
     }
 
-    @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){super.onActivityResult(requestCode,resultCode,data);if(resultCode!=RESULT_OK||data==null||data.getData()==null)return;android.net.Uri uri=data.getData();if(requestCode==PICK_BACKGROUND){try{getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);}catch(Exception ignored){}prefs.edit().putString("custom_background_uri",uri.toString()).apply();showSettings();Toast.makeText(this,"Фото установлено как фон ♡",Toast.LENGTH_SHORT).show();}else if(requestCode==BACKUP_EXPORT){try{java.io.OutputStream out=getContentResolver().openOutputStream(uri);if(out==null)throw new Exception();out.write(createBackupJson().getBytes("UTF-8"));out.close();Toast.makeText(this,"Резервная копия сохранена ♡",Toast.LENGTH_LONG).show();}catch(Exception e){Toast.makeText(this,"Не удалось сохранить копию",Toast.LENGTH_LONG).show();}}else if(requestCode==BACKUP_IMPORT){try{java.io.InputStream in=getContentResolver().openInputStream(uri);java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();byte[] buffer=new byte[4096];int n;while((n=in.read(buffer))>0)bytes.write(buffer,0,n);in.close();restoreBackupJson(new String(bytes.toByteArray(),"UTF-8"));Toast.makeText(this,"Данные восстановлены ♡",Toast.LENGTH_LONG).show();loadChapters();showHome();}catch(Exception e){Toast.makeText(this,"Файл копии не удалось прочитать",Toast.LENGTH_LONG).show();}}}
+    @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){super.onActivityResult(requestCode,resultCode,data);if(resultCode!=RESULT_OK||data==null||data.getData()==null)return;android.net.Uri uri=data.getData();if(requestCode==PICK_BACKGROUND){try{getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);}catch(Exception ignored){}prefs.edit().putString("custom_background_uri",uri.toString()).apply();showSettings();Toast.makeText(this,"Фото установлено как фон ♡",Toast.LENGTH_SHORT).show();}else if(requestCode==BACKUP_EXPORT){try{java.io.OutputStream out=getContentResolver().openOutputStream(uri,"wt");if(out==null)throw new Exception();out.write(createBackupJson().getBytes("UTF-8"));out.close();Toast.makeText(this,"Резервная копия сохранена ♡",Toast.LENGTH_LONG).show();}catch(Exception e){Toast.makeText(this,"Не удалось сохранить копию",Toast.LENGTH_LONG).show();}}else if(requestCode==BACKUP_IMPORT){try{java.io.InputStream in=getContentResolver().openInputStream(uri);java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();byte[] buffer=new byte[4096];int n;while((n=in.read(buffer))>0)bytes.write(buffer,0,n);in.close();restoreBackupJson(new String(bytes.toByteArray(),"UTF-8"));Toast.makeText(this,"Данные восстановлены ♡",Toast.LENGTH_LONG).show();loadChapters();showHome();}catch(Exception e){Toast.makeText(this,"Файл копии не удалось прочитать",Toast.LENGTH_LONG).show();}}}
 
     private LinearLayout settingsGroup(String title) {
         LinearLayout group=new LinearLayout(this);group.setOrientation(LinearLayout.VERTICAL);
@@ -674,7 +674,7 @@ public class MainActivity extends Activity {
         for (String chapter : chapters.keySet()) {
             if (chapter.startsWith("CUSTOM:")) continue;
             final String selected = chapter; String pretty = chapter.replaceFirst("^[^ ]+\\s*", "");
-            actionRegular("РАЗДЕЛ " + number + "\\n" + pretty, chapters.get(chapter).size() + " учебных тем", () -> { selectedChapter = selected; showTopics(selected); }); number++;
+            actionRegular("РАЗДЕЛ " + number + "\n" + pretty, chapters.get(chapter).size() + " учебных тем", () -> { selectedChapter = selected; showTopics(selected); }); number++;
         }
         Button back = button("← К урокам", false); back.setOnClickListener(v -> onBackPressed()); root.addView(back, lp(-1, 50, 0, 12, 0, 0));
     }
@@ -857,12 +857,8 @@ public class MainActivity extends Activity {
     }
 
     private void markDone() {
-        int oldProgress=selectedTopic==null?100:topicProgress(selectedTopic);
-        if(selectedTopic!=null)saveTopicProgress(selectedTopic,100);
-        if(oldProgress<100)playTopicCompleteSound();
         recordStudyDay();
-        if (selectedTopic != null) refreshTopicProgress(100);
-        showPraise();
+        Toast.makeText(this,"Сегодняшнее занятие отмечено ♡",Toast.LENGTH_SHORT).show();
     }
 
 
@@ -940,7 +936,7 @@ public class MainActivity extends Activity {
         addText(summary, "🌸  ОБЩИЙ РЕЗУЛЬТАТ", 12, PINK, true);
         addText(summary, overall + "% изучено", 27, DARK, true);
         addText(summary, completedTopics + " из " + totalTopics + " тем завершено", 14, MUTED, false);
-        addText(summary, "⏱ Сегодня: " + prefs.getInt("app_minutes_" + todayKey(), 0) + " минут занятий", 14, PINK, true);
+        addText(summary, "⏱ Сегодня: " + prefs.getInt("app_minutes_" + todayKey(), 0) + " минут в приложении", 14, PINK, true);
         addText(summary, "Всего: " + totalStudyMinutes() + " минут", 13, MUTED, false);
         addProgressLine(summary, "Весь учебный план", overall);
         root.addView(summary, lp(-1, -2, 0, 0, 0, 16));
@@ -1062,7 +1058,7 @@ public class MainActivity extends Activity {
         if ("pomodoro".equals(currentScreen)) showPomodoro();
     }
 
-    // Study time in Progress is foreground time spent in the app, not only Pomodoro time.
+    // App usage is tracked separately; only an explicit study action records a study day.
     private void saveForegroundUsage() {
         if (appUsageStartedElapsed == 0L || prefs == null) return;
         long elapsed = Math.max(0L, SystemClock.elapsedRealtime() - appUsageStartedElapsed);
@@ -1073,7 +1069,7 @@ public class MainActivity extends Activity {
         int addMinutes = (int)(combined / 60000L);
         prefs.edit().putLong(remainderKey, combined % 60000L)
                 .putInt("app_minutes_" + date, prefs.getInt("app_minutes_" + date, 0) + addMinutes).apply();
-        if (addMinutes > 0) recordStudyDay();
+        // Foreground app time is usage time, not verified study time.
     }
 
     @Override protected void onResume() { super.onResume(); appUsageStartedElapsed = SystemClock.elapsedRealtime(); if (prefs != null) scheduleReminders(this); }
@@ -1422,6 +1418,7 @@ public class MainActivity extends Activity {
             }
             if(matches.isEmpty()){new android.app.AlertDialog.Builder(MainActivity.this).setTitle("Ничего не найдено").setMessage("Попробуй изменить запрос ♡").setPositiveButton("Понятно",null).show();return;}
             String[] items=matches.toArray(new String[0]);
+            for(int i=0;i<items.length;i++){String raw=items[i];int tab=raw.indexOf("\t");int nl=raw.indexOf("\n");items[i]=raw.substring(0,tab>=0?tab:(nl>=0?nl:raw.length()));}
             new android.app.AlertDialog.Builder(MainActivity.this).setTitle("Результаты поиска").setItems(items,(dlg,which)->{
                 String[] parts=items[which].split("\\t",2);if(parts.length<2)return;selectedChapter=parts[1];
                 if(items[which].contains("\n")){selectedTopic=items[which].substring(items[which].indexOf("\n")+1);showTopic(selectedTopic);}else showTopics(selectedChapter);
