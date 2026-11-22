@@ -1076,7 +1076,7 @@ public class MainActivity extends Activity {
                     .putExtra("id",910);
             PendingIntent pi=PendingIntent.getBroadcast(this,910,intent,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
             long at=System.currentTimeMillis()+Math.max(1000L,delayMs);
-            if(Build.VERSION.SDK_INT>=23)alarm.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,at,pi);else alarm.setExact(AlarmManager.RTC_WAKEUP,at,pi);
+            if(Build.VERSION.SDK_INT>=31&&!alarm.canScheduleExactAlarms())alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,at,pi);else if(Build.VERSION.SDK_INT>=23)alarm.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,at,pi);else alarm.setExact(AlarmManager.RTC_WAKEUP,at,pi);
         } catch(Exception ignored) { }
     }
     private void cancelTimerFinishAlarm() {
@@ -1407,7 +1407,7 @@ public class MainActivity extends Activity {
                     .putExtra("message","Твоё письмо себе уже можно открыть ✉").putExtra("id",Math.abs(id.hashCode())+10000);
             PendingIntent pi=PendingIntent.getBroadcast(this,Math.abs(id.hashCode())+10000,intent,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
             AlarmManager am=(AlarmManager)getSystemService(ALARM_SERVICE);
-            if(Build.VERSION.SDK_INT>=23)am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,when.getTimeInMillis(),pi);else am.setExact(AlarmManager.RTC_WAKEUP,when.getTimeInMillis(),pi);
+            if(Build.VERSION.SDK_INT>=31&&!am.canScheduleExactAlarms())am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,when.getTimeInMillis(),pi);else if(Build.VERSION.SDK_INT>=23)am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,when.getTimeInMillis(),pi);else am.setExact(AlarmManager.RTC_WAKEUP,when.getTimeInMillis(),pi);
         } catch(Exception ignored) { }
     }
 
