@@ -1603,7 +1603,7 @@ public class MainActivity extends Activity {
             float volume=prefs.getInt("ambience_volume",35)/100f;player.setVolume(volume,volume);player.setLooping(true);
             player.setOnPreparedListener(mp->{if(ambiencePlayer==mp){mp.start();ambiencePlaying=true;}});
             player.setOnErrorListener((mp,what,extra)->{if(ambiencePlayer==mp)stopAmbience();runOnUiThread(()->Toast.makeText(this,"Не удалось загрузить звук. Проверь интернет.",Toast.LENGTH_SHORT).show());return true;});
-            player.setDataSource(url);player.prepareAsync();
+            player.setDataSource(url);ambiencePlaying=true;player.prepareAsync();
         }catch(Exception e){stopAmbience();Toast.makeText(this,"Не удалось загрузить звук атмосферы",Toast.LENGTH_SHORT).show();}
     }
     private void stopAmbience(){ambiencePlaying=false;android.media.MediaPlayer player=ambiencePlayer;ambiencePlayer=null;if(player!=null){try{if(player.isPlaying())player.stop();}catch(Exception ignored){}try{player.release();}catch(Exception ignored){}}}
