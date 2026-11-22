@@ -88,7 +88,7 @@ public class MainActivity extends Activity {
         getWindow().getDecorView().setBackgroundColor(BG);
         getWindow().setStatusBarColor(0xFFFFF9F7);
         getWindow().setNavigationBarColor(0xFFFFF9F7);
-        if (Build.VERSION.SDK_INT >= 23) getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        updateSystemBarIcons();
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
         applySavedTheme();
         getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG);
@@ -210,7 +210,7 @@ public class MainActivity extends Activity {
         scroll.addView(root);
         shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
         if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 78, 0, 0, 0, 0));
-        setContentView(shell);
+        setContentView(shell);\n        if (Build.VERSION.SDK_INT >= 21) {\n            shell.setOnApplyWindowInsetsListener((view, insets) -> {\n                int top,bottom;\n                if (Build.VERSION.SDK_INT >= 30) { android.graphics.Insets bars=insets.getInsets(android.view.WindowInsets.Type.systemBars()); top=bars.top; bottom=bars.bottom; }\n                else { top=insets.getSystemWindowInsetTop(); bottom=insets.getSystemWindowInsetBottom(); }\n                view.setPadding(0,top,0,bottom);\n                return insets;\n            });\n            shell.requestApplyInsets();\n        }
         scroll.setAlpha(0f); scroll.setTranslationY(dp(7));
         scroll.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         scroll.animate().alpha(1f).translationY(0f).setDuration(230)
@@ -325,7 +325,7 @@ public class MainActivity extends Activity {
         Button back=button("← Назад",true);back.setOnClickListener(v->onBackPressed());root.addView(back,lp(-1,48,0,8,0,4));
     }
 
-    private void applySavedTheme() {
+    private void updateSystemBarIcons() {\n        if (Build.VERSION.SDK_INT >= 23 && getWindow() != null) {\n            String t=prefs==null?"pink":prefs.getString("app_theme","pink");\n            boolean darkIcons=!("night".equals(t)||"luxury".equals(t));\n            getWindow().getDecorView().setSystemUiVisibility(darkIcons?View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR:0);\n        }\n    }\n\n    private void applySavedTheme() {
         String theme = prefs == null ? "pink" : prefs.getString("app_theme", "pink");
         if ("night".equals(theme)) { BG=0xFF17151D; PINK=0xFFE39AB5; PALE=0xFF302735; DARK=0xFFF4EAF0; MUTED=0xFFB6A8B2; }
         else if ("lavender".equals(theme)) { BG=0xFFF8F6FF; PINK=0xFF8979B8; PALE=0xFFF0ECFA; DARK=0xFF393448; MUTED=0xFF8E879E; }
@@ -339,7 +339,7 @@ public class MainActivity extends Activity {
         else if ("red".equals(theme)) { BG=0xFFFFF5F4; PINK=0xFFB32635; PALE=0xFFF8E2E3; DARK=0xFF4B2026; MUTED=0xFF9D777B; }
         else if ("lv".equals(theme)) { BG=0xFFF4E8D5; PINK=0xFF76502F; PALE=0xFFE7D2B3; DARK=0xFF3B281C; MUTED=0xFF92775E; }
         else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF95878C; }
-        if (getWindow() != null) { getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG); }
+        if (getWindow() != null) { getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG); updateSystemBarIcons(); }
     }
 
         private void showHome() {
@@ -647,7 +647,7 @@ public class MainActivity extends Activity {
     }
 
     private String dailyMotivation() { return "✧  "+messages[Math.floorMod(todayKey().hashCode(),messages.length)]; }
-     private String word(int n) { int x=n%10, y=n%100; if(x==1 && y!=11)return "урок"; if(x>=2&&x<=4&&(y<12||y>14))return "урока"; return "уроков"; }
+     private String word(int n) { int x=n%10, y=n%100; if(x==1 && y!=11)return "урок"; if(x>=2&&x<=4&&(y<12||y>14))return "урока"; return "уроков"; }\n    private String dayWord(int n){int x=n%10,y=n%100;if(x==1&&y!=11)return "день";if(x>=2&&x<=4&&(y<12||y>14))return "дня";return "дней";}
     private void showChapters() {
         currentScreen = "chapters";
         base("Уроки 📚", "Выбери предмет или создай свой урок");
@@ -1663,7 +1663,7 @@ public class MainActivity extends Activity {
             }, now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE), true).show();
         });
         root.addView(addTime, lp(-1, 48, 0, 4, 0, 14));
-        TextView summary=text(dayChecks.size()+" дней · "+reminderTimes.size()+" напоминания в день",11,MUTED,true);summary.setGravity(Gravity.CENTER);root.addView(summary,lp(-1,28,0,2,0,2));
+        TextView summary=text(selectedDays().size()+" дней · "+reminderTimes.size()+" напоминания в день",11,MUTED,true);summary.setGravity(Gravity.CENTER);root.addView(summary,lp(-1,28,0,2,0,2));\n        Runnable updateReminderSummary=()->{int count=0;for(CheckBox cb:dayChecks)if(cb.isChecked())count++;summary.setText(count+" "+dayWord(count)+" · "+reminderTimes.size()+" напоминаний в день");};\n        for(CheckBox cb:dayChecks)cb.setOnCheckedChangeListener((button,checked)->{cb.setBackground(shape(checked?0xFFF7DCE6:PALE,14,checked?PINK:0xFFF0DCE4));updateReminderSummary.run();});
         Button save = button("💗  Сохранить расписание", true);
         save.setOnClickListener(v -> {
             Set<String> days = new TreeSet<>();
