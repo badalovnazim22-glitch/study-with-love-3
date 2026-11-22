@@ -861,7 +861,7 @@ public class MainActivity extends Activity {
     private void showMiniTestResult(boolean wrongOnly){
         currentScreen="mini_test_result";base("Результат мини-теста","Ошибки — это подсказка, что повторить");
         int total=miniQuestions.size();LinearLayout card=card();card.setGravity(Gravity.CENTER);addText(card,"ТВОЙ РЕЗУЛЬТАТ",11,PINK,true);TextView score=text(miniScore+" / "+total,38,DARK,true);score.setGravity(Gravity.CENTER);card.addView(score,lp(-1,60,0,6,0,4));addText(card,miniWrongQuestions.isEmpty()?"Все ответы верные — отлично!":"Ошибок: "+miniWrongQuestions.size()+". Их можно пройти ещё раз.",13,MUTED,false);root.addView(card,lp(-1,-2,0,0,0,14));
-        if(miniWrongQuestions.isEmpty()&&!wrongOnly){String suffix=topicStorageSuffix(selectedChapter,miniTopic);for(int d:new int[]{3,7,14})prefs.edit().putBoolean("review_done_"+suffix+"_"+d,false).apply();}
+        if(miniWrongQuestions.isEmpty()&&!wrongOnly){String suffix=topicStorageSuffix(selectedChapter,miniTopic);for(int d:new int[]{3,7,14})prefs.edit().putBoolean("review_done_"+suffix+"_"+d,false).apply();if(!pendingReviewKey.isEmpty()){prefs.edit().putBoolean(pendingReviewKey,true).apply();pendingReviewKey="";}}
         if(!miniWrongQuestions.isEmpty()){Button repeat=button("↻  Повторить ошибки",true);repeat.setOnClickListener(v->{miniQuestions.clear();miniQuestions.addAll(miniWrongQuestions);miniWrongQuestions.clear();miniScore=0;renderMiniTest(0,false);});root.addView(repeat,lp(-1,50,0,0,0,8));}
         Button again=button("Пройти тест заново",false);again.setOnClickListener(v->startMiniTest(miniTopic));root.addView(again,lp(-1,48,0,0,0,8));backHome();
     }
@@ -870,7 +870,7 @@ public class MainActivity extends Activity {
         for(Map.Entry<String,List<String>> entry:chapters.entrySet())for(String topic:entry.getValue()){
             String suffix=topicStorageSuffix(entry.getKey(),topic);long completed=prefs.getLong("topic_completed_at_"+suffix,0);if(completed<=0)continue;long age=(now-completed)/86400000L;
             for(int interval:new int[]{3,7,14})if(age>=interval&&!prefs.getBoolean("review_done_"+suffix+"_"+interval,false)){
-                count++;TextView item=text("•  "+topic+"  ·  "+interval+" дня",13,DARK,true);section.addView(item,lp(-1,34,0,1,0,1));Button review=button("Повторить тему",false);review.setOnClickListener(v->{selectedChapter=entry.getKey();selectedTopic=topic;pendingReviewKey="review_done_"+suffix+"_"+interval;startMiniTest(topic);});section.addView(review,lp(-1,40,0,0,0,8));
+                final int dueInterval=interval;count++;TextView item=text("•  "+topic+"  ·  "+interval+" дня",13,DARK,true);section.addView(item,lp(-1,34,0,1,0,1));Button review=button("Повторить тему",false);review.setOnClickListener(v->{selectedChapter=entry.getKey();selectedTopic=topic;pendingReviewKey="review_done_"+suffix+"_"+dueInterval;startMiniTest(topic);});section.addView(review,lp(-1,40,0,0,0,8));
             }
         }
         if(count==0)addText(section,"Пока всё повторено. Следующая проверка появится через 3, 7 и 14 дней после завершения темы ♡",12,MUTED,false);
@@ -1151,11 +1151,12 @@ public class MainActivity extends Activity {
     }
 
     private void finishTimerPhase() {
+        boolean focusFinished=!timerIsBreak;
         timerHandler.removeCallbacks(timerTick); timerRunning = false; cancelTimerFinishAlarm(); getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;} timerRemainingMs = 0;
         if (!timerIsBreak) { recordStudyDay(); timerIsBreak = true; timerRemainingMs = selectedBreakMinutes * 60000L; Toast.makeText(this, isMaleProfile()?"Ты большой молодец! Время отдохнуть 🌸":"Ты большая умничка! Время отдохнуть 🌸", Toast.LENGTH_LONG).show(); }
         else { timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; Toast.makeText(this, isMaleProfile()?"Перерыв окончен. Ты готов продолжать! 💗":"Перерыв окончен. Ты готова продолжать! 💗", Toast.LENGTH_LONG).show(); }
         if ("pomodoro".equals(currentScreen)) showPomodoro();
-        if(!timerIsBreak){prefs.edit().putBoolean("diary_prefill_timer_win",true).apply();new android.app.AlertDialog.Builder(this).setTitle("Фокус-сессия завершена 🌸").setMessage("Хочешь записать эту маленькую победу в дневник?").setNegativeButton("Позже",null).setPositiveButton("Записать",(d,w)->showDiary()).show();}
+        if(focusFinished){prefs.edit().putBoolean("diary_prefill_timer_win",true).apply();new android.app.AlertDialog.Builder(this).setTitle("Фокус-сессия завершена 🌸").setMessage("Хочешь записать эту маленькую победу в дневник?").setNegativeButton("Позже",null).setPositiveButton("Записать",(d,w)->showDiary()).show();}
     }
 
     // App usage is tracked separately; only an explicit study action records a study day.
@@ -1589,7 +1590,7 @@ public class MainActivity extends Activity {
         addProgressLine(summary,"Общий прогресс",total==0?0:completed*100/total);Set<String> days=prefs.getStringSet("study_days",new TreeSet<String>());addText(summary,"Учебных дней: "+days.size(),14,MUTED,false);
         addText(summary,"Всего времени: "+(totalStudyMinutes()/60)+" ч "+(totalStudyMinutes()%60)+" мин",14,MUTED,false);addText(summary,"Завершённых занятий: "+prefs.getInt("done_count",0),14,MUTED,false);root.addView(summary,lp(-1,-2,0,0,0,12));
         Calendar c=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));LinearLayout week=card();addText(week,"ПОСЛЕДНИЕ 7 ДНЕЙ",12,PINK,true);
-        for(int i=6;i>=0;i--){Calendar day=(Calendar)c.clone();day.add(Calendar.DAY_OF_YEAR,-i);String date=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(day.getTime());int mins=prefs.getInt("app_minutes_"+date,0);addProgressLine(week,new SimpleDateFormat("EEE, d MMM",new Locale("ru")).format(day.getTime())+" · "+mins+" мин",Math.min(100,mins*2));}
+        for(int i=6;i>=0;i--){Calendar day=(Calendar)c.clone();day.add(Calendar.DAY_OF_YEAR,-i);String date=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(day.getTime());int mins=prefs.getInt("focus_minutes_"+date,0);addProgressLine(week,new SimpleDateFormat("EEE, d MMM",new Locale("ru")).format(day.getTime())+" · "+mins+" мин",Math.min(100,mins*2));}
         root.addView(week,lp(-1,-2,0,0,0,12));backHome();
     }
 
