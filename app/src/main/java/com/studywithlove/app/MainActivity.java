@@ -110,7 +110,7 @@ public class MainActivity extends Activity {
             prefs.edit().putStringSet("study_days", history).apply();
         }
         loadChapters();
-        scheduleReminders(this); WeeklyReportReceiver.schedule(this); StudyWidgetProvider.updateAll(this);
+        scheduleReminders(this); rescheduleFutureLetterReminders(this); WeeklyReportReceiver.schedule(this); StudyWidgetProvider.updateAll(this);
         if (prefs.getBoolean("notifications_enabled", true) && Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 20);
         if (!prefs.getBoolean("welcome_done", false)) showWelcome(); else showHome();
@@ -1162,7 +1162,7 @@ public class MainActivity extends Activity {
     // App usage is tracked separately; only an explicit study action records a study day.
     private void saveForegroundUsage() { appUsageStartedElapsed=0L; }
 
-    @Override protected void onResume() { super.onResume(); appUsageStartedElapsed = SystemClock.elapsedRealtime(); if (prefs != null) {scheduleReminders(this);WeeklyReportReceiver.schedule(this);StudyWidgetProvider.updateAll(this);} }
+    @Override protected void onResume() { super.onResume(); appUsageStartedElapsed = SystemClock.elapsedRealtime(); if (prefs != null) {scheduleReminders(this);rescheduleFutureLetterReminders(this);WeeklyReportReceiver.schedule(this);StudyWidgetProvider.updateAll(this);} }
     @Override protected void onPause() { saveForegroundUsage(); appUsageStartedElapsed = 0L; super.onPause(); }
 
     private void showMessage() {
@@ -1456,6 +1456,11 @@ public class MainActivity extends Activity {
             AlarmManager am=(AlarmManager)getSystemService(ALARM_SERVICE);
             if(Build.VERSION.SDK_INT>=31&&!am.canScheduleExactAlarms())am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,when.getTimeInMillis(),pi);else if(Build.VERSION.SDK_INT>=23)am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,when.getTimeInMillis(),pi);else am.setExact(AlarmManager.RTC_WAKEUP,when.getTimeInMillis(),pi);
         } catch(Exception ignored) { }
+    }
+
+    public static void rescheduleFutureLetterReminders(Context context){
+        SharedPreferences p=context.getSharedPreferences(PREFS,MODE_PRIVATE);Set<String> ids=p.getStringSet("future_letter_ids",new TreeSet<String>());AlarmManager am=(AlarmManager)context.getSystemService(ALARM_SERVICE);
+        for(String id:ids){if(!p.getBoolean("future_remind_"+id,false))continue;String date=p.getString("future_date_"+id,"");try{SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd",Locale.US);f.setTimeZone(TimeZone.getTimeZone("Asia/Baku"));Date parsed=f.parse(date);if(parsed==null)continue;Calendar when=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));when.setTime(parsed);when.set(Calendar.HOUR_OF_DAY,9);when.set(Calendar.MINUTE,0);when.set(Calendar.SECOND,0);when.set(Calendar.MILLISECOND,0);if(when.getTimeInMillis()<=System.currentTimeMillis())continue;int code=Math.abs(id.hashCode())+10000;Intent intent=new Intent(context,ReminderReceiver.class).setAction("future_letter_"+id).putExtra("message","Твоё письмо себе уже можно открыть ✉").putExtra("id",code);PendingIntent pi=PendingIntent.getBroadcast(context,code,intent,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);if(Build.VERSION.SDK_INT>=31&&!am.canScheduleExactAlarms())am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,when.getTimeInMillis(),pi);else if(Build.VERSION.SDK_INT>=23)am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,when.getTimeInMillis(),pi);else am.setExact(AlarmManager.RTC_WAKEUP,when.getTimeInMillis(),pi);}catch(Exception ignored){}}
     }
 
     private void showFutureLetters() {
