@@ -1121,16 +1121,42 @@ public class MainActivity extends Activity {
         }).setNegativeButton("Отмена",null).show();
     }
     private void showPlanner() {
-        currentScreen="planner";base("Умный планировщик","Составь небольшой и реальный план на день");String today=todayKey(),key="planner_tasks_"+today;
-        LinearLayout form=card();addText(form,"НОВАЯ ЗАДАЧА",12,PINK,true);EditText task=new EditText(this);task.setSingleLine(true);task.setHint("Например: повторить дроби");task.setTextColor(DARK);task.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));form.addView(task,lp(-1,48,0,7,0,8));
-        Button add=button("＋  Добавить в план",true);form.addView(add,lp(-1,46,0,0,0,0));root.addView(form,lp(-1,-2,0,0,0,12));
-        LinearLayout list=new LinearLayout(this);list.setOrientation(LinearLayout.VERTICAL);root.addView(list,lp(-1,-2,0,0,0,8));Runnable[] render=new Runnable[1];
-        render[0]=()->{list.removeAllViews();Set<String> tasks=new TreeSet<>(prefs.getStringSet(key,new TreeSet<String>()));if(tasks.isEmpty())addText(list,"Пока нет задач. Добавь первую — даже маленький шаг важен ♡",14,MUTED,false);
-            for(String item:tasks){LinearLayout row=card();row.setOrientation(LinearLayout.HORIZONTAL);row.setGravity(Gravity.CENTER_VERTICAL);CheckBox done=new CheckBox(this);done.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));done.setText(item);done.setTextColor(DARK);row.addView(done,new LinearLayout.LayoutParams(0,dp(48),1f));Button del=button("×",false);del.setMinWidth(dp(42));row.addView(del);
-                done.setOnCheckedChangeListener((b,on)->{if(on){Set<String> latest=new TreeSet<>(prefs.getStringSet(key,new TreeSet<String>()));latest.remove(item);prefs.edit().putStringSet(key,latest).putInt("planner_completed_"+today,prefs.getInt("planner_completed_"+today,0)+1).apply();row.animate().alpha(0).setDuration(180).withEndAction(render[0]::run).start();}});
-                del.setOnClickListener(v->{Set<String> latest=new TreeSet<>(prefs.getStringSet(key,new TreeSet<String>()));latest.remove(item);prefs.edit().putStringSet(key,latest).apply();render[0].run();});list.addView(row,lp(-1,-2,0,0,0,7));}};
-        add.setOnClickListener(v->{String value=task.getText().toString().trim();if(value.isEmpty()){task.setError("Напиши задачу");return;}Set<String> tasks=new TreeSet<>(prefs.getStringSet(key,new TreeSet<String>()));tasks.add(value);prefs.edit().putStringSet(key,tasks).apply();task.setText("");render[0].run();});
-        render[0].run();addText(root,"План хранится отдельно для каждого дня. Не перегружай себя — достаточно 2–3 важных дел.",13,MUTED,false);backHome();
+        currentScreen="planner";
+        base("Умный планировщик","Небольшой план — уже хороший шаг");
+        String[] selectedDate={todayKey()};
+        LinearLayout switcher=new LinearLayout(this);switcher.setGravity(Gravity.CENTER);switcher.setBackground(shape(PALE,16,0));
+        TextView todayChip=text("Сегодня",13,PINK,true),tomorrowChip=text("Завтра",13,MUTED,true);
+        todayChip.setGravity(Gravity.CENTER);tomorrowChip.setGravity(Gravity.CENTER);
+        switcher.addView(todayChip,new LinearLayout.LayoutParams(0,dp(40),1f));switcher.addView(tomorrowChip,new LinearLayout.LayoutParams(0,dp(40),1f));root.addView(switcher,lp(-1,44,0,0,0,10));
+        LinearLayout form=card();addText(form,"НОВАЯ ЗАДАЧА",12,PINK,true);
+        TextView counter=text("0 / 3 важных дела",11,MUTED,true);form.addView(counter,lp(-1,22,0,2,0,0));
+        EditText task=new EditText(this);task.setSingleLine(true);task.setHint("Например: повторить дроби");task.setTextColor(DARK);task.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));form.addView(task,lp(-1,48,0,7,0,8));
+        LinearLayout quick=new LinearLayout(this);quick.setGravity(Gravity.CENTER_VERTICAL);
+        String[] durations={"15 мин","30 мин","1 час"};for(String d:durations){TextView chip=text(d,10,MUTED,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(10),dp(7),dp(10),dp(7));chip.setBackground(shape(0xFFF7F3F4,14,0xFFEDE3E7));quick.addView(chip,lp(-2,30,0,0,6,0));chip.setOnClickListener(v->{task.setText(task.getText().toString().trim().isEmpty()?d+" · ":task.getText().toString()+" · "+d);task.setSelection(task.length());});}
+        form.addView(quick,lp(-1,34,0,0,0,6));
+        LinearLayout templates=new LinearLayout(this);templates.setGravity(Gravity.CENTER_VERTICAL);
+        String[] examples={"Повторить тему","Решить 5 задач","Сделать конспект"};for(String ex:examples){TextView chip=text(ex,10,PINK,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(8),dp(6),dp(8),dp(6));chip.setBackground(shape(0xFFFFF0F4,13,0));templates.addView(chip,lp(-2,30,0,0,5,0));chip.setOnClickListener(v->{task.setText(ex);task.setSelection(task.length());});}
+        form.addView(templates,lp(-1,34,0,0,0,7));
+        Button add=button("＋  Добавить в план",true);form.addView(add,lp(-1,46,0,0,0,0));root.addView(form,lp(-1,-2,0,0,0,10));
+        TextView overload=text("",11,PINK,true);root.addView(overload,lp(-1,-2,0,0,0,6));
+        LinearLayout list=new LinearLayout(this);list.setOrientation(LinearLayout.VERTICAL);root.addView(list,lp(-1,-2,0,0,0,8));
+        Button move=button("↗  Перенести незавершённое на завтра",false);root.addView(move,lp(-1,42,0,4,0,8));
+        Runnable[] render=new Runnable[1];
+        Runnable updateDate=()->{boolean isToday=selectedDate[0].equals(todayKey());todayChip.setTextColor(isToday?PINK:MUTED);tomorrowChip.setTextColor(isToday?MUTED:PINK);todayChip.setBackground(shape(isToday?0xFFFFFFFF:PALE,13,isToday?PINK:0));tomorrowChip.setBackground(shape(isToday?PALE:0xFFFFFFFF,13,isToday?0:PINK));};
+        todayChip.setOnClickListener(v->{selectedDate[0]=todayKey();updateDate.run();render[0].run();});
+        tomorrowChip.setOnClickListener(v->{Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));cal.add(Calendar.DAY_OF_YEAR,1);selectedDate[0]=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(cal.getTime());updateDate.run();render[0].run();});
+        render[0]=()->{
+            list.removeAllViews();String key="planner_tasks_"+selectedDate[0];Set<String> tasks=new TreeSet<>(prefs.getStringSet(key,new TreeSet<String>()));
+            counter.setText(tasks.size()+" / 3 важных дела");overload.setText(tasks.size()>=3?"Уже "+tasks.size()+" задач — точно хватит сил на ещё одну? ♡":"Можно добавить ещё одно важное дело, если есть силы");
+            move.setVisibility(tasks.isEmpty()||!selectedDate[0].equals(todayKey())?View.GONE:View.VISIBLE);
+            if(tasks.isEmpty()){addText(list,"Пока план свободен — выбери маленький шаг ♡",14,MUTED,false);LinearLayout suggestions=card();addText(suggestions,"ИДЕИ НА СЕГОДНЯ",11,PINK,true);for(String ex:examples){TextView suggestion=text("＋  "+ex,13,DARK,true);suggestions.addView(suggestion,lp(-1,38,0,2,0,0));suggestion.setOnClickListener(v->{task.setText(ex);task.setSelection(task.length());});}list.addView(suggestions,lp(-1,-2,0,8,0,0));}
+            for(String item:tasks){LinearLayout row=card();row.setOrientation(LinearLayout.HORIZONTAL);row.setGravity(Gravity.CENTER_VERTICAL);CheckBox done=new CheckBox(this);done.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));done.setText(item);done.setTextColor(DARK);row.addView(done,new LinearLayout.LayoutParams(0,dp(48),1f));Button del=button("×",false);del.setMinWidth(dp(38));row.addView(del);
+                done.setOnCheckedChangeListener((b,on)->{if(on){Set<String> latest=new TreeSet<>(prefs.getStringSet(key,new TreeSet<String>()));latest.remove(item);prefs.edit().putStringSet(key,latest).putInt("planner_completed_"+selectedDate[0],prefs.getInt("planner_completed_"+selectedDate[0],0)+1).apply();row.animate().alpha(0).setDuration(180).withEndAction(render[0]::run).start();}});
+                del.setOnClickListener(v->{Set<String> latest=new TreeSet<>(prefs.getStringSet(key,new TreeSet<String>()));latest.remove(item);prefs.edit().putStringSet(key,latest).apply();render[0].run();});list.addView(row,lp(-1,-2,0,0,0,7));}
+        };
+        move.setOnClickListener(v->{if(selectedDate[0].equals(todayKey())){Set<String> pending=new TreeSet<>(prefs.getStringSet("planner_tasks_"+selectedDate[0],new TreeSet<String>()));if(pending.isEmpty())return;Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));cal.add(Calendar.DAY_OF_YEAR,1);String tomorrow=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(cal.getTime());Set<String> next=new TreeSet<>(prefs.getStringSet("planner_tasks_"+tomorrow,new TreeSet<String>()));next.addAll(pending);prefs.edit().putStringSet("planner_tasks_"+tomorrow,next).putStringSet("planner_tasks_"+selectedDate[0],new TreeSet<String>()).apply();showSavedBanner("План обновлён","Незавершённые задачи перенесены на завтра ♡");render[0].run();}});
+        add.setOnClickListener(v->{String value=task.getText().toString().trim();if(value.isEmpty()){task.setError("Напиши задачу");return;}Set<String> tasks=new TreeSet<>(prefs.getStringSet("planner_tasks_"+selectedDate[0],new TreeSet<String>()));tasks.add(value);prefs.edit().putStringSet("planner_tasks_"+selectedDate[0],tasks).apply();task.setText("");render[0].run();});
+        updateDate.run();render[0].run();
     }
     private void showDetailedStats() {
         currentScreen="stats";saveForegroundUsage();base("Подробная статистика","Посмотри, как растёт твой учебный путь");int completed=0,total=0;
@@ -1281,13 +1307,17 @@ public class MainActivity extends Activity {
         String[] dayShort = {"Пн","Вт","Ср","Чт","Пт","Сб","Вс"};
         int[] calendarDays = {2,3,4,5,6,7,1};
         for (int d = 0; d < 7; d++) {
-            CheckBox cb = new CheckBox(this); cb.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK)); cb.setText(dayShort[d]); cb.setTextSize(11); cb.setTypeface(Typeface.DEFAULT,Typeface.BOLD); cb.setTextColor(DARK); cb.setGravity(Gravity.CENTER); cb.setPadding(dp(2),0,dp(2),0); cb.setBackground(shape(PALE,14,0xFFF0DCE4));
+            CheckBox cb = new CheckBox(this); cb.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK)); cb.setText(dayShort[d]); cb.setSingleLine(true); cb.setMinWidth(0); cb.setTextSize(11); cb.setTypeface(Typeface.DEFAULT,Typeface.BOLD); cb.setTextColor(DARK); cb.setGravity(Gravity.CENTER); cb.setPadding(dp(2),0,dp(2),0); cb.setBackground(shape(PALE,14,0xFFF0DCE4));
             cb.setChecked(savedDays.contains(String.valueOf(calendarDays[d])));
             cb.setBackground(shape(cb.isChecked()?0xFFF7DCE6:PALE,14,cb.isChecked()?PINK:0xFFF0DCE4));
             cb.setOnCheckedChangeListener((button,checked)->cb.setBackground(shape(checked?0xFFF7DCE6:PALE,14,checked?PINK:0xFFF0DCE4)));
             dayChecks.add(cb); LinearLayout.LayoutParams dayLp=new LinearLayout.LayoutParams(0,dp(46),1f);dayLp.setMargins(dp(2),0,dp(2),0);daysRow.addView(cb,dayLp);
         }
-        LinearLayout daysCard = card(); daysCard.addView(daysRow, lp(-1, 44, 0, 0, 0, 0)); root.addView(daysCard, lp(-1, -2, 0, 2, 0, 10));
+        LinearLayout daysCard = card(); daysCard.addView(daysRow, lp(-1, 44, 0, 0, 0, 0)); root.addView(daysCard, lp(-1, -2, 0, 2, 0, 6));
+        LinearLayout presets=new LinearLayout(this);presets.setGravity(Gravity.CENTER_VERTICAL);
+        String[] presetNames={"Каждый день","Будни","Выходные"};
+        for(String preset:presetNames){TextView chip=text(preset,10,PINK,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(10),dp(7),dp(10),dp(7));chip.setBackground(shape(0xFFFFF0F4,15,0));presets.addView(chip,lp(-2,32,0,0,5,0));chip.setOnClickListener(v->{for(int k=0;k<dayChecks.size();k++){boolean checked=preset.equals("Каждый день")||(preset.equals("Будни")&&k<5)||(preset.equals("Выходные")&&k>=5);dayChecks.get(k).setChecked(checked);}});}
+        root.addView(presets,lp(-1,36,0,0,0,8));
         addText(root, "ВРЕМЯ НАПОМИНАНИЙ", 12, PINK, true);
         reminderTimes.clear(); reminderTimes.addAll(getSavedTimes());
         LinearLayout timeList = new LinearLayout(this); timeList.setOrientation(LinearLayout.VERTICAL); root.addView(timeList, lp(-1, -2, 0, 4, 0, 8));
@@ -1297,9 +1327,12 @@ public class MainActivity extends Activity {
             if (reminderTimes.isEmpty()) addText(timeList, "Время не выбрано — напоминания выключены", 14, MUTED, false);
             for (String time : new ArrayList<>(reminderTimes)) {
                 LinearLayout row = new LinearLayout(this); row.setGravity(Gravity.CENTER_VERTICAL); row.setBackground(shape(PALE, 16, 0)); row.setPadding(dp(12),0,dp(6),0);
-                TextView label = text("◷  " + time, 16, DARK, true); row.addView(label, new LinearLayout.LayoutParams(0, dp(46), 1));
-                Button remove = button("×", false); remove.setTextSize(19); remove.setOnClickListener(v -> { reminderTimes.remove(time); renderTimes[0].run(); });
-                row.addView(remove, lp(42, 40, 6, 0, 0, 0)); timeList.addView(row, lp(-1, 48, 0, 3, 0, 3));
+                LinearLayout timeInfo=new LinearLayout(this);timeInfo.setOrientation(LinearLayout.VERTICAL);timeInfo.setGravity(Gravity.CENTER_VERTICAL);
+                TextView label = text("◷  " + time, 16, DARK, true);timeInfo.addView(label,lp(-1,24,0,0,0,0));
+                String slot=time.startsWith("10:")?"Утро":time.startsWith("15:")?"День":time.startsWith("19:")?"Вечер":time.startsWith("21:")?"Перед сном":"Напоминание";
+                TextView sub=text(slot,10,MUTED,false);timeInfo.addView(sub,lp(-1,16,0,0,0,0));row.addView(timeInfo,new LinearLayout.LayoutParams(0,dp(46),1));
+                Button remove = button("×", false); remove.setTextSize(16); remove.setMinWidth(dp(30)); remove.setPadding(0,0,0,0); remove.setOnClickListener(v -> { reminderTimes.remove(time); renderTimes[0].run(); });
+                row.addView(remove, lp(32, 34, 4, 0, 0, 0)); timeList.addView(row, lp(-1, 52, 0, 3, 0, 3));
             }
         };
         renderTimes[0].run();
@@ -1312,6 +1345,7 @@ public class MainActivity extends Activity {
             }, now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE), true).show();
         });
         root.addView(addTime, lp(-1, 48, 0, 4, 0, 14));
+        TextView summary=text(dayChecks.size()+" дней · "+reminderTimes.size()+" напоминания в день",11,MUTED,true);summary.setGravity(Gravity.CENTER);root.addView(summary,lp(-1,28,0,2,0,2));
         Button save = button("💗  Сохранить расписание", true);
         save.setOnClickListener(v -> {
             Set<String> days = new TreeSet<>();
@@ -1331,7 +1365,7 @@ public class MainActivity extends Activity {
             showHome();
         });
         root.addView(save, lp(-1, 54, 0, 4, 0, 8));
-        Button back = button("← Назад", false); back.setOnClickListener(v -> showSettings()); root.addView(back, lp(-1, 48, 0, 0, 0, 0));
+
     }
     private void backHome() { Button b = button("← Главное меню", false); b.setOnClickListener(v -> showHome()); root.addView(b, lp(-1, 50, 0, 18, 0, 0)); }
     private void ritualTile(LinearLayout row, String icon, String title, String subtitle, OnAction run) {
