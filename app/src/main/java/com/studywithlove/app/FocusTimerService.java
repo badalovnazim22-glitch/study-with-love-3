@@ -44,7 +44,7 @@ public class FocusTimerService extends Service {
     }
     private void finish(boolean rest){
         handler.removeCallbacks(tick);
-        if(!rest){recordFocus(segmentDuration);getSharedPreferences(PREFS,MODE_PRIVATE).edit().putBoolean("diary_prefill_timer_win",true).putBoolean("timer_finish_prompt_pending",true).apply();}
+        if(!rest){recordFocus(segmentDuration);if(!MainActivity.activityVisible)getSharedPreferences(PREFS,MODE_PRIVATE).edit().putBoolean("diary_prefill_timer_win",true).putBoolean("timer_finish_prompt_pending",true).apply();}
         clearSavedTimer();
         try{android.os.Vibrator vibrator=(android.os.Vibrator)getSystemService(VIBRATOR_SERVICE);if(Build.VERSION.SDK_INT>=26)vibrator.vibrate(VibrationEffect.createWaveform(new long[]{0,350,180,550},-1));else vibrator.vibrate(new long[]{0,350,180,550},-1);}catch(Exception ignored){}
         Uri sound=RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
