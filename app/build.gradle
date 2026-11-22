@@ -1,5 +1,10 @@
 plugins { id 'com.android.application' }
 
+def stableSigningConfigured = System.getenv("ANDROID_KEYSTORE_PATH") &&
+        System.getenv("ANDROID_KEYSTORE_PASSWORD") &&
+        System.getenv("ANDROID_KEY_ALIAS") &&
+        System.getenv("ANDROID_KEY_PASSWORD")
+
 android {
     namespace 'com.studywithlove.app'
     compileSdk 35
@@ -7,7 +12,26 @@ android {
         applicationId 'com.studywithlove.app'
         minSdk 23
         targetSdk 35
-        versionCode 9
-        versionName '4.0'
+        versionCode 10
+        versionName '4.1'
+    }
+
+    signingConfigs {
+        if (stableSigningConfigured) {
+            stableDebug {
+                storeFile file(System.getenv("ANDROID_KEYSTORE_PATH"))
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            if (stableSigningConfigured) {
+                signingConfig signingConfigs.getByName("stableDebug")
+            }
+        }
     }
 }
