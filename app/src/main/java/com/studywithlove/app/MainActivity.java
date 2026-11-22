@@ -64,6 +64,9 @@ public class MainActivity extends Activity {
     private long timerEndElapsed = 0L, timerRemainingMs = 0L;
     private boolean timerRunning = false, timerIsBreak = false;
     private long timerSessionStarted = 0L;
+    private volatile boolean ambiencePlaying=false;
+    private Thread ambienceThread;
+    private android.media.AudioTrack ambienceTrack;
     private static final String PREFS = "study_progress";
     private static final int PICK_BACKGROUND = 7412;
     private static final int BACKUP_EXPORT = 7413, BACKUP_IMPORT = 7414;
@@ -1095,6 +1098,15 @@ public class MainActivity extends Activity {
         root.addView(week,lp(-1,-2,0,0,0,12));backHome();
     }
 
+    private void startAmbience() {
+        stopAmbience();ambiencePlaying=true;ambienceThread=new Thread(()->{int rate=22050,chunk=2048;short[] samples=new short[chunk];java.util.Random random=new java.util.Random();double phase=0;String mode=prefs.getString("study_atmosphere","🌧️  Дождь за окном");int min=android.media.AudioTrack.getMinBufferSize(rate,android.media.AudioFormat.CHANNEL_OUT_MONO,android.media.AudioFormat.ENCODING_PCM_16BIT);int size=Math.max(min,chunk*4);
+            try{ambienceTrack=new android.media.AudioTrack(android.media.AudioManager.STREAM_MUSIC,rate,android.media.AudioFormat.CHANNEL_OUT_MONO,android.media.AudioFormat.ENCODING_PCM_16BIT,size,android.media.AudioTrack.MODE_STREAM);ambienceTrack.setVolume(.22f);ambienceTrack.play();double filtered=0;
+                while(ambiencePlaying){for(int i=0;i<chunk;i++){double noise=random.nextDouble()*2-1;filtered=filtered*.92+noise*.08;double value=0;if(mode.contains("Дождь"))value=filtered*.22+noise*.035;else if(mode.contains("кафе"))value=filtered*.13+Math.sin(phase)*.012;else if(mode.contains("природы"))value=filtered*.16+Math.sin(phase)*.025;else value=filtered*.09;phase+=2*Math.PI*110/rate;if(phase>Math.PI*2)phase-=Math.PI*2;samples[i]=(short)Math.max(-32767,Math.min(32767,value*12000));}ambienceTrack.write(samples,0,chunk);}
+            }catch(Exception ignored){}finally{try{if(ambienceTrack!=null){ambienceTrack.pause();ambienceTrack.flush();ambienceTrack.release();}}catch(Exception ignored){}ambienceTrack=null;ambiencePlaying=false;}},"StudyAmbience");ambienceThread.setDaemon(true);ambienceThread.start();
+    }
+    private void stopAmbience(){ambiencePlaying=false;if(ambienceTrack!=null){try{ambienceTrack.pause();}catch(Exception ignored){}}if(ambienceThread!=null){ambienceThread.interrupt();ambienceThread=null;}}
+    @Override protected void onDestroy(){stopAmbience();super.onDestroy();}
+
     private void showAtmosphere() {
         currentScreen = "atmosphere";
         base("Атмосфера учёбы", "Выбери настроение для спокойной концентрации");
@@ -1102,7 +1114,7 @@ public class MainActivity extends Activity {
         String[] descriptions={"Мягкий дождливый настрой","Тёплая атмосфера кофейни","Спокойствие и свежесть","Минимум отвлечений"};
         String chosen=prefs.getString("study_atmosphere",names[0]);
         for(int i=0;i<names.length;i++){final String n=names[i]; LinearLayout c=card(); addText(c,n,18,DARK,true); addText(c,descriptions[i],13,MUTED,false); Button b=button(chosen.equals(n)?"Выбрано ✓":"Выбрать",chosen.equals(n)); b.setOnClickListener(v->{prefs.edit().putString("study_atmosphere",n).apply();showAtmosphere();}); c.addView(b,lp(-1,44,0,8,0,0)); root.addView(c,lp(-1,-2,0,0,0,9));}
-        addText(root,"Сейчас доступны визуальные режимы. Для воспроизведения фоновых звуков потребуются встроенные аудиофайлы.",12,MUTED,false); backHome();
+        LinearLayout sound=card();addText(sound,"ЗВУКОВОЙ ФОН",12,PINK,true);addText(sound,"Мягкий фоновый шум для спокойной концентрации.",13,MUTED,false);Button play=button(ambiencePlaying?"Выключить звук":"Включить звук ♫",true);play.setOnClickListener(v->{if(ambiencePlaying){stopAmbience();}else{startAmbience();}showAtmosphere();});sound.addView(play,lp(-1,46,0,8,0,0));root.addView(sound,lp(-1,-2,0,0,0,10));backHome();
     }
 
     private int countStudyDaysThisMonth(Set<String> days, int year, int month) {
