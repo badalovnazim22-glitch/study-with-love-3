@@ -1420,11 +1420,11 @@ public class MainActivity extends Activity {
                 for(String topic:e.getValue())if(topic.toLowerCase(Locale.ROOT).contains(q))matches.add(display+"  •  "+topic+"\t"+ch+"\n"+topic);
             }
             if(matches.isEmpty()){new android.app.AlertDialog.Builder(MainActivity.this).setTitle("Ничего не найдено").setMessage("Попробуй изменить запрос ♡").setPositiveButton("Понятно",null).show();return;}
-            String[] items=matches.toArray(new String[0]);
+            String[] rawItems=matches.toArray(new String[0]);String[] items=rawItems.clone();
             for(int i=0;i<items.length;i++){String raw=items[i];int tab=raw.indexOf("\t");int nl=raw.indexOf("\n");items[i]=raw.substring(0,tab>=0?tab:(nl>=0?nl:raw.length()));}
             new android.app.AlertDialog.Builder(MainActivity.this).setTitle("Результаты поиска").setItems(items,(dlg,which)->{
-                String[] parts=items[which].split("\\t",2);if(parts.length<2)return;selectedChapter=parts[1];
-                if(items[which].contains("\n")){selectedTopic=items[which].substring(items[which].indexOf("\n")+1);showTopic(selectedTopic);}else showTopics(selectedChapter);
+                String[] parts=rawItems[which].split("\\t",2);if(parts.length<2)return;selectedChapter=parts[1];
+                if(rawItems[which].contains("\n")){selectedTopic=rawItems[which].substring(rawItems[which].indexOf("\n")+1);showTopic(selectedTopic);}else showTopics(selectedChapter);
             }).show();
         }).create();
         query.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int st,int count,int after){}public void onTextChanged(CharSequence s,int st,int before,int count){clear.setVisibility(s.length()>0?View.VISIBLE:View.GONE);}public void afterTextChanged(android.text.Editable e){}});
