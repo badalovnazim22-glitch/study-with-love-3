@@ -1136,7 +1136,7 @@ public class MainActivity extends Activity {
         LinearLayout durationRow=new LinearLayout(this);durationRow.setGravity(Gravity.CENTER_VERTICAL);form.addView(durationRow,lp(-1,38,0,3,0,7));
         TextView[] durationViews=new TextView[durations.length];
         Runnable refreshDuration=()->{for(int i=0;i<durations.length;i++){boolean on=duration[0].equals(durations[i]);durationViews[i].setTextColor(on?0xFFFFFFFF:PINK);durationViews[i].setBackground(shape(on?PINK:0xFFFFF0F4,15,on?PINK:0));}};
-        for(int i=0;i<durations.length;i++){final String value=durations[i];TextView chip=text(value,11,PINK,true);chip.setGravity(Gravity.CENTER);durationViews[i]=chip;durationRow.addView(chip,lp(0,32,0,0,6,0),new LinearLayout.LayoutParams(0,dp(32),1f));chip.setOnClickListener(v->{duration[0]=value;refreshDuration.run();});}
+        for(int i=0;i<durations.length;i++){final String value=durations[i];TextView chip=text(value,11,PINK,true);chip.setGravity(Gravity.CENTER);durationViews[i]=chip;LinearLayout.LayoutParams durationLp=new LinearLayout.LayoutParams(0,dp(32),1f);durationLp.setMargins(0,0,dp(6),0);durationRow.addView(chip,durationLp);chip.setOnClickListener(v->{duration[0]=value;refreshDuration.run();});}
         addText(form,"ЧТО ДЕЛАЕМ?",10,MUTED,true);
         LinearLayout actionRow=new LinearLayout(this);actionRow.setGravity(Gravity.CENTER_VERTICAL);form.addView(actionRow,lp(-1,38,0,3,0,7));
         TextView[] actionViews=new TextView[actions.length];
