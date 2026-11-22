@@ -1,0 +1,21 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="600dp" android:height="280dp" android:viewportWidth="600" android:viewportHeight="280">
+    <path android:fillColor="#FFEADFFF" android:pathData="M0,0h600v280h-600z"/>
+    <path android:fillColor="#FFF9E9F7" android:pathData="M0,0h600v22h-600z"/>
+    <path android:fillColor="#FFFFD9E8" android:pathData="M0,0h90v280h-90z"/>
+    <path android:fillColor="#FFD8C8F2" android:pathData="M380,0h220v208h-220z"/>
+    <path android:fillColor="#FFFFE9B8" android:pathData="M420,30a76,76 0,1 0,152 0a76,76 0,1 0,-152 0"/>
+    <path android:fillColor="#FFBDA9E8" android:pathData="M380,150l68,-65 48,44 40,-34 64,60v53h-220z"/>
+    <path android:fillColor="#FF9E8BD1" android:pathData="M380,174l64,-37 48,30 52,-44 56,41v44h-220z"/>
+    <path android:fillColor="#FFFFC9DD" android:pathData="M0,190c65,-25 110,-18 166,3c62,-42 115,-31 166,0c74,-38 137,-28 202,0v87h-534z"/>
+    <path android:fillColor="#FF9C7ACD" android:pathData="M0,246c76,-22 146,-18 214,0c80,-24 151,-18 221,0c62,-17 111,-12 165,0v34h-600z"/>
+    <path android:fillColor="#FFFFF8FD" android:pathData="M390,0h8v210h-8zM492,0h7v210h-7zM380,102h220v7h-220z"/>
+    <path android:fillColor="#FFB87DD0" android:pathData="M38,0h7v280h-7zM88,0h7v280h-7z"/>
+    <path android:fillColor="#FF8D6CC1" android:pathData="M50,222c-4,-30 5,-50 20,-62c13,16 19,36 14,62z"/>
+    <path android:fillColor="#FF8D6CC1" android:pathData="M65,206c-23,-23 -38,-26 -49,-19c7,21 23,30 49,30z"/>
+    <path android:fillColor="#FFFFF7FB" android:pathData="M24,226h72l-9,42h-54z"/>
+    <path android:fillColor="#FFFFD1E4" android:pathData="M20,220h80v12h-80z"/>
+    <path android:fillColor="#FFFFF4C8" android:pathData="M190,50c0,-10 8,-18 18,-18s18,8 18,18s-8,18 -18,18s-18,-8 -18,-18"/>
+    <path android:fillColor="#FFFFFFFF" android:pathData="M240,92c0,-7 6,-13 13,-13s13,6 13,13s-6,13 -13,13s-13,-6 -13,-13"/>
+    <path android:fillColor="#FFFFB7D4" android:pathData="M300,48c0,-8 6,-14 14,-14s14,6 14,14s-6,14 -14,14s-14,-6 -14,-14"/>
+</vector>
