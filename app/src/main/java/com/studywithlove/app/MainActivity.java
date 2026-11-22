@@ -371,7 +371,7 @@ public class MainActivity extends Activity {
     }
 
         private void showHome() {
-        currentScreen = "home";
+        currentScreen = "home"; StudyWidgetProvider.updateAll(this);
         base("Привет, " + prefs.getString("display_name", "Назка") + "! ♡", "Сегодня — хороший день, чтобы сделать маленький шаг к своей цели.");
         int done = prefs.getInt("done_count", 0);
         int streak = currentStreak();
