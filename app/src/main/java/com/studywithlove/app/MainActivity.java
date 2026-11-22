@@ -960,8 +960,6 @@ public class MainActivity extends Activity {
     }
 
     private void showSavedBanner(String title, String subtitle) {
-
-    private void showSavedBanner(String title, String subtitle) {
         LinearLayout banner=new LinearLayout(this);banner.setOrientation(LinearLayout.HORIZONTAL);banner.setGravity(Gravity.CENTER_VERTICAL);
         banner.setPadding(dp(16),dp(11),dp(18),dp(11));banner.setBackground(shape(PALE,20,0));banner.setElevation(dp(8));
         TextView icon=text("♡",25,PINK,true);icon.setGravity(Gravity.CENTER);banner.addView(icon,lp(34,36,0,0,10,0));
