@@ -408,9 +408,11 @@ public class MainActivity extends Activity {
     private void showChapters() {
         currentScreen = "chapters";
         base("Уроки 📚", "Выбери предмет или создай свой урок");
+        LinearLayout lessonHead=new LinearLayout(this);lessonHead.setGravity(Gravity.CENTER_VERTICAL);TextView orderLabel=text("МОИ ПРЕДМЕТЫ",11,PINK,true);lessonHead.addView(orderLabel,new LinearLayout.LayoutParams(0,dp(34),1f));Button orderButton=button("⋮",false);orderButton.setTextSize(23);orderButton.setPadding(0,0,0,0);lessonHead.addView(orderButton,lp(44,38,0,0,0,0));root.addView(lessonHead,lp(-1,40,0,0,0,8));orderButton.setOnClickListener(v->{android.widget.PopupMenu menu=new android.widget.PopupMenu(this,orderButton);menu.getMenu().add(0,1,0,"По умолчанию");menu.getMenu().add(0,2,1,"По названию А—Я");menu.getMenu().add(0,3,2,"Сначала новые");menu.setOnMenuItemClickListener(mi->{prefs.edit().putString("lesson_sort",mi.getItemId()==2?"alpha":mi.getItemId()==3?"new":"default").apply();showChapters();return true;});menu.show();});
         actionRegular("📐  Математика", "Все разделы и темы по математике", () -> showMathChapters());
         Set<String> ids = prefs.getStringSet("custom_lesson_ids", new TreeSet<String>());
-        for (String id : ids) {
+        List<String> lessonOrder=new ArrayList<>(ids);String sort=prefs.getString("lesson_sort","default");if("alpha".equals(sort))java.util.Collections.sort(lessonOrder,(a,b)->prefs.getString("custom_lesson_name_"+a,"").compareToIgnoreCase(prefs.getString("custom_lesson_name_"+b,"")));else if("new".equals(sort))java.util.Collections.sort(lessonOrder,java.util.Collections.reverseOrder());
+        for (String id : lessonOrder) {
             String name = prefs.getString("custom_lesson_name_" + id, "Мой урок");
             actionRegular(prefs.getString("custom_lesson_emoji_"+id,"📚")+"  " + name, chapters.get("CUSTOM:" + id + ":" + name).size() + " тем", () -> { selectedChapter = "CUSTOM:" + id + ":" + name; showTopics(selectedChapter); });
         }
@@ -438,21 +440,27 @@ public class MainActivity extends Activity {
                 selectedChapter="CUSTOM:"+id+":"+name;chapters.put(selectedChapter,new ArrayList<String>());showTopics(selectedChapter);
             }).show();
     }
-    private void addCustomTopic(String chapter) {
-        EditText input=new EditText(this);input.setSingleLine(true);input.setHint("Название темы");
-        new android.app.AlertDialog.Builder(this).setTitle("Новая тема").setView(input).setNegativeButton("Отмена",null).setPositiveButton("Добавить",(d,w)->{
-            String topic=input.getText().toString().trim();if(topic.isEmpty()){Toast.makeText(this,"Введи название темы",Toast.LENGTH_SHORT).show();return;}
-            String[] parts=chapter.split(":",3);if(parts.length<3)return;
-            Set<String> topics=new TreeSet<>(prefs.getStringSet("custom_lesson_topics_"+parts[1],new TreeSet<String>()));topics.add(topic);
-            prefs.edit().putStringSet("custom_lesson_topics_"+parts[1],topics).apply();chapters.put(chapter,new ArrayList<>(topics));showTopics(chapter);
+    private String topicContentKey(String lessonId,String topic){return "custom_topic_content_"+lessonId+"_"+android.util.Base64.encodeToString(topic.getBytes(java.nio.charset.StandardCharsets.UTF_8),android.util.Base64.URL_SAFE|android.util.Base64.NO_WRAP);}
+    private void openCustomTopicDialog(String chapter,String oldName,String oldContent){
+        String[] parts=chapter.split(":",3);if(parts.length<3)return;String lessonId=parts[1];
+        LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(dp(20),dp(8),dp(20),dp(4));
+        TextView note=text("Название и материал темы можно будет изменить позже.",12,MUTED,false);body.addView(note,lp(-1,-2,0,0,0,8));
+        EditText name=new EditText(this);name.setSingleLine(true);name.setTextSize(16);name.setTextColor(DARK);name.setHint("Название темы");name.setText(oldName==null?"":oldName);name.setPadding(dp(13),dp(8),dp(13),dp(8));name.setBackground(shape(0xFFFFF9F7,14,0xFFEADDE2));body.addView(name,lp(-1,50,0,0,0,9));
+        EditText content=new EditText(this);content.setTextSize(15);content.setTextColor(DARK);content.setHint("Добавь конспект, объяснение или заметки…");content.setGravity(Gravity.TOP);content.setMinLines(4);content.setText(oldContent);content.setPadding(dp(13),dp(12),dp(13),dp(12));content.setBackground(shape(0xFFFFF9F7,14,0xFFEADDE2));body.addView(content,lp(-1,118,0,0,0,0));
+        new android.app.AlertDialog.Builder(this).setTitle(oldName==null?"♡  Новая тема":"✎  Изменить тему").setView(body).setNegativeButton("Отмена",null).setPositiveButton(oldName==null?"Добавить":"Сохранить",(d,w)->{
+            String n=name.getText().toString().trim();if(n.isEmpty()){name.setError("Введи название");return;}
+            Set<String> topics=new TreeSet<>(prefs.getStringSet("custom_lesson_topics_"+lessonId,new TreeSet<String>()));SharedPreferences.Editor e=prefs.edit();
+            if(oldName!=null&&!oldName.equals(n)){topics.remove(oldName);topics.add(n);int oldProgress=prefs.getInt("progress_"+oldName,0);e.remove("progress_"+oldName).remove("done_"+oldName);if(oldProgress>0)e.putInt("progress_"+n,oldProgress);e.remove(topicContentKey(lessonId,oldName));}else topics.add(n);
+            e.putStringSet("custom_lesson_topics_"+lessonId,topics).putString(topicContentKey(lessonId,n),content.getText().toString().trim()).apply();chapters.put(chapter,new ArrayList<>(topics));if(oldName!=null&&oldName.equals(selectedTopic))selectedTopic=n;showTopics(chapter);
         }).show();
     }
+    private void addCustomTopic(String chapter){openCustomTopicDialog(chapter,null,"");}
 
     private void showTopics(String chapter) {
         currentScreen = "topics";
         boolean customLesson = chapter.startsWith("CUSTOM:");
         base(customLesson ? chapter.split(":", 3)[2] : chapter, "Выбери тему, которую хочешь изучить:");
-        for (String topic : chapters.get(chapter)) {
+        List<String> topicOrder=new ArrayList<>(chapters.get(chapter));if(customLesson&&"alpha".equals(prefs.getString("lesson_sort","default")))java.util.Collections.sort(topicOrder,String.CASE_INSENSITIVE_ORDER);for (String topic : topicOrder) {
             int percent = topicProgress(topic);
             action((percent == 100 ? "✓  " : "♡  ") + topic, "Изучено на " + percent + "%", () -> { selectedTopic = topic; showTopic(topic); });
         }
@@ -466,12 +474,13 @@ public class MainActivity extends Activity {
         int percent = topicProgress(topic);
         LinearLayout box = card();
         addText(box, topic, 20, DARK, true);
-        addText(box, "Открой соответствующий урок в учебнике, изучи материал и реши задания. Отмечай свой прогресс — он сохранится автоматически.", 15, MUTED, false);
+        String customBody="";if(selectedChapter!=null&&selectedChapter.startsWith("CUSTOM:")){String[] customParts=selectedChapter.split(":",3);if(customParts.length>=2)customBody=prefs.getString(topicContentKey(customParts[1],topic),"");}addText(box,customBody.isEmpty()?"Открой соответствующий урок в учебнике, изучи материал и реши задания. Отмечай свой прогресс — он сохранится автоматически.":customBody,15,MUTED,false);
         topicProgressLabel = text("ТВОЙ ПРОГРЕСС: " + percent + "%", 13, PINK, true); box.addView(topicProgressLabel, lp(-1, -2, 0, 0, 0, 5));
         topicProgressBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal); topicProgressBar.setMax(100); topicProgressBar.setProgress(percent);
         if (Build.VERSION.SDK_INT >= 21) { topicProgressBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK)); topicProgressBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFE2EA)); }
         box.addView(topicProgressBar, lp(-1, 8, 0, 0, 0, 5));
         root.addView(box, lp(-1, -2, 0, 0, 0, 14));
+        if(selectedChapter!=null&&selectedChapter.startsWith("CUSTOM:")){String[] cp=selectedChapter.split(":",3);if(cp.length>=2){LinearLayout manage=new LinearLayout(this);Button editTopic=button("✎  Изменить содержание",false),deleteTopic=button("Удалить тему",false);manage.addView(editTopic,new LinearLayout.LayoutParams(0,dp(44),1f));manage.addView(deleteTopic,new LinearLayout.LayoutParams(0,dp(44),1f));editTopic.setOnClickListener(v->openCustomTopicDialog(selectedChapter,topic,prefs.getString(topicContentKey(cp[1],topic),"")));deleteTopic.setOnClickListener(v->{new android.app.AlertDialog.Builder(this).setTitle("Удалить тему?").setMessage("Тема и её содержание будут удалены.").setNegativeButton("Отмена",null).setPositiveButton("Удалить",(d,w)->{Set<String> ts=new TreeSet<>(prefs.getStringSet("custom_lesson_topics_"+cp[1],new TreeSet<String>()));ts.remove(topic);prefs.edit().putStringSet("custom_lesson_topics_"+cp[1],ts).remove(topicContentKey(cp[1],topic)).remove("progress_"+topic).remove("done_"+topic).apply();chapters.put(selectedChapter,new ArrayList<>(ts));showTopics(selectedChapter);}).show();});root.addView(manage,lp(-1,48,0,0,0,12));}}
 
         addText(root, "ОТМЕТИТЬ ПРОГРЕСС", 12, PINK, true);
         LinearLayout levels = new LinearLayout(this);
@@ -897,37 +906,15 @@ public class MainActivity extends Activity {
         banner.setAlpha(0f);banner.setTranslationY(dp(18));banner.animate().alpha(1f).translationY(0).setDuration(260).start();
     }
 
-    private void renderDiaryEntries(LinearLayout entries, EditText note, Button save, String[] editingId) {
-        entries.removeAllViews();
-        Set<String> ids = new TreeSet<>(prefs.getStringSet("diary_ids", new TreeSet<String>()));
-        List<String> sorted = new ArrayList<>(ids);
-        java.util.Collections.sort(sorted, java.util.Collections.reverseOrder());
-        if (sorted.isEmpty()) {
-            LinearLayout empty = card(); empty.setGravity(Gravity.CENTER);
-            addText(empty, "🌷", 30, PINK, true);
-            addText(empty, "Здесь появятся твои маленькие победы", 15, DARK, true);
-            addText(empty, "Сохрани первую запись — тебе будет приятно перечитать её позже.", 13, MUTED, false);
-            entries.addView(empty, lp(-1, -2, 0, 0, 0, 10));
-        }
-        for (String id : sorted) {
-            String value = prefs.getString("diary_" + id, ""); if (value.isEmpty()) continue;
-            LinearLayout entry = card();
-            entry.setBackground(shape(0xFFFFFFFF, 23, 0xFFF0E4E8));
-            String date = new SimpleDateFormat("d MMMM yyyy · HH:mm", new Locale("ru")).format(new Date(Long.parseLong(id)));
-            addText(entry, "✿  " + date, 13, PINK, true);
-            addText(entry, value, 16, DARK, false);
-            Button edit = button("Изменить", false);
-            edit.setOnClickListener(v -> { note.setText(prefs.getString("diary_" + id, "")); editingId[0] = id; save.setText("♡  Сохранить изменения"); note.requestFocus(); });
-            entry.addView(edit, lp(-1, 42, 0, 8, 0, 5));
-            Button delete = button("Удалить запись", false);
-            delete.setOnClickListener(v -> {
-                Set<String> updated = new TreeSet<>(prefs.getStringSet("diary_ids", new TreeSet<String>()));
-                updated.remove(id); prefs.edit().remove("diary_" + id).putStringSet("diary_ids", updated).apply();
-                if (id.equals(editingId[0])) { editingId[0] = null; note.setText(""); save.setText("♡  Сохранить запись"); }
-                renderDiaryEntries(entries, note, save, editingId);
-            });
-            entry.addView(delete, lp(-1, 42, 0, 0, 0, 0));
-            entries.addView(entry, lp(-1, -2, 0, 0, 0, 10));
+    private void renderDiaryEntries(LinearLayout entries,EditText note,Button save,String[] editingId){
+        entries.removeAllViews();Set<String> ids=new TreeSet<>(prefs.getStringSet("diary_ids",new TreeSet<String>()));List<String> sorted=new ArrayList<>(ids);java.util.Collections.sort(sorted,java.util.Collections.reverseOrder());
+        if(sorted.isEmpty()){LinearLayout empty=card();empty.setGravity(Gravity.CENTER);addText(empty,"🌷",30,PINK,true);addText(empty,"Здесь появятся твои маленькие победы",15,DARK,true);addText(empty,"Сохрани первую запись — тебе будет приятно перечитать её позже.",13,MUTED,false);entries.addView(empty,lp(-1,-2,0,0,0,10));}
+        for(String id:sorted){String value=prefs.getString("diary_"+id,"");if(value.isEmpty())continue;LinearLayout entry=card();entry.setBackground(shape(0xFFFFFFFF,23,0xFFF0E4E8));String date=new SimpleDateFormat("d MMMM yyyy · HH:mm",new Locale("ru")).format(new Date(Long.parseLong(id)));addText(entry,"✿  "+date,13,PINK,true);
+            TextView body=text(value,16,DARK,false);body.setGravity(Gravity.TOP);body.setPadding(0,dp(4),0,dp(8));entry.addView(body,lp(-1,-2,0,0,0,5));
+            LinearLayout editArea=new LinearLayout(this);editArea.setOrientation(LinearLayout.VERTICAL);editArea.setVisibility(View.GONE);EditText editText=new EditText(this);editText.setText(value);editText.setTextSize(15);editText.setTextColor(DARK);editText.setGravity(Gravity.TOP);editText.setMinLines(3);editText.setPadding(dp(12),dp(10),dp(12),dp(10));editText.setBackground(shape(0xFFFFF9F7,15,0xFFEADDE2));editArea.addView(editText,lp(-1,108,0,0,0,7));LinearLayout editActions=new LinearLayout(this);Button saveInline=button("Сохранить",true),cancelInline=button("Отмена",false);editActions.addView(saveInline,new LinearLayout.LayoutParams(0,dp(42),1f));editActions.addView(cancelInline,new LinearLayout.LayoutParams(0,dp(42),1f));editArea.addView(editActions);entry.addView(editArea,lp(-1,-2,0,0,0,0));
+            LinearLayout actions=new LinearLayout(this);Button edit=button("Изменить",false),del=button("Удалить запись",false);actions.addView(edit,new LinearLayout.LayoutParams(0,dp(42),1f));actions.addView(del,new LinearLayout.LayoutParams(0,dp(42),1f));entry.addView(actions,lp(-1,46,0,5,0,0));
+            edit.setOnClickListener(v->{body.setVisibility(View.GONE);actions.setVisibility(View.GONE);editArea.setVisibility(View.VISIBLE);editText.requestFocus();});cancelInline.setOnClickListener(v->{editText.setText(prefs.getString("diary_"+id,""));editArea.setVisibility(View.GONE);body.setVisibility(View.VISIBLE);actions.setVisibility(View.VISIBLE);});saveInline.setOnClickListener(v->{String updated=editText.getText().toString().trim();if(updated.isEmpty()){editText.setError("Напиши пару слов");return;}prefs.edit().putString("diary_"+id,updated).apply();showSavedBanner("Запись обновлена","Изменения сохранены в этой записи ♡");renderDiaryEntries(entries,note,save,editingId);});
+            del.setOnClickListener(v->{entry.animate().alpha(0f).translationX(dp(24)).setDuration(220).withEndAction(()->{Set<String> latest=new TreeSet<>(prefs.getStringSet("diary_ids",new TreeSet<String>()));latest.remove(id);prefs.edit().remove("diary_"+id).putStringSet("diary_ids",latest).apply();renderDiaryEntries(entries,note,save,editingId);}).start();});entries.addView(entry,lp(-1,-2,0,0,0,10));
         }
     }
 
@@ -975,15 +962,19 @@ public class MainActivity extends Activity {
     private class FlowerArtView extends View {
         private final android.graphics.Paint p=new android.graphics.Paint(3);private final int type,days;
         FlowerArtView(android.content.Context c,int t,int d){super(c);type=t;days=d;}
-        @Override protected void onDraw(android.graphics.Canvas canvas){super.onDraw(canvas);float cx=getWidth()/2f,cy=getHeight()*.78f,top=getHeight()*.25f;int[] colors={0xFFE88DAA,0xFFF2B6C8,0xFFF4C75E,0xFFD6A1D8,0xFFEFA27F};int petal=colors[type];
-            p.setColor(0xFF4D9360);p.setStrokeWidth(5);p.setStrokeCap(android.graphics.Paint.Cap.ROUND);canvas.drawLine(cx,cy,cx,top+25,p);
-            android.graphics.Path leaf=new android.graphics.Path();leaf.moveTo(cx,cy*.78f);leaf.cubicTo(cx-48,cy*.57f,cx-42,cy*.48f,cx-7,cy*.63f);leaf.cubicTo(cx+3,cy*.67f,cx+4,cy*.73f,cx,cy*.78f);p.setColor(0xFF65A875);canvas.drawPath(leaf,p);
-            android.graphics.Path leaf2=new android.graphics.Path();leaf2.moveTo(cx,cy*.68f);leaf2.cubicTo(cx+48,cy*.46f,cx+44,cy*.39f,cx+7,cy*.54f);leaf2.cubicTo(cx-2,cy*.59f,cx-3,cy*.64f,cx,cy*.68f);canvas.drawPath(leaf2,p);
-            float fx=cx,fy=top+12;for(int i=0;i<9;i++){canvas.save();canvas.rotate(i*40,fx,fy);p.setShader(new android.graphics.RadialGradient(fx,fy-20,32,new int[]{0xFFFFF7E8,petal,0xFFCA6F91},null,android.graphics.Shader.TileMode.CLAMP));canvas.drawOval(fx-13,fy-39,fx+13,fy+7,p);p.setShader(null);canvas.restore();}
-            p.setColor(0xFFF4C95D);canvas.drawCircle(fx,fy,13,p);p.setColor(0xFFB77A37);canvas.drawCircle(fx-4,fy-3,2,p);canvas.drawCircle(fx+4,fy+2,2,p);
-            if(days<3){p.setColor(0xFF6EA879);canvas.drawOval(cx-9,cy-46,cx+9,cy-13,p);}
+        private void petal(android.graphics.Canvas c,float x,float y,float rx,float ry,int light,int mid,int dark){
+            p.setStyle(android.graphics.Paint.Style.FILL);p.setShader(new android.graphics.LinearGradient(x-rx,y-ry,x+rx,y+ry,light,mid,android.graphics.Shader.TileMode.CLAMP));c.drawOval(x-rx,y-ry,x+rx,y+ry,p);p.setShader(null);p.setStyle(android.graphics.Paint.Style.STROKE);p.setStrokeWidth(dp(1));p.setColor(dark);c.drawLine(x,y-ry*.65f,x,y+ry*.55f,p);p.setStyle(android.graphics.Paint.Style.FILL);
+        }
+        @Override protected void onDraw(android.graphics.Canvas c){super.onDraw(c);float w=getWidth(),h=getHeight(),stemX=w*.5f,baseY=h*.91f,headY=h*.29f;int[][] palettes={{0xFFFFD6E1,0xFFE879A0,0xFFB94B70},{0xFFFFE4EE,0xFFF3A9C1,0xFFC86C8A},{0xFFFFF1B8,0xFFEABF45,0xFFB77C20},{0xFFF3D9F4,0xFFC78BCB,0xFF89558F},{0xFFFFDCCB,0xFFEB9875,0xFFB95F48}};int[] col=palettes[type%palettes.length];
+            p.setStyle(android.graphics.Paint.Style.STROKE);p.setStrokeWidth(dp(5));p.setStrokeCap(android.graphics.Paint.Cap.ROUND);p.setColor(0xFF397A45);android.graphics.Path stem=new android.graphics.Path();stem.moveTo(stemX,baseY);stem.cubicTo(stemX-4,baseY-55,stemX+8,headY+55,stemX,headY+8);c.drawPath(stem,p);p.setStyle(android.graphics.Paint.Style.FILL);
+            android.graphics.Path left=new android.graphics.Path();left.moveTo(stemX,baseY*.79f);left.cubicTo(stemX-42,baseY*.69f,stemX-48,baseY*.59f,stemX-12,baseY*.64f);left.cubicTo(stemX-4,baseY*.67f,stemX-1,baseY*.73f,stemX,baseY*.79f);p.setShader(new android.graphics.LinearGradient(stemX-45,baseY*.6f,stemX+3,baseY*.8f,0xFF9BCB70,0xFF347A43,android.graphics.Shader.TileMode.CLAMP));c.drawPath(left,p);p.setShader(null);p.setColor(0xFFDBE9A4);p.setStrokeWidth(dp(1));c.drawLine(stemX-5,baseY*.73f,stemX-37,baseY*.65f,p);
+            android.graphics.Path right=new android.graphics.Path();right.moveTo(stemX,baseY*.69f);right.cubicTo(stemX+40,baseY*.56f,stemX+49,baseY*.49f,stemX+13,baseY*.55f);right.cubicTo(stemX+4,baseY*.59f,stemX+1,baseY*.64f,stemX,baseY*.69f);p.setShader(new android.graphics.LinearGradient(stemX,baseY*.5f,stemX+45,baseY*.7f,0xFFB5D77C,0xFF397D48,android.graphics.Shader.TileMode.CLAMP));c.drawPath(right,p);p.setShader(null);p.setColor(0xFFDDEBA7);c.drawLine(stemX+5,baseY*.63f,stemX+38,baseY*.55f,p);
+            float fx=stemX,fy=headY;for(int ring=0;ring<2;ring++){int count=ring==0?12:10;for(int j=0;j<count;j++){c.save();c.rotate(j*360f/count+(ring==0?0:18),fx,fy);float yy=ring==0?-23:-18;petal(c,fx,fy+yy,ring==0?8.5f:7f,ring==0?27:21,ring==0?col[0]:col[1],col[1],col[2]);c.restore();}}
+            p.setShader(new android.graphics.RadialGradient(fx-3,fy-4,14,new int[]{0xFFFFF4B2,0xFFFFC84D,0xFFB66A22},null,android.graphics.Shader.TileMode.CLAMP));c.drawCircle(fx,fy,13,p);p.setShader(null);p.setColor(0xFF8F5523);for(int k=0;k<18;k++){double a=k*2.399;float r=3+(k%4)*2;c.drawCircle(fx+(float)Math.cos(a)*r,fy+(float)Math.sin(a)*r,1.15f,p);}
+            if(days<3){p.setColor(0xFF6C9D4F);c.drawOval(fx-8,fy+20,fx+8,fy+43,p);}
         }
     }
+
     private class WaterCanView extends View {
         private final android.graphics.Paint p=new android.graphics.Paint(3);
         WaterCanView(android.content.Context c){super(c);}
