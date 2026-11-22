@@ -668,7 +668,6 @@ public class MainActivity extends Activity {
 
     private String dailyMotivation() { return "✧  "+messages[Math.floorMod(todayKey().hashCode(),messages.length)]; }
      private String word(int n) { int x=n%10, y=n%100; if(x==1 && y!=11)return "урок"; if(x>=2&&x<=4&&(y<12||y>14))return "урока"; return "уроков"; }
-    private String dayWord(int n){int x=n%10,y=n%100;if(x==1&&y!=11)return "день";if(x>=2&&x<=4&&(y<12||y>14))return "дня";return "дней";}
     private void showChapters() {
         currentScreen = "chapters";
         base("Уроки 📚", "Выбери предмет или создай свой урок");
