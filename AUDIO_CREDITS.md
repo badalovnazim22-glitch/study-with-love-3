@@ -1,6 +1,6 @@
 # Audio assets
 
-The app bundles these ambience recordings at build time in `app/build/generated/ambienceRes/raw`.
+The app streams these ambience recordings from Wikimedia Commons and loops them with the selected volume. An internet connection is required.
 
 - **Rain** — “Rain.ogg”, author ジダネ, Wikimedia Commons. Released into the public domain by the author. https://commons.wikimedia.org/wiki/File:Rain.ogg
 - **Cafe** — “Cafe ambiance.ogg”, Marble Toast, Wikimedia Commons. CC0 1.0. https://commons.wikimedia.org/wiki/File:Cafe_ambiance.ogg
