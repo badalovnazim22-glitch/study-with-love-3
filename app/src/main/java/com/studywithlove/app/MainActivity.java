@@ -790,6 +790,7 @@ public class MainActivity extends Activity {
         LinearLayout box = card();
         addText(box, topic, 20, DARK, true);
         String customBody="";if(selectedChapter!=null&&selectedChapter.startsWith("CUSTOM:")){String[] customParts=selectedChapter.split(":",3);if(customParts.length>=2)customBody=prefs.getString(topicContentKey(customParts[1],topic),"");}addText(box,customBody.isEmpty()?"Открой соответствующий урок в учебнике, изучи материал и реши задания. Отмечай свой прогресс — он сохранится автоматически.":customBody,15,MUTED,false);
+        Button mini=button("📝  Мини-тест по теме · 5 вопросов",true);mini.setOnClickListener(v->startMiniTest(topic));root.addView(mini,lp(-1,50,0,0,0,12));
         topicProgressLabel = text("ТВОЙ ПРОГРЕСС: " + percent + "%", 13, PINK, true); box.addView(topicProgressLabel, lp(-1, -2, 0, 0, 0, 5));
         topicProgressBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal); topicProgressBar.setMax(100); topicProgressBar.setProgress(percent);
         if (Build.VERSION.SDK_INT >= 21) { topicProgressBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK)); topicProgressBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFE2EA)); }
@@ -823,6 +824,55 @@ public class MainActivity extends Activity {
         Button back = button("← К темам", false);
         back.setOnClickListener(v -> onBackPressed());
         root.addView(back, lp(-1, 50, 0, 0, 0, 0));
+    }
+
+    private void showTopicQuizCategories(){
+        currentScreen="topic_quiz_categories";base("Викторина по темам","Выбери раздел — вопросы будут по его материалу");
+        String[] cats={"Обыкновенные дроби","Проценты","Десятичные дроби","Натуральные числа"};
+        String[] desc={"Состав, часть числа и действия с дробями","Процент от числа и обратные задачи","Сложение, вычитание и сравнение","Числа, действия и делимость"};
+        for(int i=0;i<cats.length;i++){final String c=cats[i];LinearLayout item=card();addText(item,c,17,DARK,true);addText(item,desc[i],12,MUTED,false);item.setOnClickListener(v->{selectedChapter="2️⃣ Обыкновенные дроби";startMiniTest(c);});root.addView(item,lp(-1,-2,0,0,0,9));}
+        backHome();
+    }
+    private void startMiniTest(String topic){
+        miniTopic=topic;miniQuestions.clear();miniWrongQuestions.clear();miniScore=0;
+        for(int i=0;i<5;i++)miniQuestions.add(makeMiniQuestion(topic));
+        renderMiniTest(0,false);
+    }
+    private MiniQuestion makeMiniQuestion(String topic){
+        String t=topic.toLowerCase(new Locale("ru"));boolean pct=t.contains("процент"),dec=t.contains("десятич"),frac=t.contains("дроб");
+        int answer;String prompt,explain;
+        if(pct){int[] ps={5,10,20,25,50};int p=ps[miniQuestions.size()%ps.length],base=(miniQuestions.size()%2==0?200:400);answer=base*p/100;prompt="Найди "+p+"% от "+base;explain=p+"% от "+base+" = "+answer+".";}
+        else if(dec){int a=12+miniQuestions.size()*7,b=23+miniQuestions.size()*4;answer=a+b;prompt=String.format(Locale.US,"Сколько будет %.1f + %.1f?",a/10.0,b/10.0);explain=String.format(Locale.US,"%.1f + %.1f = %.1f.",a/10.0,b/10.0,answer/10.0);}
+        else if(frac){int d=2+miniQuestions.size(),whole=d*(3+miniQuestions.size());answer=whole/d;prompt="Найди "+(1)+"/"+d+" от "+whole;explain="Одна "+(1)+"/"+d+" часть от "+whole+" равна "+answer+".";}
+        else {int a=17+miniQuestions.size()*9,b=6+miniQuestions.size()*3;answer=a+b;prompt="Вычисли "+a+" + "+b;explain=a+" + "+b+" = "+answer+".";}
+        int[] vals={answer,answer+1,Math.max(0,answer-2),answer+3};java.util.List<Integer> order=new java.util.ArrayList<>();for(int v:vals)if(!order.contains(v))order.add(v);java.util.Collections.shuffle(order,quizRandom);String[] opts=new String[order.size()];int correct=0;for(int i=0;i<order.size();i++){opts[i]=dec?String.format(Locale.US,"%.1f",order.get(i)/10.0):String.valueOf(order.get(i));if(order.get(i)==answer)correct=i;}
+        return new MiniQuestion(prompt,opts,correct,explain);
+    }
+    private void renderMiniTest(int index,boolean wrongOnly){
+        currentScreen="mini_test";base("Мини-тест · "+(index+1)+"/"+(wrongOnly?miniWrongQuestions.size():miniQuestions.size()),"Пять коротких вопросов — проверь себя");
+        List<MiniQuestion> list=wrongOnly?miniWrongQuestions:miniQuestions;
+        if(index>=list.size()){showMiniTestResult(wrongOnly);return;}
+        MiniQuestion q=list.get(index);LinearLayout panel=card();panel.setPadding(dp(16),dp(18),dp(16),dp(18));addText(panel,"ВОПРОС "+(index+1)+" ИЗ "+list.size(),11,PINK,true);addText(panel,q.prompt,21,DARK,true);root.addView(panel,lp(-1,-2,0,0,0,14));
+        for(int i=0;i<q.options.length;i++){final int answer=i;Button b=button(q.options[i],false);b.setTextSize(18);root.addView(b,lp(-1,50,0,0,0,8));b.setOnClickListener(v->{if(answer==q.correct)miniScore++;else miniWrongQuestions.add(q);new android.app.AlertDialog.Builder(this).setTitle(answer==q.correct?"Верно! 🌸":"Разберём ошибку").setMessage((answer==q.correct?"Правильный ответ. ":"Правильный ответ: "+q.options[q.correct]+". ")+q.explanation).setPositiveButton("Дальше",(d,w)->renderMiniTest(index+1,wrongOnly)).setCancelable(false).show();});}
+        Button quit=button("Завершить тест",false);quit.setOnClickListener(v->showMiniTestResult(wrongOnly));root.addView(quit,lp(-1,44,0,8,0,0));
+    }
+    private void showMiniTestResult(boolean wrongOnly){
+        currentScreen="mini_test_result";base("Результат мини-теста","Ошибки — это подсказка, что повторить");
+        int total=wrongOnly?miniWrongQuestions.size():miniQuestions.size();LinearLayout card=card();card.setGravity(Gravity.CENTER);addText(card,"ТВОЙ РЕЗУЛЬТАТ",11,PINK,true);TextView score=text(miniScore+" / "+total,38,DARK,true);score.setGravity(Gravity.CENTER);card.addView(score,lp(-1,60,0,6,0,4));addText(card,miniWrongQuestions.isEmpty()?"Все ответы верные — отлично!":"Ошибок: "+miniWrongQuestions.size()+". Их можно пройти ещё раз.",13,MUTED,false);root.addView(card,lp(-1,-2,0,0,0,14));
+        if(miniWrongQuestions.isEmpty()&&!wrongOnly){String suffix=topicStorageSuffix(selectedChapter,miniTopic);for(int d:new int[]{3,7,14})prefs.edit().putBoolean("review_done_"+suffix+"_"+d,false).apply();}
+        if(!miniWrongQuestions.isEmpty()){Button repeat=button("↻  Повторить ошибки",true);repeat.setOnClickListener(v->{miniQuestions.clear();miniQuestions.addAll(miniWrongQuestions);miniWrongQuestions.clear();miniScore=0;renderMiniTest(0,true);});root.addView(repeat,lp(-1,50,0,0,0,8));}
+        Button again=button("Пройти тест заново",false);again.setOnClickListener(v->startMiniTest(miniTopic));root.addView(again,lp(-1,48,0,0,0,8));backHome();
+    }
+    private void addSpacedRepetitionSection(){
+        LinearLayout section=card();addText(section,"🔁  ПОРА ПОВТОРИТЬ",12,PINK,true);int count=0;long now=System.currentTimeMillis();
+        for(Map.Entry<String,List<String>> entry:chapters.entrySet())for(String topic:entry.getValue()){
+            String suffix=topicStorageSuffix(entry.getKey(),topic);long completed=prefs.getLong("topic_completed_at_"+suffix,0);if(completed<=0)continue;long age=(now-completed)/86400000L;
+            for(int interval:new int[]{3,7,14})if(age>=interval&&!prefs.getBoolean("review_done_"+suffix+"_"+interval,false)){
+                count++;TextView item=text("•  "+topic+"  ·  "+interval+" дня",13,DARK,true);section.addView(item,lp(-1,34,0,1,0,1));Button review=button("Повторить тему",false);review.setOnClickListener(v->{selectedChapter=entry.getKey();selectedTopic=topic;startMiniTest(topic);});section.addView(review,lp(-1,40,0,0,0,8));
+            }
+        }
+        if(count==0)addText(section,"Пока всё повторено. Следующая проверка появится через 3, 7 и 14 дней после завершения темы ♡",12,MUTED,false);
+        root.addView(section,lp(-1,-2,0,0,0,12));
     }
 
     private void refreshTopicProgress(int value) {
@@ -1502,6 +1552,7 @@ public class MainActivity extends Activity {
         LinearLayout switcher=new LinearLayout(this);switcher.setGravity(Gravity.CENTER);switcher.setBackground(shape(PALE,16,0));
         TextView todayChip=text("Сегодня",13,PINK,true),tomorrowChip=text("Завтра",13,MUTED,true);todayChip.setGravity(Gravity.CENTER);tomorrowChip.setGravity(Gravity.CENTER);
         switcher.addView(todayChip,new LinearLayout.LayoutParams(0,dp(40),1f));switcher.addView(tomorrowChip,new LinearLayout.LayoutParams(0,dp(40),1f));root.addView(switcher,lp(-1,44,0,0,0,10));
+        addSpacedRepetitionSection();
         LinearLayout form=card();addText(form,"НОВАЯ ЗАДАЧА",12,PINK,true);TextView counter=text("0 / 3 важных дела",11,MUTED,true);form.addView(counter,lp(-1,22,0,2,0,0));
         EditText task=new EditText(this);task.setSingleLine(true);task.setHint("Например: Дроби");task.setTextColor(DARK);task.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));form.addView(task,lp(-1,48,0,7,0,8));
         addText(form,"СКОЛЬКО ВРЕМЕНИ?",10,MUTED,true);
