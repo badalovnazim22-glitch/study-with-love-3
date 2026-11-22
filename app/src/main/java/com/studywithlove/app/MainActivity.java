@@ -1663,7 +1663,9 @@ public class MainActivity extends Activity {
             }, now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE), true).show();
         });
         root.addView(addTime, lp(-1, 48, 0, 4, 0, 14));
-        TextView summary=text(selectedDays().size()+" дней · "+reminderTimes.size()+" напоминания в день",11,MUTED,true);summary.setGravity(Gravity.CENTER);root.addView(summary,lp(-1,28,0,2,0,2));\n        Runnable updateReminderSummary=()->{int count=0;for(CheckBox cb:dayChecks)if(cb.isChecked())count++;summary.setText(count+" "+dayWord(count)+" · "+reminderTimes.size()+" напоминаний в день");};\n        for(CheckBox cb:dayChecks)cb.setOnCheckedChangeListener((button,checked)->{cb.setBackground(shape(checked?0xFFF7DCE6:PALE,14,checked?PINK:0xFFF0DCE4));updateReminderSummary.run();});
+        TextView summary=text(selectedDays().size()+" дней · "+reminderTimes.size()+" напоминания в день",11,MUTED,true);summary.setGravity(Gravity.CENTER);root.addView(summary,lp(-1,28,0,2,0,2));
+        Runnable updateReminderSummary=()->{int count=0;for(CheckBox cb:dayChecks)if(cb.isChecked())count++;summary.setText(count+" "+dayWord(count)+" · "+reminderTimes.size()+" напоминаний в день");};
+        for(CheckBox cb:dayChecks)cb.setOnCheckedChangeListener((button,checked)->{cb.setBackground(shape(checked?0xFFF7DCE6:PALE,14,checked?PINK:0xFFF0DCE4));updateReminderSummary.run();});
         Button save = button("💗  Сохранить расписание", true);
         save.setOnClickListener(v -> {
             Set<String> days = new TreeSet<>();
