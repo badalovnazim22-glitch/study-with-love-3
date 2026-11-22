@@ -99,6 +99,7 @@ public class MainActivity extends Activity {
         getWindow().setNavigationBarColor(0xFFFFF9F7);
         updateSystemBarIcons();
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+        long restoredEnd=prefs.getLong("timer_service_end_wall",0);if(restoredEnd>System.currentTimeMillis()){timerRunning=true;timerIsBreak=prefs.getBoolean("timer_service_break",false);timerRemainingMs=restoredEnd-System.currentTimeMillis();timerEndElapsed=SystemClock.elapsedRealtime()+timerRemainingMs;long duration=prefs.getLong("timer_service_duration",timerRemainingMs);timerSessionStarted=SystemClock.elapsedRealtime()-Math.max(0,duration-timerRemainingMs);}
         applySavedTheme();
         getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG);
         Set<String> visits = new TreeSet<>(prefs.getStringSet("visit_days", new TreeSet<String>())); visits.add(todayKey()); prefs.edit().putStringSet("visit_days", visits).apply();
@@ -1089,7 +1090,8 @@ public class MainActivity extends Activity {
             timerControls.addView(control,cp);
         }
         root.addView(timerControls,lp(-1,52,0,0,0,0));
-        if(timerRemainingMs<=0)timerRemainingMs=(timerIsBreak?selectedBreakMinutes:selectedStudyMinutes)*60000L;if(timerRunning)updateTimerDisplay();
+        if(timerRemainingMs<=0)timerRemainingMs=(timerIsBreak?selectedBreakMinutes:selectedStudyMinutes)*60000L;
+        if(timerRunning){updateTimerDisplay();timerStartButton.setEnabled(false);timerPauseButton.setEnabled(true);if(timerTick==null){timerTick=new Runnable(){public void run(){updateTimerDisplay();long left=timerEndElapsed-SystemClock.elapsedRealtime();if(left<=0)finishTimerPhase();else timerHandler.postDelayed(this,250);}};timerHandler.post(timerTick);}}
     }
 
     private String formatTimer(long ms) {
