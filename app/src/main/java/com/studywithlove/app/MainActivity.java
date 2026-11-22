@@ -211,7 +211,17 @@ public class MainActivity extends Activity {
         scroll.addView(root);
         shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
         if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 78, 0, 0, 0, 0));
-        setContentView(shell);\n        if (Build.VERSION.SDK_INT >= 21) {\n            shell.setOnApplyWindowInsetsListener((view, insets) -> {\n                int top,bottom;\n                if (Build.VERSION.SDK_INT >= 30) { android.graphics.Insets bars=insets.getInsets(android.view.WindowInsets.Type.systemBars()); top=bars.top; bottom=bars.bottom; }\n                else { top=insets.getSystemWindowInsetTop(); bottom=insets.getSystemWindowInsetBottom(); }\n                view.setPadding(0,top,0,bottom);\n                return insets;\n            });\n            shell.requestApplyInsets();\n        }
+        setContentView(shell);
+        if (Build.VERSION.SDK_INT >= 21) {
+            shell.setOnApplyWindowInsetsListener((view, insets) -> {
+                int top,bottom;
+                if (Build.VERSION.SDK_INT >= 30) { android.graphics.Insets bars=insets.getInsets(android.view.WindowInsets.Type.systemBars()); top=bars.top; bottom=bars.bottom; }
+                else { top=insets.getSystemWindowInsetTop(); bottom=insets.getSystemWindowInsetBottom(); }
+                view.setPadding(0,top,0,bottom);
+                return insets;
+            });
+            shell.requestApplyInsets();
+        }
         scroll.setAlpha(0f); scroll.setTranslationY(dp(7));
         scroll.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         scroll.animate().alpha(1f).translationY(0f).setDuration(230)
@@ -326,7 +336,15 @@ public class MainActivity extends Activity {
         Button back=button("← Назад",true);back.setOnClickListener(v->onBackPressed());root.addView(back,lp(-1,48,0,8,0,4));
     }
 
-    private void updateSystemBarIcons() {\n        if (Build.VERSION.SDK_INT >= 23 && getWindow() != null) {\n            String t=prefs==null?"pink":prefs.getString("app_theme","pink");\n            boolean darkIcons=!("night".equals(t)||"luxury".equals(t));\n            getWindow().getDecorView().setSystemUiVisibility(darkIcons?View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR:0);\n        }\n    }\n\n    private void applySavedTheme() {
+    private void updateSystemBarIcons() {
+        if (Build.VERSION.SDK_INT >= 23 && getWindow() != null) {
+            String t=prefs==null?"pink":prefs.getString("app_theme","pink");
+            boolean darkIcons=!("night".equals(t)||"luxury".equals(t));
+            getWindow().getDecorView().setSystemUiVisibility(darkIcons?View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR:0);
+        }
+    }
+
+    private void applySavedTheme() {
         String theme = prefs == null ? "pink" : prefs.getString("app_theme", "pink");
         if ("night".equals(theme)) { BG=0xFF17151D; PINK=0xFFE39AB5; PALE=0xFF302735; DARK=0xFFF4EAF0; MUTED=0xFFB6A8B2; }
         else if ("lavender".equals(theme)) { BG=0xFFF8F6FF; PINK=0xFF8979B8; PALE=0xFFF0ECFA; DARK=0xFF393448; MUTED=0xFF8E879E; }
