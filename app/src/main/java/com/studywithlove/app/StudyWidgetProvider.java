@@ -17,7 +17,7 @@ public class StudyWidgetProvider extends AppWidgetProvider {
         RemoteViews v=new RemoteViews(c.getPackageName(),R.layout.study_widget);
         v.setTextViewText(R.id.widget_streak,p.getInt("current_streak",0)+" дней подряд");
         String date=p.getString("exam_date","");String title=p.getString("exam_title","До экзамена");
-        try{Set<String> ids=new TreeSet<>(p.getStringSet("exam_goal_ids",new TreeSet<String>()));if(!ids.isEmpty()){String x=ids.iterator().next();date=p.getString("exam_goal_date_"+x,date);title=p.getString("exam_goal_title_"+x,title);}}catch(Exception ignored){}
+        try{Set<String> ids=new TreeSet<>(p.getStringSet("exam_goal_ids",new TreeSet<String>()));String x=p.getString("exam_main_goal_id","");if(x.isEmpty()&&!ids.isEmpty())x=ids.iterator().next();if(!x.isEmpty()){date=p.getString("exam_goal_date_"+x,date);title=p.getString("exam_goal_title_"+x,title);}}catch(Exception ignored){}
         String left="Добавь дату экзамена";try{long days=(new SimpleDateFormat("yyyy-MM-dd",Locale.US).parse(date).getTime()-System.currentTimeMillis())/86400000L;left=days>=0?"До "+title+": "+days+" дн.":"Экзамен прошёл";}catch(Exception ignored){}
         v.setTextViewText(R.id.widget_exam,left);
         Intent open=new Intent(c,MainActivity.class);PendingIntent pi=PendingIntent.getActivity(c,930,open,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);v.setOnClickPendingIntent(R.id.widget_root,pi);m.updateAppWidget(id,v);
