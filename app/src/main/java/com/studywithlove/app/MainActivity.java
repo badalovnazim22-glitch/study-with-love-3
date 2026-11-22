@@ -126,6 +126,7 @@ public class MainActivity extends Activity {
     }
 
     private void showTopics(Chapter c){
+        selectedTopic="";
         page(c.title,"Раздел "+String.format(Locale.US,"%02d",chapters.indexOf(c)+1)+"  ·  "+c.topics.size()+" учебных тем");
         Button back=quiet("← Все разделы");back.setOnClickListener(v->showHome());root.addView(back,margin(-1,44,0,0,0,18));
         for(int i=0;i<c.topics.size();i++){
