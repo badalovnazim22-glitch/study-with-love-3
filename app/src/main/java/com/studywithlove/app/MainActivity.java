@@ -81,6 +81,8 @@ public class MainActivity extends Activity {
     private String cachedBackgroundUri="";
     private Thread ambienceThread;
     private android.media.AudioTrack ambienceTrack;
+    private android.media.MediaPlayer ambiencePlayer;
+    private String pendingReviewKey="";
     private static final String PREFS = "study_progress";
     private static final int PICK_BACKGROUND = 7412;
     private static final int BACKUP_EXPORT = 7413, BACKUP_IMPORT = 7414;
@@ -868,7 +870,7 @@ public class MainActivity extends Activity {
         for(Map.Entry<String,List<String>> entry:chapters.entrySet())for(String topic:entry.getValue()){
             String suffix=topicStorageSuffix(entry.getKey(),topic);long completed=prefs.getLong("topic_completed_at_"+suffix,0);if(completed<=0)continue;long age=(now-completed)/86400000L;
             for(int interval:new int[]{3,7,14})if(age>=interval&&!prefs.getBoolean("review_done_"+suffix+"_"+interval,false)){
-                count++;TextView item=text("•  "+topic+"  ·  "+interval+" дня",13,DARK,true);section.addView(item,lp(-1,34,0,1,0,1));Button review=button("Повторить тему",false);review.setOnClickListener(v->{selectedChapter=entry.getKey();selectedTopic=topic;startMiniTest(topic);});section.addView(review,lp(-1,40,0,0,0,8));
+                count++;TextView item=text("•  "+topic+"  ·  "+interval+" дня",13,DARK,true);section.addView(item,lp(-1,34,0,1,0,1));Button review=button("Повторить тему",false);review.setOnClickListener(v->{selectedChapter=entry.getKey();selectedTopic=topic;pendingReviewKey="review_done_"+suffix+"_"+interval;startMiniTest(topic);});section.addView(review,lp(-1,40,0,0,0,8));
             }
         }
         if(count==0)addText(section,"Пока всё повторено. Следующая проверка появится через 3, 7 и 14 дней после завершения темы ♡",12,MUTED,false);
@@ -894,7 +896,7 @@ public class MainActivity extends Activity {
         toastView.setBackground(shape(0xFFFFF0F5, 22, 0xFFFFC6D7));
         TextView flower = text("🌸", 17, PINK, true);
         toastView.addView(flower, lp(25, 25, 0, 0, 6, 0));
-        TextView praise = text("Умничка! ❤️", 13, DARK, true);
+        TextView praise = text(g("Умничка! ❤️","Молодец! ❤️"), 13, DARK, true);
         toastView.addView(praise, lp(-2, 38, 0, 0, 0, 0));
         Toast toast = new Toast(this);
         toast.setDuration(Toast.LENGTH_SHORT);
@@ -1018,7 +1020,7 @@ public class MainActivity extends Activity {
         addText(summary, "🌸  ОБЩИЙ РЕЗУЛЬТАТ", 12, PINK, true);
         addText(summary, overall + "% изучено", 27, DARK, true);
         addText(summary, completedTopics + " из " + totalTopics + " тем завершено", 14, MUTED, false);
-        addText(summary, "⏱ Сегодня: " + prefs.getInt("app_minutes_" + todayKey(), 0) + " минут в приложении", 14, PINK, true);
+        addText(summary, "⏱ Сегодня: " + prefs.getInt("focus_minutes_" + todayKey(), 0) + " минут по таймеру", 14, PINK, true);
         addText(summary, "Всего: " + totalStudyMinutes() + " минут", 13, MUTED, false);
         addProgressLine(summary, "Весь учебный план", overall);
         root.addView(summary, lp(-1, -2, 0, 0, 0, 16));
@@ -1047,11 +1049,7 @@ public class MainActivity extends Activity {
         root.addView(back, lp(-1, 52, 0, 4, 0, 0));
     }
 
-    private int totalStudyMinutes() {
-        int total = 0;
-        for (String key : prefs.getAll().keySet()) if (key.startsWith("app_minutes_")) total += prefs.getInt(key, 0);
-        return total;
-    }
+    private int totalStudyMinutes() { return prefs.getInt("focus_total_minutes",0); }
 
     private void showPomodoro() {
         currentScreen="pomodoro";base("Таймер фокуса","Настрой время и занимайся в своём ритме");
@@ -1104,7 +1102,6 @@ public class MainActivity extends Activity {
         timerRunning = true; timerSessionStarted = SystemClock.elapsedRealtime(); timerEndElapsed = timerSessionStarted + timerRemainingMs;
         try{Intent service=new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_START).putExtra("duration_ms",timerRemainingMs).putExtra("break",timerIsBreak);if(Build.VERSION.SDK_INT>=26)startForegroundService(service);else startService(service);}catch(Exception ignored){}
         getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        scheduleTimerFinishAlarm(timerRemainingMs);
         timerTick = new Runnable() { @Override public void run() { updateTimerDisplay(); long left = timerEndElapsed - SystemClock.elapsedRealtime(); if (left <= 0) finishTimerPhase(); else timerHandler.postDelayed(this, 250); } };
         if(timerPulseAnimator!=null)timerPulseAnimator.cancel();if(timerDisplay!=null){timerPulseAnimator=android.animation.ValueAnimator.ofFloat(1f,1.045f);timerPulseAnimator.setDuration(1050);timerPulseAnimator.setRepeatMode(android.animation.ValueAnimator.REVERSE);timerPulseAnimator.setRepeatCount(android.animation.ValueAnimator.INFINITE);timerPulseAnimator.addUpdateListener(a->{if(timerDisplay!=null){float s=(float)a.getAnimatedValue();timerDisplay.setScaleX(s);timerDisplay.setScaleY(s);}});timerPulseAnimator.start();}
         if (timerStartButton != null) timerStartButton.setEnabled(false);
@@ -1155,8 +1152,8 @@ public class MainActivity extends Activity {
 
     private void finishTimerPhase() {
         timerHandler.removeCallbacks(timerTick); timerRunning = false; cancelTimerFinishAlarm(); getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;} timerRemainingMs = 0;
-        if (!timerIsBreak) { recordStudyDay(); showTimerNotification("Время отдохнуть 🌸","Фокус-сессия завершена. Ты молодец!"); timerIsBreak = true; timerRemainingMs = selectedBreakMinutes * 60000L; Toast.makeText(this, isMaleProfile()?"Ты большой молодец! Время отдохнуть 🌸":"Ты большая умничка! Время отдохнуть 🌸", Toast.LENGTH_LONG).show(); }
-        else { showTimerNotification("Перерыв окончен 💗","Можно возвращаться к занятиям"); timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; Toast.makeText(this, isMaleProfile()?"Перерыв окончен. Ты готов продолжать! 💗":"Перерыв окончен. Ты готова продолжать! 💗", Toast.LENGTH_LONG).show(); }
+        if (!timerIsBreak) { recordStudyDay(); timerIsBreak = true; timerRemainingMs = selectedBreakMinutes * 60000L; Toast.makeText(this, isMaleProfile()?"Ты большой молодец! Время отдохнуть 🌸":"Ты большая умничка! Время отдохнуть 🌸", Toast.LENGTH_LONG).show(); }
+        else { timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; Toast.makeText(this, isMaleProfile()?"Перерыв окончен. Ты готов продолжать! 💗":"Перерыв окончен. Ты готова продолжать! 💗", Toast.LENGTH_LONG).show(); }
         if ("pomodoro".equals(currentScreen)) showPomodoro();
         if(!timerIsBreak){prefs.edit().putBoolean("diary_prefill_timer_win",true).apply();new android.app.AlertDialog.Builder(this).setTitle("Фокус-сессия завершена 🌸").setMessage("Хочешь записать эту маленькую победу в дневник?").setNegativeButton("Позже",null).setPositiveButton("Записать",(d,w)->showDiary()).show();}
     }
@@ -1597,13 +1594,12 @@ public class MainActivity extends Activity {
     }
 
     private void startAmbience() {
-        stopAmbience();ambiencePlaying=true;final int generation=++ambienceGeneration;
-        ambienceThread=new Thread(()->{int rate=22050,chunk=2048;short[] samples=new short[chunk];java.util.Random random=new java.util.Random();double phase=0;String mode=prefs.getString("study_atmosphere","🌧️  Дождь за окном");int min=android.media.AudioTrack.getMinBufferSize(rate,android.media.AudioFormat.CHANNEL_OUT_MONO,android.media.AudioFormat.ENCODING_PCM_16BIT);int size=Math.max(min,chunk*4);android.media.AudioTrack local=null;
-            try{local=new android.media.AudioTrack(android.media.AudioManager.STREAM_MUSIC,rate,android.media.AudioFormat.CHANNEL_OUT_MONO,android.media.AudioFormat.ENCODING_PCM_16BIT,size,android.media.AudioTrack.MODE_STREAM);ambienceTrack=local;local.setVolume(.22f);local.play();double filtered=0;
-                while(ambiencePlaying&&generation==ambienceGeneration){for(int i=0;i<chunk;i++){double noise=random.nextDouble()*2-1;filtered=filtered*.92+noise*.08;double value=0;if(mode.contains("Дождь"))value=filtered*.22+noise*.035;else if(mode.contains("кафе"))value=filtered*.13+Math.sin(phase)*.012;else if(mode.contains("природы"))value=filtered*.16+Math.sin(phase)*.025;else value=filtered*.09;phase+=2*Math.PI*110/rate;if(phase>Math.PI*2)phase-=Math.PI*2;samples[i]=(short)Math.max(-32767,Math.min(32767,value*12000));}if(generation==ambienceGeneration)local.write(samples,0,chunk);}
-            }catch(Exception ignored){}finally{try{if(local!=null){local.pause();local.flush();local.release();}}catch(Exception ignored){}if(generation==ambienceGeneration){ambienceTrack=null;ambiencePlaying=false;ambienceThread=null;}}},"StudyAmbience");ambienceThread.setDaemon(true);ambienceThread.start();
+        stopAmbience();
+        String mode=prefs.getString("study_atmosphere","🌧️  Дождь за окном");
+        int raw=mode.contains("Дождь")?R.raw.ambience_rain:mode.contains("кафе")?R.raw.ambience_cafe:mode.contains("природы")?R.raw.ambience_forest:R.raw.ambience_library;
+        try{ambiencePlayer=android.media.MediaPlayer.create(this,raw);if(ambiencePlayer==null)throw new IllegalStateException("Audio resource unavailable");float volume=prefs.getInt("ambience_volume",35)/100f;ambiencePlayer.setLooping(true);ambiencePlayer.setVolume(volume,volume);ambiencePlayer.setOnErrorListener((mp,what,extra)->{stopAmbience();return true;});ambiencePlayer.start();ambiencePlaying=true;}catch(Exception e){ambiencePlaying=false;Toast.makeText(this,"Не удалось загрузить звук атмосферы",Toast.LENGTH_SHORT).show();}
     }
-    private void stopAmbience(){ambienceGeneration++;ambiencePlaying=false;android.media.AudioTrack active=ambienceTrack;if(active!=null){try{active.pause();}catch(Exception ignored){}}Thread old=ambienceThread;if(old!=null){old.interrupt();ambienceThread=null;}}
+    private void stopAmbience(){ambiencePlaying=false;android.media.MediaPlayer player=ambiencePlayer;ambiencePlayer=null;if(player!=null){try{if(player.isPlaying())player.stop();}catch(Exception ignored){}try{player.release();}catch(Exception ignored){}}}
     @Override protected void onDestroy(){if(flowerBreatheAnimator!=null){flowerBreatheAnimator.cancel();flowerBreatheAnimator=null;}if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}stopAmbience();super.onDestroy();}
 
     private void showAtmosphere() {
@@ -1613,6 +1609,7 @@ public class MainActivity extends Activity {
         String[] descriptions={"Мягкий дождливый настрой","Тёплая атмосфера кофейни","Спокойствие и свежесть","Минимум отвлечений"};
         String chosen=prefs.getString("study_atmosphere",names[0]);
         for(int i=0;i<names.length;i++){final String n=names[i];boolean selected=chosen.equals(n);LinearLayout c=card();addText(c,n,18,DARK,true);addText(c,descriptions[i],13,MUTED,false);TextView state=text(selected?(ambiencePlaying?"Играет сейчас  •  ✓":"Выбрано  •  ▶"):"Нажми, чтобы включить",12,selected?PINK:MUTED,true);c.addView(state,lp(-1,30,0,5,0,0));c.setOnClickListener(v->{prefs.edit().putString("study_atmosphere",n).apply();if(selected&&ambiencePlaying)stopAmbience();else if(!ambiencePlaying)startAmbience();else{stopAmbience();startAmbience();}showAtmosphere();});root.addView(c,lp(-1,-2,0,0,0,9));}
+        android.widget.SeekBar volume=new android.widget.SeekBar(this);volume.setMax(100);volume.setProgress(prefs.getInt("ambience_volume",35));if(Build.VERSION.SDK_INT>=21)volume.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));addText(root,"ГРОМКОСТЬ",11,PINK,true);root.addView(volume,lp(-1,36,0,0,0,8));volume.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener(){public void onProgressChanged(android.widget.SeekBar b,int value,boolean user){if(user){prefs.edit().putInt("ambience_volume",value).apply();if(ambiencePlayer!=null)ambiencePlayer.setVolume(value/100f,value/100f);}}public void onStartTrackingTouch(android.widget.SeekBar b){}public void onStopTrackingTouch(android.widget.SeekBar b){}});
         if(ambiencePlaying){Button stop=button("Остановить звук",false);stop.setOnClickListener(v->{stopAmbience();showAtmosphere();});root.addView(stop,lp(-1,44,0,4,0,8));}
         backHome();
     }
