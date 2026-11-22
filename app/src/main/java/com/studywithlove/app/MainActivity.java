@@ -653,7 +653,7 @@ public class MainActivity extends Activity {
             final String selected = chapter; String pretty = chapter.replaceFirst("^[^ ]+\\s*", "");
             actionRegular("РАЗДЕЛ " + number + "\\n" + pretty, chapters.get(chapter).size() + " учебных тем", () -> { selectedChapter = selected; showTopics(selected); }); number++;
         }
-        Button back = button("← К урокам", false); back.setOnClickListener(v -> showChapters()); root.addView(back, lp(-1, 50, 0, 12, 0, 0));
+        Button back = button("← К урокам", false); back.setOnClickListener(v -> onBackPressed()); root.addView(back, lp(-1, 50, 0, 12, 0, 0));
     }
     private void addCustomLesson() {
         final String[] chosenEmoji={"📚"};String[] emojis={"📚","📐","🌸","🧪","🌍","🎨","🎵","📝","💡","⭐","📖","✏️","🧠","🔬","🧬","🧮","🗺️","🏛️","🎭","🎹","🪴","🦋","☀️","🌙","💗","💜","🩵","🍀","🌷","🪻","🧸","🐱","🐰","🍓","🍒","🍉","🍰","🧁","☕","🫧","✨","🔥","🏆","🎯","💫","🪄","🧩","🪐","🌈","🦄"};
@@ -1394,14 +1394,14 @@ public class MainActivity extends Activity {
             String q=query.getText().toString().trim().toLowerCase(Locale.ROOT);if(q.isEmpty())return;List<String> matches=new ArrayList<>();
             for(Map.Entry<String,List<String>> e:chapters.entrySet()){
                 String ch=e.getKey();String display=ch.startsWith("CUSTOM:")?ch.split(":",3)[2]:ch.replaceFirst("^[^ ]+\\s*","");
-                if(display.toLowerCase(Locale.ROOT).contains(q))matches.add(display+"\\t"+ch);
-                for(String topic:e.getValue())if(topic.toLowerCase(Locale.ROOT).contains(q))matches.add(display+"  •  "+topic+"\\t"+ch+"\\n"+topic);
+                if(display.toLowerCase(Locale.ROOT).contains(q))matches.add(display+"\t"+ch);
+                for(String topic:e.getValue())if(topic.toLowerCase(Locale.ROOT).contains(q))matches.add(display+"  •  "+topic+"\t"+ch+"\n"+topic);
             }
             if(matches.isEmpty()){new android.app.AlertDialog.Builder(MainActivity.this).setTitle("Ничего не найдено").setMessage("Попробуй изменить запрос ♡").setPositiveButton("Понятно",null).show();return;}
             String[] items=matches.toArray(new String[0]);
             new android.app.AlertDialog.Builder(MainActivity.this).setTitle("Результаты поиска").setItems(items,(dlg,which)->{
                 String[] parts=items[which].split("\\t",2);if(parts.length<2)return;selectedChapter=parts[1];
-                if(items[which].contains("\\n")){selectedTopic=items[which].substring(items[which].indexOf("\\n")+1);showTopic(selectedTopic);}else showTopics(selectedChapter);
+                if(items[which].contains("\n")){selectedTopic=items[which].substring(items[which].indexOf("\n")+1);showTopic(selectedTopic);}else showTopics(selectedChapter);
             }).show();
         }).create();
         query.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int st,int count,int after){}public void onTextChanged(CharSequence s,int st,int before,int count){clear.setVisibility(s.length()>0?View.VISIBLE:View.GONE);}public void afterTextChanged(android.text.Editable e){}});
@@ -1519,7 +1519,7 @@ public class MainActivity extends Activity {
             case "reminders": showReminderSettings(); break;
             case "message": showMessage(); break;
             case "math_quiz": showMathQuiz(); break;
-            case "math_quiz_result": endMathQuiz(false); break;
+            case "math_quiz_result": showMathQuiz(); break;
             case "math_quiz_awards": showMathQuizAchievements(); break;
             default: showHome(); break;
         }
