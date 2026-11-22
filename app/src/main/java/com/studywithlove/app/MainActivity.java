@@ -441,7 +441,7 @@ public class MainActivity extends Activity {
     private final Random quizRandom = new Random();
     private final Handler quizHandler = new Handler();
     private Runnable quizTick;
-    private boolean quizActive = false;
+    private boolean quizActive = false, quizTimed = true;
     private int quizDifficulty = 0, quizScore = 0, quizStreak = 0, quizBestStreak = 0;
     private int quizAnswer = 0, quizSeconds = 15, quizLevel = 1;
     private long quizDeadline = 0L;
@@ -450,22 +450,30 @@ public class MainActivity extends Activity {
 
     private int quizTimeForDifficulty() { return quizDifficulty == 0 ? 15 : quizDifficulty == 1 ? 10 : 6; }
     private String quizDifficultyName() { return quizDifficulty == 0 ? "Лёгкая" : quizDifficulty == 1 ? "Средняя" : "Тяжёлая"; }
+    private String quizModeName() { return quizTimed ? "С таймером" : "Без времени"; }
 
     private void showMathQuiz() {
         stopQuizTimer();
         quizActive = false;
         currentScreen = "math_quiz";
-        base("Математическая викторина 🧮", "Бесконечная игра на скорость и точность");
+        base("Математическая викторина 🧮", "Бесконечная практика в твоём темпе");
         LinearLayout intro = card();
         intro.setPadding(dp(18),dp(18),dp(18),dp(18));
         intro.setBackground(shape(0xFFFFF0F4,24,0));
         addText(intro,"ТВОЙ МАТЕМАТИЧЕСКИЙ ЧЕЛЛЕНДЖ",11,PINK,true);
         addText(intro,"Сколько примеров ты решишь подряд?",22,DARK,true);
-        addText(intro,"Отвечай правильно, набирай очки, проходи уровни и собирай достижения. Ошибка или ноль на таймере завершат забег.",13,MUTED,false);
+        addText(intro,"Выбери режим и сложность. Набирай очки, проходи уровни и собирай достижения. Ошибка завершит забег.",13,MUTED,false);
         root.addView(intro,lp(-1,-2,0,0,0,14));
+        addText(root,"РЕЖИМ ИГРЫ",12,PINK,true);
+        LinearLayout modes=new LinearLayout(this);modes.setOrientation(LinearLayout.HORIZONTAL);
+        Button timedMode=button("⏱ С таймером",quizTimed),freeMode=button("☁ Без времени",!quizTimed);
+        LinearLayout.LayoutParams modeLp=new LinearLayout.LayoutParams(0,dp(48),1f);modeLp.setMargins(0,0,dp(5),0);modes.addView(timedMode,modeLp);
+        LinearLayout.LayoutParams freeLp=new LinearLayout.LayoutParams(0,dp(48),1f);freeLp.setMargins(dp(5),0,0,0);modes.addView(freeMode,freeLp);
+        timedMode.setOnClickListener(v->{quizTimed=true;showMathQuiz();});freeMode.setOnClickListener(v->{quizTimed=false;showMathQuiz();});
+        root.addView(modes,lp(-1,50,0,0,0,14));
         addText(root,"ВЫБЕРИ СЛОЖНОСТЬ",12,PINK,true);
         String[] names={"🌱  Лёгкая","⚡  Средняя","🔥  Тяжёлая"};
-        String[] details={"15 секунд на ответ · простые действия","10 секунд на ответ · числа побольше","6 секунд на ответ · повышенная сложность"};
+        String[] details={"До 20 · таблица умножения 2–5 · простые примеры","До 100 · умножение и деление на числа до 12","До 500 · крупные числа · умножение до 30"};
         for(int i=0;i<3;i++){
             final int d=i;
             LinearLayout item=card();item.setPadding(dp(15),dp(12),dp(15),dp(12));
@@ -482,7 +490,7 @@ public class MainActivity extends Activity {
         addText(stats,prefs.getInt("quiz_best_score",0)+" очков  ·  "+prefs.getInt("quiz_total_correct",0)+" правильных ответов за всё время",14,DARK,true);
         root.addView(stats,lp(-1,-2,0,8,0,10));
         Button awards=button("🏅  Посмотреть достижения",false);awards.setOnClickListener(v->showMathQuizAchievements());root.addView(awards,lp(-1,48,0,0,0,6));
-        Button back=button("← На главную",false);back.setOnClickListener(v->showHome());root.addView(back,lp(-1,46,0,0,0,0));
+        Button back=button("← Назад",false);back.setOnClickListener(v->onBackPressed());root.addView(back,lp(-1,46,0,0,0,0));
     }
 
     private void startMathQuiz() {
@@ -491,32 +499,45 @@ public class MainActivity extends Activity {
     }
 
     private int[] makeQuizProblem() {
-        int scale=Math.min(50,quizLevel-1);
-        int max=quizDifficulty==0?12+scale*3:quizDifficulty==1?30+scale*8:60+scale*15;
-        max=Math.min(999,Math.max(12,max));
-        int op=quizRandom.nextInt(4),a,b,result;
+        int scale=Math.min(40,quizLevel-1), op=quizRandom.nextInt(4),a,b,result;
+        int max=quizDifficulty==0?Math.min(30,20+scale):quizDifficulty==1?Math.min(180,100+scale*2):Math.min(700,300+scale*10);
         if(op==0){a=1+quizRandom.nextInt(max);b=1+quizRandom.nextInt(max);result=a+b;return new int[]{a,b,op,result};}
         if(op==1){a=1+quizRandom.nextInt(max);b=1+quizRandom.nextInt(a);result=a-b;return new int[]{a,b,op,result};}
-        if(op==2){int cap=quizDifficulty==0?10:quizDifficulty==1?15:20;a=1+quizRandom.nextInt(Math.min(max,cap));b=1+quizRandom.nextInt(Math.min(max,cap));result=a*b;return new int[]{a,b,op,result};}
-        b=1+quizRandom.nextInt(Math.min(max,20));result=1+quizRandom.nextInt(Math.min(max,20));a=b*result;return new int[]{a,b,op,result};
+        if(op==2){
+            int low=quizDifficulty==0?2:quizDifficulty==1?2:12;
+            int high=quizDifficulty==0?5:quizDifficulty==1?12:30;
+            a=low+quizRandom.nextInt(high-low+1);b=low+quizRandom.nextInt(high-low+1);
+            if(quizDifficulty==2&&quizRandom.nextBoolean())a+=quizRandom.nextInt(20);
+            result=a*b;return new int[]{a,b,op,result};
+        }
+        int divisor,quotient;
+        if(quizDifficulty==0){divisor=2+quizRandom.nextInt(4);quotient=2+quizRandom.nextInt(9);}
+        else if(quizDifficulty==1){divisor=2+quizRandom.nextInt(11);quotient=5+quizRandom.nextInt(16);}
+        else {divisor=12+quizRandom.nextInt(19);quotient=12+quizRandom.nextInt(29);}
+        a=divisor*quotient;b=divisor;result=quotient;return new int[]{a,b,op,result};
     }
 
     private void showMathQuizQuestion() {
         currentScreen="math_quiz";
         int[] problem=makeQuizProblem();quizAnswer=problem[3];
         String sign=problem[2]==0?"+":problem[2]==1?"−":problem[2]==2?"×":"÷";
-        base("Уровень "+quizLevel+"  ·  "+quizDifficultyName(),"Реши пример до окончания времени");
+        base("Уровень "+quizLevel+"  ·  "+quizDifficultyName(),"Режим: "+quizModeName()+(quizTimed?" · реши до окончания времени":" · решай в своём темпе"));
         LinearLayout top=card();top.setPadding(dp(15),dp(12),dp(15),dp(12));
         LinearLayout topLine=new LinearLayout(this);topLine.setGravity(Gravity.CENTER_VERTICAL);
         quizScoreLabel=text("⭐ "+quizScore+" очков",14,DARK,true);topLine.addView(quizScoreLabel,new LinearLayout.LayoutParams(0,-2,1f));
         quizLevelLabel=text("УРОВЕНЬ "+quizLevel,12,PINK,true);topLine.addView(quizLevelLabel);top.addView(topLine);
         root.addView(top,lp(-1,-2,0,0,0,12));
-        LinearLayout timerCard=card();timerCard.setGravity(Gravity.CENTER);timerCard.setPadding(dp(14),dp(14),dp(14),dp(14));
-        quizTimerLabel=text(quizTimeForDifficulty()+" сек",30,PINK,true);quizTimerLabel.setGravity(Gravity.CENTER);
-        timerCard.addView(quizTimerLabel,lp(-1,42,0,0,0,5));
-        quizTimerBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);quizTimerBar.setMax(1000);quizTimerBar.setProgress(1000);
-        if(Build.VERSION.SDK_INT>=21){quizTimerBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));quizTimerBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFE2EA));}
-        timerCard.addView(quizTimerBar,lp(-1,8,0,0,0,0));root.addView(timerCard,lp(-1,-2,0,0,0,18));
+        quizTimerLabel=null;quizTimerBar=null;
+        if(quizTimed){
+            LinearLayout timerCard=card();timerCard.setGravity(Gravity.CENTER);timerCard.setPadding(dp(14),dp(14),dp(14),dp(14));
+            quizTimerLabel=text(quizTimeForDifficulty()+" сек",30,PINK,true);quizTimerLabel.setGravity(Gravity.CENTER);
+            timerCard.addView(quizTimerLabel,lp(-1,42,0,0,0,5));
+            quizTimerBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);quizTimerBar.setMax(1000);quizTimerBar.setProgress(1000);
+            if(Build.VERSION.SDK_INT>=21){quizTimerBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));quizTimerBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFE2EA));}
+            timerCard.addView(quizTimerBar,lp(-1,8,0,0,0,0));root.addView(timerCard,lp(-1,-2,0,0,0,18));
+        }else{
+            LinearLayout relaxed=card();relaxed.setGravity(Gravity.CENTER);addText(relaxed,"☁  Время не ограничено",14,PINK,true);root.addView(relaxed,lp(-1,48,0,0,0,14));
+        }
         LinearLayout question=card();question.setGravity(Gravity.CENTER);question.setPadding(dp(12),dp(25),dp(12),dp(25));
         addText(question,"СКОЛЬКО БУДЕТ?",11,MUTED,true);
         quizQuestionLabel=text(problem[0]+" "+sign+" "+problem[1]+" = ?",36,DARK,true);quizQuestionLabel.setGravity(Gravity.CENTER);
@@ -530,16 +551,18 @@ public class MainActivity extends Activity {
             root.addView(row,lp(-1,-2,0,0,0,8));
         }
         TextView streak=text("🔥 Серия правильных ответов: "+quizStreak,13,PINK,true);streak.setGravity(Gravity.CENTER);root.addView(streak,lp(-1,40,0,8,0,0));
-        quizSeconds=quizTimeForDifficulty();quizDeadline=SystemClock.elapsedRealtime()+quizSeconds*1000L;
-        quizTick=()->{
-            if(!quizActive||!"math_quiz".equals(currentScreen))return;
-            long left=quizDeadline-SystemClock.elapsedRealtime();
-            if(left<=0){if(quizTimerLabel!=null)quizTimerLabel.setText("0 сек");if(quizTimerBar!=null)quizTimerBar.setProgress(0);endMathQuiz(true);return;}
-            int sec=(int)((left+999)/1000);if(quizTimerLabel!=null)quizTimerLabel.setText(sec+" сек");
-            if(quizTimerBar!=null)quizTimerBar.setProgress((int)Math.max(0,Math.min(1000,left*1000L/(quizSeconds*1000L))));
-            quizHandler.postDelayed(quizTick,80);
-        };
-        quizHandler.post(quizTick);
+        if(quizTimed){
+            quizSeconds=quizTimeForDifficulty();quizDeadline=SystemClock.elapsedRealtime()+quizSeconds*1000L;
+            quizTick=()->{
+                if(!quizActive||!"math_quiz".equals(currentScreen))return;
+                long left=quizDeadline-SystemClock.elapsedRealtime();
+                if(left<=0){if(quizTimerLabel!=null)quizTimerLabel.setText("0 сек");if(quizTimerBar!=null)quizTimerBar.setProgress(0);endMathQuiz(true);return;}
+                int sec=(int)((left+999)/1000);if(quizTimerLabel!=null)quizTimerLabel.setText(sec+" сек");
+                if(quizTimerBar!=null)quizTimerBar.setProgress((int)Math.max(0,Math.min(1000,left*1000L/(quizSeconds*1000L))));
+                quizHandler.postDelayed(quizTick,80);
+            };
+            quizHandler.post(quizTick);
+        }
     }
 
     private void submitMathQuizAnswer(int answer) {
@@ -615,7 +638,7 @@ public class MainActivity extends Activity {
             TextView state=text(unlocked?"✓":"···",17,unlocked?PINK:MUTED,true);item.addView(state);
             root.addView(item,lp(-1,-2,0,0,0,7));
         }
-        Button back=button("← К викторине",true);back.setOnClickListener(v->showMathQuiz());root.addView(back,lp(-1,50,0,10,0,0));
+        Button back=button("← Назад",true);back.setOnClickListener(v->onBackPressed());root.addView(back,lp(-1,50,0,10,0,0));
     }
 
     private int countQuizAwards(){
