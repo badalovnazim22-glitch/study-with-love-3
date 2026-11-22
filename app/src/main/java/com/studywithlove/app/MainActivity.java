@@ -388,7 +388,7 @@ public class MainActivity extends Activity {
         hero.setBackground(shape(0xFFF8E8EE, 27, 0));
         addText(hero, "ТВОЙ ПРОГРЕСС", 12, PINK, true);
         addText(hero, "Ты справляешься.\nПродолжай в своём темпе.", 24, DARK, true);
-        addText(hero, isMaleProfile()?"Каждое занятие — это забота о себе будущем.":"Каждое занятие — это забота о себе будущей.", 14, MUTED, false);
+        addText(hero, g("Каждое занятие — это забота о себе будущей.","Каждое занятие — это забота о себе будущем."), 14, MUTED, false);
          addText(hero, dailyMotivation(), 14, PINK, true);
         LinearLayout progressHead = new LinearLayout(this);
         progressHead.setGravity(Gravity.CENTER_VERTICAL);
@@ -820,7 +820,7 @@ public class MainActivity extends Activity {
         }
         root.addView(levels, lp(-1, -2, 0, 0, 0, 8));
 
-        Button done = button("✅  "+(isMaleProfile()?"Я позанимался сегодня":"Я позанималась сегодня"), true);
+        Button done = button("✅  "+(g("Я позанималась сегодня","Я позанимался сегодня")), true);
         done.setOnClickListener(v -> markDone());
         root.addView(done, lp(-1, 54, 0, 4, 0, 10));
         Button back = button("← К темам", false);
@@ -861,7 +861,7 @@ public class MainActivity extends Activity {
     private void showMiniTestResult(boolean wrongOnly){
         currentScreen="mini_test_result";base("Результат мини-теста","Ошибки — это подсказка, что повторить");
         int total=miniQuestions.size();LinearLayout card=card();card.setGravity(Gravity.CENTER);addText(card,"ТВОЙ РЕЗУЛЬТАТ",11,PINK,true);TextView score=text(miniScore+" / "+total,38,DARK,true);score.setGravity(Gravity.CENTER);card.addView(score,lp(-1,60,0,6,0,4));addText(card,miniWrongQuestions.isEmpty()?"Все ответы верные — отлично!":"Ошибок: "+miniWrongQuestions.size()+". Их можно пройти ещё раз.",13,MUTED,false);root.addView(card,lp(-1,-2,0,0,0,14));
-        if(miniWrongQuestions.isEmpty()&&!wrongOnly){String suffix=topicStorageSuffix(selectedChapter,miniTopic);for(int d:new int[]{3,7,14})prefs.edit().putBoolean("review_done_"+suffix+"_"+d,false).apply();if(!pendingReviewKey.isEmpty()){prefs.edit().putBoolean(pendingReviewKey,true).apply();pendingReviewKey="";}}
+        if(miniWrongQuestions.isEmpty()&&!pendingReviewKey.isEmpty()){prefs.edit().putBoolean(pendingReviewKey,true).apply();pendingReviewKey="";}
         if(!miniWrongQuestions.isEmpty()){Button repeat=button("↻  Повторить ошибки",true);repeat.setOnClickListener(v->{miniQuestions.clear();miniQuestions.addAll(miniWrongQuestions);miniWrongQuestions.clear();miniScore=0;renderMiniTest(0,false);});root.addView(repeat,lp(-1,50,0,0,0,8));}
         Button again=button("Пройти тест заново",false);again.setOnClickListener(v->startMiniTest(miniTopic));root.addView(again,lp(-1,48,0,0,0,8));backHome();
     }
@@ -1153,8 +1153,8 @@ public class MainActivity extends Activity {
     private void finishTimerPhase() {
         boolean focusFinished=!timerIsBreak;
         timerHandler.removeCallbacks(timerTick); timerRunning = false; cancelTimerFinishAlarm(); getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;} timerRemainingMs = 0;
-        if (!timerIsBreak) { recordStudyDay(); timerIsBreak = true; timerRemainingMs = selectedBreakMinutes * 60000L; Toast.makeText(this, isMaleProfile()?"Ты большой молодец! Время отдохнуть 🌸":"Ты большая умничка! Время отдохнуть 🌸", Toast.LENGTH_LONG).show(); }
-        else { timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; Toast.makeText(this, isMaleProfile()?"Перерыв окончен. Ты готов продолжать! 💗":"Перерыв окончен. Ты готова продолжать! 💗", Toast.LENGTH_LONG).show(); }
+        if (!timerIsBreak) { recordStudyDay(); timerIsBreak = true; timerRemainingMs = selectedBreakMinutes * 60000L; Toast.makeText(this, g("Ты большая умничка! Время отдохнуть 🌸","Ты большой молодец! Время отдохнуть 🌸"), Toast.LENGTH_LONG).show(); }
+        else { timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; Toast.makeText(this, g("Перерыв окончен. Ты готова продолжать! 💗","Перерыв окончен. Ты готов продолжать! 💗"), Toast.LENGTH_LONG).show(); }
         if ("pomodoro".equals(currentScreen)) showPomodoro();
         if(focusFinished){prefs.edit().putBoolean("diary_prefill_timer_win",true).apply();new android.app.AlertDialog.Builder(this).setTitle("Фокус-сессия завершена 🌸").setMessage("Хочешь записать эту маленькую победу в дневник?").setNegativeButton("Позже",null).setPositiveButton("Записать",(d,w)->showDiary()).show();}
     }
@@ -1464,7 +1464,7 @@ public class MainActivity extends Activity {
     }
 
     private void showFutureLetters() {
-        currentScreen="letters";base("✉ Письмо себе в будущее",isMaleProfile()?"Запечатай важные мысли для себя будущего":"Запечатай важные мысли для себя будущей");
+        currentScreen="letters";base("✉ Письмо себе в будущее",g("Запечатай важные мысли для себя будущей","Запечатай важные мысли для себя будущего"));
         LinearLayout steps=new LinearLayout(this);steps.setOrientation(LinearLayout.HORIZONTAL);String[] stepLabels={"1. Напиши","2. Выбери дату","3. Отправь"};for(int i=0;i<3;i++){TextView st=text(stepLabels[i],10,i==0?PINK:MUTED,true);st.setGravity(Gravity.CENTER);st.setPadding(dp(5),dp(9),dp(5),dp(9));st.setBackground(shape(i==0?0xFFFFE8EF:0xFFF7F3F4,14,0));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(38),1f);p.setMargins(dp(2),0,dp(2),0);steps.addView(st,p);}root.addView(steps,lp(-1,42,0,0,0,18));
         TextView prompt=text("✒  Напиши письмо",17,DARK,true);root.addView(prompt,lp(-1,-2,0,0,0,5));
         EditText body=new EditText(this);body.setHint("Дорогая я, хочу сказать тебе...");body.setMinLines(5);body.setGravity(Gravity.TOP);body.setTextSize(16);body.setTextColor(DARK);body.setHintTextColor(MUTED);body.setPadding(dp(2),dp(12),dp(2),dp(12));body.setBackgroundColor(0x00000000);root.addView(body,lp(-1,145,0,0,0,18));
