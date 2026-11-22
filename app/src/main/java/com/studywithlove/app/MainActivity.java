@@ -331,6 +331,8 @@ public class MainActivity extends Activity {
         }
         int overall = totalTopics == 0 ? 0 : completedTopics * 100 / totalTopics;
 
+        ImageView heroArt=new ImageView(this);heroArt.setImageResource(R.drawable.study_hero);heroArt.setScaleType(ImageView.ScaleType.CENTER_CROP);heroArt.setContentDescription("Уютная учебная комната в пастельных тонах");heroArt.setBackground(shape(0xFFEEDFFF,25,0xFFE4D6F4));heroArt.setClipToOutline(true);heroArt.setElevation(dp(5));root.addView(heroArt,lp(-1,150,0,0,0,14));
+
         LinearLayout hero = card();
         hero.setPadding(dp(20), dp(22), dp(20), dp(19));
         hero.setBackground(gradientShape(0xFFEBDFFF,0xFFFFE8F2,29));
