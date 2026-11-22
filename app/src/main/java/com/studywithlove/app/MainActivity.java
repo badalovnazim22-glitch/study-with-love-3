@@ -155,7 +155,7 @@ public class MainActivity extends Activity {
             PendingIntent pi = PendingIntent.getBroadcast(context, 300 + i, old, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
             am.cancel(pi); pi.cancel();
         }
-        if (!p.getBoolean("notifications_enabled", true)) { p.edit().putStringSet("scheduled_alarm_keys", new TreeSet<String>()).apply(); return; }
+        if (!p.getBoolean("notifications_enabled", true) || p.getBoolean("do_not_disturb", false)) { p.edit().putStringSet("scheduled_alarm_keys", new TreeSet<String>()).apply(); return; }
         Set<String> days = p.getStringSet("reminder_days", null);
         if (days == null) { days = new TreeSet<>(); for (int d = 1; d <= 7; d++) days.add(String.valueOf(d)); }
         Set<String> times = p.getStringSet("reminder_times", null);
@@ -298,7 +298,7 @@ public class MainActivity extends Activity {
         notificationCard.addView(reminderSettings, lp(-1, 46, 0, 4, 0, 0));
         root.addView(notificationCard, lp(-1, -2, 0, 0, 0, 13));
 
-        LinearLayout focusCard=card();addText(focusCard,"РЕЖИМ «НЕ ОТВЛЕКАТЬ»",12,PINK,true);addText(focusCard,"При включении приложение временно отключит свои учебные напоминания.",13,MUTED,false);CheckBox focus=new CheckBox(this);focus.setText("Включить режим фокуса");focus.setTextColor(DARK);focus.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));focus.setChecked(prefs.getBoolean("do_not_disturb",false));focusCard.addView(focus,lp(-1,48,0,4,0,0));focus.setOnCheckedChangeListener((b,on)->{prefs.edit().putBoolean("do_not_disturb",on).putBoolean("notifications_enabled",!on).apply();scheduleReminders(this);Toast.makeText(this,on?"Режим фокуса включён":"Режим фокуса выключен",Toast.LENGTH_SHORT).show();});root.addView(focusCard,lp(-1,-2,0,0,0,13));
+        LinearLayout focusCard=card();addText(focusCard,"РЕЖИМ «НЕ ОТВЛЕКАТЬ»",12,PINK,true);addText(focusCard,"При включении приложение временно отключит свои учебные напоминания.",13,MUTED,false);CheckBox focus=new CheckBox(this);focus.setText("Включить режим фокуса");focus.setTextColor(DARK);focus.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));focus.setChecked(prefs.getBoolean("do_not_disturb",false));focusCard.addView(focus,lp(-1,48,0,4,0,0));focus.setOnCheckedChangeListener((b,on)->{prefs.edit().putBoolean("do_not_disturb",on).apply();scheduleReminders(this);Toast.makeText(this,on?"Режим фокуса включён":"Режим фокуса выключен",Toast.LENGTH_SHORT).show();});root.addView(focusCard,lp(-1,-2,0,0,0,13));
          LinearLayout backupCard=card();addText(backupCard,"РЕЗЕРВНАЯ КОПИЯ",12,PINK,true);addText(backupCard,"Сохрани уроки, цели, дневник и прогресс в один файл.",13,MUTED,false);Button export=button("Экспортировать копию",true);export.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");i.putExtra(Intent.EXTRA_TITLE,"study_with_love_backup.json");startActivityForResult(i,BACKUP_EXPORT);});backupCard.addView(export,lp(-1,46,0,8,0,5));Button restore=button("Восстановить из копии",false);restore.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");startActivityForResult(i,BACKUP_IMPORT);});backupCard.addView(restore,lp(-1,44,0,0,0,0));root.addView(backupCard,lp(-1,-2,0,0,0,13));
          Button back = button("← На главную", true); back.setOnClickListener(v -> showHome());
         root.addView(back, lp(-1, 50, 0, 0, 0, 0));
