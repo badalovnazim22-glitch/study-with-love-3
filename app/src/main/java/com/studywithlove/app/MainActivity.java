@@ -841,10 +841,10 @@ public class MainActivity extends Activity {
     private MiniQuestion makeMiniQuestion(String topic){
         String t=topic.toLowerCase(new Locale("ru"));boolean pct=t.contains("процент"),dec=t.contains("десятич"),frac=t.contains("дроб");
         int answer;String prompt,explain;
-        if(pct){int[] ps={5,10,20,25,50};int p=ps[miniQuestions.size()%ps.length],base=(miniQuestions.size()%2==0?200:400);answer=base*p/100;prompt="Найди "+p+"% от "+base;explain=p+"% от "+base+" = "+answer+".";}
-        else if(dec){int a=12+miniQuestions.size()*7,b=23+miniQuestions.size()*4;answer=a+b;prompt=String.format(Locale.US,"Сколько будет %.1f + %.1f?",a/10.0,b/10.0);explain=String.format(Locale.US,"%.1f + %.1f = %.1f.",a/10.0,b/10.0,answer/10.0);}
-        else if(frac){int d=2+miniQuestions.size(),whole=d*(3+miniQuestions.size());answer=whole/d;prompt="Найди "+(1)+"/"+d+" от "+whole;explain="Одна "+(1)+"/"+d+" часть от "+whole+" равна "+answer+".";}
-        else {int a=17+miniQuestions.size()*9,b=6+miniQuestions.size()*3;answer=a+b;prompt="Вычисли "+a+" + "+b;explain=a+" + "+b+" = "+answer+".";}
+        if(pct){int[] ps={5,10,20,25,50};int p=ps[quizRandom.nextInt(ps.length)],base=quizRandom.nextBoolean()?200:400;answer=base*p/100;prompt="Найди "+p+"% от "+base;explain=p+"% от "+base+" = "+answer+".";}
+        else if(dec){int a=12+quizRandom.nextInt(50),b=23+quizRandom.nextInt(50);answer=a+b;prompt=String.format(Locale.US,"Сколько будет %.1f + %.1f?",a/10.0,b/10.0);explain=String.format(Locale.US,"%.1f + %.1f = %.1f.",a/10.0,b/10.0,answer/10.0);}
+        else if(frac){int d=2+quizRandom.nextInt(9),whole=d*(3+quizRandom.nextInt(12));answer=whole/d;prompt="Найди "+(1)+"/"+d+" от "+whole;explain="Одна "+(1)+"/"+d+" часть от "+whole+" равна "+answer+".";}
+        else {int a=17+quizRandom.nextInt(70),b=6+quizRandom.nextInt(30);answer=a+b;prompt="Вычисли "+a+" + "+b;explain=a+" + "+b+" = "+answer+".";}
         int[] vals={answer,answer+1,Math.max(0,answer-2),answer+3};java.util.List<Integer> order=new java.util.ArrayList<>();for(int v:vals)if(!order.contains(v))order.add(v);java.util.Collections.shuffle(order,quizRandom);String[] opts=new String[order.size()];int correct=0;for(int i=0;i<order.size();i++){opts[i]=dec?String.format(Locale.US,"%.1f",order.get(i)/10.0):String.valueOf(order.get(i));if(order.get(i)==answer)correct=i;}
         return new MiniQuestion(prompt,opts,correct,explain);
     }
@@ -858,9 +858,9 @@ public class MainActivity extends Activity {
     }
     private void showMiniTestResult(boolean wrongOnly){
         currentScreen="mini_test_result";base("Результат мини-теста","Ошибки — это подсказка, что повторить");
-        int total=wrongOnly?miniWrongQuestions.size():miniQuestions.size();LinearLayout card=card();card.setGravity(Gravity.CENTER);addText(card,"ТВОЙ РЕЗУЛЬТАТ",11,PINK,true);TextView score=text(miniScore+" / "+total,38,DARK,true);score.setGravity(Gravity.CENTER);card.addView(score,lp(-1,60,0,6,0,4));addText(card,miniWrongQuestions.isEmpty()?"Все ответы верные — отлично!":"Ошибок: "+miniWrongQuestions.size()+". Их можно пройти ещё раз.",13,MUTED,false);root.addView(card,lp(-1,-2,0,0,0,14));
+        int total=miniQuestions.size();LinearLayout card=card();card.setGravity(Gravity.CENTER);addText(card,"ТВОЙ РЕЗУЛЬТАТ",11,PINK,true);TextView score=text(miniScore+" / "+total,38,DARK,true);score.setGravity(Gravity.CENTER);card.addView(score,lp(-1,60,0,6,0,4));addText(card,miniWrongQuestions.isEmpty()?"Все ответы верные — отлично!":"Ошибок: "+miniWrongQuestions.size()+". Их можно пройти ещё раз.",13,MUTED,false);root.addView(card,lp(-1,-2,0,0,0,14));
         if(miniWrongQuestions.isEmpty()&&!wrongOnly){String suffix=topicStorageSuffix(selectedChapter,miniTopic);for(int d:new int[]{3,7,14})prefs.edit().putBoolean("review_done_"+suffix+"_"+d,false).apply();}
-        if(!miniWrongQuestions.isEmpty()){Button repeat=button("↻  Повторить ошибки",true);repeat.setOnClickListener(v->{miniQuestions.clear();miniQuestions.addAll(miniWrongQuestions);miniWrongQuestions.clear();miniScore=0;renderMiniTest(0,true);});root.addView(repeat,lp(-1,50,0,0,0,8));}
+        if(!miniWrongQuestions.isEmpty()){Button repeat=button("↻  Повторить ошибки",true);repeat.setOnClickListener(v->{miniQuestions.clear();miniQuestions.addAll(miniWrongQuestions);miniWrongQuestions.clear();miniScore=0;renderMiniTest(0,false);});root.addView(repeat,lp(-1,50,0,0,0,8));}
         Button again=button("Пройти тест заново",false);again.setOnClickListener(v->startMiniTest(miniTopic));root.addView(again,lp(-1,48,0,0,0,8));backHome();
     }
     private void addSpacedRepetitionSection(){
@@ -1115,7 +1115,7 @@ public class MainActivity extends Activity {
     private void pauseTimer() {
         if (!timerRunning) return;
         timerRemainingMs = Math.max(0, timerEndElapsed - SystemClock.elapsedRealtime());
-        timerRunning = false; timerHandler.removeCallbacks(timerTick); cancelTimerFinishAlarm(); try{Intent stop=new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_STOP);startService(stop);}catch(Exception ignored){} getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        timerRunning = false; timerHandler.removeCallbacks(timerTick); cancelTimerFinishAlarm(); try{Intent pause=new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_PAUSE).putExtra("elapsed_ms",Math.max(0,SystemClock.elapsedRealtime()-timerSessionStarted)).putExtra("break",timerIsBreak);startService(pause);}catch(Exception ignored){} getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}if (timerDisplay != null) { timerDisplay.setText(formatTimer(timerRemainingMs)); timerDisplay.animate().scaleX(1f).scaleY(1f).setDuration(220).start(); }
         if (timerStartButton != null) { timerStartButton.setEnabled(true); timerStartButton.setText("▶  Продолжить"); }
         if (timerPauseButton != null) timerPauseButton.setEnabled(false);
@@ -1154,10 +1154,11 @@ public class MainActivity extends Activity {
     }
 
     private void finishTimerPhase() {
-        timerHandler.removeCallbacks(timerTick); timerRunning = false; cancelTimerFinishAlarm(); try{stopService(new Intent(this,FocusTimerService.class));}catch(Exception ignored){} getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;} timerRemainingMs = 0;
+        timerHandler.removeCallbacks(timerTick); timerRunning = false; cancelTimerFinishAlarm(); getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;} timerRemainingMs = 0;
         if (!timerIsBreak) { recordStudyDay(); showTimerNotification("Время отдохнуть 🌸","Фокус-сессия завершена. Ты молодец!"); timerIsBreak = true; timerRemainingMs = selectedBreakMinutes * 60000L; Toast.makeText(this, isMaleProfile()?"Ты большой молодец! Время отдохнуть 🌸":"Ты большая умничка! Время отдохнуть 🌸", Toast.LENGTH_LONG).show(); }
         else { showTimerNotification("Перерыв окончен 💗","Можно возвращаться к занятиям"); timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; Toast.makeText(this, isMaleProfile()?"Перерыв окончен. Ты готов продолжать! 💗":"Перерыв окончен. Ты готова продолжать! 💗", Toast.LENGTH_LONG).show(); }
         if ("pomodoro".equals(currentScreen)) showPomodoro();
+        if(!timerIsBreak){prefs.edit().putBoolean("diary_prefill_timer_win",true).apply();new android.app.AlertDialog.Builder(this).setTitle("Фокус-сессия завершена 🌸").setMessage("Хочешь записать эту маленькую победу в дневник?").setNegativeButton("Позже",null).setPositiveButton("Записать",(d,w)->showDiary()).show();}
     }
 
     // App usage is tracked separately; only an explicit study action records a study day.
@@ -1264,7 +1265,7 @@ public class MainActivity extends Activity {
         currentScreen="diary";
         base("Дневник успехов ♡","Сохраняй моменты, которыми ты гордишься");
         addText(root,"МАЛЕНЬКАЯ ПОБЕДА СЕГОДНЯ",11,PINK,true);
-        EditText note=new EditText(this);note.setHint("Сегодня у меня получилось...");note.setTextSize(17);note.setTextColor(DARK);note.setHintTextColor(MUTED);note.setGravity(Gravity.TOP);note.setMinLines(3);note.setPadding(dp(2),dp(10),dp(2),dp(10));note.setBackgroundColor(0x00000000);
+        EditText note=new EditText(this);note.setHint("Сегодня у меня получилось...");if(prefs.getBoolean("diary_prefill_timer_win",false)){note.setText(g("Я завершила фокус-сессию и уделила время своей цели. ♡","Я завершил фокус-сессию и уделил время своей цели. ♡"));prefs.edit().remove("diary_prefill_timer_win").apply();}note.setTextSize(17);note.setTextColor(DARK);note.setHintTextColor(MUTED);note.setGravity(Gravity.TOP);note.setMinLines(3);note.setPadding(dp(2),dp(10),dp(2),dp(10));note.setBackgroundColor(0x00000000);
         root.addView(note,lp(-1,104,0,0,0,7));
         final String[] selectedTag={"Учёба"}, editingId={null}, activeFilter={"Все"}, queryValue={""};
         Set<String> customTags=new TreeSet<>(prefs.getStringSet("diary_custom_tags",new TreeSet<String>()));
@@ -1699,7 +1700,7 @@ public class MainActivity extends Activity {
 
     private int currentStreak() {
         String last = prefs.getString("last_study_date", "");
-        if (todayKey().equals(last) || isYesterday(last)) return prefs.getInt("current_streak", 0);
+        if (todayKey().equals(last) || isYesterday(last) || (isOneDayGap(last)&&!weekKey().equals(prefs.getString("streak_freeze_week","")))) return prefs.getInt("current_streak", 0);
         return 0;
     }
 
