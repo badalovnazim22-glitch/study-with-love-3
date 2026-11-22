@@ -37,37 +37,3 @@ android {
 }
 
 
-def ambienceResDir = layout.buildDirectory.dir("generated/ambienceRes")
-android.sourceSets.main.res.srcDir(ambienceResDir)
-
-tasks.register("downloadAmbienceAssets") {
-    outputs.files(
-        ambienceResDir.map { it.file("raw/ambience_rain.ogg") },
-        ambienceResDir.map { it.file("raw/ambience_cafe.ogg") },
-        ambienceResDir.map { it.file("raw/ambience_forest.ogg") },
-        ambienceResDir.map { it.file("raw/ambience_library.ogg") }
-    )
-    doLast {
-        def rawDir = file("$buildDir/generated/ambienceRes/raw")
-        rawDir.mkdirs()
-        def sounds = [
-            ambience_rain: "https://upload.wikimedia.org/wikipedia/commons/3/3d/Rain.ogg",
-            ambience_cafe: "https://upload.wikimedia.org/wikipedia/commons/5/54/Cafe_ambiance.ogg",
-            ambience_forest: "https://upload.wikimedia.org/wikipedia/commons/3/38/Birds_forest.ogg",
-            ambience_library: "https://upload.wikimedia.org/wikipedia/commons/f/fb/20121112_TU_Delft_Library%2C_quiet_study_room_-_general_ambience_-_SoundCloud_-_el_mar.ogg"
-        ]
-        sounds.each { name, url ->
-            def output = new File(rawDir, name + ".ogg")
-            if (!output.exists() || output.length() < 10000) {
-                def connection = new URL(url).openConnection()
-                connection.setConnectTimeout(20000)
-                connection.setReadTimeout(120000)
-                connection.setRequestProperty("User-Agent", "StudyWithLove Android build/1.0")
-                connection.getInputStream().withCloseable { input ->
-                    output.withOutputStream { out -> out << input }
-                }
-            }
-        }
-    }
-}
-tasks.named("preBuild").configure { dependsOn("downloadAmbienceAssets") }
