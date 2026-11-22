@@ -998,47 +998,6 @@ public class MainActivity extends Activity {
             c.addView(words,new LinearLayout.LayoutParams(0,-2,1f));root.addView(c,lp(-1,-2,0,0,0,9));
         }backHome();
     }
-        currentScreen = "achievements";
-        base("Коллекция достижений", "Каждый маленький шаг достоин похвалы");
-        int days = prefs.getStringSet("study_days", new TreeSet<String>()).size();
-        int minutes = totalStudyMinutes();
-        int completed = 0; for (List<String> topics : chapters.values()) completed += countCompleted(topics);
-        int sessions = prefs.getInt("done_count", 0);
-        String[][] a = {
-            {"🌱","Первые шаги","Первый день занятий",String.valueOf(days>=1)},
-            {"🌷","Неделя стараний","7 дней занятий",String.valueOf(days>=7)},
-            {"🌸","Две недели","14 дней занятий",String.valueOf(days>=14)},
-            {"💐","Месяц успеха","30 дней занятий",String.valueOf(days>=30)},
-            {"🏵️","Два месяца","60 дней занятий",String.valueOf(days>=60)},
-            {"🌻","Сто дней","100 дней занятий",String.valueOf(days>=100)},
-            {"📚","Маленький математик","Завершена первая тема",String.valueOf(completed>=1)},
-            {"🧮","Счёт — это просто","Завершено 5 тем",String.valueOf(completed>=5)},
-            {"🎓","Знаток математики","Завершено 10 тем",String.valueOf(completed>=10)},
-            {"🏆","Мастер знаний","Завершены все 41 темы",String.valueOf(completed>=41)},
-            {"⏳","Первый час","60 минут занятий",String.valueOf(minutes>=60)},
-            {"⌛","10 часов учёбы","600 минут занятий",String.valueOf(minutes>=600)},
-            {"🚀","Настойчивость","25 учебных занятий",String.valueOf(sessions>=25)},
-            {"💎","Пятьдесят побед","50 завершённых тем или занятий",String.valueOf(completed+sessions>=50)},
-            {"💗","Возвращаюсь к цели","Занятия в 3 разных дня",String.valueOf(days>=3)},
-            {"✨","Ритм учёбы","Занятия в 5 разных дней",String.valueOf(days>=5)}
-        };
-        for (String[] x : a) {
-            boolean unlocked = Boolean.parseBoolean(x[3]);
-            LinearLayout c = card();
-            c.setOrientation(LinearLayout.HORIZONTAL); c.setGravity(Gravity.CENTER_VERTICAL);
-            c.setBackground(shape(unlocked ? 0xFFFFF0F4 : 0xFFF5F2F1, 22, 0));
-            TextView icon = text(x[0], 29, unlocked ? PINK : MUTED, true);
-            icon.setGravity(Gravity.CENTER);
-            c.addView(icon, lp(48, 52, 0, 0, 12, 0));
-            LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
-            addText(words, x[1], 16, DARK, true);
-            addText(words, x[2], 13, MUTED, false);
-            addText(words, unlocked ? "Открыто ✓" : "Ещё впереди", 12, unlocked ? PINK : MUTED, true);
-            c.addView(words, new LinearLayout.LayoutParams(0, -2, 1f));
-            root.addView(c, lp(-1, -2, 0, 0, 0, 9));
-        }
-        backHome();
-    }
 
     private void showFutureLetters() {
         currentScreen="letters";base("✉ Письмо себе в будущее","Запечатай важные мысли для себя будущей");
@@ -1058,15 +1017,6 @@ public class MainActivity extends Activity {
         Set<String> ids=new TreeSet<>(prefs.getStringSet("future_letter_ids",new TreeSet<String>()));List<String> sorted=new ArrayList<>(ids);java.util.Collections.sort(sorted,java.util.Collections.reverseOrder());addText(root,"📬 ТВОИ ЗАПЕЧАТАННЫЕ ПИСЬМА",11,PINK,true);
         for(String id:sorted){String d=prefs.getString("future_date_"+id,"");String msg=prefs.getString("future_letter_"+id,"");boolean open=d.compareTo(todayKey())<=0;LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.VERTICAL);item.setPadding(dp(13),dp(12),dp(13),dp(12));item.setBackground(shape(0xFFFFF5F8,18,0));addText(item,(open?"✉️  Можно открыть":"🔒  Открывается "+d),13,PINK,true);if(open)addText(item,msg,14,DARK,false);else addText(item,"Твоё письмо ждёт назначенного дня ♡",12,MUTED,false);root.addView(item,lp(-1,-2,0,0,0,8));}
         addText(root,"📬 У тебя уже есть "+ids.size()+" запечатанное письмо"+(ids.size()==1?"":"(а)")+".",12,MUTED,false);backHome();
-    }
-        currentScreen = "letters";
-        base("Письмо себе в будущее", "Оставь доброе напоминание для себя будущей");
-        EditText body = new EditText(this); body.setHint("Дорогая я, хочу сказать тебе..."); body.setMinLines(4); body.setGravity(Gravity.TOP); body.setTextSize(16); body.setTextColor(DARK); body.setPadding(dp(14),dp(12),dp(14),dp(12)); body.setBackground(shape(0xFFFFFFFF,18,0xFFEADDE2)); root.addView(body, lp(-1,130,0,0,0,10));
-        EditText date = new EditText(this); date.setHint("Выбери дату открытия"); date.setSingleLine(true); date.setFocusable(false); date.setClickable(true); date.setTextSize(15); date.setPadding(dp(12),dp(8),dp(12),dp(8)); date.setBackground(shape(0xFFFFFFFF,14,0xFFEADDE2)); date.setOnClickListener(v->{Calendar now=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));new android.app.DatePickerDialog(this,(picker,y,m,d)->date.setText(String.format(Locale.US,"%04d-%02d-%02d",y,m+1,d)),now.get(Calendar.YEAR),now.get(Calendar.MONTH),now.get(Calendar.DAY_OF_MONTH)).show();}); root.addView(date,lp(-1,50,0,0,0,10));
-        Button save = button("♡  Сохранить письмо", true); save.setOnClickListener(v -> { String msg=body.getText().toString().trim(), d=date.getText().toString().trim(); if(msg.isEmpty() || d.isEmpty()){Toast.makeText(this,"Заполни письмо и дату открытия",Toast.LENGTH_SHORT).show();return;} try { java.text.SimpleDateFormat f=new java.text.SimpleDateFormat("yyyy-MM-dd",Locale.US); f.setLenient(false); Date parsed=f.parse(d); if(parsed==null || d.compareTo(todayKey())<0){Toast.makeText(this,"Выбери сегодняшнюю или будущую дату",Toast.LENGTH_SHORT).show();return;} } catch(Exception e){Toast.makeText(this,"Выбери дату в календаре",Toast.LENGTH_SHORT).show();return;} String id=String.valueOf(System.currentTimeMillis()); Set<String> ids=new TreeSet<>(prefs.getStringSet("future_letter_ids",new TreeSet<String>())); ids.add(id); prefs.edit().putString("future_letter_"+id,msg).putString("future_date_"+id,d).putStringSet("future_letter_ids",ids).apply(); body.setText("");date.setText(""); Toast.makeText(this,"Письмо сохранено ❤️",Toast.LENGTH_SHORT).show(); showFutureLetters(); }); root.addView(save,lp(-1,50,0,0,0,14));
-        Set<String> ids=new TreeSet<>(prefs.getStringSet("future_letter_ids",new TreeSet<String>())); List<String> sorted=new ArrayList<>(ids); java.util.Collections.sort(sorted,java.util.Collections.reverseOrder());
-        for(String id:sorted){String d=prefs.getString("future_date_"+id,""); String msg=prefs.getString("future_letter_"+id,""); LinearLayout c=card(); boolean open=d.compareTo(todayKey())<=0; addText(c,(open?"✉️  Можно открыть":"🔒  Открывается "+d),14,PINK,true); if(open)addText(c,msg,15,DARK,false); else addText(c,"Твоё письмо ждёт назначенного дня ♡",13,MUTED,false); root.addView(c,lp(-1,-2,0,0,0,8)); }
-        backHome();
     }
 
     
