@@ -1922,7 +1922,7 @@ public class MainActivity extends Activity {
     }
 
     private boolean isOneDayGap(String date){try{SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd",Locale.US);f.setTimeZone(AppTime.zone());Date d=f.parse(date);Calendar c=Calendar.getInstance(AppTime.zone());c.setTime(d);c.add(Calendar.DAY_OF_YEAR,2);return todayKey().equals(f.format(c.getTime()));}catch(Exception e){return false;}}
-    private String weekKey(){Calendar c=Calendar.getInstance(AppTime.zone());return c.getWeekYear()+"-"+c.get(Calendar.WEEK_OF_YEAR);}
+    private String weekKey(){Calendar c=Calendar.getInstance(AppTime.zone());c.setFirstDayOfWeek(Calendar.MONDAY);c.setMinimalDaysInFirstWeek(4);int week=c.get(Calendar.WEEK_OF_YEAR),year=c.get(Calendar.YEAR),month=c.get(Calendar.MONTH);if(week==1&&month==Calendar.DECEMBER)year++;else if(week>=52&&month==Calendar.JANUARY)year--;return year+"-"+week;}
     private String dayWord(int n) {
         int x = Math.abs(n) % 10, y = Math.abs(n) % 100;
         if (x == 1 && y != 11) return "день";
