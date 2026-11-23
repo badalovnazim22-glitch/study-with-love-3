@@ -639,6 +639,47 @@ public class MainActivity extends Activity {
         });
         root.addView(continueCard, lp(-1, -2, 0, 2, 0, 13));
 
+        // Weekly goal with a Monday-to-Sunday activity strip on the home screen.
+        int weeklyGoal = prefs.getInt("weekly_goal_minutes", 300);
+        int weeklyDone = weeklyMinutesLast7Days();
+        LinearLayout weeklyCard = card();
+        weeklyCard.setPadding(dp(16), dp(14), dp(16), dp(14));
+        addText(weeklyCard, "🎯  ЦЕЛЬ НЕДЕЛИ", 11, PINK, true);
+        addText(weeklyCard, weeklyDone + " из " + weeklyGoal + " минут", 19, DARK, true);
+        addProgressLine(weeklyCard, "Твой недельный результат",
+                weeklyGoal <= 0 ? 0 : Math.min(100, weeklyDone * 100 / weeklyGoal));
+        LinearLayout daysRow = new LinearLayout(this);
+        daysRow.setOrientation(LinearLayout.HORIZONTAL);
+        daysRow.setGravity(Gravity.CENTER_VERTICAL);
+        Calendar weekDay = Calendar.getInstance(AppTime.zone());
+        weekDay.setFirstDayOfWeek(Calendar.MONDAY);
+        weekDay.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+        SimpleDateFormat weekDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        String[] weekLabels = {"ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"};
+        String todayDate = todayKey();
+        for (int dayIndex = 0; dayIndex < 7; dayIndex++) {
+            String dateKey = weekDateFormat.format(weekDay.getTime());
+            int dayMinutes = prefs.getInt("focus_minutes_" + dateKey, 0);
+            boolean isToday = todayDate.equals(dateKey);
+            LinearLayout dayCell = new LinearLayout(this);
+            dayCell.setOrientation(LinearLayout.VERTICAL);
+            dayCell.setGravity(Gravity.CENTER);
+            TextView dayName = text(weekLabels[dayIndex], 10, MUTED, true);
+            dayCell.addView(dayName, lp(-1, 18, 0, 0, 0, 3));
+            TextView dayMark = text(dayMinutes > 0 ? "♥" : (isToday ? "○" : "·"),
+                    dayMinutes > 0 ? 18 : 21, dayMinutes > 0 ? PINK : MUTED, true);
+            dayMark.setGravity(Gravity.CENTER);
+            dayCell.addView(dayMark, lp(-1, 25, 0, 0, 0, 0));
+            TextView minutesLabel = text(dayMinutes > 0 ? dayMinutes + "м" : "—",
+                    9, MUTED, false);
+            minutesLabel.setGravity(Gravity.CENTER);
+            dayCell.addView(minutesLabel, lp(-1, 16, 0, 0, 0, 0));
+            daysRow.addView(dayCell, new LinearLayout.LayoutParams(0, dp(59), 1f));
+            weekDay.add(Calendar.DAY_OF_YEAR, 1);
+        }
+        weeklyCard.addView(daysRow, lp(-1, 59, 0, 9, 0, 0));
+        root.addView(weeklyCard, lp(-1, -2, 0, 0, 0, 13));
+
         LinearLayout aiCard = card();
         aiCard.setOrientation(LinearLayout.HORIZONTAL);
         aiCard.setGravity(Gravity.CENTER_VERTICAL);
