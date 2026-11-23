@@ -542,6 +542,9 @@ public class MainActivity extends Activity {
          LinearLayout ritualRow6 = new LinearLayout(this); ritualRow6.setOrientation(LinearLayout.HORIZONTAL);
          ritualTile(ritualRow6, "♡", "Напарник по учёбе", "Общие недельные цели и тёплые стикеры", this::showStudyBuddy);
          root.addView(ritualRow6, lp(-1, -2, 0, 0, 0, 14));
+         LinearLayout ritualRow7 = new LinearLayout(this); ritualRow7.setOrientation(LinearLayout.HORIZONTAL);
+         ritualTile(ritualRow7, "✧", "ИИ-помощник", "Объясняет темы и разбирает задачи", () -> startActivity(new Intent(this, AiTutorActivity.class)));
+         root.addView(ritualRow7, lp(-1, -2, 0, 0, 0, 14));
 
         LinearLayout reminder = card();
         reminder.setOrientation(LinearLayout.HORIZONTAL); reminder.setGravity(Gravity.CENTER_VERTICAL);
