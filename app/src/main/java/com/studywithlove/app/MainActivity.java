@@ -405,11 +405,11 @@ public class MainActivity extends Activity {
         progressHead.setGravity(Gravity.CENTER_VERTICAL);
         TextView progressTitle = text("Учебный план", 14, DARK, true);
         progressHead.addView(progressTitle, new LinearLayout.LayoutParams(0, dp(28), 1f));
-        TextView progressValue = text(overall + "%", 18, PINK, true);
+        TextView progressValue = text("0%", 18, PINK, true);animateNumber(progressValue,overall,"%");
         progressHead.addView(progressValue);
         hero.addView(progressHead, lp(-1, 30, 0, 12, 0, 4));
         ProgressBar overallBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-        overallBar.setMax(100); overallBar.setProgress(overall);
+        overallBar.setMax(100); overallBar.setProgress(0);overallBar.post(()->animateProgress(overallBar,overall));
         if (Build.VERSION.SDK_INT >= 21) {
             overallBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
             overallBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFDCE6));
@@ -427,7 +427,7 @@ public class MainActivity extends Activity {
             LinearLayout stat = card(); stat.setGravity(Gravity.CENTER);
             stat.setPadding(dp(5), dp(7), dp(5), dp(7));
             stat.setBackground(shape(i == 0 || i == 2 ? 0xFFFFF0F4 : colors[i], 22, 0));
-            TextView number = text(value[0], 24, PINK, true); number.setGravity(Gravity.CENTER);
+            TextView number = text("0", 24, PINK, true); number.setGravity(Gravity.CENTER);animateNumber(number,Integer.parseInt(value[0]),"");
             stat.addView(number, lp(-1, 30, 0, 0, 0, 3));
             TextView caption = text(value[1], 12, MUTED, false); caption.setGravity(Gravity.CENTER); caption.setMaxLines(2);
             stat.addView(caption, lp(-1, 38, 0, 0, 0, 0));
@@ -474,6 +474,7 @@ public class MainActivity extends Activity {
         TextView made = text("Сделано с любовью ♡", 12, MUTED, false);
         made.setGravity(Gravity.CENTER);
         root.addView(made, lp(-1, 40, 0, 12, 0, 0));
+        animateHomeCascade();
     }
 
     // Endless arithmetic challenge. Best scores and unlocked awards are stored locally.
@@ -1905,6 +1906,18 @@ public class MainActivity extends Activity {
             }
             return false;
         });
+    }
+    private void animateNumber(TextView view,int target,String suffix) {
+        android.animation.ValueAnimator animator=android.animation.ValueAnimator.ofInt(0,Math.max(0,target));
+        animator.setDuration(720);animator.setInterpolator(new android.view.animation.DecelerateInterpolator());
+        animator.addUpdateListener(a->view.setText(a.getAnimatedValue()+suffix));animator.start();
+    }
+    private void animateProgress(ProgressBar bar,int target) {
+        bar.setProgress(0);android.animation.ObjectAnimator.ofInt(bar,"progress",0,Math.max(0,target)).setDuration(850).start();
+    }
+    private void animateHomeCascade() {
+        if(root==null)return;
+        for(int i=0;i<root.getChildCount();i++){View child=root.getChildAt(i);child.setAlpha(0f);child.setTranslationY(dp(12));child.animate().alpha(1f).translationY(0f).setStartDelay(i*40L).setDuration(300).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();}
     }
     private void haptic(View view, boolean success) {
         if(view!=null)view.performHapticFeedback(success?android.view.HapticFeedbackConstants.CONFIRM:android.view.HapticFeedbackConstants.REJECT);
