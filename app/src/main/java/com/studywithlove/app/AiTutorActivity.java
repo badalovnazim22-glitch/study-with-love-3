@@ -220,14 +220,17 @@ public class AiTutorActivity extends Activity {
             JSONObject item = history.get(i);
             String content = item.optString("content", "");
             if (content.length() > 6000 || totalChars + content.length() > 24000) continue;
-            JSONObject outgoing = new JSONObject(item.toString());
+            JSONObject outgoing = item;
             if (i == history.size() - 1 && "user".equals(item.optString("role")) && !studyContext.isEmpty()) {
                 String contextualQuestion = "Учебный контекст приложения: " + studyContext
                         + "\nОтвечай с учётом этих тем, объясняй понятным языком и не предполагай, что ученик уже знает сложные термины.\n\nВопрос: "
                         + content;
                 if (contextualQuestion.length() <= 6000 && totalChars + contextualQuestion.length() <= 24000) {
-                    outgoing.put("content", contextualQuestion);
-
+                    try {
+                        outgoing = new JSONObject();
+                        outgoing.put("role", item.optString("role"));
+                        outgoing.put("content", contextualQuestion);
+                    } catch (Exception ignored) { outgoing = item; }
                 }
             }
             payloadMessages.put(outgoing);
