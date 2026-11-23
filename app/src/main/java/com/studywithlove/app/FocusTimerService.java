@@ -18,7 +18,7 @@ public class FocusTimerService extends Service {
     @Override public void onCreate(){super.onCreate();nm=(NotificationManager)getSystemService(NOTIFICATION_SERVICE);if(Build.VERSION.SDK_INT>=26){nm.createNotificationChannel(new NotificationChannel(CHANNEL,"Таймер Study with Love",NotificationManager.IMPORTANCE_LOW));nm.createNotificationChannel(new NotificationChannel(FINISH_CHANNEL,"Окончание фокус-сессии",NotificationManager.IMPORTANCE_HIGH));}}
     @Override public int onStartCommand(Intent intent,int flags,int startId){
         if(intent!=null&&ACTION_STOP.equals(intent.getAction())){if(!intent.getBooleanExtra("break",false))recordFocus(intent.getLongExtra("elapsed_ms",0),dateKey(System.currentTimeMillis()));clearSavedTimer();stopForeground(true);stopSelf();return START_NOT_STICKY;}
-        if(intent!=null&&ACTION_PAUSE.equals(intent.getAction())){if(!intent.getBooleanExtra("break",false))recordFocus(intent.getLongExtra("elapsed_ms",0));clearSavedTimer();stopForeground(true);stopSelf();return START_NOT_STICKY;}
+        if(intent!=null&&ACTION_PAUSE.equals(intent.getAction())){if(!intent.getBooleanExtra("break",false))recordFocus(intent.getLongExtra("elapsed_ms",0),dateKey(System.currentTimeMillis()));clearSavedTimer();stopForeground(true);stopSelf();return START_NOT_STICKY;}
         if(intent==null){
             android.content.SharedPreferences p=getSharedPreferences(PREFS,MODE_PRIVATE);
             long wallEnd=p.getLong("timer_service_end_wall",0);
