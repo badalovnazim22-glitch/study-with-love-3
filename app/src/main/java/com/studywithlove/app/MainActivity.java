@@ -583,25 +583,25 @@ public class MainActivity extends Activity {
         final String chapterToResume = resumeChapter;
         final boolean hasResumeTopic = resumeFound;
 
-        // Restored original large "Your progress" motivational card.
+        // Compact motivational progress card on the home screen.
         LinearLayout continueCard = card();
-        continueCard.setPadding(dp(20), dp(22), dp(20), dp(22));
+        continueCard.setPadding(dp(16), dp(14), dp(16), dp(14));
         continueCard.setBackground(shape(0xFFF8E8EE, 24, 0));
-        addText(continueCard, "ТВОЙ ПРОГРЕСС", 16, PINK, true);
-        addText(continueCard, "Ты справляешься.\\nПродолжай в своём\\nтемпе.", 32, DARK, true);
-        addText(continueCard, "Каждое занятие — это забота о себе будущей.", 16, MUTED, false);
-        addText(continueCard, "✧  Ты отлично справляешься! ❤️", 18, PINK, true);
+        addText(continueCard, "ТВОЙ ПРОГРЕСС", 13, PINK, true);
+        addText(continueCard, "Ты справляешься.\\nПродолжай в своём темпе.", 24, DARK, true);
+        addText(continueCard, "Каждое занятие — это забота о себе будущей.", 13, MUTED, false);
+        addText(continueCard, "✧  Ты отлично справляешься! ❤️", 15, PINK, true);
         int hour = Calendar.getInstance(AppTime.zone()).get(Calendar.HOUR_OF_DAY);
         String greeting = hour < 12 ? "🐰 Доброе утро! Начнём день с маленькой победы?"
                 : hour < 18 ? "🐰 Хорошего дня! Сделаем ещё один маленький шаг?"
                 : "🐰 Добрый вечер! Даже маленькое занятие — уже победа.";
-        addText(continueCard, greeting, 17, DARK, true);
+        addText(continueCard, greeting, 14, DARK, true);
         LinearLayout overallHead = new LinearLayout(this);
         overallHead.setGravity(Gravity.CENTER_VERTICAL);
-        overallHead.addView(text("Учебный план", 19, DARK, true),
-                new LinearLayout.LayoutParams(0, dp(34), 1f));
-        overallHead.addView(text(overall + "%", 24, PINK, true));
-        continueCard.addView(overallHead, lp(-1, 42, 0, 50, 0, 7));
+        overallHead.addView(text("Учебный план", 16, DARK, true),
+                new LinearLayout.LayoutParams(0, dp(30), 1f));
+        overallHead.addView(text(overall + "%", 21, PINK, true));
+        continueCard.addView(overallHead, lp(-1, 34, 0, 18, 0, 4));
         ProgressBar overallBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         overallBar.setMax(100);
         overallBar.setProgress(overall);
@@ -609,8 +609,8 @@ public class MainActivity extends Activity {
             overallBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
             overallBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFDCE6));
         }
-        continueCard.addView(overallBar, lp(-1, 8, 0, 0, 0, 16));
-        addText(continueCard, completedTopics + " из " + totalTopics + " тем завершено", 17, MUTED, false);
+        continueCard.addView(overallBar, lp(-1, 6, 0, 0, 0, 8));
+        addText(continueCard, completedTopics + " из " + totalTopics + " тем завершено", 14, MUTED, false);
         root.addView(continueCard, lp(-1, -2, 0, 2, 0, 13));
 
         // Weekly goal with a Monday-to-Sunday activity strip on the home screen.
