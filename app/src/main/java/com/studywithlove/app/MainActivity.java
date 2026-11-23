@@ -72,7 +72,7 @@ public class MainActivity extends Activity {
     private int miniScore=0;
     private String miniTopic="";
     private boolean weaknessTrainingMode=false;
-    private static class MiniQuestion { String prompt,explanation,type,answer; String[] options; int correct; MiniQuestion(String p,String[] o,int c,String e){this(p,o,c,e,"choice",o!=null&&c>=0&&c<o.length?o[c]:"");} MiniQuestion(String p,String[] o,int c,String e,String t,String a){prompt=p;options=o;correct=c;explanation=e;type=t;answer=a;} }
+    private static class MiniQuestion { String prompt,explanation,type,answer,topic; String[] options; int correct; MiniQuestion(String p,String[] o,int c,String e){this(p,o,c,e,"choice",o!=null&&c>=0&&c<o.length?o[c]:"");} MiniQuestion(String p,String[] o,int c,String e,String t,String a){prompt=p;options=o;correct=c;explanation=e;type=t;answer=a;topic="";} }
     private Button timerStartButton, timerPauseButton;
     private EditText customMinutesInput;
     private long appUsageStartedElapsed = 0L;
@@ -957,7 +957,7 @@ public class MainActivity extends Activity {
                 org.json.JSONObject item=all.getJSONObject(i);String topic=item.getString("topic"),type=item.optString("type","choice"),answer=item.optString("answer","");
                 org.json.JSONArray arr=item.optJSONArray("options");String[] options=null;int correct=-1;
                 if(arr!=null){options=new String[arr.length()];for(int k=0;k<arr.length();k++){options[k]=arr.getString(k);if(options[k].trim().equalsIgnoreCase(answer.trim()))correct=k;}}
-                MiniQuestion q=new MiniQuestion(item.getString("prompt"),options,correct,item.optString("explanation",""),type,answer);
+                MiniQuestion q=new MiniQuestion(item.getString("prompt"),options,correct,item.optString("explanation",""),type,answer);q.topic=topic;
                 List<MiniQuestion> list=questionBank.get(topic);if(list==null){list=new ArrayList<>();questionBank.put(topic,list);}list.add(q);
             }
         }catch(Exception e){android.util.Log.e("StudyWithLove","Question bank load failed",e);}
@@ -974,12 +974,12 @@ public class MainActivity extends Activity {
     private void startWeaknessTraining(){
         miniTopic="Мои слабые места";miniQuestions.clear();miniWrongQuestions.clear();miniScore=0;weaknessTrainingMode=true;
         List<String> keys=new ArrayList<>();for(String key:prefs.getAll().keySet())if(key.startsWith("mistake_"))keys.add(key);java.util.Collections.sort(keys,java.util.Collections.reverseOrder());
-        for(String key:keys){try{org.json.JSONObject o=new org.json.JSONObject(prefs.getString(key,"{}"));org.json.JSONArray a=o.optJSONArray("options");String[] opts=null;int correct=-1;if(a!=null){opts=new String[a.length()];for(int i=0;i<a.length();i++){opts[i]=a.getString(i);if(opts[i].equalsIgnoreCase(o.optString("answer")))correct=i;}}miniQuestions.add(new MiniQuestion(o.optString("prompt"),opts,correct,o.optString("explanation"),o.optString("type","choice"),o.optString("answer")));if(miniQuestions.size()>=10)break;}catch(Exception ignored){}}
+        for(String key:keys){try{org.json.JSONObject o=new org.json.JSONObject(prefs.getString(key,"{}"));org.json.JSONArray a=o.optJSONArray("options");String[] opts=null;int correct=-1;if(a!=null){opts=new String[a.length()];for(int i=0;i<a.length();i++){opts[i]=a.getString(i);if(opts[i].equalsIgnoreCase(o.optString("answer")))correct=i;}}MiniQuestion restored=new MiniQuestion(o.optString("prompt"),opts,correct,o.optString("explanation"),o.optString("type","choice"),o.optString("answer"));restored.topic=o.optString("topic","");miniQuestions.add(restored);if(miniQuestions.size()>=10)break;}catch(Exception ignored){}}
         if(miniQuestions.isEmpty()){showWeaknessTrainer();return;}renderMiniTest(0,false);
     }
     private void recordMistake(MiniQuestion q,String userAnswer){
         try{
-            org.json.JSONObject o=new org.json.JSONObject();o.put("topic",miniTopic);o.put("type",q.type);o.put("prompt",q.prompt);o.put("answer",q.answer);o.put("user_answer",userAnswer);o.put("explanation",q.explanation);
+            org.json.JSONObject o=new org.json.JSONObject();o.put("topic",q.topic==null||q.topic.isEmpty()?miniTopic:q.topic);o.put("type",q.type);o.put("prompt",q.prompt);o.put("answer",q.answer);o.put("user_answer",userAnswer);o.put("explanation",q.explanation);
             org.json.JSONArray a=new org.json.JSONArray();if(q.options!=null)for(String option:q.options)a.put(option);o.put("options",a);
             String key="mistake_"+System.currentTimeMillis()+"_"+Math.abs(q.prompt.hashCode());prefs.edit().putString(key,o.toString()).apply();
             List<String> keys=new ArrayList<>();for(String k:prefs.getAll().keySet())if(k.startsWith("mistake_"))keys.add(k);java.util.Collections.sort(keys);for(int i=0;i<keys.size()-100;i++)prefs.edit().remove(keys.get(i)).apply();
@@ -1004,7 +1004,7 @@ public class MainActivity extends Activity {
         else{int a=17+quizRandom.nextInt(70),b=6+quizRandom.nextInt(30);answer=a+b;prompt="Вычисли "+a+" + "+b;explain=a+" + "+b+" = "+answer+".";}
         List<Integer> order=new ArrayList<>();order.add(answer);int attempts=0;while(order.size()<4&&attempts++<100){int delta=1+quizRandom.nextInt(9);int candidate=answer+(quizRandom.nextBoolean()?delta:-delta);if(candidate>=0&&!order.contains(candidate))order.add(candidate);}while(order.size()<4)order.add(answer+order.size()+attempts++);
         java.util.Collections.shuffle(order,quizRandom);String[] opts=new String[4];int correct=0;for(int i=0;i<4;i++){opts[i]=decimalAnswer?String.format(Locale.GERMANY,"%.1f",order.get(i)/10.0):String.valueOf(order.get(i));if(order.get(i)==answer)correct=i;}
-        return new MiniQuestion(prompt,opts,correct,explain,"choice",opts[correct]);
+        MiniQuestion generated=new MiniQuestion(prompt,opts,correct,explain,"choice",opts[correct]);generated.topic=topic;return generated;
     }
     private void renderMiniTest(int index,boolean wrongOnly){
         List<MiniQuestion> list=wrongOnly?miniWrongQuestions:miniQuestions;
@@ -1165,8 +1165,8 @@ public class MainActivity extends Activity {
                 int day = slot - offset + 1;
                 String dateKey = String.format(Locale.US, "%04d-%02d-%02d", yearNumber, monthNumber + 1, day);
                 boolean studied = studiedDays.contains(dateKey), visited = visitedDays.contains(dateKey), isToday = progressMonthOffset == 0 && day == todayDay;
-                cell.setText(String.valueOf(day)); cell.setTextColor(studied ? PINK : DARK);
-                cell.setBackground(shape(studied ? PALE : (isToday ? PALE : (visited ? 0xFFF1F0F2 : 0xFFFFFFFF)), 11, isToday ? PINK : (studied ? PINK : 0x00FFFFFF)));
+                cell.setText(String.valueOf(day)); int minutes=prefs.getInt("focus_minutes_"+dateKey,0);int heatColor=minutes>=60?0xFFFFC4D5:minutes>=30?0xFFFFD8E3:minutes>=15?0xFFFFE8EE:studied?0xFFFFF2F5:(isToday?PALE:(visited?0xFFF1F0F2:0xFFFFFFFF));cell.setTextColor(studied?PINK:DARK);
+                cell.setBackground(shape(heatColor,11,isToday?PINK:(studied?0xFFFFC6D7:0x00FFFFFF)));
                 cell.setElevation(dp(1)); if (isToday) cell.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             }
             LinearLayout.LayoutParams dayCell=new LinearLayout.LayoutParams(0,dp(30),1f); dayCell.gravity=Gravity.CENTER; dayCell.setMargins(dp(2),0,dp(2),0); week.addView(cell,dayCell);
