@@ -679,42 +679,36 @@ public class MainActivity extends Activity {
         extraContent.setOrientation(LinearLayout.VERTICAL);
         extraContent.setVisibility(View.GONE);
 
-        addText(extraContent, "ЭМОЦИИ И МОТИВАЦИЯ", 11, PINK, true);
-        LinearLayout feelings1 = new LinearLayout(this);
-        feelings1.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(feelings1, "♡", "Дневник", "Маленькие победы", this::showDiary);
-        ritualTile(feelings1, "☆", "Письмо себе", "В будущее", this::showFutureLetters);
-        extraContent.addView(feelings1, lp(-1, -2, 0, 7, 0, 8));
-        LinearLayout feelings2 = new LinearLayout(this);
-        feelings2.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(feelings2, "✿", "Цветочек", "Растёт с тобой", this::showFlower);
-        ritualTile(feelings2, "☼", "Атмосфера", "Звуки для учёбы", this::showAtmosphere);
-        extraContent.addView(feelings2, lp(-1, -2, 0, 0, 0, 12));
-
         addText(extraContent, "УЧЁБА", 11, PINK, true);
         LinearLayout studyMore = new LinearLayout(this);
         studyMore.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(studyMore, "◎", "Викторина", "Математика", this::showMathQuiz);
-        ritualTile(studyMore, "▤", "Слабые места", "Работа над ошибками", this::showWeaknessTrainer);
+        ritualTile(studyMore, "△", "Викторина", "Математика", this::showMathQuiz);
+        ritualTile(studyMore, "□", "Планировщик", "План на день", this::showPlanner);
         extraContent.addView(studyMore, lp(-1, -2, 0, 7, 0, 12));
+
+        addText(extraContent, "ЭМОЦИИ И МОТИВАЦИЯ", 11, PINK, true);
+        LinearLayout feelings1 = new LinearLayout(this);
+        feelings1.setOrientation(LinearLayout.HORIZONTAL);
+        ritualTile(feelings1, "○", "Дневник", "Маленькие победы", this::showDiary);
+        ritualTile(feelings1, "▱", "Письмо себе", "В будущее", this::showFutureLetters);
+        extraContent.addView(feelings1, lp(-1, -2, 0, 7, 0, 8));
+        LinearLayout feelings2 = new LinearLayout(this);
+        feelings2.setOrientation(LinearLayout.HORIZONTAL);
+        ritualTile(feelings2, "◇", "Цветочек", "Растёт с тобой", this::showFlower);
+        ritualTile(feelings2, "◌", "Атмосфера", "Звуки для учёбы", this::showAtmosphere);
+        extraContent.addView(feelings2, lp(-1, -2, 0, 0, 0, 12));
 
         addText(extraContent, "ПРОГРЕСС", 11, PINK, true);
         LinearLayout progressMore = new LinearLayout(this);
         progressMore.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(progressMore, "▦", "Календарь", "Дни занятий", this::showProgress);
-        ritualTile(progressMore, "◇", "Статистика", "Подробный обзор", this::showDetailedStats);
-        extraContent.addView(progressMore, lp(-1, -2, 0, 7, 0, 8));
-        LinearLayout progressMore2 = new LinearLayout(this);
-        progressMore2.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(progressMore2, "☆", "Достижения", "Твои награды", this::showAchievements);
-        ritualTile(progressMore2, "□", "Планировщик", "План на день", this::showPlanner);
-        extraContent.addView(progressMore2, lp(-1, -2, 0, 0, 0, 12));
+        ritualTile(progressMore, "▤", "Статистика", "Подробный обзор", this::showDetailedStats);
+        ritualTile(progressMore, "☆", "Достижения", "Твои награды", this::showAchievements);
+        extraContent.addView(progressMore, lp(-1, -2, 0, 7, 0, 12));
 
         addText(extraContent, "СОЦИАЛЬНОЕ", 11, PINK, true);
         LinearLayout socialMore = new LinearLayout(this);
         socialMore.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(socialMore, "♡", "Напарник", "Общая цель", this::showStudyBuddy);
-        ritualTile(socialMore, "✧", "ИИ-помощник", "Задать вопрос", () -> launchAiTutor());
+        ritualTile(socialMore, "◎", "Напарник", "Общая цель", this::showStudyBuddy);
         extraContent.addView(socialMore, lp(-1, -2, 0, 7, 0, 12));
 
         root.addView(extraContent, lp(-1, -2, 0, 0, 0, 8));
