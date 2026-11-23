@@ -82,6 +82,22 @@ public class AiTutorActivity extends Activity {
         page.setOrientation(LinearLayout.VERTICAL);
         page.setBackgroundColor(BG);
         page.setPadding(dp(14), dp(8), dp(14), dp(10));
+        if (android.os.Build.VERSION.SDK_INT >= 21) {
+            page.setOnApplyWindowInsetsListener((view, insets) -> {
+                int top = 0, bottom = 0;
+                if (android.os.Build.VERSION.SDK_INT >= 30) {
+                    android.graphics.Insets bars = insets.getInsets(android.view.WindowInsets.Type.systemBars());
+                    android.graphics.Insets ime = insets.getInsets(android.view.WindowInsets.Type.ime());
+                    top = bars.top;
+                    bottom = Math.max(bars.bottom, ime.bottom);
+                } else {
+                    top = insets.getSystemWindowInsetTop();
+                    bottom = insets.getSystemWindowInsetBottom();
+                }
+                view.setPadding(dp(14), dp(8) + top, dp(14), dp(10) + bottom);
+                return insets;
+            });
+        }
 
         LinearLayout top = new LinearLayout(this);
         top.setGravity(Gravity.CENTER_VERTICAL);
@@ -166,6 +182,7 @@ public class AiTutorActivity extends Activity {
         page.addView(composer, new LinearLayout.LayoutParams(-1, -2));
 
         setContentView(page);
+        if (android.os.Build.VERSION.SDK_INT >= 21) page.requestApplyInsets();
     }
 
     private void sendMessage() {
