@@ -66,9 +66,11 @@ public class MainActivity extends Activity {
     private android.animation.ObjectAnimator flowerBreatheAnimator;
     private final List<MiniQuestion> miniQuestions=new ArrayList<>();
     private final List<MiniQuestion> miniWrongQuestions=new ArrayList<>();
+    private final Map<String,List<MiniQuestion>> questionBank=new HashMap<>();
     private int miniScore=0;
     private String miniTopic="";
-    private static class MiniQuestion { String prompt,explanation; String[] options; int correct; MiniQuestion(String p,String[] o,int c,String e){prompt=p;options=o;correct=c;explanation=e;} }
+    private boolean weaknessTrainingMode=false;
+    private static class MiniQuestion { String prompt,explanation,type,answer; String[] options; int correct; MiniQuestion(String p,String[] o,int c,String e){this(p,o,c,e,"choice",o!=null&&c>=0&&c<o.length?o[c]:"");} MiniQuestion(String p,String[] o,int c,String e,String t,String a){prompt=p;options=o;correct=c;explanation=e;type=t;answer=a;} }
     private Button timerStartButton, timerPauseButton;
     private EditText customMinutesInput;
     private long appUsageStartedElapsed = 0L;
@@ -117,6 +119,7 @@ public class MainActivity extends Activity {
             prefs.edit().putStringSet("study_days", history).apply();
         }
         loadChapters();
+        loadQuestionBank();
         scheduleReminders(this); rescheduleFutureLetterReminders(this); WeeklyReportReceiver.schedule(this); StudyWidgetProvider.updateAll(this);
         if (prefs.getBoolean("notifications_enabled", true) && Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 20);
@@ -702,6 +705,7 @@ public class MainActivity extends Activity {
         TextView search=text("⌕",24,PINK,true);search.setGravity(Gravity.CENTER);search.setBackground(shape(0xFFFFF0F4,14,0xFFF2DDE4));search.setElevation(dp(1));search.setContentDescription("Поиск уроков и тем");lessonHead.addView(search,lp(42,40,0,0,7,0));search.setOnClickListener(v->showSearchDialog());
         Button orderButton=button("⋮",false);orderButton.setTextSize(22);orderButton.setPadding(0,0,0,0);lessonHead.addView(orderButton,lp(40,38,0,0,0,0));root.addView(lessonHead,lp(-1,42,0,0,0,8));
         orderButton.setOnClickListener(v->{android.widget.PopupMenu menu=new android.widget.PopupMenu(this,orderButton);menu.getMenu().add(0,1,0,"По умолчанию");menu.getMenu().add(0,2,1,"По названию А—Я");menu.getMenu().add(0,3,2,"Сначала новые");menu.getMenu().add(0,4,3,"По прогрессу");menu.setOnMenuItemClickListener(mi->{prefs.edit().putString("lesson_sort",mi.getItemId()==2?"alpha":mi.getItemId()==3?"new":mi.getItemId()==4?"progress":"default").apply();showChapters();return true;});menu.show();});
+        Button weak=button("🧠  Мои слабые места · "+countMistakes(),false);weak.setOnClickListener(v->showWeaknessTrainer());root.addView(weak,lp(-1,46,0,0,0,10));
         List<String> mathTopics=chapters.get("1️⃣ Натуральные числа и действия с ними");int total=0,done=0;for(List<String> topics:chapters.values()){total+=topics.size();done+=countCompleted(topics);}
         int mathTotal=0,mathDone=0;for(Map.Entry<String,List<String>> e:chapters.entrySet())if(!e.getKey().startsWith("CUSTOM:")){mathTotal+=e.getValue().size();mathDone+=countCompleted(e.getValue());}
         LinearLayout math=card();math.setOrientation(LinearLayout.VERTICAL);math.setPadding(dp(15),dp(13),dp(15),dp(12));math.setOnClickListener(v->showMathChapters());
@@ -844,10 +848,50 @@ public class MainActivity extends Activity {
         root.addView(back, lp(-1, 50, 0, 0, 0, 0));
     }
 
+    private void loadQuestionBank(){
+        questionBank.clear();
+        try(java.io.InputStream in=getAssets().open("question_bank.json")){
+            java.io.ByteArrayOutputStream out=new java.io.ByteArrayOutputStream();byte[] buffer=new byte[8192];int n;while((n=in.read(buffer))>0)out.write(buffer,0,n);
+            org.json.JSONObject data=new org.json.JSONObject(new String(out.toByteArray(),java.nio.charset.StandardCharsets.UTF_8));
+            org.json.JSONArray all=data.getJSONArray("questions");
+            for(int i=0;i<all.length();i++){
+                org.json.JSONObject item=all.getJSONObject(i);String topic=item.getString("topic"),type=item.optString("type","choice"),answer=item.optString("answer","");
+                org.json.JSONArray arr=item.optJSONArray("options");String[] options=null;int correct=-1;
+                if(arr!=null){options=new String[arr.length()];for(int k=0;k<arr.length();k++){options[k]=arr.getString(k);if(options[k].trim().equalsIgnoreCase(answer.trim()))correct=k;}}
+                MiniQuestion q=new MiniQuestion(item.getString("prompt"),options,correct,item.optString("explanation",""),type,answer);
+                List<MiniQuestion> list=questionBank.get(topic);if(list==null){list=new ArrayList<>();questionBank.put(topic,list);}list.add(q);
+            }
+        }catch(Exception e){android.util.Log.e("StudyWithLove","Question bank load failed",e);}
+    }
     private void startMiniTest(String topic){
-        miniTopic=topic;miniQuestions.clear();miniWrongQuestions.clear();miniScore=0;
-        for(int i=0;i<5;i++)miniQuestions.add(makeMiniQuestion(topic));
+        miniTopic=topic;miniQuestions.clear();miniWrongQuestions.clear();miniScore=0;weaknessTrainingMode=false;
+        List<MiniQuestion> bank=questionBank.get(topic);
+        if(bank!=null&&!bank.isEmpty()){
+            List<MiniQuestion> shuffled=new ArrayList<>(bank);java.util.Collections.shuffle(shuffled,quizRandom);
+            miniQuestions.addAll(shuffled.subList(0,Math.min(5,shuffled.size())));
+        }else for(int i=0;i<5;i++)miniQuestions.add(makeMiniQuestion(topic));
         renderMiniTest(0,false);
+    }
+    private void startWeaknessTraining(){
+        miniTopic="Мои слабые места";miniQuestions.clear();miniWrongQuestions.clear();miniScore=0;weaknessTrainingMode=true;
+        List<String> keys=new ArrayList<>();for(String key:prefs.getAll().keySet())if(key.startsWith("mistake_"))keys.add(key);java.util.Collections.sort(keys,java.util.Collections.reverseOrder());
+        for(String key:keys){try{org.json.JSONObject o=new org.json.JSONObject(prefs.getString(key,"{}"));org.json.JSONArray a=o.optJSONArray("options");String[] opts=null;int correct=-1;if(a!=null){opts=new String[a.length()];for(int i=0;i<a.length();i++){opts[i]=a.getString(i);if(opts[i].equalsIgnoreCase(o.optString("answer")))correct=i;}}miniQuestions.add(new MiniQuestion(o.optString("prompt"),opts,correct,o.optString("explanation"),o.optString("type","choice"),o.optString("answer")));if(miniQuestions.size()>=10)break;}catch(Exception ignored){}}
+        if(miniQuestions.isEmpty()){showWeaknessTrainer();return;}renderMiniTest(0,false);
+    }
+    private void recordMistake(MiniQuestion q,String userAnswer){
+        try{
+            org.json.JSONObject o=new org.json.JSONObject();o.put("topic",miniTopic);o.put("type",q.type);o.put("prompt",q.prompt);o.put("answer",q.answer);o.put("user_answer",userAnswer);o.put("explanation",q.explanation);
+            org.json.JSONArray a=new org.json.JSONArray();if(q.options!=null)for(String option:q.options)a.put(option);o.put("options",a);
+            String key="mistake_"+System.currentTimeMillis()+"_"+Math.abs(q.prompt.hashCode());prefs.edit().putString(key,o.toString()).apply();
+            List<String> keys=new ArrayList<>();for(String k:prefs.getAll().keySet())if(k.startsWith("mistake_"))keys.add(k);java.util.Collections.sort(keys);for(int i=0;i<keys.size()-100;i++)prefs.edit().remove(keys.get(i)).apply();
+        }catch(Exception ignored){}
+    }
+    private String normalizeAnswer(String value){return value==null?"":value.trim().toLowerCase(new Locale("ru")).replace(" ","").replace(",",".").replace("−","-");}
+    private void acceptMiniAnswer(MiniQuestion q,String userAnswer,int index,boolean wrongOnly,View source){
+        boolean correct=normalizeAnswer(userAnswer).equals(normalizeAnswer(q.answer));
+        if(correct){miniScore++;haptic(source,true);}else{miniWrongQuestions.add(q);recordMistake(q,userAnswer);haptic(source,false);if(source!=null)source.animate().translationX(dp(8)).setDuration(45).withEndAction(()->source.animate().translationX(-dp(8)).setDuration(45).withEndAction(()->source.animate().translationX(0).setDuration(45).start()).start()).start();}
+        if(q.options!=null&&source instanceof Button){Button chosen=(Button)source;chosen.setBackground(shape(correct?0xFFE4F4E8:0xFFFFE8E8,22,correct?0xFF75B987:0xFFE58A8A));chosen.setTextColor(correct?0xFF287A43:0xFFB64242);}
+        new Handler().postDelayed(()->{if(!isFinishing())renderMiniTest(index+1,wrongOnly);},correct?220:260);
     }
     private MiniQuestion makeMiniQuestion(String topic){
         String t=topic.toLowerCase(new Locale("ru"));
@@ -855,52 +899,46 @@ public class MainActivity extends Activity {
         boolean dec=t.contains("десятич")||t.contains("округлен")||t.contains("среднее арифмет");
         boolean frac=t.contains("дроб")||t.contains("смешан")||t.contains("часть числа")||t.contains("числа по его части");
         int answer;String prompt,explain;boolean decimalAnswer=false;
-        if(pct){
-            int a=20+quizRandom.nextInt(181),b=2+quizRandom.nextInt(9);
-            if(t.contains("пропорц")||t.contains("отношение")){int unitPrice=2+quizRandom.nextInt(6),baseCount=2+quizRandom.nextInt(5),doubleCount=baseCount*2;answer=unitPrice*2;prompt=baseCount+" одинаковых предмета стоят "+(unitPrice*baseCount)+". Сколько стоят "+doubleCount+" таких предметов?";explain="Количество увеличилось в 2 раза, значит стоимость тоже: "+(unitPrice*baseCount)+" · 2 = "+answer+".";}
-            else if(t.contains("числа по процент")||t.contains("по процент")){int p=10*(1+quizRandom.nextInt(8));answer=a;int part=a*p/100;prompt=part+" составляет "+p+"% какого числа?";answer=part*100/p;explain=answer+" · "+p+"% = "+part+".";}
-            else if(t.contains("увелич")||t.contains("уменьш")){int p=10*(1+quizRandom.nextInt(4));answer=t.contains("уменьш")?a-a*p/100:a+a*p/100;prompt="Уменьши "+a+" на "+p+"%";if(t.contains("увелич"))prompt="Увеличь "+a+" на "+p+"%";explain=a+(t.contains("уменьш")?" − ":" + ")+(a*p/100)+" = "+answer+".";}
-            else{int p=new int[]{5,10,20,25,50}[quizRandom.nextInt(5)];answer=a*p/100;prompt="Найди "+p+"% от "+a;explain=p+"% от "+a+" = "+answer+".";}
-        }else if(dec){
-            decimalAnswer=true;int a=12+quizRandom.nextInt(80),b=11+quizRandom.nextInt(70);
-            if(t.contains("сравнен")){answer=Math.max(a,b);prompt="Какое число больше: "+String.format(Locale.GERMANY,"%.1f",a/10.0)+" или "+String.format(Locale.GERMANY,"%.1f",b/10.0)+"?";explain="Сравни целые и десятые части чисел. Ответ: "+String.format(Locale.GERMANY,"%.1f",answer/10.0)+".";}
-            else if(t.contains("округлен")){int n=125+quizRandom.nextInt(800);answer=(n+5)/10;prompt="Округли "+String.format(Locale.GERMANY,"%.2f",n/100.0)+" до десятых";explain="Получаем "+String.format(Locale.GERMANY,"%.1f",answer/10.0)+".";}
-            else{answer=a+b;prompt="Вычисли "+String.format(Locale.GERMANY,"%.1f",a/10.0)+" + "+String.format(Locale.GERMANY,"%.1f",b/10.0);explain=String.format(Locale.GERMANY,"%.1f + %.1f = %.1f",a/10.0,b/10.0,answer/10.0);}
-        }else if(frac){
-            int d=2+quizRandom.nextInt(8),n=2+quizRandom.nextInt(9);
-            if(t.contains("сравнен")){int x=1+quizRandom.nextInt(d-1),y=1+quizRandom.nextInt(d-1);answer=Math.max(x,y);prompt="Для дробей "+x+"/"+d+" и "+y+"/"+d+" выбери больший числитель";explain="При одинаковых знаменателях больше дробь с большим числителем: "+answer+".";}
-            else if(t.contains("смешан")||t.contains("правильн")||t.contains("неправильн")){int whole=1+quizRandom.nextInt(8),num=1+quizRandom.nextInt(d-1);answer=whole*d+num;prompt="Преобразуй "+whole+" "+num+"/"+d+" в неправильную дробь (числитель)";explain=whole+" · "+d+" + "+num+" = "+answer+".";}
-            else if(t.contains("делен")){int numerator=1+quizRandom.nextInt(7),denominator=2+quizRandom.nextInt(7);answer=numerator;prompt="Вычисли "+numerator+"/"+denominator+" ÷ 1/"+denominator;explain="Деление на 1/"+denominator+" даёт "+answer+".";}
-            else if(t.contains("умнож")){int x=1+quizRandom.nextInt(7),y=1+quizRandom.nextInt(7);answer=x;prompt="Вычисли "+x+"/3 · 3/"+y+" (числитель произведения)";explain="Сокращаем 3 и 3; числитель результата равен "+answer+".";}
-            else{int whole=d*n;answer=n;prompt="Найди 1/"+d+" от "+whole;explain="Одна "+1+"/"+d+" часть от "+whole+" равна "+answer+".";}
-        }else{
-            int a=17+quizRandom.nextInt(70),b=6+quizRandom.nextInt(30);
-            if(t.contains("сравнен")||t.contains("упорядоч")){answer=Math.max(a,b);prompt="Какое число больше: "+a+" или "+b+"?";explain="Больше число "+answer+".";}
-            else if(t.contains("делител")||t.contains("кратн")||t.contains("делим")){int k=2+quizRandom.nextInt(8);answer=k;prompt="Какое число нужно умножить на "+k+"?";answer=k;prompt="Назови делитель числа "+(k*12)+" из вариантов: найди простой делитель";explain=k+" делит "+(k*12)+" без остатка.";}
-            else{answer=a+b;prompt="Вычисли "+a+" + "+b;explain=a+" + "+b+" = "+answer+".";}
-        }
-        java.util.List<Integer> order=new java.util.ArrayList<>();order.add(answer);
-        int attempts=0;while(order.size()<4&&attempts++<100){int delta=1+quizRandom.nextInt(Math.max(4,Math.min(12,Math.abs(answer)/3+3)));if(quizRandom.nextBoolean())delta=-delta;int candidate=answer+delta;if(candidate>=0&&!order.contains(candidate))order.add(candidate);}
-        while(order.size()<4){int candidate=answer+order.size()+attempts++;if(!order.contains(candidate))order.add(candidate);}
-        java.util.Collections.shuffle(order,quizRandom);String[] opts=new String[4];int correct=0;
-        for(int i=0;i<4;i++){opts[i]=decimalAnswer?String.format(Locale.GERMANY,"%.1f",order.get(i)/10.0):String.valueOf(order.get(i));if(order.get(i)==answer)correct=i;}
-        return new MiniQuestion(prompt,opts,correct,explain);
+        if(pct){int a=20+quizRandom.nextInt(181);if(t.contains("пропорц")||t.contains("отношение")){int unitPrice=2+quizRandom.nextInt(6),baseCount=2+quizRandom.nextInt(5);answer=unitPrice*2;prompt=baseCount+" одинаковых предмета стоят "+(unitPrice*baseCount)+". Сколько стоят "+(baseCount*2)+" таких предметов?";explain="Количество увеличилось в 2 раза, значит стоимость тоже: "+(unitPrice*baseCount)+" · 2 = "+answer+".";}else{int p=10*(1+quizRandom.nextInt(8));answer=a*p/100;prompt="Найди "+p+"% от "+a;explain=p+"% от "+a+" = "+answer+".";}}
+        else if(dec){decimalAnswer=true;int a=12+quizRandom.nextInt(80),b=11+quizRandom.nextInt(70);answer=a+b;prompt="Вычисли "+String.format(Locale.GERMANY,"%.1f",a/10.0)+" + "+String.format(Locale.GERMANY,"%.1f",b/10.0);explain=String.format(Locale.GERMANY,"%.1f + %.1f = %.1f",a/10.0,b/10.0,answer/10.0);}
+        else if(frac){int d=2+quizRandom.nextInt(8),n=2+quizRandom.nextInt(9);answer=n;prompt="Найди 1/"+d+" от "+(d*n);explain="Одна "+1+"/"+d+" часть от "+(d*n)+" равна "+answer+".";}
+        else{int a=17+quizRandom.nextInt(70),b=6+quizRandom.nextInt(30);answer=a+b;prompt="Вычисли "+a+" + "+b;explain=a+" + "+b+" = "+answer+".";}
+        List<Integer> order=new ArrayList<>();order.add(answer);int attempts=0;while(order.size()<4&&attempts++<100){int delta=1+quizRandom.nextInt(9);int candidate=answer+(quizRandom.nextBoolean()?delta:-delta);if(candidate>=0&&!order.contains(candidate))order.add(candidate);}while(order.size()<4)order.add(answer+order.size()+attempts++);
+        java.util.Collections.shuffle(order,quizRandom);String[] opts=new String[4];int correct=0;for(int i=0;i<4;i++){opts[i]=decimalAnswer?String.format(Locale.GERMANY,"%.1f",order.get(i)/10.0):String.valueOf(order.get(i));if(order.get(i)==answer)correct=i;}
+        return new MiniQuestion(prompt,opts,correct,explain,"choice",opts[correct]);
     }
     private void renderMiniTest(int index,boolean wrongOnly){
-        currentScreen="mini_test";base("Мини-тест · "+(index+1)+"/"+(wrongOnly?miniWrongQuestions.size():miniQuestions.size()),"Пять коротких вопросов — проверь себя");
         List<MiniQuestion> list=wrongOnly?miniWrongQuestions:miniQuestions;
         if(index>=list.size()){showMiniTestResult(wrongOnly);return;}
-        MiniQuestion q=list.get(index);LinearLayout panel=card();panel.setPadding(dp(16),dp(18),dp(16),dp(18));addText(panel,"ВОПРОС "+(index+1)+" ИЗ "+list.size(),11,PINK,true);addText(panel,q.prompt,21,DARK,true);root.addView(panel,lp(-1,-2,0,0,0,14));
-        final boolean[] answered={false};Button[] answerButtons=new Button[q.options.length];
-        for(int i=0;i<q.options.length;i++){final int answer=i;Button b=button(q.options[i],false);answerButtons[i]=b;b.setTextSize(18);root.addView(b,lp(-1,50,0,0,0,8));b.setOnClickListener(v->{if(answered[0])return;answered[0]=true;for(int k=0;k<q.options.length;k++){Button choice=answerButtons[k];if(k==q.correct){choice.setBackground(shape(0xFFE4F4E8,22,0xFF75B987));choice.setTextColor(0xFF287A43);}else if(k==answer){choice.setBackground(shape(0xFFFFE8E8,22,0xFFE58A8A));choice.setTextColor(0xFFB64242);}}boolean correct=answer==q.correct;if(correct){miniScore++;haptic(b,true);}else{miniWrongQuestions.add(q);haptic(b,false);b.animate().translationX(dp(9)).setDuration(55).withEndAction(()->b.animate().translationX(-dp(9)).setDuration(55).withEndAction(()->b.animate().translationX(0).setDuration(55).start()).start()).start();}new Handler().postDelayed(()->{if(!isFinishing())renderMiniTest(index+1,wrongOnly);},280);});}
+        currentScreen="mini_test";base((weaknessTrainingMode?"Мои слабые места":"Мини-тест")+" · "+(index+1)+"/"+list.size(),"Отвечай в своём темпе — после ответа будет короткое объяснение");
+        MiniQuestion q=list.get(index);LinearLayout panel=card();panel.setPadding(dp(16),dp(18),dp(16),dp(18));addText(panel,"ВОПРОС "+(index+1)+" ИЗ "+list.size(),11,PINK,true);addText(panel,q.type.equals("input")?"✍️  ВПИШИ ОТВЕТ":q.type.equals("true_false")?"⚖️  ВЕРНО ИЛИ НЕВЕРНО":q.type.equals("find_error")?"🔎  НАЙДИ ОШИБКУ":"ВЫБЕРИ ОТВЕТ",10,MUTED,true);addText(panel,q.prompt,20,DARK,true);root.addView(panel,lp(-1,-2,0,0,0,14));
+        final boolean[] answered={false};
+        if("input".equals(q.type)){
+            EditText input=new EditText(this);input.setSingleLine(true);input.setTextSize(19);input.setTextColor(DARK);input.setHint("Твой ответ");input.setPadding(dp(14),dp(8),dp(14),dp(8));input.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));root.addView(input,lp(-1,52,0,0,0,9));
+            Button submit=button("Проверить ответ",true);root.addView(submit,lp(-1,48,0,0,0,8));submit.setOnClickListener(v->{if(answered[0])return;String value=input.getText().toString();if(value.trim().isEmpty()){input.setError("Введи ответ");return;}answered[0]=true;acceptMiniAnswer(q,value,index,wrongOnly,submit);});
+        }else{
+            String[] opts=q.options==null?new String[]{"Верно","Неверно"}:q.options;Button[] answerButtons=new Button[opts.length];
+            for(int i=0;i<opts.length;i++){final String answer=opts[i];Button b=button(answer,false);answerButtons[i]=b;b.setTextSize(17);root.addView(b,lp(-1,50,0,0,0,8));b.setOnClickListener(v->{if(answered[0])return;answered[0]=true;for(int k=0;k<opts.length;k++){Button choice=answerButtons[k];boolean isRight=normalizeAnswer(opts[k]).equals(normalizeAnswer(q.answer));if(isRight){choice.setBackground(shape(0xFFE4F4E8,22,0xFF75B987));choice.setTextColor(0xFF287A43);}else if(choice==b){choice.setBackground(shape(0xFFFFE8E8,22,0xFFE58A8A));choice.setTextColor(0xFFB64242);}}acceptMiniAnswer(q,answer,index,wrongOnly,b);});}
+        }
+        if(!q.explanation.isEmpty()){TextView hint=text("После ответа появится разбор решения",11,MUTED,false);root.addView(hint,lp(-1,-2,0,3,0,0));}
         Button quit=button("Завершить тест",false);quit.setOnClickListener(v->showMiniTestResult(wrongOnly));root.addView(quit,lp(-1,44,0,8,0,0));
     }
     private void showMiniTestResult(boolean wrongOnly){
-        currentScreen="mini_test_result";base("Результат мини-теста","Ошибки — это подсказка, что повторить");
-        int total=miniQuestions.size();LinearLayout card=card();card.setGravity(Gravity.CENTER);addText(card,"ТВОЙ РЕЗУЛЬТАТ",11,PINK,true);TextView score=text(miniScore+" / "+total,38,DARK,true);score.setGravity(Gravity.CENTER);card.addView(score,lp(-1,60,0,6,0,4));addText(card,miniWrongQuestions.isEmpty()?"Все ответы верные — отлично!":"Ошибок: "+miniWrongQuestions.size()+". Их можно пройти ещё раз.",13,MUTED,false);root.addView(card,lp(-1,-2,0,0,0,14));
+        currentScreen="mini_test_result";base(weaknessTrainingMode?"Результат тренажёра":"Результат мини-теста","Ошибки — это подсказка, что повторить");
+        int total=miniQuestions.size();LinearLayout resultCard=card();resultCard.setGravity(Gravity.CENTER);addText(resultCard,"ТВОЙ РЕЗУЛЬТАТ",11,PINK,true);TextView score=text(miniScore+" / "+total,38,DARK,true);score.setGravity(Gravity.CENTER);resultCard.addView(score,lp(-1,60,0,6,0,4));addText(resultCard,miniWrongQuestions.isEmpty()?"Все ответы верные — отлично!":"Ошибок: "+miniWrongQuestions.size()+". Они сохранены в журнале.",13,MUTED,false);root.addView(resultCard,lp(-1,-2,0,0,0,14));
         if(miniWrongQuestions.isEmpty()&&!pendingReviewKey.isEmpty()){prefs.edit().putBoolean(pendingReviewKey,true).apply();pendingReviewKey="";}
         if(!miniWrongQuestions.isEmpty()){Button repeat=button("↻  Повторить ошибки",true);repeat.setOnClickListener(v->{miniQuestions.clear();miniQuestions.addAll(miniWrongQuestions);miniWrongQuestions.clear();miniScore=0;renderMiniTest(0,false);});root.addView(repeat,lp(-1,50,0,0,0,8));}
-        Button again=button("Пройти тест заново",false);again.setOnClickListener(v->startMiniTest(miniTopic));root.addView(again,lp(-1,48,0,0,0,8));backHome();
+        Button again=button(weaknessTrainingMode?"Пройти тренажёр ещё раз":"Пройти тест заново",false);again.setOnClickListener(v->{if(weaknessTrainingMode)startWeaknessTraining();else startMiniTest(miniTopic);});root.addView(again,lp(-1,48,0,0,0,8));backHome();
+    }
+    private int countMistakes(){int n=0;for(String k:prefs.getAll().keySet())if(k.startsWith("mistake_"))n++;return n;}
+    private void showWeaknessTrainer(){
+        currentScreen="weakness_trainer";base("Мои слабые места","Повторяй именно те задания, в которых ошибалась");
+        Map<String,Integer> byTopic=new TreeMap<>();List<String> keys=new ArrayList<>();for(String key:prefs.getAll().keySet())if(key.startsWith("mistake_")){keys.add(key);try{org.json.JSONObject o=new org.json.JSONObject(prefs.getString(key,"{}"));String topic=o.optString("topic","Другая тема");byTopic.put(topic,byTopic.containsKey(topic)?byTopic.get(topic)+1:1);}catch(Exception ignored){}}
+        LinearLayout summary=card();addText(summary,"ЗАПИСЕЙ В ЖУРНАЛЕ",11,PINK,true);addText(summary,String.valueOf(keys.size()),34,DARK,true);addText(summary,"Ошибки сохраняются автоматически после неверного ответа.",12,MUTED,false);root.addView(summary,lp(-1,-2,0,0,0,12));
+        if(keys.isEmpty())addText(root,"Пока ошибок нет. Решай мини-тесты — если что-то не получится, задание появится здесь.",14,MUTED,false);
+        else{for(Map.Entry<String,Integer> e:byTopic.entrySet()){LinearLayout item=card();addText(item,e.getKey(),14,DARK,true);addText(item,e.getValue()+" "+dayWord(e.getValue())+" в журнале",12,MUTED,false);root.addView(item,lp(-1,-2,0,0,0,6));}}
+        Button train=button("🧠  Тренировать мои ошибки",true);train.setEnabled(!keys.isEmpty());train.setAlpha(keys.isEmpty()?.45f:1f);train.setOnClickListener(v->startWeaknessTraining());root.addView(train,lp(-1,50,0,10,0,8));
+        Button back=button("← К урокам",false);back.setOnClickListener(v->showChapters());root.addView(back,lp(-1,46,0,0,0,0));
     }
     private void addSpacedRepetitionSection(){
         LinearLayout section=card();addText(section,"🔁  ПОРА ПОВТОРИТЬ",12,PINK,true);int count=0;long now=System.currentTimeMillis();
