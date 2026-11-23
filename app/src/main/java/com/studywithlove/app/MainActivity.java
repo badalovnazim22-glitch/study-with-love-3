@@ -110,7 +110,7 @@ public class MainActivity extends Activity {
         getWindow().setNavigationBarColor(0xFFFFF9F7);
         updateSystemBarIcons();
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
-        long restoredEnd=prefs.getLong("timer_service_end_wall",0);if(restoredEnd>System.currentTimeMillis()){timerRunning=true;timerIsBreak=prefs.getBoolean("timer_service_break",false);timerRemainingMs=restoredEnd-System.currentTimeMillis();timerEndElapsed=SystemClock.elapsedRealtime()+timerRemainingMs;long duration=prefs.getLong("timer_service_duration",timerRemainingMs);timerSessionStarted=SystemClock.elapsedRealtime()-Math.max(0,duration-timerRemainingMs);}
+        SharedPreferences timerPrefs=getSharedPreferences("timer_runtime",MODE_PRIVATE);if(!timerPrefs.contains("timer_service_end_wall")&&prefs.contains("timer_service_end_wall")){SharedPreferences.Editor migrate=timerPrefs.edit();migrate.putLong("timer_service_end_wall",prefs.getLong("timer_service_end_wall",0)).putLong("timer_service_duration",prefs.getLong("timer_service_duration",60000)).putBoolean("timer_service_break",prefs.getBoolean("timer_service_break",false)).apply();prefs.edit().remove("timer_service_end_wall").remove("timer_service_duration").remove("timer_service_break").apply();}long restoredEnd=timerPrefs.getLong("timer_service_end_wall",0);if(restoredEnd>System.currentTimeMillis()){timerRunning=true;timerIsBreak=timerPrefs.getBoolean("timer_service_break",false);timerRemainingMs=restoredEnd-System.currentTimeMillis();timerEndElapsed=SystemClock.elapsedRealtime()+timerRemainingMs;long duration=timerPrefs.getLong("timer_service_duration",timerRemainingMs);timerSessionStarted=SystemClock.elapsedRealtime()-Math.max(0,duration-timerRemainingMs);}
         applySavedTheme();
         getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG);
         Set<String> visits = new TreeSet<>(prefs.getStringSet("visit_days", new TreeSet<String>())); visits.add(todayKey()); prefs.edit().putStringSet("visit_days", visits).apply();
@@ -1716,31 +1716,32 @@ public class MainActivity extends Activity {
     
     
     private String createBackupJson() throws Exception {
-        org.json.JSONObject json=new org.json.JSONObject();json.put("app","Study with Love");json.put("version",1);org.json.JSONObject data=new org.json.JSONObject();
-        for(Map.Entry<String,?> entry:prefs.getAll().entrySet()){String key=entry.getKey();if(key.startsWith("timer_service_"))continue;Object value=entry.getValue();if(value instanceof Set){org.json.JSONArray arr=new org.json.JSONArray();for(Object item:(Set<?>)value)arr.put(String.valueOf(item));data.put(entry.getKey(),arr);}else data.put(entry.getKey(),value);}
-        json.put("data",data);return json.toString(2);
+        org.json.JSONObject json=new org.json.JSONObject();json.put("app","Study with Love");json.put("version",2);org.json.JSONObject data=new org.json.JSONObject(),photos=new org.json.JSONObject();
+        Map<String,?> all=prefs.getAll();
+        for(Map.Entry<String,?> entry:all.entrySet()){
+            String key=entry.getKey();if(key.startsWith("timer_service_")||key.startsWith("topic_photo_"))continue;
+            Object value=entry.getValue();if(value instanceof Set){org.json.JSONArray arr=new org.json.JSONArray();for(Object item:(Set<?>)value)arr.put(String.valueOf(item));data.put(key,arr);}else data.put(key,value);
+        }
+        Set<String> suffixes=new TreeSet<>();for(String key:all.keySet()){if(key.startsWith("topic_photo_file_"))suffixes.add(key.substring("topic_photo_file_".length()));else if(key.startsWith("topic_photo_"))suffixes.add(key.substring("topic_photo_".length()));}
+        for(String suffix:suffixes){
+            String path=(String)all.get("topic_photo_file_"+suffix),uri=(String)all.get("topic_photo_"+suffix);java.io.InputStream in=null;
+            try{if(path!=null&&!path.isEmpty())in=new java.io.FileInputStream(path);else if(uri!=null&&!uri.isEmpty())in=getContentResolver().openInputStream(android.net.Uri.parse(uri));
+                if(in==null)throw new Exception("Фото темы недоступно: "+suffix);java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();byte[] buffer=new byte[8192];int n;while((n=in.read(buffer))!=-1)bytes.write(buffer,0,n);photos.put(suffix,android.util.Base64.encodeToString(bytes.toByteArray(),android.util.Base64.NO_WRAP));
+            }finally{if(in!=null)try{in.close();}catch(Exception ignored){}}
+        }
+        json.put("data",data);json.put("topic_photos",photos);return json.toString(2);
     }
     private void restoreBackupJson(String raw) throws Exception {
-        org.json.JSONObject json=new org.json.JSONObject(raw);
-        if(!"Study with Love".equals(json.optString("app")))throw new Exception("Wrong backup");
-        org.json.JSONObject data=json.getJSONObject("data");
-        SharedPreferences.Editor editor=prefs.edit().clear();
-        java.util.Iterator<String> keys=data.keys();
-        while(keys.hasNext()){
+        org.json.JSONObject json=new org.json.JSONObject(raw);if(!"Study with Love".equals(json.optString("app")))throw new Exception("Wrong backup");
+        org.json.JSONObject data=json.getJSONObject("data"),photos=json.optJSONObject("topic_photos");SharedPreferences.Editor editor=prefs.edit().clear();
+        java.util.Iterator<String> keys=data.keys();while(keys.hasNext()){
             String key=keys.next();Object value=data.get(key);
-            if(value instanceof org.json.JSONArray){
-                org.json.JSONArray arr=(org.json.JSONArray)value;Set<String> set=new TreeSet<>();
-                for(int i=0;i<arr.length();i++)set.add(arr.getString(i));
-                editor.putStringSet(key,set);
-            }else if(value instanceof Boolean)editor.putBoolean(key,(Boolean)value);
-            else if(value instanceof Number){
-                Number n=(Number)value;
-                if(key.startsWith("app_usage_remainder_")||key.startsWith("focus_remainder_ms_")||key.endsWith("_elapsed_ms")||key.endsWith("_time_ms"))editor.putLong(key,n.longValue());
-                else if(value instanceof Integer)editor.putInt(key,n.intValue());
-                else if(value instanceof Long)editor.putLong(key,n.longValue());
-                else editor.putFloat(key,n.floatValue());
-            }else if(value instanceof String)editor.putString(key,(String)value);
+            if(value instanceof org.json.JSONArray){org.json.JSONArray arr=(org.json.JSONArray)value;Set<String> set=new TreeSet<>();for(int i=0;i<arr.length();i++)set.add(arr.getString(i));editor.putStringSet(key,set);}
+            else if(value instanceof Boolean)editor.putBoolean(key,(Boolean)value);
+            else if(value instanceof Number){Number n=(Number)value;if(key.startsWith("app_usage_remainder_")||key.startsWith("focus_remainder_ms_")||key.endsWith("_elapsed_ms")||key.endsWith("_time_ms"))editor.putLong(key,n.longValue());else if(value instanceof Integer)editor.putInt(key,n.intValue());else if(value instanceof Long)editor.putLong(key,n.longValue());else editor.putFloat(key,n.floatValue());}
+            else if(value instanceof String)editor.putString(key,(String)value);
         }
+        if(photos!=null){java.util.Iterator<String> photoKeys=photos.keys();while(photoKeys.hasNext()){String suffix=photoKeys.next();byte[] bytes=android.util.Base64.decode(photos.getString(suffix),android.util.Base64.DEFAULT);java.io.File file=new java.io.File(getFilesDir(),"topic_photo_"+Math.abs(suffix.hashCode())+".jpg");try(java.io.FileOutputStream out=new java.io.FileOutputStream(file)){out.write(bytes);out.flush();}editor.putString("topic_photo_file_"+suffix,file.getAbsolutePath()).remove("topic_photo_"+suffix);}}
         editor.commit();scheduleReminders(this);
     }
     private void showSearchDialog() {
