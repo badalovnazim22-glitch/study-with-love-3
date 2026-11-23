@@ -439,7 +439,23 @@ public class MainActivity extends Activity {
         else if ("red".equals(theme)) { BG=0xFFFFF5F4; PINK=0xFFB32635; PALE=0xFFF8E2E3; DARK=0xFF4B2026; MUTED=0xFF9D777B; }
         else if ("lv".equals(theme)) { BG=0xFFF4E8D5; PINK=0xFF76502F; PALE=0xFFE7D2B3; DARK=0xFF3B281C; MUTED=0xFF92775E; }
         else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF95878C; }
+        applyAccentOverlay(theme);
         if (getWindow() != null) { getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG); updateSystemBarIcons(); }
+    }
+    private void applyAccentOverlay(String theme){
+        int style=R.style.AppAccentPink;
+        if("lavender".equals(theme))style=R.style.AppAccentLavender;
+        else if("mint".equals(theme))style=R.style.AppAccentMint;
+        else if("night".equals(theme))style=R.style.AppAccentNight;
+        else if("white".equals(theme))style=R.style.AppAccentWhite;
+        else if("brown".equals(theme))style=R.style.AppAccentBrown;
+        else if("gold".equals(theme))style=R.style.AppAccentGold;
+        else if("luxury".equals(theme))style=R.style.AppAccentLuxury;
+        else if("sky".equals(theme))style=R.style.AppAccentSky;
+        else if("peach".equals(theme))style=R.style.AppAccentPeach;
+        else if("red".equals(theme))style=R.style.AppAccentRed;
+        else if("lv".equals(theme))style=R.style.AppAccentLv;
+        getTheme().applyStyle(style,true);
     }
 
         private void showHome() {
