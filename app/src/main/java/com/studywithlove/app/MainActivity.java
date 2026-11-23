@@ -31,6 +31,8 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.widget.Toast;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.Calendar;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -995,7 +997,7 @@ public class MainActivity extends Activity {
         Map<String,Integer> byTopic=new TreeMap<>();List<String> keys=new ArrayList<>();for(String key:prefs.getAll().keySet())if(key.startsWith("mistake_")){keys.add(key);try{org.json.JSONObject o=new org.json.JSONObject(prefs.getString(key,"{}"));String topic=o.optString("topic","Другая тема");byTopic.put(topic,byTopic.containsKey(topic)?byTopic.get(topic)+1:1);}catch(Exception ignored){}}
         LinearLayout summary=card();addText(summary,"ЗАПИСЕЙ В ЖУРНАЛЕ",11,PINK,true);addText(summary,String.valueOf(keys.size()),34,DARK,true);addText(summary,"Ошибки сохраняются автоматически после неверного ответа.",12,MUTED,false);root.addView(summary,lp(-1,-2,0,0,0,12));
         if(keys.isEmpty())addText(root,"Пока ошибок нет. Решай мини-тесты — если что-то не получится, задание появится здесь.",14,MUTED,false);
-        else{for(Map.Entry<String,Integer> e:byTopic.entrySet()){LinearLayout item=card();addText(item,e.getKey(),14,DARK,true);addText(item,e.getValue()+" "+dayWord(e.getValue())+" в журнале",12,MUTED,false);root.addView(item,lp(-1,-2,0,0,0,6));}}
+        else{for(Map.Entry<String,Integer> e:byTopic.entrySet()){LinearLayout item=card();addText(item,e.getKey(),14,DARK,true);addText(item,e.getValue()+" ошибок в журнале",12,MUTED,false);root.addView(item,lp(-1,-2,0,0,0,6));}}
         Button train=button("🧠  Тренировать мои ошибки",true);train.setEnabled(!keys.isEmpty());train.setAlpha(keys.isEmpty()?.45f:1f);train.setOnClickListener(v->startWeaknessTraining());root.addView(train,lp(-1,50,0,10,0,8));
         Button back=button("← К урокам",false);back.setOnClickListener(v->showChapters());root.addView(back,lp(-1,46,0,0,0,0));
     }
