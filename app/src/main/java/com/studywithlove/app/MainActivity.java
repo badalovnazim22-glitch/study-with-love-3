@@ -385,11 +385,6 @@ public class MainActivity extends Activity {
         return group;
     }
 
-    @Override protected void onResume() {
-        super.onResume();
-        AppUpdater.resumePendingInstall(this);
-    }
-
     private void showSettings() {
         currentScreen="settings";
         base("Настройки ⚙","Всё нужное — в одном месте");
@@ -1470,7 +1465,7 @@ public class MainActivity extends Activity {
     // App usage is tracked separately; only an explicit study action records a study day.
     private void saveForegroundUsage() { appUsageStartedElapsed=0L; }
 
-    @Override protected void onResume() { super.onResume(); activityVisible=true; appUsageStartedElapsed = SystemClock.elapsedRealtime(); if (prefs != null) {updateAchievementDates();scheduleReminders(this);rescheduleFutureLetterReminders(this);WeeklyReportReceiver.schedule(this);StudyWidgetProvider.updateAll(this);if(prefs.getBoolean("timer_finish_prompt_pending",false)){prefs.edit().putBoolean("timer_finish_prompt_pending",false).apply();showTimerFinishPrompt();}} }
+    @Override protected void onResume() { super.onResume(); AppUpdater.resumePendingInstall(this); activityVisible=true; appUsageStartedElapsed = SystemClock.elapsedRealtime(); if (prefs != null) {updateAchievementDates();scheduleReminders(this);rescheduleFutureLetterReminders(this);WeeklyReportReceiver.schedule(this);StudyWidgetProvider.updateAll(this);if(prefs.getBoolean("timer_finish_prompt_pending",false)){prefs.edit().putBoolean("timer_finish_prompt_pending",false).apply();showTimerFinishPrompt();}} }
     @Override protected void onPause() { activityVisible=false; saveForegroundUsage(); appUsageStartedElapsed = 0L; super.onPause(); }
 
     private void showMessage() {
