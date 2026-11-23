@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class AiTutorActivity extends Activity {
     private static final String AI_PREFS = "study_ai_settings";
@@ -53,6 +54,12 @@ public class AiTutorActivity extends Activity {
     private ScrollView scroll;
     private EditText input;
     private Button sendButton;
+    private Button cancelButton;
+    private TextView typingBubble;
+    private Future<?> activeTask;
+    private volatile long activeRequestId = 0;
+    private volatile boolean requestCancelled = false;
+    private String retryQuestion = "";
     private boolean waiting = false;
     private volatile HttpURLConnection activeConnection;
     private volatile boolean destroyed = false;
@@ -77,8 +84,9 @@ public class AiTutorActivity extends Activity {
         }
         updateSystemBars();
         buildUi();
-        addBubble(tr("Привет! Я ИИ-помощник. Могу объяснить математическую тему, разобрать задачу по шагам или составить тренировку.\n\nНе отправляй сюда пароли, адреса и другие личные данные. История этого чата не сохраняется после закрытия экрана.", "Hi! I’m the AI tutor. I can explain a math topic, work through a problem step by step, or create a practice quiz.\n\nDon’t send passwords, addresses, or other personal information. This chat history is not saved after you close the screen.", "Salam! Mən Study with Love süni intellekt köməkçisiyəm. Riyaziyyat mövzusunu izah edə, məsələni addım-addım həll edə və ya məşq testi hazırlaya bilərəm.\n\nŞifrələri, ünvanları və digər şəxsi məlumatları göndərmə. Ekranı bağladıqdan sonra bu söhbətin tarixçəsi saxlanılmır."), false);
-        if (endpoint().isEmpty()) main.postDelayed(this::showEndpointDialog, 350);
+        boolean restored = restoreChat(state);
+        if (!restored) addBubble(tr("Привет! Я ИИ-помощник. Могу объяснить математическую тему, разобрать задачу по шагам или составить тренировку.\n\nНе отправляй сюда пароли, адреса и другие личные данные. История этого чата не сохраняется после закрытия экрана.", "Hi! I’m the AI tutor. I can explain a math topic, work through a problem step by step, or create a practice quiz.\n\nDon’t send passwords, addresses, or other personal information. This chat history is not saved after you close the screen.", "Salam! Mən Study with Love süni intellekt köməkçisiyəm. Riyaziyyat mövzusunu izah edə, məsələni addım-addım həll edə və ya məşq testi hazırlaya bilərəm.\n\nŞifrələri, ünvanları və digər şəxsi məlumatları göndərmə. Ekranı bağladıqdan sonra bu söhbətin tarixçəsi saxlanılmır."), false);
+
     }
 
     private void buildUi() {
@@ -185,7 +193,25 @@ public class AiTutorActivity extends Activity {
         sendButton.setPadding(0, 0, 0, 0);
         sendButton.setBackground(round(PINK, 20, PINK));
         composer.addView(sendButton, new LinearLayout.LayoutParams(dp(48), dp(48)));
-        sendButton.setOnClickListener(v -> sendMessage());
+        sendButton.setOnClickListener(v -> {
+            if (!retryQuestion.isEmpty() && input.getText().toString().trim().isEmpty()) {
+                input.setText(retryQuestion);
+            }
+            retryQuestion = "";
+            sendButton.setText("➤");
+            sendMessage();
+        });
+        cancelButton = new Button(this);
+        cancelButton.setText("×");
+        cancelButton.setContentDescription(tr("Отменить запрос", "Cancel request", "Sorğunu ləğv et"));
+        cancelButton.setAllCaps(false);
+        cancelButton.setTextColor(PINK);
+        cancelButton.setBackground(round(BG, 18, BG));
+        cancelButton.setVisibility(View.GONE);
+        cancelButton.setOnClickListener(v -> cancelActiveRequest());
+        LinearLayout.LayoutParams cancelLp = new LinearLayout.LayoutParams(dp(44), dp(48));
+        cancelLp.leftMargin = dp(4);
+        composer.addView(cancelButton, cancelLp);
         page.addView(composer, new LinearLayout.LayoutParams(-1, -2));
 
         setContentView(page);
