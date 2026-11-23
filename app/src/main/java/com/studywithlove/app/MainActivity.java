@@ -179,6 +179,8 @@ public class MainActivity extends Activity {
 
     private static int reminderRequestCode(int day, int hour, int minute) { return 5000 + day * 10000 + hour * 100 + minute; }
 
+    private void chooseQuietTime(String key){String value=prefs.getString(key,key.endsWith("start")?"22:00":"08:00");String[] p=value.split(":");int h=22,m=0;try{h=Integer.parseInt(p[0]);m=Integer.parseInt(p[1]);}catch(Exception ignored){}new TimePickerDialog(this,(view,hour,minute)->{String time=String.format(Locale.US,"%02d:%02d",hour,minute);prefs.edit().putString(key,time).apply();scheduleReminders(this);showSettings();},h,m,true).show();}
+    private static boolean isQuietHour(int hour,int minute,SharedPreferences p){if(!p.getBoolean("quiet_hours_enabled",false))return false;try{String[] a=p.getString("quiet_hours_start","22:00").split(":"),b=p.getString("quiet_hours_end","08:00").split(":");int start=Integer.parseInt(a[0])*60+Integer.parseInt(a[1]),end=Integer.parseInt(b[0])*60+Integer.parseInt(b[1]),now=hour*60+minute;if(start==end)return true;return start<end?(now>=start&&now<end):(now>=start||now<end);}catch(Exception e){return false;}}
     public static void scheduleReminders(Context context) {
         SharedPreferences p = context.getSharedPreferences(PREFS, MODE_PRIVATE);
         AlarmManager am = (AlarmManager) context.getSystemService(ALARM_SERVICE);
@@ -214,6 +216,7 @@ public class MainActivity extends Activity {
                 int day = Integer.parseInt(dayValue);
                 String[] parts = timeValue.split(":");
                 int hour = Integer.parseInt(parts[0]), minute = Integer.parseInt(parts[1]);
+                if(isQuietHour(hour,minute,p))continue;
                 String key = day + "_" + String.format(Locale.US, "%02d:%02d", hour, minute);
                 Calendar next = Calendar.getInstance(tz);
                 next.set(Calendar.DAY_OF_WEEK, day);
@@ -344,6 +347,7 @@ public class MainActivity extends Activity {
             option.setOnClickListener(v->{prefs.edit().putString("app_theme",key).apply();applySavedTheme();showSettings();});
         }
         appearance.addView(palette,lp(-1,-2,0,7,0,8));
+        Button systemTheme=button("◐  Цвета и тёмная тема — как в системе","system".equals(activeTheme));systemTheme.setOnClickListener(v->{prefs.edit().putString("app_theme","system").apply();applySavedTheme();showSettings();});appearance.addView(systemTheme,lp(-1,44,0,3,0,0));
         Button choosePhoto=button("＋  Выбрать фото фона",false);choosePhoto.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT);pick.addCategory(Intent.CATEGORY_OPENABLE);pick.setType("image/*");pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,PICK_BACKGROUND);});
         appearance.addView(choosePhoto,lp(-1,44,0,3,0,4));
         Button clearPhoto=button("Убрать фото фона",false);clearPhoto.setOnClickListener(v->{prefs.edit().remove("custom_background_uri").apply();showSettings();});appearance.addView(clearPhoto,lp(-1,40,0,0,0,0));
@@ -369,6 +373,8 @@ public class MainActivity extends Activity {
         LinearLayout reminders=settingsGroup("НАПОМИНАНИЯ");
         CheckBox enabled=new CheckBox(this);enabled.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));enabled.setText(translate("Включить напоминания о занятиях"));enabled.setTextSize(14);enabled.setTextColor(DARK);enabled.setChecked(prefs.getBoolean("notifications_enabled",true));reminders.addView(enabled,lp(-1,46,0,0,0,4));
         enabled.setOnCheckedChangeListener((buttonView,checked)->{prefs.edit().putBoolean("notifications_enabled",checked).apply();scheduleReminders(this);if(checked&&Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},20);});
+        CheckBox quietToggle=new CheckBox(this);quietToggle.setText("Тихие часы для уведомлений");quietToggle.setTextColor(DARK);quietToggle.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));quietToggle.setChecked(prefs.getBoolean("quiet_hours_enabled",false));reminders.addView(quietToggle,lp(-1,42,0,4,0,0));quietToggle.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("quiet_hours_enabled",on).apply();scheduleReminders(this);});
+        Button quietStart=button("Начало тишины · "+prefs.getString("quiet_hours_start","22:00"),false);Button quietEnd=button("Конец тишины · "+prefs.getString("quiet_hours_end","08:00"),false);quietStart.setOnClickListener(v->chooseQuietTime("quiet_hours_start"));quietEnd.setOnClickListener(v->chooseQuietTime("quiet_hours_end"));reminders.addView(quietStart,lp(-1,40,0,3,0,3));reminders.addView(quietEnd,lp(-1,40,0,0,0,5));
         Button reminderSettings=button("Настроить дни и время",false);reminderSettings.setOnClickListener(v->showReminderSettings());reminders.addView(reminderSettings,lp(-1,44,0,0,0,0));root.addView(reminders,lp(-1,-2,0,0,0,4));
 
         LinearLayout focus=settingsGroup("РЕЖИМ ФОКУСА");
@@ -392,7 +398,13 @@ public class MainActivity extends Activity {
 
     private void applySavedTheme() {
         String theme = prefs == null ? "pink" : prefs.getString("app_theme", "pink");
-        if ("night".equals(theme)) { BG=0xFF17151D; PINK=0xFFE39AB5; PALE=0xFF302735; DARK=0xFFF4EAF0; MUTED=0xFFB6A8B2; }
+        if ("system".equals(theme)) {
+            boolean darkMode=(getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES;
+            if(Build.VERSION.SDK_INT>=31){try{int accent=getResources().getIdentifier("system_accent1_600","color","android"),bg=getResources().getIdentifier(darkMode?"system_neutral1_900":"system_neutral1_10","color","android"),surface=getResources().getIdentifier(darkMode?"system_neutral1_800":"system_neutral1_50","color","android"),fg=getResources().getIdentifier(darkMode?"system_neutral1_50":"system_neutral1_900","color","android");PINK=getResources().getColor(accent,getTheme());BG=getResources().getColor(bg,getTheme());PALE=getResources().getColor(surface,getTheme());DARK=getResources().getColor(fg,getTheme());MUTED=darkMode?0xFFBDB5C1:0xFF827A83;}catch(Exception e){BG=darkMode?0xFF17151D:0xFFFFF9F7;PINK=0xFFC97891;PALE=darkMode?0xFF302735:0xFFFCEEF2;DARK=darkMode?0xFFF4EAF0:0xFF3F3439;MUTED=darkMode?0xFFB6A8B2:0xFF95878C;}}
+            else if(darkMode){BG=0xFF17151D;PINK=0xFFE39AB5;PALE=0xFF302735;DARK=0xFFF4EAF0;MUTED=0xFFB6A8B2;}
+            else{BG=0xFFFFF9F7;PINK=0xFFC97891;PALE=0xFFFCEEF2;DARK=0xFF3F3439;MUTED=0xFF95878C;}
+        }
+        else if ("night".equals(theme)) { BG=0xFF17151D; PINK=0xFFE39AB5; PALE=0xFF302735; DARK=0xFFF4EAF0; MUTED=0xFFB6A8B2; }
         else if ("lavender".equals(theme)) { BG=0xFFF8F6FF; PINK=0xFF8979B8; PALE=0xFFF0ECFA; DARK=0xFF393448; MUTED=0xFF8E879E; }
         else if ("mint".equals(theme)) { BG=0xFFF5FAF7; PINK=0xFF659B86; PALE=0xFFEAF5EF; DARK=0xFF34443D; MUTED=0xFF84958C; }
         else if ("white".equals(theme)) { BG=0xFFF7F8FA; PINK=0xFF65758B; PALE=0xFFE9EDF2; DARK=0xFF303844; MUTED=0xFF87919E; }
