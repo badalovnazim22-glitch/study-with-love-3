@@ -725,10 +725,11 @@ public class MainActivity extends Activity {
         TextView hint = text("Выбери настроение — подскажу, с чего начать.", 12, MUTED, false);
         moodCard.addView(hint, lp(-1, -2, 0, 2, 0, 7));
         String[] faces = {"😴", "😌", "🙂", "😊", "⚡"};
-        String[] names = {"Усталость", "Спокойно", "Нормально", "Радостно", "Полон сил"};
+        String[] names = {"Усталость", "Спокойно", "Нормально", "Радостно", "Много энергии"};
         String[] hints = {"Предлагаю короткую сессию на 5 минут.", "Можно спокойно повторить знакомую тему.", "Выбери одну небольшую задачу.", "Хороший момент для новой темы.", "Попробуй сложную задачу или длинную сессию."};
         String today = todayKey();
         String selected = prefs.getString("daily_mood_date", "").equals(today) ? prefs.getString("daily_mood", "") : "";
+        if (!selected.isEmpty()) { try { hint.setText(hints[Integer.parseInt(selected)]); } catch (Exception ignored) { } }
         LinearLayout choices = new LinearLayout(this);
         choices.setOrientation(LinearLayout.HORIZONTAL);
         for (int i = 0; i < faces.length; i++) {
@@ -2506,8 +2507,8 @@ public class MainActivity extends Activity {
             case "math_chapters": showMathChapters(); break;
             case "topics": if(selectedChapter!=null)showTopics(selectedChapter);else showChapters(); break;
             case "topic": if(selectedTopic!=null)showTopic(selectedTopic);else if(selectedChapter!=null)showTopics(selectedChapter);else showChapters(); break;
-            case "settings": showSettings(); break;
-            case "settings_appearance": case "settings_reminders": case "settings_goals": case "settings_data": case "settings_about": showSettings(); break;
+            case "settings": currentScreen="settings"; showSettings(); break;
+            case "settings_appearance": case "settings_reminders": case "settings_goals": case "settings_data": case "settings_about": currentScreen=key; showSettings(); break;
             case "progress": showProgress(); break;
             case "pomodoro": showPomodoro(); break;
             case "exam": showExam(); break;
