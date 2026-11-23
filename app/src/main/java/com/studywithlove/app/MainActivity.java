@@ -206,6 +206,8 @@ public class MainActivity extends Activity {
     private void renderWelcomeStep(int step, String name, String address, String theme, String focus, int minutes, int slide) {
         currentScreen = "welcome";
         applyWelcomeTheme(theme);
+        int[] liveAccents={0xFFC97891,0xFF8979B8,0xFF659B86,0xFF5D91B5,0xFFD88968,0xFFC49318};
+        if(step==3) PINK=liveAccents[Math.max(0,Math.min(liveAccents.length-1,slide))];
         base("", "");
         root.setPadding(dp(20), dp(16), dp(20), dp(18));
         LinearLayout page = new LinearLayout(this);
@@ -219,7 +221,7 @@ public class MainActivity extends Activity {
             View dot = new View(this);
             GradientDrawable d = new GradientDrawable();
             d.setShape(GradientDrawable.OVAL);
-            d.setColor(i <= Math.min(step,2) ? PINK : (isDarkWelcome(theme) ? 0xFF554956 : 0xFFEADDE2));
+            d.setColor(i <= (step==0?0:(step<=2?1:2)) ? PINK : (isDarkWelcome(theme) ? 0xFF554956 : 0xFFEADDE2));
             dot.setBackground(d);
             LinearLayout.LayoutParams dotParams = new LinearLayout.LayoutParams(dp(i==Math.min(step,2)?10:7),dp(i==Math.min(step,2)?10:7));
             dotParams.setMargins(dp(5),0,dp(5),0);
@@ -266,31 +268,36 @@ public class MainActivity extends Activity {
             getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE|android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         } else if (step == 1) {
             addText(page,"Как к тебе обращаться?",25,DARK,true);
-            addText(page,"Это поможет подобрать подходящие формулировки.",14,MUTED,false);
+            addText(page,"Выбери один вариант.",14,MUTED,false);
             String[] labels={"Девушка","Парень","Не указывать"};
             String[] values={"female","male","neutral"};
             for(int i=0;i<3;i++){
                 final String value=values[i];
                 Button choice=button((address.equals(value)?"✓  ":"")+labels[i],address.equals(value));
-                page.addView(choice,lp(-1,50,0,10,0,2));
+                page.addView(choice,lp(-1,54,0,12,0,3));
                 choice.setOnClickListener(v->{v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);renderWelcomeStep(1,name,value,theme,focus,minutes,slide);});
             }
-            addText(page,"Выбери аватарку",14,MUTED,true);
-            String[] avatars={"🌸","🐰","🦋","🐱","🌷","⭐"};
-            android.widget.GridLayout avatarGrid=new android.widget.GridLayout(this);avatarGrid.setColumnCount(3);
-            String selectedAvatar=prefs.getString("onboarding_avatar","🌸");
-            for(String avatar:avatars){
-                Button av=button((selectedAvatar.equals(avatar)?"✓ ":"")+avatar,selectedAvatar.equals(avatar));
-                android.widget.GridLayout.LayoutParams ap=new android.widget.GridLayout.LayoutParams();
-                ap.width=0;ap.height=dp(54);ap.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);
-                ap.setMargins(dp(4),dp(3),dp(4),dp(3));avatarGrid.addView(av,ap);
-                av.setOnClickListener(v->{v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);prefs.edit().putString("onboarding_avatar",avatar).apply();renderWelcomeStep(1,name,address,theme,focus,minutes,slide);});
-            }
-            page.addView(avatarGrid,lp(-1,-2,0,4,0,0));
             page.addView(new android.widget.Space(this),new LinearLayout.LayoutParams(1,0,1f));
             Button next=button("Дальше",true);page.addView(next,lp(-1,52,0,8,0,6));next.setOnClickListener(v->renderWelcomeStep(2,name,address,theme,focus,minutes,slide));
             Button skip=button("Пропустить",false);page.addView(skip,lp(-1,46,0,0,0,0));skip.setOnClickListener(v->renderWelcomeStep(2,name,"neutral",theme,focus,minutes,slide));
         } else if (step == 2) {
+            addText(page,"Выбери аватарку",25,DARK,true);
+            addText(page,"Её можно будет поменять позже.",14,MUTED,false);
+            String[] avatars={"🌸","🐰","🦋","🐱","🌷","⭐"};
+            android.widget.GridLayout avatarGrid=new android.widget.GridLayout(this);avatarGrid.setColumnCount(3);
+            String selectedAvatar=prefs.getString("onboarding_avatar","🌸");
+            for(String avatar:avatars){
+                Button av=button((selectedAvatar.equals(avatar)?"✓  ":"")+avatar,selectedAvatar.equals(avatar));
+                android.widget.GridLayout.LayoutParams ap=new android.widget.GridLayout.LayoutParams();
+                ap.width=0;ap.height=dp(76);ap.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);
+                ap.setMargins(dp(5),dp(6),dp(5),dp(6));avatarGrid.addView(av,ap);
+                av.setOnClickListener(v->{v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);prefs.edit().putString("onboarding_avatar",avatar).apply();renderWelcomeStep(2,name,address,theme,focus,minutes,slide);});
+            }
+            page.addView(avatarGrid,lp(-1,-2,0,22,0,0));
+            page.addView(new android.widget.Space(this),new LinearLayout.LayoutParams(1,0,1f));
+            Button next=button("Дальше",true);page.addView(next,lp(-1,52,0,8,0,6));next.setOnClickListener(v->renderWelcomeStep(3,name,address,theme,focus,minutes,slide));
+            Button skip=button("Пропустить",false);page.addView(skip,lp(-1,46,0,0,0,0));skip.setOnClickListener(v->renderWelcomeStep(3,name,address,theme,focus,minutes,slide));
+        } else if (step == 3) {
             addText(page,"Выбери оформление",25,DARK,true);
             addText(page,"Тема и цвет сразу меняются в предпросмотре.",14,MUTED,false);
             LinearLayout preview=card();preview.setPadding(dp(14),dp(12),dp(14),dp(12));
@@ -311,7 +318,7 @@ public class MainActivity extends Activity {
             page.addView(palette,lp(-1,-2,0,0,0,10));
             page.addView(new android.widget.Space(this),new LinearLayout.LayoutParams(1,0,1f));
             Button next=button("Готово",true);page.addView(next,lp(-1,52,0,8,0,6));next.setOnClickListener(v->renderWelcomeStep(3,name,address,theme,focus,minutes,slide));
-            Button skip=button("Пропустить",false);page.addView(skip,lp(-1,46,0,0,0,0));skip.setOnClickListener(v->renderWelcomeStep(3,name,address,theme,focus,minutes,slide));
+            Button skip=button("Пропустить",false);page.addView(skip,lp(-1,46,0,0,0,0));skip.setOnClickListener(v->renderWelcomeStep(4,name,address,theme,focus,minutes,slide));
         } else {
             int[] accents={0xFFC97891,0xFF8979B8,0xFF659B86,0xFF5D91B5,0xFFD88968,0xFFC49318};
             int chosen=accents[Math.max(0,Math.min(accents.length-1,slide))];
@@ -799,7 +806,8 @@ public class MainActivity extends Activity {
         StudyWidgetProvider.updateAll(this);
         String displayName = prefs.getString("display_name", "Друг");
         int hourNow = Calendar.getInstance(AppTime.zone()).get(Calendar.HOUR_OF_DAY);
-        String greetingTitle = hourNow < 12 ? "Доброе утро, " + displayName : hourNow < 18 ? "Добрый день, " + displayName : "Как прошёл день, " + displayName + "?";
+        String avatar = prefs.getString("onboarding_avatar", "");
+        String greetingTitle = (avatar.isEmpty() ? "" : avatar + "  ") + (hourNow < 12 ? "Доброе утро, " + displayName : hourNow < 18 ? "Добрый день, " + displayName : "Как прошёл день, " + displayName + "?");
         String lastStudy = prefs.getString("last_study_date", "");
         boolean returningAfterGap = !lastStudy.isEmpty() && !todayKey().equals(lastStudy) && !isYesterday(lastStudy);
         int dailyGoal = prefs.getInt("daily_goal_minutes", 15);
