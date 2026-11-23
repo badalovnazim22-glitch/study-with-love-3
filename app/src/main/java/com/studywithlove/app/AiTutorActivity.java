@@ -107,7 +107,7 @@ public class AiTutorActivity extends Activity {
         back.setTextSize(34);
         back.setTextColor(PINK);
         back.setGravity(Gravity.CENTER);
-        top.addView(back, new LinearLayout.LayoutParams(dp(42), dp(48)));
+        top.addView(back, new LinearLayout.LayoutParams(dp(48), dp(48)));
         back.setOnClickListener(v -> finish());
         LinearLayout heading = new LinearLayout(this);
         heading.setOrientation(LinearLayout.VERTICAL);
@@ -119,7 +119,7 @@ public class AiTutorActivity extends Activity {
         TextView settings = label("⚙", 23, PINK, true);
         settings.setContentDescription(tr("Настройки подключения ИИ", "AI connection settings", "Süni intellekt bağlantı ayarları"));
         settings.setGravity(Gravity.CENTER);
-        top.addView(settings, new LinearLayout.LayoutParams(dp(44), dp(44)));
+        top.addView(settings, new LinearLayout.LayoutParams(dp(48), dp(48)));
         settings.setOnClickListener(v -> showEndpointDialog());
         page.addView(top, new LinearLayout.LayoutParams(-1, dp(54)));
 
