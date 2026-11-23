@@ -349,7 +349,7 @@ public class MainActivity extends Activity {
         male.setOnClickListener(v->{prefs.edit().putString("profile_gender","male").apply();showSettings();});
         profile.addView(genderRow,lp(-1,48,0,4,0,8));
         Button saveName=button("Сохранить имя",true);saveName.setOnClickListener(v->{String value=name.getText().toString().trim();if(value.isEmpty()){name.setError("Введи имя");return;}prefs.edit().putString("display_name",value).apply();Toast.makeText(this,"Имя сохранено ♡",Toast.LENGTH_SHORT).show();});
-        profile.addView(saveName,lp(-1,44,0,0,0,0));root.addView(profile,lp(-1,-2,0,0,0,4));
+        profile.addView(saveName,lp(-1,48,0,0,0,0));root.addView(profile,lp(-1,-2,0,0,0,4));
 
         LinearLayout appearance=settingsGroup("ВНЕШНИЙ ВИД");
         addText(appearance,"Тема приложения",14,DARK,true);
@@ -383,7 +383,7 @@ public class MainActivity extends Activity {
         LinearLayout language=settingsGroup("ЯЗЫК ПРИЛОЖЕНИЯ");
         addText(language,"После выбора язык применяется ко всем экранам приложения.",12,MUTED,false);
         String[] languageNames={"Русский","English","Azərbaycan dili"};String[] languageKeys={"ru","en","az"};String selectedLanguage=prefs.getString("app_language","ru");
-        for(int i=0;i<languageKeys.length;i++){final String key=languageKeys[i];Button choice=button((selectedLanguage.equals(key)?"✓  ":"")+languageNames[i],selectedLanguage.equals(key));language.addView(choice,lp(-1,42,0,5,0,0));choice.setOnClickListener(v->{prefs.edit().putString("app_language",key).apply();showSettings();});}
+        for(int i=0;i<languageKeys.length;i++){final String key=languageKeys[i];Button choice=button((selectedLanguage.equals(key)?"✓  ":"")+languageNames[i],selectedLanguage.equals(key));language.addView(choice,lp(-1,48,0,5,0,0));choice.setOnClickListener(v->{prefs.edit().putString("app_language",key).apply();showSettings();});}
         root.addView(language,lp(-1,-2,0,0,0,4));
 
         LinearLayout progress=settingsGroup("ОТОБРАЖЕНИЕ ПРОГРЕССА");
@@ -401,7 +401,7 @@ public class MainActivity extends Activity {
         CheckBox enabled=new CheckBox(this);enabled.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));enabled.setText(translate("Включить напоминания о занятиях"));enabled.setTextSize(14);enabled.setTextColor(DARK);enabled.setChecked(prefs.getBoolean("notifications_enabled",true));reminders.addView(enabled,lp(-1,46,0,0,0,4));
         enabled.setOnCheckedChangeListener((buttonView,checked)->{prefs.edit().putBoolean("notifications_enabled",checked).apply();scheduleReminders(this);if(checked&&Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},20);});
         CheckBox quietToggle=new CheckBox(this);quietToggle.setText("Тихие часы для уведомлений");quietToggle.setTextColor(DARK);quietToggle.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));quietToggle.setChecked(prefs.getBoolean("quiet_hours_enabled",false));reminders.addView(quietToggle,lp(-1,42,0,4,0,0));quietToggle.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("quiet_hours_enabled",on).apply();scheduleReminders(this);});
-        Button quietStart=button("Начало тишины · "+prefs.getString("quiet_hours_start","22:00"),false);Button quietEnd=button("Конец тишины · "+prefs.getString("quiet_hours_end","08:00"),false);quietStart.setOnClickListener(v->chooseQuietTime("quiet_hours_start"));quietEnd.setOnClickListener(v->chooseQuietTime("quiet_hours_end"));reminders.addView(quietStart,lp(-1,40,0,3,0,3));reminders.addView(quietEnd,lp(-1,40,0,0,0,5));
+        Button quietStart=button("Начало тишины · "+prefs.getString("quiet_hours_start","22:00"),false);Button quietEnd=button("Конец тишины · "+prefs.getString("quiet_hours_end","08:00"),false);quietStart.setOnClickListener(v->chooseQuietTime("quiet_hours_start"));quietEnd.setOnClickListener(v->chooseQuietTime("quiet_hours_end"));reminders.addView(quietStart,lp(-1,48,0,3,0,3));reminders.addView(quietEnd,lp(-1,40,0,0,0,5));
         Button reminderSettings=button("Настроить дни и время",false);reminderSettings.setOnClickListener(v->showReminderSettings());reminders.addView(reminderSettings,lp(-1,44,0,0,0,0));root.addView(reminders,lp(-1,-2,0,0,0,4));
 
         LinearLayout focus=settingsGroup("РЕЖИМ ФОКУСА");
@@ -683,7 +683,7 @@ public class MainActivity extends Activity {
         java.util.Collections.shuffle(choices,quizRandom);
         for(int i=0;i<4;i+=2){
             LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);
-            for(int j=i;j<i+2;j++){final int answer=choices.get(j);Button option=button(String.valueOf(answer),false);option.setTextSize(20);option.setOnClickListener(v->{if(!quizActive)return;boolean correct=answer==quizAnswer;option.setBackground(shape(correct?0xFFE4F4E8:0xFFFFE8E8,22,correct?0xFF75B987:0xFFE58A8A));option.setTextColor(correct?0xFF287A43:0xFFB64242);if(!correct){for(int k=0;k<row.getChildCount();k++){View child=row.getChildAt(k);if(child instanceof Button&&((Button)child).getText().toString().equals(String.valueOf(quizAnswer))){child.setBackground(shape(0xFFE4F4E8,22,0xFF75B987));((Button)child).setTextColor(0xFF287A43);}}}haptic(option,correct);new Handler().postDelayed(()->submitMathQuizAnswer(answer),250);});LinearLayout.LayoutParams op=new LinearLayout.LayoutParams(0,dp(62),1f);op.setMargins(dp(3),0,dp(3),0);row.addView(option,op);}
+            for(int j=i;j<i+2;j++){final int answer=choices.get(j);Button option=button(String.valueOf(answer),false);option.setTextSize(20);option.setOnClickListener(v->{if(!quizActive)return;boolean correct=answer==quizAnswer;option.setBackground(shape(correct?0xFFE4F4E8:0xFFFFE8E8,22,correct?0xFF75B987:0xFFE58A8A));option.setTextColor(correct?0xFF287A43:0xFFB64242);if(!correct){for(int k=0;k<row.getChildCount();k++){View child=row.getChildAt(k);if(child instanceof Button&&((Button)child).getText().toString().equals(String.valueOf(quizAnswer))){child.setBackground(shape(0xFFE4F4E8,22,0xFF75B987));((Button)child).setTextColor(0xFF287A43);}}}haptic(option,correct);new Handler(Looper.getMainLooper()).postDelayed(()->submitMathQuizAnswer(answer),250);});LinearLayout.LayoutParams op=new LinearLayout.LayoutParams(0,dp(62),1f);op.setMargins(dp(3),0,dp(3),0);row.addView(option,op);}
             root.addView(row,lp(-1,-2,0,0,0,8));
         }
         TextView streak=text("🔥 Серия правильных ответов: "+quizStreak,13,PINK,true);streak.setGravity(Gravity.CENTER);root.addView(streak,lp(-1,40,0,8,0,0));
@@ -1099,7 +1099,7 @@ public class MainActivity extends Activity {
             for(int i=0;i<opts.length;i++){final String answer=opts[i];Button b=button(answer,false);answerButtons[i]=b;b.setTextSize(17);root.addView(b,lp(-1,50,0,0,0,8));b.setOnClickListener(v->{if(answered[0])return;answered[0]=true;for(int k=0;k<opts.length;k++){Button choice=answerButtons[k];boolean isRight=normalizeAnswer(opts[k]).equals(normalizeAnswer(q.answer));if(isRight){choice.setBackground(shape(0xFFE4F4E8,22,0xFF75B987));choice.setTextColor(0xFF287A43);}else if(choice==b){choice.setBackground(shape(0xFFFFE8E8,22,0xFFE58A8A));choice.setTextColor(0xFFB64242);}}acceptMiniAnswer(q,answer,index,wrongOnly,b);new Handler(android.os.Looper.getMainLooper()).postDelayed(()->{for(Button option:answerButtons){option.setBackground(shape(0xFFFFFFFF,22,0xFFEADDE2));option.setTextColor(DARK);}},260);});}
         }
         if(!q.explanation.isEmpty()){TextView hint=text("После ответа появится разбор решения",11,MUTED,false);root.addView(hint,lp(-1,-2,0,3,0,0));}
-        Button quit=button("Завершить тест",false);quit.setOnClickListener(v->showMiniTestResult(wrongOnly));root.addView(quit,lp(-1,44,0,8,0,0));
+        Button quit=button("Завершить тест",false);quit.setOnClickListener(v->showMiniTestResult(wrongOnly));root.addView(quit,lp(-1,48,0,8,0,0));
     }
     private void saveMiniTestResult(){try{org.json.JSONObject o=new org.json.JSONObject();o.put("topic",miniTopic);o.put("score",miniScore);o.put("total",miniQuestions.size());o.put("wrong",miniWrongQuestions.size());o.put("date",todayKey());String key="test_result_"+System.currentTimeMillis();prefs.edit().putString(key,o.toString()).apply();List<String> keys=new ArrayList<>();for(String k:prefs.getAll().keySet())if(k.startsWith("test_result_"))keys.add(k);java.util.Collections.sort(keys);for(int i=0;i<keys.size()-100;i++)prefs.edit().remove(keys.get(i)).apply();}catch(Exception ignored){}}
     private void showMiniTestResult(boolean wrongOnly){
