@@ -108,6 +108,9 @@ public class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
+        if (Build.VERSION.SDK_INT >= 33) {
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(0, this::handleBackNavigation);
+        }
         getWindow().getDecorView().setBackgroundColor(BG);
         getWindow().setStatusBarColor(0xFFFFF9F7);
         getWindow().setNavigationBarColor(0xFFFFF9F7);
@@ -2026,9 +2029,7 @@ public class MainActivity extends Activity {
         return count;
     }
 
-    @Override
-    @SuppressWarnings("deprecation")
-    public void onBackPressed() {
+    private void handleBackNavigation() {
         if (!screenHistory.isEmpty()) {
             String target = screenHistory.remove(screenHistory.size() - 1);
             navigatingBack = true;
@@ -2042,6 +2043,10 @@ public class MainActivity extends Activity {
         lastBackPressedAt=now;
         Toast.makeText(this, "Нажми ещё раз, чтобы выйти", Toast.LENGTH_SHORT).show();
     }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void onBackPressed() { handleBackNavigation(); }
 
     private void showScreenByKey(String key) {
         switch (key) {
