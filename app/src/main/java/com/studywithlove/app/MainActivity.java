@@ -416,7 +416,12 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 23 && getWindow() != null) {
             String t=prefs==null?"pink":prefs.getString("app_theme","pink");
             boolean darkIcons=!("night".equals(t)||"luxury".equals(t)||("system".equals(t)&&(getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES));
-            getWindow().getDecorView().setSystemUiVisibility(darkIcons?View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR:0);
+            if (Build.VERSION.SDK_INT >= 30) {
+                android.view.WindowInsetsController c=getWindow().getInsetsController();
+                if(c!=null){int flags=android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS; c.setSystemBarsAppearance(darkIcons?flags:0,flags);}
+            } else {
+                getWindow().getDecorView().setSystemUiVisibility(darkIcons?View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR:0);
+            }
         }
     }
 
@@ -441,7 +446,7 @@ public class MainActivity extends Activity {
         else if ("lv".equals(theme)) { BG=0xFFF4E8D5; PINK=0xFF76502F; PALE=0xFFE7D2B3; DARK=0xFF3B281C; MUTED=0xFF92775E; }
         else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF95878C; }
         applyAccentOverlay(theme);
-        if (getWindow() != null) { getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG); updateSystemBarIcons(); }
+        if (getWindow() != null) { if(Build.VERSION.SDK_INT>=30){getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);getWindow().setDecorFitsSystemWindows(false);if(Build.VERSION.SDK_INT>=29){getWindow().setStatusBarContrastEnforced(false);getWindow().setNavigationBarContrastEnforced(false);}}else{getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(BG);} updateSystemBarIcons(); }
     }
     private void applyAccentOverlay(String theme){
         int style=R.style.AppAccentPink;
@@ -567,7 +572,7 @@ public class MainActivity extends Activity {
 
     // Endless arithmetic challenge. Best scores and unlocked awards are stored locally.
     private final Random quizRandom = new Random();
-    private final Handler quizHandler = new Handler();
+    private final Handler quizHandler = new Handler(Looper.getMainLooper());
     private Runnable quizTick;
     private boolean quizActive = false, quizTimed = true;
     private int quizDifficulty = 0, quizScore = 0, quizStreak = 0, quizBestStreak = 0;
