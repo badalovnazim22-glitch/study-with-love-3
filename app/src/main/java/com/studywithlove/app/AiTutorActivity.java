@@ -111,8 +111,8 @@ public class AiTutorActivity extends Activity {
         back.setOnClickListener(v -> finish());
         LinearLayout heading = new LinearLayout(this);
         heading.setOrientation(LinearLayout.VERTICAL);
-        TextView title = label("ИИ-помощник", 19, DARK, true);
-        TextView subtitle = label("Study with Love · ИИ-репетитор", 13, MUTED, false);
+        TextView title = label(tr("ИИ-помощник", "AI tutor", "Süni intellekt köməkçisi"), 19, DARK, true);
+        TextView subtitle = label(tr("Study with Love · ИИ-репетитор", "Study with Love · AI tutor", "Study with Love · Süni intellekt köməkçisi"), 13, MUTED, false);
         heading.addView(title);
         heading.addView(subtitle);
         top.addView(heading, new LinearLayout.LayoutParams(0, -2, 1));
