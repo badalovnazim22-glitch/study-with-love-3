@@ -2365,7 +2365,7 @@ public class MainActivity extends Activity {
         boolean white = color == 0xFFFFFFFF || color == 0xFFFFF9F7 || color == 0xFFFFFBFC || color == 0xFFFFF5F8 || color == 0xFFFFF4F7 || color == 0xFFFFF5F7 || color == 0xFFFFF8F6 || color == 0xFFF7F4F2 || color == 0xFFFFFCF7 || color == 0xFFFFFCFC || color == 0xFFFFF9EF;
         boolean soft = color == 0xFFFCEEF2 || color == 0xFFFFF0F4 || color == 0xFFFFF0F5 || color == 0xFFFFEEF3 || color == 0xFFFFF1F5 || color == 0xFFF8E8EE || color == 0xFFFFF4F7 || color == 0xFFFFF5F8 || color == 0xFFFFF5F7 || color == 0xFFFFF5F4;
         boolean pale = color == 0xFFF3F0FF || color == 0xFFF1F0FF || color == 0xFFEFF7F1 || color == 0xFFF5F2F1 || color == 0xFFF0E4E8 || color == 0xFFF1F0F2 || color == 0xFFF7F4F2 || color == 0xFFF7F4F5;
-        boolean border = border || stroke == 0xFFEADDE2 || stroke == 0xFFFFD5E1 || stroke == 0xFFF4DCE5 || stroke == 0xFFF2DDE4 || stroke == 0xFFEEDFE4;
+        boolean border = stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8 || stroke == 0xFFEADDE2 || stroke == 0xFFFFD5E1 || stroke == 0xFFF4DCE5 || stroke == 0xFFF2DDE4 || stroke == 0xFFEEDFE4;
         if ("system".equals(theme)) {
             if(white)color=color==0xFFFFF9F7?BG:(isDarkAppearance()?PALE:0xFFFFFFFF);
             else if(soft||pale)color=PALE;
