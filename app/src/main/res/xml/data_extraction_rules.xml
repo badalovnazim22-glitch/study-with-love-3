@@ -8,6 +8,5 @@
     <device-transfer>
         <include domain="sharedpref" path="study_progress.xml" />
         <include domain="file" path="." />
-        <exclude domain="external" path="." />
     </device-transfer>
 </data-extraction-rules>
