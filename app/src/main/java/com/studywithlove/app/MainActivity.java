@@ -985,14 +985,21 @@ public class MainActivity extends Activity {
         try{
             org.json.JSONObject o=new org.json.JSONObject();o.put("topic",q.topic==null||q.topic.isEmpty()?miniTopic:q.topic);o.put("kind",classifyMistake(q,userAnswer));o.put("type",q.type);o.put("prompt",q.prompt);o.put("answer",q.answer);o.put("user_answer",userAnswer);o.put("explanation",q.explanation);
             org.json.JSONArray a=new org.json.JSONArray();if(q.options!=null)for(String option:q.options)a.put(option);o.put("options",a);
-            String key="mistake_"+System.currentTimeMillis()+"_"+Math.abs(q.prompt.hashCode());prefs.edit().putString(key,o.toString()).apply();
+            String topic=q.topic==null||q.topic.isEmpty()?miniTopic:q.topic;String key="mistake_"+Integer.toHexString((topic+"|"+q.prompt).hashCode());prefs.edit().putString(key,o.toString()).apply();
             List<String> keys=new ArrayList<>();for(String k:prefs.getAll().keySet())if(k.startsWith("mistake_"))keys.add(k);java.util.Collections.sort(keys);for(int i=0;i<keys.size()-100;i++)prefs.edit().remove(keys.get(i)).apply();
+        }catch(Exception ignored){}
+    }
+    private void clearMistake(MiniQuestion q){
+        try{String topic=q.topic==null?"":q.topic;SharedPreferences.Editor edit=prefs.edit();boolean changed=false;
+            for(Map.Entry<String,?> entry:prefs.getAll().entrySet()){String key=entry.getKey();if(!key.startsWith("mistake_")||!(entry.getValue() instanceof String))continue;
+                try{org.json.JSONObject saved=new org.json.JSONObject((String)entry.getValue());if(topic.equals(saved.optString("topic",""))&&q.prompt.equals(saved.optString("prompt",""))){edit.remove(key);changed=true;}}catch(Exception ignored){}
+            }if(changed)edit.apply();
         }catch(Exception ignored){}
     }
     private String normalizeAnswer(String value){return value==null?"":value.trim().toLowerCase(new Locale("ru")).replace(" ","").replace(",",".").replace("−","-");}
     private void acceptMiniAnswer(MiniQuestion q,String userAnswer,int index,boolean wrongOnly,View source){
         boolean correct=normalizeAnswer(userAnswer).equals(normalizeAnswer(q.answer));
-        if(correct){miniScore++;haptic(source,true);}else{miniWrongQuestions.add(q);recordMistake(q,userAnswer);haptic(source,false);if(source!=null)source.animate().translationX(dp(8)).setDuration(45).withEndAction(()->source.animate().translationX(-dp(8)).setDuration(45).withEndAction(()->source.animate().translationX(0).setDuration(45).start()).start()).start();}
+        if(correct){miniScore++;clearMistake(q);haptic(source,true);}else{miniWrongQuestions.add(q);recordMistake(q,userAnswer);haptic(source,false);if(source!=null)source.animate().translationX(dp(8)).setDuration(45).withEndAction(()->source.animate().translationX(-dp(8)).setDuration(45).withEndAction(()->source.animate().translationX(0).setDuration(45).start()).start()).start();}
         if(source instanceof Button){Button chosen=(Button)source;chosen.setBackground(shape(correct?0xFFE4F4E8:0xFFFFE8E8,22,correct?0xFF75B987:0xFFE58A8A));chosen.setTextColor(correct?0xFF287A43:0xFFB64242);new Handler().postDelayed(()->{if(!isFinishing()){chosen.setBackground(shape(0xFFFFFFFF,22,0xFFEADDE2));chosen.setTextColor(DARK);}},260);}
         TextView feedback=text((correct?"✓  Верно! ":"✦  Правильный ответ: "+q.answer+" · ")+q.explanation,13,correct?0xFF287A43:0xFF9B4A58,true);feedback.setPadding(dp(12),dp(10),dp(12),dp(10));feedback.setBackground(shape(correct?0xFFF0F8F1:0xFFFFF2F2,14,0));root.addView(feedback,lp(-1,-2,0,7,0,4));
         new Handler().postDelayed(()->{if(!isFinishing())renderMiniTest(index+1,wrongOnly);},1050);
@@ -1015,7 +1022,7 @@ public class MainActivity extends Activity {
         List<MiniQuestion> list=wrongOnly?miniWrongQuestions:miniQuestions;
         if(index>=list.size()){showMiniTestResult(wrongOnly);return;}
         currentScreen="mini_test";base((weaknessTrainingMode?"Мои слабые места":"Мини-тест")+" · "+(index+1)+"/"+list.size(),"Отвечай в своём темпе — после ответа будет короткое объяснение");
-        MiniQuestion q=list.get(index);LinearLayout panel=card();panel.setPadding(dp(16),dp(18),dp(16),dp(18));addText(panel,"ВОПРОС "+(index+1)+" ИЗ "+list.size(),11,PINK,true);addText(panel,q.type.equals("input")?"✍️  ВПИШИ ОТВЕТ":q.type.equals("true_false")?"⚖️  ВЕРНО ИЛИ НЕВЕРНО":q.type.equals("find_error")?"🔎  НАЙДИ ОШИБКУ":"ВЫБЕРИ ОТВЕТ",10,MUTED,true);addText(panel,q.prompt,20,DARK,true);root.addView(panel,lp(-1,-2,0,0,0,14));
+        MiniQuestion original=list.get(index);MiniQuestion q=new MiniQuestion(original.prompt,original.options==null?null:original.options.clone(),original.correct,original.explanation,original.type,original.answer);q.topic=original.topic;if(q.options!=null)java.util.Collections.shuffle(java.util.Arrays.asList(q.options),quizRandom);LinearLayout panel=card();panel.setPadding(dp(16),dp(18),dp(16),dp(18));addText(panel,"ВОПРОС "+(index+1)+" ИЗ "+list.size(),11,PINK,true);addText(panel,q.type.equals("input")?"✍️  ВПИШИ ОТВЕТ":q.type.equals("true_false")?"⚖️  ВЕРНО ИЛИ НЕВЕРНО":q.type.equals("find_error")?"🔎  НАЙДИ ОШИБКУ":"ВЫБЕРИ ОТВЕТ",10,MUTED,true);addText(panel,q.prompt,20,DARK,true);root.addView(panel,lp(-1,-2,0,0,0,14));
         final boolean[] answered={false};
         if("input".equals(q.type)){
             EditText input=new EditText(this);input.setSingleLine(true);input.setTextSize(19);input.setTextColor(DARK);input.setHint("Твой ответ");input.setPadding(dp(14),dp(8),dp(14),dp(8));input.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));root.addView(input,lp(-1,52,0,0,0,9));
@@ -1326,7 +1333,7 @@ public class MainActivity extends Activity {
     private void finishTimerPhase() {
         boolean focusFinished=!timerIsBreak;
         timerHandler.removeCallbacks(timerTick); timerRunning = false; cancelTimerFinishAlarm(); getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;} timerRemainingMs = 0;
-        if (!timerIsBreak) { recordStudyDay(); prefs.edit().putInt("postcard_focus_count",prefs.getInt("postcard_focus_count",0)+1).putInt("flower_petals",prefs.getInt("flower_petals",0)+1).apply(); timerIsBreak = true; timerRemainingMs = selectedBreakMinutes * 60000L; Toast.makeText(this, g("Ты большая умничка! Время отдохнуть 🌸","Ты большой молодец! Время отдохнуть 🌸"), Toast.LENGTH_LONG).show(); }
+        if (!timerIsBreak) { timerIsBreak = true; timerRemainingMs = selectedBreakMinutes * 60000L; Toast.makeText(this, g("Ты большая умничка! Время отдохнуть 🌸","Ты большой молодец! Время отдохнуть 🌸"), Toast.LENGTH_LONG).show(); }
         else { timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; Toast.makeText(this, g("Перерыв окончен. Ты готова продолжать! 💗","Перерыв окончен. Ты готов продолжать! 💗"), Toast.LENGTH_LONG).show(); }
         if ("pomodoro".equals(currentScreen)) showPomodoro();
         if(focusFinished){prefs.edit().putBoolean("diary_prefill_timer_win",true).putBoolean("timer_finish_prompt_pending",false).apply();showTimerFinishPrompt();}
@@ -1337,7 +1344,7 @@ public class MainActivity extends Activity {
     // App usage is tracked separately; only an explicit study action records a study day.
     private void saveForegroundUsage() { appUsageStartedElapsed=0L; }
 
-    @Override protected void onResume() { super.onResume(); activityVisible=true; appUsageStartedElapsed = SystemClock.elapsedRealtime(); if (prefs != null) {updateAchievementDates();scheduleReminders(this);rescheduleFutureLetterReminders(this);WeeklyReportReceiver.schedule(this);StudyWidgetProvider.updateAll(this);if(prefs.getBoolean("timer_finish_prompt_pending",false)){prefs.edit().putBoolean("timer_finish_prompt_pending",false).apply();recordStudyDay();showTimerFinishPrompt();}} }
+    @Override protected void onResume() { super.onResume(); activityVisible=true; appUsageStartedElapsed = SystemClock.elapsedRealtime(); if (prefs != null) {updateAchievementDates();scheduleReminders(this);rescheduleFutureLetterReminders(this);WeeklyReportReceiver.schedule(this);StudyWidgetProvider.updateAll(this);if(prefs.getBoolean("timer_finish_prompt_pending",false)){prefs.edit().putBoolean("timer_finish_prompt_pending",false).apply();showTimerFinishPrompt();}} }
     @Override protected void onPause() { activityVisible=false; saveForegroundUsage(); appUsageStartedElapsed = 0L; super.onPause(); }
 
     private void showMessage() {
@@ -1710,7 +1717,7 @@ public class MainActivity extends Activity {
     
     private String createBackupJson() throws Exception {
         org.json.JSONObject json=new org.json.JSONObject();json.put("app","Study with Love");json.put("version",1);org.json.JSONObject data=new org.json.JSONObject();
-        for(Map.Entry<String,?> entry:prefs.getAll().entrySet()){Object value=entry.getValue();if(value instanceof Set){org.json.JSONArray arr=new org.json.JSONArray();for(Object item:(Set<?>)value)arr.put(String.valueOf(item));data.put(entry.getKey(),arr);}else data.put(entry.getKey(),value);}
+        for(Map.Entry<String,?> entry:prefs.getAll().entrySet()){String key=entry.getKey();if(key.startsWith("timer_service_"))continue;Object value=entry.getValue();if(value instanceof Set){org.json.JSONArray arr=new org.json.JSONArray();for(Object item:(Set<?>)value)arr.put(String.valueOf(item));data.put(entry.getKey(),arr);}else data.put(entry.getKey(),value);}
         json.put("data",data);return json.toString(2);
     }
     private void restoreBackupJson(String raw) throws Exception {
@@ -1728,7 +1735,7 @@ public class MainActivity extends Activity {
             }else if(value instanceof Boolean)editor.putBoolean(key,(Boolean)value);
             else if(value instanceof Number){
                 Number n=(Number)value;
-                if(key.startsWith("app_usage_remainder_")||key.endsWith("_elapsed_ms")||key.endsWith("_time_ms"))editor.putLong(key,n.longValue());
+                if(key.startsWith("app_usage_remainder_")||key.startsWith("focus_remainder_ms_")||key.endsWith("_elapsed_ms")||key.endsWith("_time_ms"))editor.putLong(key,n.longValue());
                 else if(value instanceof Integer)editor.putInt(key,n.intValue());
                 else if(value instanceof Long)editor.putLong(key,n.longValue());
                 else editor.putFloat(key,n.floatValue());
