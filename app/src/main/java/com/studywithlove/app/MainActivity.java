@@ -94,6 +94,8 @@ public class MainActivity extends Activity {
 
     private String pendingReviewKey="";
     private static final String PREFS = "study_progress";
+    private MistakeStore mistakeStore;
+    private MistakeStore mistakeStore(){if(mistakeStore==null)mistakeStore=new MistakeStore(this);return mistakeStore;}
     private static final int PICK_BACKGROUND = 7412, PICK_TOPIC_PHOTO = 7415, PICK_TOPIC_CAMERA = 7418;
     private static final int BACKUP_EXPORT = 7413, BACKUP_IMPORT = 7414, WEEKLY_IMAGE_EXPORT = 7416, PDF_REPORT_EXPORT = 7417;
     private android.graphics.Bitmap pendingWeeklyBitmap;
@@ -976,8 +978,8 @@ public class MainActivity extends Activity {
     }
     private void startWeaknessTraining(){
         miniTopic="Мои слабые места";miniQuestions.clear();miniWrongQuestions.clear();miniScore=0;weaknessTrainingMode=true;miniResultSaved=false;
-        List<String> keys=new ArrayList<>();for(String key:prefs.getAll().keySet())if(key.startsWith("mistake_"))keys.add(key);java.util.Collections.sort(keys,java.util.Collections.reverseOrder());
-        for(String key:keys){try{org.json.JSONObject o=new org.json.JSONObject(prefs.getString(key,"{}"));org.json.JSONArray a=o.optJSONArray("options");String[] opts=null;int correct=-1;if(a!=null){opts=new String[a.length()];for(int i=0;i<a.length();i++){opts[i]=a.getString(i);if(opts[i].equalsIgnoreCase(o.optString("answer")))correct=i;}}MiniQuestion restored=new MiniQuestion(o.optString("prompt"),opts,correct,o.optString("explanation"),o.optString("type","choice"),o.optString("answer"));restored.topic=o.optString("topic","");miniQuestions.add(restored);if(miniQuestions.size()>=10)break;}catch(Exception ignored){}}
+        mistakeStore().migrateLegacy(prefs);
+        for(String payload:mistakeStore().newestPayloads(10)){try{org.json.JSONObject o=new org.json.JSONObject(payload);org.json.JSONArray a=o.optJSONArray("options");String[] opts=null;int correct=-1;if(a!=null){opts=new String[a.length()];for(int i=0;i<a.length();i++){opts[i]=a.getString(i);if(opts[i].equalsIgnoreCase(o.optString("answer")))correct=i;}}MiniQuestion restored=new MiniQuestion(o.optString("prompt"),opts,correct,o.optString("explanation"),o.optString("type","choice"),o.optString("answer"));restored.topic=o.optString("topic","");miniQuestions.add(restored);}catch(Exception ignored){}}
         if(miniQuestions.isEmpty()){showWeaknessTrainer();return;}renderMiniTest(0,false);
     }
     private String classifyMistake(MiniQuestion q,String userAnswer){String t=(q.topic+" "+q.prompt).toLowerCase(new Locale("ru"));if(t.contains("сокращ"))return "Сокращение";if(t.contains("знаменател"))return "Общий знаменатель";if(t.contains("округлен")||t.contains("десятич")||t.contains("запят"))return "Запятая или разряд";if(t.contains("вычит")||q.prompt.contains("−")||q.prompt.contains(" - "))return "Знак действия";if(t.contains("делен"))return "Деление";return "Вычисление";}
@@ -985,16 +987,11 @@ public class MainActivity extends Activity {
         try{
             org.json.JSONObject o=new org.json.JSONObject();o.put("topic",q.topic==null||q.topic.isEmpty()?miniTopic:q.topic);o.put("kind",classifyMistake(q,userAnswer));o.put("type",q.type);o.put("prompt",q.prompt);o.put("answer",q.answer);o.put("user_answer",userAnswer);o.put("explanation",q.explanation);
             org.json.JSONArray a=new org.json.JSONArray();if(q.options!=null)for(String option:q.options)a.put(option);o.put("options",a);
-            String topic=q.topic==null||q.topic.isEmpty()?miniTopic:q.topic;clearMistake(q);String key="mistake_"+Integer.toHexString((topic+"|"+q.prompt).hashCode());prefs.edit().putString(key,o.toString()).apply();
-            List<String> keys=new ArrayList<>();for(String k:prefs.getAll().keySet())if(k.startsWith("mistake_"))keys.add(k);java.util.Collections.sort(keys);for(int i=0;i<keys.size()-100;i++)prefs.edit().remove(keys.get(i)).apply();
+            String topic=q.topic==null||q.topic.isEmpty()?miniTopic:q.topic;mistakeStore().migrateLegacy(prefs);mistakeStore().save(topic,q.prompt,o.toString());
         }catch(Exception ignored){}
     }
     private void clearMistake(MiniQuestion q){
-        try{String topic=q.topic==null?"":q.topic;SharedPreferences.Editor edit=prefs.edit();boolean changed=false;
-            for(Map.Entry<String,?> entry:prefs.getAll().entrySet()){String key=entry.getKey();if(!key.startsWith("mistake_")||!(entry.getValue() instanceof String))continue;
-                try{org.json.JSONObject saved=new org.json.JSONObject((String)entry.getValue());if(topic.equals(saved.optString("topic",""))&&q.prompt.equals(saved.optString("prompt",""))){edit.remove(key);changed=true;}}catch(Exception ignored){}
-            }if(changed)edit.apply();
-        }catch(Exception ignored){}
+        try{mistakeStore().migrateLegacy(prefs);String topic=q.topic==null?"":q.topic;mistakeStore().delete(topic,q.prompt);}catch(Exception ignored){}
     }
     private String normalizeAnswer(String value){return value==null?"":value.trim().toLowerCase(new Locale("ru")).replace(" ","").replace(",",".").replace("−","-");}
     private void acceptMiniAnswer(MiniQuestion q,String userAnswer,int index,boolean wrongOnly,View source){
