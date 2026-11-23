@@ -45,6 +45,7 @@ public class AiTutorActivity extends Activity {
     private int PALE = 0xFFFCEEF2;
     private String fontFamily = "sans-serif";
     private String language = "ru";
+    private String studyContext = "";
     private final Handler main = new Handler(Looper.getMainLooper());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final List<JSONObject> history = new ArrayList<>();
@@ -59,6 +60,8 @@ public class AiTutorActivity extends Activity {
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
         loadAppearance();
+        studyContext = getIntent().getStringExtra("study_context");
+        if (studyContext == null) studyContext = "";
         getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         if (android.os.Build.VERSION.SDK_INT >= 30) {
             getWindow().setStatusBarColor(Color.TRANSPARENT);
@@ -217,7 +220,17 @@ public class AiTutorActivity extends Activity {
             JSONObject item = history.get(i);
             String content = item.optString("content", "");
             if (content.length() > 6000 || totalChars + content.length() > 24000) continue;
-            payloadMessages.put(item);
+            JSONObject outgoing = new JSONObject(item.toString());
+            if (i == history.size() - 1 && "user".equals(item.optString("role")) && !studyContext.isEmpty()) {
+                String contextualQuestion = "Учебный контекст приложения: " + studyContext
+                        + "\\nОтвечай с учётом этих тем, объясняй понятным языком и не предполагай, что ученик уже знает сложные термины.\\n\\nВопрос: "
+                        + content;
+                if (contextualQuestion.length() <= 9000) {
+                    outgoing.put("content", contextualQuestion);
+                    totalChars += studyContext.length();
+                }
+            }
+            payloadMessages.put(outgoing);
             totalChars += content.length();
         }
         JSONObject payload = new JSONObject();
