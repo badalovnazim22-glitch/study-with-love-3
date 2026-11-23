@@ -180,10 +180,19 @@ public class MainActivity extends Activity {
     private static int reminderRequestCode(int day, int hour, int minute) { return 5000 + day * 10000 + hour * 100 + minute; }
 
     private void chooseQuietTime(String key){String value=prefs.getString(key,key.endsWith("start")?"22:00":"08:00");String[] p=value.split(":");int h=22,m=0;try{h=Integer.parseInt(p[0]);m=Integer.parseInt(p[1]);}catch(Exception ignored){}new TimePickerDialog(this,(view,hour,minute)->{String time=String.format(Locale.US,"%02d:%02d",hour,minute);prefs.edit().putString(key,time).apply();scheduleReminders(this);showSettings();},h,m,true).show();}
+    private static void scheduleEveningRest(Context context,SharedPreferences p,AlarmManager am){
+        Intent intent=new Intent(context,ReminderReceiver.class).setAction("study_evening_rest").putExtra("message","На сегодня достаточно. Пора отдохнуть и восстановить силы 🌙").putExtra("id",9810);
+        PendingIntent pi=PendingIntent.getBroadcast(context,9810,intent,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
+        if(!p.getBoolean("quiet_hours_enabled",false)){am.cancel(pi);pi.cancel();return;}
+        int hour=21,minute=0;try{String[] bits=p.getString("quiet_hours_start","22:00").split(":");hour=Integer.parseInt(bits[0]);minute=Integer.parseInt(bits[1]);if(hour<18){hour=21;minute=0;}}catch(Exception ignored){}
+        Calendar next=Calendar.getInstance(AppTime.zone());next.set(Calendar.HOUR_OF_DAY,hour);next.set(Calendar.MINUTE,minute);next.set(Calendar.SECOND,0);next.set(Calendar.MILLISECOND,0);if(next.getTimeInMillis()<=System.currentTimeMillis())next.add(Calendar.DAY_OF_YEAR,1);
+        if(Build.VERSION.SDK_INT>=23)am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,next.getTimeInMillis(),pi);else am.setExact(AlarmManager.RTC_WAKEUP,next.getTimeInMillis(),pi);
+    }
     private static boolean isQuietHour(int hour,int minute,SharedPreferences p){if(!p.getBoolean("quiet_hours_enabled",false))return false;try{String[] a=p.getString("quiet_hours_start","22:00").split(":"),b=p.getString("quiet_hours_end","08:00").split(":");int start=Integer.parseInt(a[0])*60+Integer.parseInt(a[1]),end=Integer.parseInt(b[0])*60+Integer.parseInt(b[1]),now=hour*60+minute;if(start==end)return true;return start<end?(now>=start&&now<end):(now>=start||now<end);}catch(Exception e){return false;}}
     public static void scheduleReminders(Context context) {
         SharedPreferences p = context.getSharedPreferences(PREFS, MODE_PRIVATE);
         AlarmManager am = (AlarmManager) context.getSystemService(ALARM_SERVICE);
+        scheduleEveningRest(context,p,am);
         // Cancel alarms from the previous saved schedule.
         Set<String> oldKeys = p.getStringSet("scheduled_alarm_keys", new TreeSet<String>());
         for (String key : new TreeSet<>(oldKeys)) {
