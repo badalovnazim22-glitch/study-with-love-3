@@ -257,6 +257,7 @@ public class MainActivity extends Activity {
         scroll.setFillViewport(true); scroll.setClipToPadding(false);
         root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(20), dp(26), dp(20), dp(26)); root.setBackgroundColor(BG);
+        installThemeFontListener(root);
         String customBg=prefs.getString("custom_background_uri","");
         if(!customBg.isEmpty()){try{if(!customBg.equals(cachedBackgroundUri)||cachedBackgroundBitmap==null){java.io.InputStream in=getContentResolver().openInputStream(android.net.Uri.parse(customBg));if(in!=null){android.graphics.Bitmap decoded=android.graphics.BitmapFactory.decodeStream(in);in.close();cachedBackgroundBitmap=decoded;cachedBackgroundUri=customBg;}}if(cachedBackgroundBitmap!=null){Drawable photo=new android.graphics.drawable.BitmapDrawable(getResources(),cachedBackgroundBitmap);photo.setAlpha(42);root.setBackground(photo);}}catch(Exception ignored){}}
         scroll.addView(root);
@@ -322,7 +323,7 @@ public class MainActivity extends Activity {
         LinearLayout group=new LinearLayout(this);group.setOrientation(LinearLayout.VERTICAL);
         group.setPadding(0,dp(9),0,dp(13));
         addText(group,title,12,PINK,true);
-        View line=new View(this);line.setBackgroundColor(0xFFEEDFE4);
+        View line=new View(this);line.setBackgroundColor(isDarkAppearance()?0xFF49404B:PALE);
         group.addView(line,lp(-1,1,0,5,0,9));
         return group;
     }
@@ -360,6 +361,15 @@ public class MainActivity extends Activity {
             option.setOnClickListener(v->{prefs.edit().putString("app_theme",key).apply();applySavedTheme();showSettings();});
         }
         appearance.addView(palette,lp(-1,-2,0,7,0,8));
+        LinearLayout fontGroup=settingsGroup("ШРИФТ ПРИЛОЖЕНИЯ");
+        addText(fontGroup,"Шрифт применяется ко всем экранам и полям ввода.",12,MUTED,false);
+        String[] fontNames={"Современный","Округлый","С засечками","Моноширинный","Узкий","Средний"};
+        String[] fontKeys={"sans","rounded","serif","mono","condensed","medium"};
+        String[] fontFamilies={"sans-serif","sans-serif-rounded","serif","monospace","sans-serif-condensed","sans-serif-medium"};
+        String activeFont=prefs.getString("app_font","sans");
+        android.widget.GridLayout fontGrid=new android.widget.GridLayout(this);fontGrid.setColumnCount(2);
+        for(int i=0;i<fontKeys.length;i++){final String key=fontKeys[i],family=fontFamilies[i];Button choice=button((activeFont.equals(key)?"✓  ":"")+fontNames[i],activeFont.equals(key));choice.setTypeface(Typeface.create(family,Typeface.BOLD));android.widget.GridLayout.LayoutParams fp=new android.widget.GridLayout.LayoutParams();fp.width=0;fp.height=dp(44);fp.columnSpec=android.widget.GridLayout.spec(i%2,1f);fp.setMargins(dp(3),dp(3),dp(3),dp(3));fontGrid.addView(choice,fp);choice.setOnClickListener(v->{prefs.edit().putString("app_font",key).apply();showSettings();});}
+        fontGroup.addView(fontGrid,lp(-1,-2,0,4,0,0));appearance.addView(fontGroup,lp(-1,-2,0,4,0,6));
         Button systemTheme=button("◐  Цвета и тёмная тема — как в системе","system".equals(activeTheme));systemTheme.setOnClickListener(v->{prefs.edit().putString("app_theme","system").apply();applySavedTheme();showSettings();});appearance.addView(systemTheme,lp(-1,44,0,3,0,0));
         Button choosePhoto=button("＋  Выбрать фото фона",false);choosePhoto.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT);pick.addCategory(Intent.CATEGORY_OPENABLE);pick.setType("image/*");pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,PICK_BACKGROUND);});
         appearance.addView(choosePhoto,lp(-1,44,0,3,0,4));
@@ -2146,12 +2156,49 @@ public class MainActivity extends Activity {
         root.addView(c, lp(-1, -2, 0, 0, 0, 9));
         return c;
     }
+    private String selectedFontFamily(){
+        String key=prefs==null?"sans":prefs.getString("app_font","sans");
+        if("rounded".equals(key))return "sans-serif-rounded";
+        if("serif".equals(key))return "serif";
+        if("mono".equals(key))return "monospace";
+        if("condensed".equals(key))return "sans-serif-condensed";
+        if("medium".equals(key))return "sans-serif-medium";
+        return "sans-serif";
+    }
+    private void installThemeFontListener(android.view.ViewGroup group){
+        group.setOnHierarchyChangeListener(new android.view.ViewGroup.OnHierarchyChangeListener(){
+            public void onChildViewAdded(android.view.View parent,android.view.View child){applyThemeFont(child);}
+            public void onChildViewRemoved(android.view.View parent,android.view.View child){}
+        });
+        for(int i=0;i<group.getChildCount();i++)applyThemeFont(group.getChildAt(i));
+    }
+    private void applyThemeFont(View view){
+        if(view instanceof TextView){
+            TextView t=(TextView)view;boolean bold=t.getTypeface()!=null&&t.getTypeface().isBold();
+            t.setTypeface(Typeface.create(selectedFontFamily(),bold?Typeface.BOLD:Typeface.NORMAL));
+            int c=t.getCurrentTextColor();
+            if(c==0xFFC97891||c==0xFFD96C91)t.setTextColor(PINK);
+            else if(c==0xFF3F3439||c==0xFF3A3036||c==0xFF382F34||c==0xFF49382E)t.setTextColor(DARK);
+            else if(c==0xFF95878C||c==0xFF8E879E||c==0xFF9B8778)t.setTextColor(MUTED);
+        }
+        if(view instanceof android.widget.ProgressBar&&Build.VERSION.SDK_INT>=21){
+            android.widget.ProgressBar bar=(android.widget.ProgressBar)view;
+            bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
+            bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(isDarkAppearance()?0xFF49404B:PALE));
+            if(view instanceof android.widget.SeekBar)((android.widget.SeekBar)view).setThumbTintList(android.content.res.ColorStateList.valueOf(PINK));
+        }
+        if(view instanceof CheckBox&&Build.VERSION.SDK_INT>=21)((CheckBox)view).setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));
+        if(view instanceof EditText&&Build.VERSION.SDK_INT>=21)((EditText)view).setBackgroundTintList(android.content.res.ColorStateList.valueOf(PINK));
+        if(view instanceof android.view.ViewGroup)installThemeFontListener((android.view.ViewGroup)view);
+    }
     private boolean isDarkAppearance(){String t=prefs==null?"pink":prefs.getString("app_theme","pink");return "night".equals(t)||"luxury".equals(t)||("system".equals(t)&&(getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES);}
     private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(17), dp(16), dp(17), dp(16)); boolean night = isDarkAppearance(); android.graphics.drawable.Drawable bg=shape(night ? 0xFF25212B : 0xFFFFFFFF,23,night ? 0xFF403541 : 0xFFF3E9EC);if(Build.VERSION.SDK_INT>=21)l.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x227D5264),bg,shape(0xFFFFFFFF,23,0)));else l.setBackground(bg);l.setElevation(dp(2)); return l; }
     private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, size, color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
     private TextView text(String value, int size, int color, boolean bold) {
-        if("system".equals(prefs==null?"":prefs.getString("app_theme",""))&&isDarkAppearance()){if(color==0xFF3F3439||color==0xFF3A3036||color==0xFF382F34||color==0xFF49382E)color=DARK;else if(color==0xFF95878C||color==0xFF8E879E||color==0xFF9B8778)color=MUTED;else if(color==0xFFC97891)color=PINK;}
- value=translate(value); TextView t = new TextView(this); t.setText(value); t.setTextSize(size); t.setTextColor(color); if (bold) t.setTypeface(Typeface.DEFAULT, Typeface.BOLD); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
+        if(color==0xFFC97891||color==0xFFD96C91)color=PINK;
+        else if(color==0xFF3F3439||color==0xFF3A3036||color==0xFF382F34||color==0xFF49382E||color==0xFF34443D||color==0xFF303844)color=DARK;
+        else if(color==0xFF95878C||color==0xFF8E879E||color==0xFF9B8778||color==0xFF84958C)color=MUTED;
+        value=translate(value); TextView t = new TextView(this); t.setText(value); t.setTextSize(size); t.setTextColor(color); t.setTypeface(Typeface.create(selectedFontFamily(),bold?Typeface.BOLD:Typeface.NORMAL)); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
     private void applyPressFeedback(View view) {
         view.setOnTouchListener((v,event)->{
             if(event.getAction()==android.view.MotionEvent.ACTION_DOWN){
@@ -2195,7 +2242,7 @@ public class MainActivity extends Activity {
         CelebrationView(android.content.Context c){super(c);java.util.Random r=new java.util.Random();for(int i=0;i<x.length;i++){x[i]=r.nextFloat();y[i]=-.12f-r.nextFloat()*.7f;speed[i]=.55f+r.nextFloat()*.9f;size[i]=dp(3+r.nextInt(4));rotation[i]=r.nextFloat()*360f;}}
         @Override protected void onDraw(android.graphics.Canvas canvas){super.onDraw(canvas);float w=getWidth(),h=getHeight();for(int i=0;i<x.length;i++){float yy=(y[i]+progress*speed[i]*1.5f)*h;if(yy<0||yy>h)continue;canvas.save();canvas.rotate(rotation[i]+progress*360f,x[i]*w,yy);paint.setColor(colors[i%colors.length]);paint.setStyle(android.graphics.Paint.Style.FILL);canvas.drawOval(x[i]*w-size[i],yy-size[i]*1.5f,x[i]*w+size[i],yy+size[i]*1.5f,paint);canvas.restore();}}
     }
-    private Button button(String label, boolean primary) { label=translate(label); Button b = new Button(this); b.setText(label); b.setTextSize(14); b.setTypeface(Typeface.DEFAULT, Typeface.BOLD); b.setAllCaps(false); b.setLetterSpacing(0.01f); b.setMinHeight(dp(48)); b.setPadding(dp(14), dp(8), dp(14), dp(8)); b.setElevation(primary ? dp(2) : 0); b.setTextColor(primary ? 0xFFFFFFFF : PINK); android.graphics.drawable.Drawable bg=shape(primary ? PINK : PALE, 22, primary ? PINK : 0xFFF2DDE4); if(Build.VERSION.SDK_INT>=21){GradientDrawable mask=shape(0xFFFFFFFF,22,0);b.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x337D5264),bg,mask));}else b.setBackground(bg);applyPressFeedback(b);return b; }
+    private Button button(String label, boolean primary) { label=translate(label); Button b = new Button(this); b.setText(label); b.setTextSize(14); b.setTypeface(Typeface.create(selectedFontFamily(), Typeface.BOLD)); b.setAllCaps(false); b.setLetterSpacing(0.01f); b.setMinHeight(dp(48)); b.setPadding(dp(14), dp(8), dp(14), dp(8)); b.setElevation(primary ? dp(2) : 0); b.setTextColor(primary ? 0xFFFFFFFF : PINK); android.graphics.drawable.Drawable bg=shape(primary ? PINK : PALE, 22, primary ? PINK : 0xFFF2DDE4); if(Build.VERSION.SDK_INT>=21){GradientDrawable mask=shape(0xFFFFFFFF,22,0);b.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x337D5264),bg,mask));}else b.setBackground(bg);applyPressFeedback(b);return b; }
     private String translate(String value){
         String lang=prefs==null?"ru":prefs.getString("app_language","ru");if("ru".equals(lang)||value==null)return value;
         String[][] pairs={
@@ -2240,10 +2287,16 @@ public class MainActivity extends Activity {
     private interface OnAction { void go(); }
     private GradientDrawable shape(int color, int radius, int stroke) {
         String theme = prefs == null ? "pink" : prefs.getString("app_theme", "pink");
+        if(color==0xFFC97891||color==0xFFD96C91)color=PINK;
+        if(stroke==0xFFC97891||stroke==0xFFD96C91)stroke=PINK;
         boolean white = color == 0xFFFFFFFF || color == 0xFFFFF9F7;
         boolean soft = color == 0xFFFCEEF2 || color == 0xFFFFF0F4 || color == 0xFFFFF0F5 || color == 0xFFFFEEF3 || color == 0xFFFFF1F5 || color == 0xFFF8E8EE;
         boolean pale = color == 0xFFF3F0FF || color == 0xFFF1F0FF || color == 0xFFEFF7F1 || color == 0xFFF5F2F1 || color == 0xFFF0E4E8 || color == 0xFFF1F0F2;
-        if ("night".equals(theme)) {
+        if ("system".equals(theme)) {
+            if(white)color=color==0xFFFFF9F7?BG:(isDarkAppearance()?PALE:0xFFFFFFFF);
+            else if(soft||pale)color=PALE;
+            if(stroke==0xFFF3E9EC||stroke==0xFFF0E4E8)stroke=isDarkAppearance()?0xFF49404B:0xFFE0D8DF;
+        } else if ("night".equals(theme)) {
             if (white) color = color == 0xFFFFF9F7 ? 0xFF17151D : 0xFF25212B;
             else if (soft) color = 0xFF302735; else if (pale) color = 0xFF342E39;
             if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFF403541;
