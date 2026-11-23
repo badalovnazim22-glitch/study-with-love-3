@@ -508,7 +508,6 @@ public class MainActivity extends Activity {
         addText(intro,"ТВОЙ МАТЕМАТИЧЕСКИЙ ЧЕЛЛЕНДЖ",11,PINK,true);
         addText(intro,"Сколько примеров ты решишь подряд?",22,DARK,true);
         addText(intro,"Выбери режим и сложность. Набирай очки, проходи уровни и собирай достижения. Ошибка завершит забег.",13,MUTED,false);
-        Button sections=button("📚  Викторина по темам: дроби · проценты · десятичные",false);sections.setOnClickListener(v->showTopicQuizCategories());root.addView(sections,lp(-1,48,0,0,0,12));
         root.addView(intro,lp(-1,-2,0,0,0,14));
         addText(root,"РЕЖИМ ИГРЫ",12,PINK,true);
         LinearLayout modes=new LinearLayout(this);modes.setOrientation(LinearLayout.HORIZONTAL);
@@ -593,7 +592,7 @@ public class MainActivity extends Activity {
         java.util.Collections.shuffle(choices,quizRandom);
         for(int i=0;i<4;i+=2){
             LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);
-            for(int j=i;j<i+2;j++){final int answer=choices.get(j);Button option=button(String.valueOf(answer),false);option.setTextSize(20);option.setOnClickListener(v->{if(!quizActive)return;boolean correct=answer==quizAnswer;option.setBackground(shape(correct?0xFFE4F4E8:0xFFFFE8E8,22,correct?0xFF75B987:0xFFE58A8A));option.setTextColor(correct?0xFF287A43:0xFFB64242);if(!correct){for(int k=0;k<row.getChildCount();k++){View child=row.getChildAt(k);if(child instanceof Button&&((Button)child).getText().toString().equals(String.valueOf(quizAnswer))){child.setBackground(shape(0xFFE4F4E8,22,0xFF75B987));((Button)child).setTextColor(0xFF287A43);}}}haptic(option,correct);new Handler().postDelayed(()->submitMathQuizAnswer(answer),450);});LinearLayout.LayoutParams op=new LinearLayout.LayoutParams(0,dp(62),1f);op.setMargins(dp(3),0,dp(3),0);row.addView(option,op);}
+            for(int j=i;j<i+2;j++){final int answer=choices.get(j);Button option=button(String.valueOf(answer),false);option.setTextSize(20);option.setOnClickListener(v->{if(!quizActive)return;boolean correct=answer==quizAnswer;option.setBackground(shape(correct?0xFFE4F4E8:0xFFFFE8E8,22,correct?0xFF75B987:0xFFE58A8A));option.setTextColor(correct?0xFF287A43:0xFFB64242);if(!correct){for(int k=0;k<row.getChildCount();k++){View child=row.getChildAt(k);if(child instanceof Button&&((Button)child).getText().toString().equals(String.valueOf(quizAnswer))){child.setBackground(shape(0xFFE4F4E8,22,0xFF75B987));((Button)child).setTextColor(0xFF287A43);}}}haptic(option,correct);new Handler().postDelayed(()->submitMathQuizAnswer(answer),250);});LinearLayout.LayoutParams op=new LinearLayout.LayoutParams(0,dp(62),1f);op.setMargins(dp(3),0,dp(3),0);row.addView(option,op);}
             root.addView(row,lp(-1,-2,0,0,0,8));
         }
         TextView streak=text("🔥 Серия правильных ответов: "+quizStreak,13,PINK,true);streak.setGravity(Gravity.CENTER);root.addView(streak,lp(-1,40,0,8,0,0));
@@ -845,13 +844,6 @@ public class MainActivity extends Activity {
         root.addView(back, lp(-1, 50, 0, 0, 0, 0));
     }
 
-    private void showTopicQuizCategories(){
-        currentScreen="topic_quiz_categories";base("Викторина по темам","Выбери раздел — вопросы будут по его материалу");
-        String[] cats={"Обыкновенные дроби","Проценты","Десятичные дроби","Натуральные числа"};
-        String[] desc={"Состав, часть числа и действия с дробями","Процент от числа и обратные задачи","Сложение, вычитание и сравнение","Числа, действия и делимость"};
-        for(int i=0;i<cats.length;i++){final String c=cats[i];LinearLayout item=card();addText(item,c,17,DARK,true);addText(item,desc[i],12,MUTED,false);item.setOnClickListener(v->{selectedChapter=c.equals("Проценты")?"4️⃣ Процент":c.equals("Десятичные дроби")?"3️⃣ Десятичные дроби":c.equals("Натуральные числа")?"1️⃣ Натуральные числа и действия с ними":"2️⃣ Обыкновенные дроби";startMiniTest(c);});root.addView(item,lp(-1,-2,0,0,0,9));}
-        backHome();
-    }
     private void startMiniTest(String topic){
         miniTopic=topic;miniQuestions.clear();miniWrongQuestions.clear();miniScore=0;
         for(int i=0;i<5;i++)miniQuestions.add(makeMiniQuestion(topic));
@@ -900,7 +892,7 @@ public class MainActivity extends Activity {
         if(index>=list.size()){showMiniTestResult(wrongOnly);return;}
         MiniQuestion q=list.get(index);LinearLayout panel=card();panel.setPadding(dp(16),dp(18),dp(16),dp(18));addText(panel,"ВОПРОС "+(index+1)+" ИЗ "+list.size(),11,PINK,true);addText(panel,q.prompt,21,DARK,true);root.addView(panel,lp(-1,-2,0,0,0,14));
         final boolean[] answered={false};Button[] answerButtons=new Button[q.options.length];
-        for(int i=0;i<q.options.length;i++){final int answer=i;Button b=button(q.options[i],false);answerButtons[i]=b;b.setTextSize(18);root.addView(b,lp(-1,50,0,0,0,8));b.setOnClickListener(v->{if(answered[0])return;answered[0]=true;for(int k=0;k<q.options.length;k++){Button choice=answerButtons[k];if(k==q.correct){choice.setBackground(shape(0xFFE4F4E8,22,0xFF75B987));choice.setTextColor(0xFF287A43);}else if(k==answer){choice.setBackground(shape(0xFFFFE8E8,22,0xFFE58A8A));choice.setTextColor(0xFFB64242);}}boolean correct=answer==q.correct;if(correct){miniScore++;haptic(b,true);}else{miniWrongQuestions.add(q);haptic(b,false);b.animate().translationX(dp(9)).setDuration(55).withEndAction(()->b.animate().translationX(-dp(9)).setDuration(55).withEndAction(()->b.animate().translationX(0).setDuration(55).start()).start()).start();}new Handler().postDelayed(()->{if(!isFinishing())renderMiniTest(index+1,wrongOnly);},650);});}
+        for(int i=0;i<q.options.length;i++){final int answer=i;Button b=button(q.options[i],false);answerButtons[i]=b;b.setTextSize(18);root.addView(b,lp(-1,50,0,0,0,8));b.setOnClickListener(v->{if(answered[0])return;answered[0]=true;for(int k=0;k<q.options.length;k++){Button choice=answerButtons[k];if(k==q.correct){choice.setBackground(shape(0xFFE4F4E8,22,0xFF75B987));choice.setTextColor(0xFF287A43);}else if(k==answer){choice.setBackground(shape(0xFFFFE8E8,22,0xFFE58A8A));choice.setTextColor(0xFFB64242);}}boolean correct=answer==q.correct;if(correct){miniScore++;haptic(b,true);}else{miniWrongQuestions.add(q);haptic(b,false);b.animate().translationX(dp(9)).setDuration(55).withEndAction(()->b.animate().translationX(-dp(9)).setDuration(55).withEndAction(()->b.animate().translationX(0).setDuration(55).start()).start()).start();}new Handler().postDelayed(()->{if(!isFinishing())renderMiniTest(index+1,wrongOnly);},280);});}
         Button quit=button("Завершить тест",false);quit.setOnClickListener(v->showMiniTestResult(wrongOnly));root.addView(quit,lp(-1,44,0,8,0,0));
     }
     private void showMiniTestResult(boolean wrongOnly){
