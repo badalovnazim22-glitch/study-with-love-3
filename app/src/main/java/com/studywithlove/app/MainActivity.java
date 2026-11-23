@@ -148,6 +148,38 @@ public class MainActivity extends Activity {
         else if("com.studywithlove.app.SHORTCUT_DIARY".equals(action)){intent.setAction(null);showDiary();}
     }
     @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);setIntent(intent);handleQuickAction(intent);}
+    private void launchAiTutor() {
+        Intent intent = new Intent(this, AiTutorActivity.class);
+        StringBuilder context = new StringBuilder();
+        if (selectedChapter != null && selectedTopic != null) {
+            context.append("Текущий урок: ").append(selectedChapter.replaceFirst("^[^ ]+\\s*", ""))
+                    .append(" — ").append(selectedTopic).append(". ");
+        }
+        if (prefs.getBoolean("exam_topic_filter_enabled", false)) {
+            Set<String> selected = new TreeSet<>(prefs.getStringSet("exam_topic_ids", new TreeSet<String>()));
+            List<String> names = new ArrayList<>();
+            for (Map.Entry<String, List<String>> entry : chapters.entrySet()) {
+                for (String topic : entry.getValue()) {
+                    if (selected.contains(examTopicKey(entry.getKey(), topic))) {
+                        names.add(topic);
+                        if (names.size() >= 18) break;
+                    }
+                }
+                if (names.size() >= 18) break;
+            }
+            if (names.isEmpty()) {
+                context.append("Фильтр тем экзамена включён, но темы пока не выбраны. Предложи выбрать темы в разделе экзаменационных целей. ");
+            } else {
+                context.append("Выбранные темы для подготовки к экзамену: ")
+                        .append(android.text.TextUtils.join(", ", names)).append(". ");
+            }
+        }
+        if (context.length() > 0) {
+            intent.putExtra("study_context", context.toString());
+        }
+        startActivity(intent);
+    }
+
     private void showWelcome() {
         currentScreen="welcome"; base("Добро пожаловать ♡","Давай познакомимся и настроим Study with Love");
         LinearLayout panel=card();panel.setGravity(Gravity.CENTER_HORIZONTAL);panel.setPadding(dp(20),dp(20),dp(20),dp(20));
@@ -344,7 +376,7 @@ public class MainActivity extends Activity {
         addText(profile,"ФОРМА ОБРАЩЕНИЯ",11,PINK,true);
         String gender=prefs.getString("profile_gender","female");LinearLayout genderRow=new LinearLayout(this);genderRow.setOrientation(LinearLayout.HORIZONTAL);
         Button female=button("Девушка","female".equals(gender)),male=button("Парень","male".equals(gender));
-        genderRow.addView(female,new LinearLayout.LayoutParams(0,dp(44),1f));genderRow.addView(male,new LinearLayout.LayoutParams(0,dp(44),1f));
+        genderRow.addView(female,new LinearLayout.LayoutParams(0,dp(48),1f));genderRow.addView(male,new LinearLayout.LayoutParams(0,dp(44),1f));
         female.setOnClickListener(v->{prefs.edit().putString("profile_gender","female").apply();showSettings();});
         male.setOnClickListener(v->{prefs.edit().putString("profile_gender","male").apply();showSettings();});
         profile.addView(genderRow,lp(-1,48,0,4,0,8));
@@ -361,7 +393,7 @@ public class MainActivity extends Activity {
         String activeTheme=prefs.getString("app_theme","pink");
         for(int i=0;i<keys.length;i++){final String key=keys[i];final int color=colors[i];final String label=names[i];LinearLayout option=new LinearLayout(this);option.setGravity(Gravity.CENTER_VERTICAL);option.setPadding(dp(8),dp(7),dp(5),dp(7));option.setBackground(shape(activeTheme.equals(key)?0xFFFFF0F4:0x00FFFFFF,15,activeTheme.equals(key)?PINK:0xFFEFE4E8));
             TextView swatch=text(activeTheme.equals(key)?"✓":"",12,0xFFFFFFFF,true);swatch.setGravity(Gravity.CENTER);swatch.setBackground(shape(color,30,activeTheme.equals(key)?PINK:0));option.addView(swatch,lp(28,28,0,0,7,0));TextView labelView=text(label,11,DARK,true);option.addView(labelView,new LinearLayout.LayoutParams(0,dp(30),1f));
-            android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(46);gp.columnSpec=android.widget.GridLayout.spec(i%3,1f);gp.setMargins(dp(2),dp(3),dp(2),dp(3));palette.addView(option,gp);
+            android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(48);gp.columnSpec=android.widget.GridLayout.spec(i%3,1f);gp.setMargins(dp(2),dp(3),dp(2),dp(3));palette.addView(option,gp);
             option.setOnClickListener(v->{prefs.edit().putString("app_theme",key).apply();applySavedTheme();showSettings();});
         }
         appearance.addView(palette,lp(-1,-2,0,7,0,8));
@@ -390,12 +422,12 @@ public class MainActivity extends Activity {
         addText(progress,"Выбери удобный формат отображения учебных результатов.",12,MUTED,false);
         String mode=prefs.getString("progress_display","percent");LinearLayout modes=new LinearLayout(this);modes.setOrientation(LinearLayout.HORIZONTAL);
         Button percent=button("С процентами",!"slider".equals(mode));Button slider=button("Полосы прогресса","slider".equals(mode));
-        LinearLayout.LayoutParams m1=new LinearLayout.LayoutParams(0,dp(46),1f);m1.setMargins(dp(2),dp(7),dp(3),0);modes.addView(percent,m1);
+        LinearLayout.LayoutParams m1=new LinearLayout.LayoutParams(0,dp(48),1f);m1.setMargins(dp(2),dp(7),dp(3),0);modes.addView(percent,m1);
         LinearLayout.LayoutParams m2=new LinearLayout.LayoutParams(0,dp(46),1f);m2.setMargins(dp(3),dp(7),dp(2),0);modes.addView(slider,m2);
         percent.setOnClickListener(v->{prefs.edit().putString("progress_display","percent").apply();showSettings();});slider.setOnClickListener(v->{prefs.edit().putString("progress_display","slider").apply();showSettings();});
         progress.addView(modes,lp(-1,54,0,0,0,0));root.addView(progress,lp(-1,-2,0,0,0,4));
 
-        LinearLayout weekly=settingsGroup("НЕДЕЛЬНАЯ ЦЕЛЬ");addText(weekly,"Сколько минут учёбы ты хочешь набрать за неделю?",12,MUTED,false);EditText weeklyInput=new EditText(this);weeklyInput.setSingleLine(true);weeklyInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);weeklyInput.setText(String.valueOf(prefs.getInt("weekly_goal_minutes",300)));weeklyInput.setHint("Например, 300");weeklyInput.setTextColor(DARK);weeklyInput.setBackground(shape(0xFFFFF9F7,14,0xFFEADDE2));weekly.addView(weeklyInput,lp(-1,46,0,6,0,7));Button saveWeekly=button("Сохранить цель недели",true);saveWeekly.setOnClickListener(v->{try{int value=Integer.parseInt(weeklyInput.getText().toString().trim());if(value<30||value>10080)throw new Exception();prefs.edit().putInt("weekly_goal_minutes",value).apply();Toast.makeText(this,"Недельная цель обновлена ♡",Toast.LENGTH_SHORT).show();}catch(Exception e){weeklyInput.setError("Укажи от 30 до 10080 минут");}});weekly.addView(saveWeekly,lp(-1,43,0,0,0,0));root.addView(weekly,lp(-1,-2,0,0,0,4));
+        LinearLayout weekly=settingsGroup("НЕДЕЛЬНАЯ ЦЕЛЬ");addText(weekly,"Сколько минут учёбы ты хочешь набрать за неделю?",12,MUTED,false);EditText weeklyInput=new EditText(this);weeklyInput.setSingleLine(true);weeklyInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);weeklyInput.setText(String.valueOf(prefs.getInt("weekly_goal_minutes",300)));weeklyInput.setHint("Например, 300");weeklyInput.setTextColor(DARK);weeklyInput.setBackground(shape(0xFFFFF9F7,14,0xFFEADDE2));weekly.addView(weeklyInput,lp(-1,48,0,6,0,7));Button saveWeekly=button("Сохранить цель недели",true);saveWeekly.setOnClickListener(v->{try{int value=Integer.parseInt(weeklyInput.getText().toString().trim());if(value<30||value>10080)throw new Exception();prefs.edit().putInt("weekly_goal_minutes",value).apply();Toast.makeText(this,"Недельная цель обновлена ♡",Toast.LENGTH_SHORT).show();}catch(Exception e){weeklyInput.setError("Укажи от 30 до 10080 минут");}});weekly.addView(saveWeekly,lp(-1,43,0,0,0,0));root.addView(weekly,lp(-1,-2,0,0,0,4));
 
         LinearLayout reminders=settingsGroup("НАПОМИНАНИЯ");
         CheckBox enabled=new CheckBox(this);enabled.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));enabled.setText(translate("Включить напоминания о занятиях"));enabled.setTextSize(14);enabled.setTextColor(DARK);enabled.setChecked(prefs.getBoolean("notifications_enabled",true));reminders.addView(enabled,lp(-1,46,0,0,0,4));
@@ -412,7 +444,7 @@ public class MainActivity extends Activity {
         Button export=button("Экспортировать копию",true);export.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");i.putExtra(Intent.EXTRA_TITLE,"study_with_love_backup.json");startActivityForResult(i,BACKUP_EXPORT);});backup.addView(export,lp(-1, 48,0,7,0,5));
         Button restore=button("Восстановить из копии",false);restore.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");startActivityForResult(i,BACKUP_IMPORT);});backup.addView(restore,lp(-1,48,0,0,0,0));root.addView(backup,lp(-1,-2,0,0,0,4));
 
-        Button back=button("← Назад",true);back.setOnClickListener(v->onBackPressed());root.addView(back,lp(-1,48,0,8,0,4));
+        Button back=button("← Назад",true);back.setOnClickListener(v->handleBackNavigation());root.addView(back,lp(-1,48,0,8,0,4));
     }
 
     private void updateSystemBarIcons() {
@@ -552,7 +584,7 @@ public class MainActivity extends Activity {
          ritualTile(ritualRow6, "♡", "Напарник по учёбе", "Общие недельные цели и тёплые стикеры", this::showStudyBuddy);
          root.addView(ritualRow6, lp(-1, -2, 0, 0, 0, 14));
          LinearLayout ritualRow7 = new LinearLayout(this); ritualRow7.setOrientation(LinearLayout.HORIZONTAL);
-         ritualTile(ritualRow7, "✧", "ИИ-помощник", "Объясняет темы и разбирает задачи", () -> startActivity(new Intent(this, AiTutorActivity.class)));
+         ritualTile(ritualRow7, "✧", "ИИ-помощник", "Объясняет темы и разбирает задачи", () -> launchAiTutor());
          root.addView(ritualRow7, lp(-1, -2, 0, 0, 0, 14));
 
         LinearLayout reminder = card();
@@ -803,7 +835,7 @@ public class MainActivity extends Activity {
         for(String id:lessonOrder){String name=prefs.getString("custom_lesson_name_"+id,"Мой урок");List<String> topics=chapters.get("CUSTOM:"+id+":"+name);if(topics==null)topics=new ArrayList<>();int c=countCompleted("CUSTOM:"+id+":"+name,topics),n=topics.size();LinearLayout item=card();item.setOrientation(LinearLayout.VERTICAL);item.setPadding(dp(14),dp(11),dp(14),dp(11));LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);TextView emoji=text(prefs.getString("custom_lesson_emoji_"+id,"📚"),25,PINK,true);row.addView(emoji,lp(40,40,0,0,9,0));LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,name,15,DARK,true);addText(words,c+" из "+n+" тем пройдено",11,MUTED,false);row.addView(words,new LinearLayout.LayoutParams(0,-2,1f));TextView go=text("›",24,PINK,false);row.addView(go);item.addView(row);ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(Math.max(1,n));bar.setProgress(c);bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));item.addView(bar,lp(-1,5,0,7,0,0));item.setOnClickListener(v->{selectedChapter="CUSTOM:"+id+":"+name;showTopics(selectedChapter);});item.setOnLongClickListener(v->{confirmDeleteCustomLesson(id,name);return true;});root.addView(item,lp(-1,-2,0,0,0,7));}
         Button add=button("＋  Добавить свой урок",true);add.setOnClickListener(v->addCustomLesson());root.addView(add,lp(-1,49,0,7,0,12));
         LinearLayout stats=card();stats.setPadding(dp(14),dp(12),dp(14),dp(12));addText(stats,"ТВОЙ УЧЕБНЫЙ РИТМ",11,PINK,true);addText(stats,done+" из "+total+" тем завершено",17,DARK,true);addText(stats,"Продолжай в своём темпе — каждый пройденный раздел приближает к цели ♡",11,MUTED,false);ProgressBar allBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);allBar.setMax(Math.max(1,total));allBar.setProgress(done);allBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));stats.addView(allBar,lp(-1,6,0,7,0,0));root.addView(stats,lp(-1,-2,0,0,0,10));
-        String recent=prefs.getString("recent_topic","");String recentChapter=prefs.getString("recent_chapter","");if(!recent.isEmpty()&&!recentChapter.isEmpty()&&chapters.containsKey(recentChapter)){Button last=button("↗  Продолжить: "+recent,false);last.setOnClickListener(v->{selectedChapter=recentChapter;selectedTopic=recent;showTopic(recent);});root.addView(last,lp(-1,45,0,0,0,4));}
+        String recent=prefs.getString("recent_topic","");String recentChapter=prefs.getString("recent_chapter","");if(!recent.isEmpty()&&!recentChapter.isEmpty()&&chapters.containsKey(recentChapter)){Button last=button("↗  Продолжить: "+recent,false);last.setOnClickListener(v->{selectedChapter=recentChapter;selectedTopic=recent;showTopic(recent);});root.addView(last,lp(-1,48,0,0,0,4));}
     }
 
     private void showMathChapters() {
@@ -814,7 +846,7 @@ public class MainActivity extends Activity {
             final String selected = chapter; String pretty = chapter.replaceFirst("^[^ ]+\\s*", "");
             actionRegular("РАЗДЕЛ " + number + "\n" + pretty, chapters.get(chapter).size() + " учебных тем", () -> { selectedChapter = selected; showTopics(selected); }); number++;
         }
-        Button back = button("← К урокам", false); back.setOnClickListener(v -> onBackPressed()); root.addView(back, lp(-1, 50, 0, 12, 0, 0));
+        Button back = button("← К урокам", false); back.setOnClickListener(v -> handleBackNavigation()); root.addView(back, lp(-1, 50, 0, 12, 0, 0));
     }
     private void addCustomLesson() {
         final String[] chosenEmoji={"📚"};String[] emojis={"📚","📐","🌸","🧪","🌍","🎨","🎵","📝","💡","⭐","📖","✏️","🧠","🔬","🧬","🧮","🗺️","🏛️","🎭","🎹","🪴","🦋","☀️","🌙","💗","💜","🩵","🍀","🌷","🪻","🧸","🐱","🐰","🍓","🍒","🍉","🍰","🧁","☕","🫧","✨","🔥","🏆","🎯","💫","🪄","🧩","🪐","🌈","🦄"};
@@ -1487,9 +1519,9 @@ public class MainActivity extends Activity {
                 main.setOnClickListener(v->{prefs.edit().putString("exam_main_goal_id",id).apply();render[0].run();});
                 edit.setOnClickListener(v->{editing[0]=id;title.setText(goalTitle);date.setText(goalDate);save.setText("Сохранить изменения");form.requestFocus();});
                 delete.setOnClickListener(v->{TextView sparkle=text("✦   ✧   ✦",25,PINK,true);sparkle.setGravity(Gravity.CENTER);item.addView(sparkle,0,lp(-1,34,0,0,0,0));sparkle.setAlpha(0f);sparkle.animate().alpha(1f).translationY(-dp(8)).setDuration(180).start();item.animate().alpha(0f).scaleX(.82f).scaleY(.82f).translationX(dp(28)).setDuration(300).withEndAction(()->{Set<String> updated=new TreeSet<>(prefs.getStringSet("exam_goal_ids",new TreeSet<String>()));updated.remove(id);SharedPreferences.Editor e=prefs.edit().remove("exam_goal_title_"+id).remove("exam_goal_date_"+id).remove("exam_goal_created_"+id).putStringSet("exam_goal_ids",updated);if(id.equals(prefs.getString("exam_main_goal_id","")))e.remove("exam_main_goal_id");e.apply();if(id.equals(editing[0])){editing[0]=null;title.setText("");date.setText("");save.setText("＋  Добавить цель");}render[0].run();});});
-                LinearLayout.LayoutParams mp=new LinearLayout.LayoutParams(0,dp(42),1f);mp.setMargins(0,dp(8),dp(3),0);actions.addView(main,mp);
-                LinearLayout.LayoutParams ep=new LinearLayout.LayoutParams(0,dp(42),.75f);ep.setMargins(dp(3),dp(8),dp(3),0);actions.addView(edit,ep);
-                LinearLayout.LayoutParams dpv=new LinearLayout.LayoutParams(0,dp(42),.65f);dpv.setMargins(dp(3),dp(8),0,0);actions.addView(delete,dpv);
+                LinearLayout.LayoutParams mp=new LinearLayout.LayoutParams(0,dp(48),1f);mp.setMargins(0,dp(8),dp(3),0);actions.addView(main,mp);
+                LinearLayout.LayoutParams ep=new LinearLayout.LayoutParams(0,dp(48),.75f);ep.setMargins(dp(3),dp(8),dp(3),0);actions.addView(edit,ep);
+                LinearLayout.LayoutParams dpv=new LinearLayout.LayoutParams(0,dp(48),.65f);dpv.setMargins(dp(3),dp(8),0,0);actions.addView(delete,dpv);
                 item.addView(actions);goals.addView(item,lp(-1,-2,0,0,0,10));
             }
         };
@@ -1507,7 +1539,7 @@ public class MainActivity extends Activity {
         addText(section,"Отметь только те темы, которые входят в твой экзамен. При включённом фильтре общий прогресс и планировщик будут учитывать именно их.",12,MUTED,false);
         CheckBox enabled=new CheckBox(this);enabled.setText("Считать прогресс и план только по отмеченным темам");enabled.setTextColor(DARK);enabled.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));enabled.setChecked(prefs.getBoolean("exam_topic_filter_enabled",false));section.addView(enabled,lp(-1,-2,0,5,0,6));
         enabled.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("exam_topic_filter_enabled",on).apply();Toast.makeText(this,on?"Фильтр тем экзамена включён":"Весь учебный план снова учитывается",Toast.LENGTH_SHORT).show();});
-        LinearLayout actions=new LinearLayout(this);Button all=button("Выбрать все",false),none=button("Снять выбор",false);actions.addView(all,new LinearLayout.LayoutParams(0,dp(48),1f));actions.addView(none,new LinearLayout.LayoutParams(0,dp(40),1f));section.addView(actions,lp(-1, 48,0,0,0,6));
+        LinearLayout actions=new LinearLayout(this);Button all=button("Выбрать все",false),none=button("Снять выбор",false);actions.addView(all,new LinearLayout.LayoutParams(0,dp(48),1f));actions.addView(none,new LinearLayout.LayoutParams(0,dp(48),1f));section.addView(actions,lp(-1, 48,0,0,0,6));
         all.setOnClickListener(v->{Set<String> ids=new TreeSet<>();for(Map.Entry<String,List<String>> e:chapters.entrySet())for(String topic:e.getValue())ids.add(examTopicKey(e.getKey(),topic));prefs.edit().putStringSet("exam_topic_ids",ids).apply();showExam();});
         none.setOnClickListener(v->{prefs.edit().putStringSet("exam_topic_ids",new TreeSet<String>()).apply();showExam();});
         Set<String> selected=new TreeSet<>(prefs.getStringSet("exam_topic_ids",new TreeSet<String>()));
