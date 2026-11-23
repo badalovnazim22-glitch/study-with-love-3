@@ -275,6 +275,7 @@ public class MainActivity extends Activity {
         scroll.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         scroll.animate().alpha(1f).translationY(0f).setDuration(290)
             .setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
+        if (currentScreen.equals("home")) {
         LinearLayout brandRow = new LinearLayout(this);
         brandRow.setGravity(Gravity.CENTER_VERTICAL);
         brandRow.setPadding(dp(12), dp(7), dp(8), dp(7));
@@ -291,6 +292,7 @@ public class MainActivity extends Activity {
             settings.setOnClickListener(v -> {settings.animate().rotationBy(90f).scaleX(1.18f).scaleY(1.18f).setDuration(170).withEndAction(()->{settings.animate().rotationBy(90f).scaleX(1f).scaleY(1f).setDuration(180).start();showSettings();}).start();});
         }
         root.addView(brandRow, lp(-1, 42, 0, 0, 0, 16));
+        }
         TextView h = text(title, 23, DARK, true);
         h.setLetterSpacing(-0.02f);
         root.addView(h, lp(-1, -2, 0, 0, 0, 6));
@@ -448,6 +450,7 @@ public class MainActivity extends Activity {
         addText(hero, "Ты справляешься.\nПродолжай в своём темпе.", 24, DARK, true);
         addText(hero, g("Каждое занятие — это забота о себе будущей.","Каждое занятие — это забота о себе будущем."), 14, MUTED, false);
          addText(hero, dailyMotivation(), 14, PINK, true);
+         addText(hero, mascotMessage(), 14, DARK, true);
         LinearLayout progressHead = new LinearLayout(this);
         progressHead.setGravity(Gravity.CENTER_VERTICAL);
         TextView progressTitle = text("Учебный план", 14, DARK, true);
@@ -1518,6 +1521,38 @@ public class MainActivity extends Activity {
         }
     }
 
+
+    private String mascotMessage(){
+        int hour=Calendar.getInstance(AppTime.zone()).get(Calendar.HOUR_OF_DAY);
+        if(currentStreak()>=3)return "🐰 Я горжусь твоей серией! Каждый шаг важен.";
+        if(hour<12)return "🐰 Доброе утро! Начнём день с маленькой победы?";
+        if(hour<18)return "🐰 Я рядом, если захочешь немного позаниматься.";
+        return "🐰 Вечер — хорошее время спокойно повторить пройденное.";
+    }
+    private void showKnowledgeGarden(){
+        currentScreen="garden";base("Сад знаний","Каждая тема — отдельное растение. Повторение помогает ему расцветать.");
+        int total=0,done=0;
+        for(Map.Entry<String,List<String>> e:chapters.entrySet())for(String topic:e.getValue()){total++;if(topicProgressForChapter(e.getKey(),topic)==100)done++;}
+        LinearLayout summary=card();summary.setGravity(Gravity.CENTER);addText(summary,"🌼  "+done+" из "+total+" растений расцвели",18,PINK,true);addText(summary,"Продолжай учиться в своём темпе — сад будет расти.",13,MUTED,false);root.addView(summary,lp(-1,-2,0,0,0,12));
+        for(Map.Entry<String,List<String>> e:chapters.entrySet()){
+            LinearLayout group=card();addText(group,e.getKey(),15,DARK,true);
+            for(String topic:e.getValue()){
+                int p=topicProgressForChapter(e.getKey(),topic);LinearLayout line=new LinearLayout(this);line.setGravity(Gravity.CENTER_VERTICAL);
+                TextView plant=text(p==100?"🌸":p>0?"🌿":"🌱",25,PINK,true);line.addView(plant,lp(42,42,0,0,8,0));
+                LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);words.addView(text(topic,13,DARK,true));words.addView(text(p==100?"Цветёт · тема завершена":p>0?"Растёт · прогресс "+p+"%":"Росток · начни изучение",11,MUTED,false));line.addView(words,new LinearLayout.LayoutParams(0,-2,1f));group.addView(line,lp(-1,-2,0,3,0,3));
+            }root.addView(group,lp(-1,-2,0,0,0,9));
+        }
+        Button water=button("💧  Полить сад повторением",true);water.setOnClickListener(v->{prefs.edit().putInt("garden_water_count",prefs.getInt("garden_water_count",0)+1).putLong("garden_last_water",System.currentTimeMillis()).apply();Toast.makeText(this,"Сад полит! Повторение помогает знаниям 🌿",Toast.LENGTH_SHORT).show();});root.addView(water,lp(-1,50,0,4,0,10));
+    }
+    private void showPostcards(){
+        currentScreen="postcards";base("Коллекция открыток","Открытки сохраняют важные учебные моменты.");
+        int days=prefs.getStringSet("study_days",new TreeSet<String>()).size(),completed=prefs.getInt("done_count",0),sessions=prefs.getInt("postcard_focus_count",0);
+        String[][] cards={{"🌱","Первый шаг","За первый учебный день",days>=1?"1":"0"},{"🌷","Неделя заботы","За 7 дней занятий",days>=7?"1":"0"},{"🌸","Цветущий сад","За первую завершённую тему",completed>=1?"1":"0"},{"✨","Сила фокуса","За первую завершённую фокус-сессию",sessions>=1?"1":"0"},{"💐","Постоянство","За 30 дней занятий",days>=30?"1":"0"}};
+        for(String[] item:cards){boolean unlocked="1".equals(item[3]);LinearLayout c=card();c.setGravity(Gravity.CENTER);c.setPadding(dp(18),dp(20),dp(18),dp(20));c.setBackground(shape(unlocked?0xFFFFF0F4:0xFFF1ECEE,22,0));addText(c,item[0],34,PINK,true);addText(c,item[1],18,DARK,true);addText(c,item[2],12,MUTED,false);addText(c,unlocked?"Открытка открыта ♡":"Пока закрыта",12,unlocked?PINK:MUTED,true);
+            if(unlocked){Button share=button("Поделиться открыткой",false);share.setOnClickListener(v->{Intent send=new Intent(Intent.ACTION_SEND);send.setType("text/plain");send.putExtra(Intent.EXTRA_TEXT,item[0]+" "+item[1]+" — "+item[2]+" · Study with Love ♡");startActivity(Intent.createChooser(send,"Поделиться открыткой"));});c.addView(share,lp(-1,44,0,8,0,0));}root.addView(c,lp(-1,-2,0,0,0,10));
+        }
+    }
+
     private void showFlower() {
         currentScreen="flower";
         Set<String> days=new TreeSet<>(prefs.getStringSet("study_days",new TreeSet<String>()));
@@ -1871,6 +1906,8 @@ public class MainActivity extends Activity {
             case "exam": showExam(); break;
             case "diary": showDiary(); break;
             case "flower": showFlower(); break;
+            case "garden": showKnowledgeGarden(); break;
+            case "postcards": showPostcards(); break;
             case "achievements": showAchievements(); break;
             case "letters": showFutureLetters(); break;
             case "planner": showPlanner(); break;
