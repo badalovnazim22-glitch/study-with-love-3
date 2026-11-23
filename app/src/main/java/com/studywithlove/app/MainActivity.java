@@ -79,7 +79,7 @@ public class MainActivity extends Activity {
     private volatile boolean ambiencePlaying=false;
     private volatile boolean ambienceLoading=false;
     private android.media.AudioManager ambienceAudioManager;
-    private android.media.AudioFocusRequest ambienceFocusRequest;
+    private Object ambienceFocusRequest;
     private volatile int ambienceGeneration=0;
     private android.graphics.Bitmap cachedBackgroundBitmap;
     private String cachedBackgroundUri="";
@@ -189,7 +189,7 @@ public class MainActivity extends Activity {
         Set<String> times = p.getStringSet("reminder_times", null);
         if (times == null) times = new TreeSet<>(java.util.Arrays.asList("10:00", "15:00", "19:00", "21:00"));
         Set<String> newKeys = new TreeSet<>();
-        TimeZone tz = TimeZone.getTimeZone("Asia/Baku");
+        TimeZone tz = AppTime.zone();
         for (String dayValue : days) for (String timeValue : times) {
             try {
                 int day = Integer.parseInt(dayValue);
@@ -995,7 +995,7 @@ public class MainActivity extends Activity {
         if(progressCalendarHost==null)return;progressCalendarHost.removeAllViews();
         LinearLayout calendarCard = card();
         addText(calendarCard, "📅  ДНИ ЗАНЯТИЙ", 12, PINK, true);
-        Calendar month = Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));
+        Calendar month = Calendar.getInstance(AppTime.zone());
         month.add(Calendar.MONTH, progressMonthOffset);
         int todayDay = month.get(Calendar.DAY_OF_MONTH);
         int monthNumber = month.get(Calendar.MONTH);
@@ -1238,7 +1238,7 @@ public class MainActivity extends Activity {
         EditText title=new EditText(this);title.setSingleLine(true);title.setTextSize(16);title.setTextColor(DARK);title.setHint("Например, экзамен по математике");title.setPadding(dp(13),dp(8),dp(13),dp(8));title.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));form.addView(title,lp(-1,50,0,7,0,12));
         addText(form,"ДАТА",12,PINK,true);
         EditText date=new EditText(this);date.setSingleLine(true);date.setFocusable(false);date.setClickable(true);date.setTextSize(15);date.setTextColor(DARK);date.setHint("Выбери дату");date.setPadding(dp(13),dp(8),dp(13),dp(8));date.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));form.addView(date,lp(-1,50,0,7,0,12));
-        date.setOnClickListener(v->{Calendar now=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));Calendar min=(Calendar)now.clone();min.set(Calendar.HOUR_OF_DAY,0);min.set(Calendar.MINUTE,0);min.set(Calendar.SECOND,0);min.set(Calendar.MILLISECOND,0);android.app.DatePickerDialog dialog=new android.app.DatePickerDialog(this,(p,y,m,d)->date.setText(String.format(Locale.US,"%04d-%02d-%02d",y,m+1,d)),now.get(Calendar.YEAR),now.get(Calendar.MONTH),now.get(Calendar.DAY_OF_MONTH));dialog.getDatePicker().setMinDate(min.getTimeInMillis());dialog.show();});
+        date.setOnClickListener(v->{Calendar now=Calendar.getInstance(AppTime.zone());Calendar min=(Calendar)now.clone();min.set(Calendar.HOUR_OF_DAY,0);min.set(Calendar.MINUTE,0);min.set(Calendar.SECOND,0);min.set(Calendar.MILLISECOND,0);android.app.DatePickerDialog dialog=new android.app.DatePickerDialog(this,(p,y,m,d)->date.setText(String.format(Locale.US,"%04d-%02d-%02d",y,m+1,d)),now.get(Calendar.YEAR),now.get(Calendar.MONTH),now.get(Calendar.DAY_OF_MONTH));dialog.getDatePicker().setMinDate(min.getTimeInMillis());dialog.show();});
         Button save=button("＋  Добавить цель",true);form.addView(save,lp(-1,50,0,4,0,0));root.addView(form,lp(-1,-2,0,0,0,14));
         LinearLayout goals=new LinearLayout(this);goals.setOrientation(LinearLayout.VERTICAL);root.addView(goals,lp(-1,-2,0,0,0,0));
         final Runnable[] render={null};
@@ -1282,7 +1282,7 @@ public class MainActivity extends Activity {
         render[0].run();
     }
     private long daysUntil(String isoDate) {
-        try {SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd",Locale.US);f.setLenient(false);f.setTimeZone(TimeZone.getTimeZone("Asia/Baku"));Date target=f.parse(isoDate);Calendar a=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));a.set(Calendar.HOUR_OF_DAY,0);a.set(Calendar.MINUTE,0);a.set(Calendar.SECOND,0);a.set(Calendar.MILLISECOND,0);Calendar b=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));b.setTime(target);b.set(Calendar.HOUR_OF_DAY,0);b.set(Calendar.MINUTE,0);b.set(Calendar.SECOND,0);b.set(Calendar.MILLISECOND,0);return (b.getTimeInMillis()-a.getTimeInMillis())/86400000L;}catch(Exception e){return -1;}
+        try {SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd",Locale.US);f.setLenient(false);f.setTimeZone(AppTime.zone());Date target=f.parse(isoDate);Calendar a=Calendar.getInstance(AppTime.zone());a.set(Calendar.HOUR_OF_DAY,0);a.set(Calendar.MINUTE,0);a.set(Calendar.SECOND,0);a.set(Calendar.MILLISECOND,0);Calendar b=Calendar.getInstance(AppTime.zone());b.setTime(target);b.set(Calendar.HOUR_OF_DAY,0);b.set(Calendar.MINUTE,0);b.set(Calendar.SECOND,0);b.set(Calendar.MILLISECOND,0);return (b.getTimeInMillis()-a.getTimeInMillis())/86400000L;}catch(Exception e){return -1;}
     }
 
     private void showDiary() {
@@ -1491,9 +1491,9 @@ public class MainActivity extends Activity {
     private void scheduleFutureLetterReminder(String id,String date) {
         try {
             java.text.SimpleDateFormat f=new java.text.SimpleDateFormat("yyyy-MM-dd",Locale.US);
-            f.setTimeZone(TimeZone.getTimeZone("Asia/Baku"));
+            f.setTimeZone(AppTime.zone());
             Date parsed=f.parse(date);if(parsed==null)return;
-            Calendar when=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));when.setTime(parsed);when.set(Calendar.HOUR_OF_DAY,9);when.set(Calendar.MINUTE,0);when.set(Calendar.SECOND,0);when.set(Calendar.MILLISECOND,0);
+            Calendar when=Calendar.getInstance(AppTime.zone());when.setTime(parsed);when.set(Calendar.HOUR_OF_DAY,9);when.set(Calendar.MINUTE,0);when.set(Calendar.SECOND,0);when.set(Calendar.MILLISECOND,0);
             if(when.getTimeInMillis()<=System.currentTimeMillis())return;
             Intent intent=new Intent(this,ReminderReceiver.class).setAction("future_letter_"+id)
                     .putExtra("message","Твоё письмо себе уже можно открыть ✉").putExtra("id",Math.abs(id.hashCode())+10000);
@@ -1505,7 +1505,7 @@ public class MainActivity extends Activity {
 
     public static void rescheduleFutureLetterReminders(Context context){
         SharedPreferences p=context.getSharedPreferences(PREFS,MODE_PRIVATE);Set<String> ids=p.getStringSet("future_letter_ids",new TreeSet<String>());AlarmManager am=(AlarmManager)context.getSystemService(ALARM_SERVICE);
-        for(String id:ids){if(!p.getBoolean("future_remind_"+id,false))continue;String date=p.getString("future_date_"+id,"");try{SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd",Locale.US);f.setTimeZone(TimeZone.getTimeZone("Asia/Baku"));Date parsed=f.parse(date);if(parsed==null)continue;Calendar when=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));when.setTime(parsed);when.set(Calendar.HOUR_OF_DAY,9);when.set(Calendar.MINUTE,0);when.set(Calendar.SECOND,0);when.set(Calendar.MILLISECOND,0);if(when.getTimeInMillis()<=System.currentTimeMillis())continue;int code=Math.abs(id.hashCode())+10000;Intent intent=new Intent(context,ReminderReceiver.class).setAction("future_letter_"+id).putExtra("message","Твоё письмо себе уже можно открыть ✉").putExtra("id",code);PendingIntent pi=PendingIntent.getBroadcast(context,code,intent,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);if(Build.VERSION.SDK_INT>=31&&!am.canScheduleExactAlarms())am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,when.getTimeInMillis(),pi);else if(Build.VERSION.SDK_INT>=23)am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,when.getTimeInMillis(),pi);else am.setExact(AlarmManager.RTC_WAKEUP,when.getTimeInMillis(),pi);}catch(Exception ignored){}}
+        for(String id:ids){if(!p.getBoolean("future_remind_"+id,false))continue;String date=p.getString("future_date_"+id,"");try{SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd",Locale.US);f.setTimeZone(AppTime.zone());Date parsed=f.parse(date);if(parsed==null)continue;Calendar when=Calendar.getInstance(AppTime.zone());when.setTime(parsed);when.set(Calendar.HOUR_OF_DAY,9);when.set(Calendar.MINUTE,0);when.set(Calendar.SECOND,0);when.set(Calendar.MILLISECOND,0);if(when.getTimeInMillis()<=System.currentTimeMillis())continue;int code=Math.abs(id.hashCode())+10000;Intent intent=new Intent(context,ReminderReceiver.class).setAction("future_letter_"+id).putExtra("message","Твоё письмо себе уже можно открыть ✉").putExtra("id",code);PendingIntent pi=PendingIntent.getBroadcast(context,code,intent,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);if(Build.VERSION.SDK_INT>=31&&!am.canScheduleExactAlarms())am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,when.getTimeInMillis(),pi);else if(Build.VERSION.SDK_INT>=23)am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,when.getTimeInMillis(),pi);else am.setExact(AlarmManager.RTC_WAKEUP,when.getTimeInMillis(),pi);}catch(Exception ignored){}}
     }
 
     private void showFutureLetters() {
@@ -1516,9 +1516,9 @@ public class MainActivity extends Activity {
         TextView dateLabel=text("📅  Когда открыть письмо?",15,DARK,true);root.addView(dateLabel,lp(-1,-2,0,0,0,7));
         EditText date=new EditText(this);date.setHint("Например, 14 июня 2027");date.setSingleLine(true);date.setFocusable(false);date.setClickable(true);date.setTextSize(15);date.setTextColor(DARK);date.setPadding(dp(14),dp(8),dp(14),dp(8));date.setBackground(shape(0xFFFFFFFF,16,0xFFEADDE2));root.addView(date,lp(-1,50,0,0,0,5));
         TextView countdown=text("Выбери дату — я посчитаю, сколько осталось дней",12,MUTED,false);root.addView(countdown,lp(-1,26,0,0,0,8));
-        final Calendar[] chosen={null};Runnable updateCountdown=()->{if(chosen[0]==null)return;Calendar now=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));Calendar target=(Calendar)chosen[0].clone();long daysLeft=Math.max(0,(target.getTimeInMillis()-now.getTimeInMillis())/86400000L);countdown.setText("До открытия: через "+daysLeft+" дней");date.setText(new SimpleDateFormat("d MMMM yyyy",new Locale("ru")).format(target.getTime()));};
-        date.setOnClickListener(v->{Calendar now=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));Calendar initial=chosen[0]==null?(Calendar)now.clone():(Calendar)chosen[0].clone();android.app.DatePickerDialog picker=new android.app.DatePickerDialog(this,(p,y,m,d)->{Calendar c=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));c.set(y,m,d,9,0,0);c.set(Calendar.MILLISECOND,0);chosen[0]=c;updateCountdown.run();},initial.get(Calendar.YEAR),initial.get(Calendar.MONTH),initial.get(Calendar.DAY_OF_MONTH));picker.getDatePicker().setMinDate(now.getTimeInMillis());picker.show();});
-        LinearLayout quick=new LinearLayout(this);quick.setOrientation(LinearLayout.HORIZONTAL);String[] quickNames={"Через месяц","Через полгода","Через год","В конце уч. года"};int[] months={1,6,12,7};for(int i=0;i<quickNames.length;i++){final int index=i;TextView chip=text(quickNames[i],10,PINK,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(7),dp(8),dp(7),dp(8));chip.setBackground(shape(0xFFFFF0F4,14,0));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(42),1f);p.setMargins(dp(2),0,dp(2),0);quick.addView(chip,p);chip.setOnClickListener(v->{Calendar c=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));if(index==3){int y=c.get(Calendar.YEAR);int m=c.get(Calendar.MONTH);c.set(y,m<=5?Calendar.JUNE:Calendar.JUNE,m<=5?30:30);if(m>5)c.add(Calendar.YEAR,1);}else c.add(Calendar.MONTH,months[index]);chosen[0]=c;updateCountdown.run();});}root.addView(quick,lp(-1,46,0,0,0,15));
+        final Calendar[] chosen={null};Runnable updateCountdown=()->{if(chosen[0]==null)return;Calendar now=Calendar.getInstance(AppTime.zone());Calendar target=(Calendar)chosen[0].clone();long daysLeft=Math.max(0,(target.getTimeInMillis()-now.getTimeInMillis())/86400000L);countdown.setText("До открытия: через "+daysLeft+" дней");date.setText(new SimpleDateFormat("d MMMM yyyy",new Locale("ru")).format(target.getTime()));};
+        date.setOnClickListener(v->{Calendar now=Calendar.getInstance(AppTime.zone());Calendar initial=chosen[0]==null?(Calendar)now.clone():(Calendar)chosen[0].clone();android.app.DatePickerDialog picker=new android.app.DatePickerDialog(this,(p,y,m,d)->{Calendar c=Calendar.getInstance(AppTime.zone());c.set(y,m,d,9,0,0);c.set(Calendar.MILLISECOND,0);chosen[0]=c;updateCountdown.run();},initial.get(Calendar.YEAR),initial.get(Calendar.MONTH),initial.get(Calendar.DAY_OF_MONTH));picker.getDatePicker().setMinDate(now.getTimeInMillis());picker.show();});
+        LinearLayout quick=new LinearLayout(this);quick.setOrientation(LinearLayout.HORIZONTAL);String[] quickNames={"Через месяц","Через полгода","Через год","В конце уч. года"};int[] months={1,6,12,7};for(int i=0;i<quickNames.length;i++){final int index=i;TextView chip=text(quickNames[i],10,PINK,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(7),dp(8),dp(7),dp(8));chip.setBackground(shape(0xFFFFF0F4,14,0));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(42),1f);p.setMargins(dp(2),0,dp(2),0);quick.addView(chip,p);chip.setOnClickListener(v->{Calendar c=Calendar.getInstance(AppTime.zone());if(index==3){int y=c.get(Calendar.YEAR);int m=c.get(Calendar.MONTH);c.set(y,m<=5?Calendar.JUNE:Calendar.JUNE,m<=5?30:30);if(m>5)c.add(Calendar.YEAR,1);}else c.add(Calendar.MONTH,months[index]);chosen[0]=c;updateCountdown.run();});}root.addView(quick,lp(-1,46,0,0,0,15));
         CheckBox hidden=new CheckBox(this);hidden.setText("🔒  Скрыть письмо до даты открытия");hidden.setTextColor(DARK);hidden.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));hidden.setChecked(true);root.addView(hidden,lp(-1,42,0,0,0,2));
         CheckBox remind=new CheckBox(this);remind.setText("🔔  Напомнить, когда придёт время");remind.setTextColor(DARK);remind.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));root.addView(remind,lp(-1,42,0,0,0,14));
         Button save=button("✉  Запечатать письмо",true);save.setTextSize(15);root.addView(save,lp(-1,54,0,0,0,18));
@@ -1609,7 +1609,7 @@ public class MainActivity extends Activity {
         Button move=button("↗  Перенести незавершённое на завтра",false);root.addView(move,lp(-1,42,0,4,0,8));Runnable[] render=new Runnable[1];
         Runnable updateDate=()->{boolean isToday=selectedDate[0].equals(todayKey());todayChip.setTextColor(isToday?PINK:MUTED);tomorrowChip.setTextColor(isToday?MUTED:PINK);todayChip.setBackground(shape(isToday?0xFFFFFFFF:PALE,13,isToday?PINK:0));tomorrowChip.setBackground(shape(isToday?PALE:0xFFFFFFFF,13,isToday?0:PINK));};
         todayChip.setOnClickListener(v->{selectedDate[0]=todayKey();updateDate.run();render[0].run();});
-        tomorrowChip.setOnClickListener(v->{Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));cal.add(Calendar.DAY_OF_YEAR,1);selectedDate[0]=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(cal.getTime());updateDate.run();render[0].run();});
+        tomorrowChip.setOnClickListener(v->{Calendar cal=Calendar.getInstance(AppTime.zone());cal.add(Calendar.DAY_OF_YEAR,1);selectedDate[0]=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(cal.getTime());updateDate.run();render[0].run();});
         render[0]=()->{list.removeAllViews();String key="planner_tasks_"+selectedDate[0];Set<String> tasks=new TreeSet<>(prefs.getStringSet(key,new TreeSet<String>()));counter.setText(tasks.size()+" / 3 важных дела");overload.setText(tasks.size()>=3?"Уже "+tasks.size()+" задач — точно хватит сил на ещё одну? ♡":"");
             move.setVisibility(tasks.isEmpty()||!selectedDate[0].equals(todayKey())?View.GONE:View.VISIBLE);
             if(tasks.isEmpty()){addText(list,"Можно добавить одно важное дело, если есть силы ♡",12,MUTED,false);LinearLayout suggestions=card();addText(suggestions,"ИДЕИ НА СЕГОДНЯ",11,PINK,true);for(String ex:actions){TextView suggestion=text("＋  "+ex,13,DARK,true);suggestions.addView(suggestion,lp(-1,38,0,2,0,0));suggestion.setOnClickListener(v->{action[0]=ex;refreshAction.run();task.requestFocus();((android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).showSoftInput(task,android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);});}list.addView(suggestions,lp(-1,-2,0,8,0,0));}
@@ -1619,7 +1619,7 @@ public class MainActivity extends Activity {
                 final float[] down={0};row.setOnTouchListener((v,event)->{if(event.getAction()==android.view.MotionEvent.ACTION_DOWN){down[0]=event.getX();return true;}if(event.getAction()==android.view.MotionEvent.ACTION_UP){float dx=event.getX()-down[0];if(Math.abs(dx)>dp(55)){Set<String> latest=new TreeSet<>(prefs.getStringSet(key,new TreeSet<String>()));latest.remove(item);if(dx>0)prefs.edit().putInt("planner_completed_"+selectedDate[0],prefs.getInt("planner_completed_"+selectedDate[0],0)+1).apply();prefs.edit().putStringSet(key,latest).apply();row.animate().alpha(0).setDuration(160).withEndAction(render[0]::run).start();return true;}return false;}return true;});
                 list.addView(row,lp(-1,-2,0,0,0,7));}
         };
-        move.setOnClickListener(v->{if(selectedDate[0].equals(todayKey())){Set<String> pending=new TreeSet<>(prefs.getStringSet("planner_tasks_"+selectedDate[0],new TreeSet<String>()));if(pending.isEmpty())return;Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));cal.add(Calendar.DAY_OF_YEAR,1);String tomorrow=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(cal.getTime());Set<String> next=new TreeSet<>(prefs.getStringSet("planner_tasks_"+tomorrow,new TreeSet<String>()));next.addAll(pending);prefs.edit().putStringSet("planner_tasks_"+tomorrow,next).putStringSet("planner_tasks_"+selectedDate[0],new TreeSet<String>()).apply();showSavedBanner("План обновлён","Незавершённые задачи перенесены на завтра ♡");render[0].run();}});
+        move.setOnClickListener(v->{if(selectedDate[0].equals(todayKey())){Set<String> pending=new TreeSet<>(prefs.getStringSet("planner_tasks_"+selectedDate[0],new TreeSet<String>()));if(pending.isEmpty())return;Calendar cal=Calendar.getInstance(AppTime.zone());cal.add(Calendar.DAY_OF_YEAR,1);String tomorrow=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(cal.getTime());Set<String> next=new TreeSet<>(prefs.getStringSet("planner_tasks_"+tomorrow,new TreeSet<String>()));next.addAll(pending);prefs.edit().putStringSet("planner_tasks_"+tomorrow,next).putStringSet("planner_tasks_"+selectedDate[0],new TreeSet<String>()).apply();showSavedBanner("План обновлён","Незавершённые задачи перенесены на завтра ♡");render[0].run();}});
         add.setOnClickListener(v->{String value=task.getText().toString().trim();if(value.isEmpty())return;StringBuilder entry=new StringBuilder(value);if(!action[0].isEmpty())entry.append(" · ").append(action[0]);if(!duration[0].isEmpty())entry.append(" · ").append(duration[0]);Set<String> tasks=new TreeSet<>(prefs.getStringSet("planner_tasks_"+selectedDate[0],new TreeSet<String>()));tasks.add(entry.toString());prefs.edit().putStringSet("planner_tasks_"+selectedDate[0],tasks).apply();task.setText("");duration[0]="";action[0]="";refreshDuration.run();refreshAction.run();render[0].run();});
         updateDate.run();render[0].run();
     }
@@ -1628,7 +1628,7 @@ public class MainActivity extends Activity {
         for(List<String> topics:chapters.values()){total+=topics.size();completed+=countCompleted(topics);}LinearLayout summary=card();addText(summary,"📚  ИЗУЧЕНИЕ",12,PINK,true);addText(summary,completed+" из "+total+" тем завершено",22,DARK,true);
         addProgressLine(summary,"Общий прогресс",total==0?0:completed*100/total);Set<String> days=prefs.getStringSet("study_days",new TreeSet<String>());TextView studyDays=text("Учебных дней: 0",14,MUTED,false);summary.addView(studyDays);animateNumber(studyDays,days.size()," учебных дней");
         TextView totalTime=text("Всего времени: 0 мин",14,MUTED,false);summary.addView(totalTime);animateNumber(totalTime,totalStudyMinutes()," мин всего");addText(summary,"Завершённых занятий: "+prefs.getInt("done_count",0),14,MUTED,false);root.addView(summary,lp(-1,-2,0,0,0,12));
-        Calendar c=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));LinearLayout week=card();addText(week,"ПОСЛЕДНИЕ 7 ДНЕЙ",12,PINK,true);
+        Calendar c=Calendar.getInstance(AppTime.zone());LinearLayout week=card();addText(week,"ПОСЛЕДНИЕ 7 ДНЕЙ",12,PINK,true);
         for(int i=6;i>=0;i--){Calendar day=(Calendar)c.clone();day.add(Calendar.DAY_OF_YEAR,-i);String date=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(day.getTime());int mins=prefs.getInt("focus_minutes_"+date,0);addProgressLine(week,new SimpleDateFormat("EEE, d MMM",new Locale("ru")).format(day.getTime())+" · "+mins+" мин",Math.min(100,mins*2));}
         root.addView(week,lp(-1,-2,0,0,0,12));backHome();
     }
@@ -1651,7 +1651,7 @@ public class MainActivity extends Activity {
             java.util.Map<String,String> headers=new java.util.HashMap<>();headers.put("User-Agent","StudyWithLove/4.1 (Android; ambience player)");player.setDataSource(this,android.net.Uri.parse(url),headers);player.prepareAsync();
         }catch(Exception e){stopAmbience();Toast.makeText(this,"Не удалось загрузить звук атмосферы",Toast.LENGTH_SHORT).show();}
     }
-    private void stopAmbience(){ambiencePlaying=false;ambienceLoading=false;android.media.MediaPlayer player=ambiencePlayer;ambiencePlayer=null;if(player!=null){try{if(player.isPlaying())player.stop();}catch(Exception ignored){}try{player.release();}catch(Exception ignored){}}if(ambienceAudioManager!=null){try{if(Build.VERSION.SDK_INT>=26&&ambienceFocusRequest!=null)ambienceAudioManager.abandonAudioFocusRequest(ambienceFocusRequest);else ambienceAudioManager.abandonAudioFocus(ambienceFocusListener);}catch(Exception ignored){}}}
+    private void stopAmbience(){ambiencePlaying=false;ambienceLoading=false;android.media.MediaPlayer player=ambiencePlayer;ambiencePlayer=null;if(player!=null){try{if(player.isPlaying())player.stop();}catch(Exception ignored){}try{player.release();}catch(Exception ignored){}}if(ambienceAudioManager!=null){try{if(Build.VERSION.SDK_INT>=26&&ambienceFocusRequest!=null)ambienceAudioManager.abandonAudioFocusRequest((android.media.AudioFocusRequest)ambienceFocusRequest);else ambienceAudioManager.abandonAudioFocus(ambienceFocusListener);}catch(Exception ignored){}}}
     @Override protected void onDestroy(){if(flowerBreatheAnimator!=null){flowerBreatheAnimator.cancel();flowerBreatheAnimator=null;}if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}stopAmbience();super.onDestroy();}
 
     private void showAtmosphere() {
@@ -1741,9 +1741,9 @@ public class MainActivity extends Activity {
         if (date == null || date.isEmpty()) return false;
         try {
             java.text.SimpleDateFormat f = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US);
-            f.setTimeZone(TimeZone.getTimeZone("Asia/Baku"));
+            f.setTimeZone(AppTime.zone());
             java.util.Date d = f.parse(date);
-            Calendar c = Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));
+            Calendar c = Calendar.getInstance(AppTime.zone());
             c.add(Calendar.DAY_OF_YEAR, -1);
             return d != null && f.format(c.getTime()).equals(f.format(d));
         } catch (Exception e) { return false; }
@@ -1755,7 +1755,7 @@ public class MainActivity extends Activity {
         return 0;
     }
 
-    private boolean isOneDayGap(String date){try{SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd",Locale.US);f.setTimeZone(TimeZone.getTimeZone("Asia/Baku"));Date d=f.parse(date);Calendar c=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));c.setTime(d);c.add(Calendar.DAY_OF_YEAR,2);return todayKey().equals(f.format(c.getTime()));}catch(Exception e){return false;}}
+    private boolean isOneDayGap(String date){try{SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd",Locale.US);f.setTimeZone(AppTime.zone());Date d=f.parse(date);Calendar c=Calendar.getInstance(AppTime.zone());c.setTime(d);c.add(Calendar.DAY_OF_YEAR,2);return todayKey().equals(f.format(c.getTime()));}catch(Exception e){return false;}}
     private String weekKey(){Calendar c=Calendar.getInstance(AppTime.zone());return c.getWeekYear()+"-"+c.get(Calendar.WEEK_OF_YEAR);}
     private String dayWord(int n) {
         int x = Math.abs(n) % 10, y = Math.abs(n) % 100;
@@ -1829,7 +1829,7 @@ public class MainActivity extends Activity {
         renderTimes[0].run();
         Button addTime = button("＋  Добавить время", false);
         addTime.setOnClickListener(v -> {
-            Calendar now = Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));
+            Calendar now = Calendar.getInstance(AppTime.zone());
             new TimePickerDialog(this, (TimePicker picker, int hour, int minute) -> {
                 String value = String.format(Locale.US, "%02d:%02d", hour, minute);
                 if (!reminderTimes.contains(value)) { reminderTimes.add(value); java.util.Collections.sort(reminderTimes); renderTimes[0].run(); }
@@ -1854,7 +1854,7 @@ public class MainActivity extends Activity {
                     catch (Exception ignored) { }
                 }
             }
-            Toast.makeText(this, days.isEmpty() || times.isEmpty() ? "Расписание очищено. Напоминания выключены." : "Готово! Расписание сохранено по времени Баку. Разреши точные будильники и уведомления, чтобы получать напоминания без системной задержки.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, days.isEmpty() || times.isEmpty() ? "Расписание очищено. Напоминания выключены." : "Готово! Расписание сохранено по местному времени. Разреши точные будильники и уведомления, чтобы получать напоминания без системной задержки.", Toast.LENGTH_LONG).show();
             showHome();
         });
         root.addView(save, lp(-1, 54, 0, 4, 0, 8));
