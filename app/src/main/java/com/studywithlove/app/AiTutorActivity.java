@@ -260,7 +260,7 @@ public class AiTutorActivity extends Activity {
     }
 
     private String endpoint() {
-        return getSharedPreferences(AI_PREFS, MODE_PRIVATE).getString(ENDPOINT_KEY, "").trim();
+        return getSharedPreferences(AI_PREFS, MODE_PRIVATE).getString(ENDPOINT_KEY, "https://study-with-love-ai.xnemorenight.workers.dev/chat").trim();
     }
 
     private String readAll(InputStream stream) throws Exception {
