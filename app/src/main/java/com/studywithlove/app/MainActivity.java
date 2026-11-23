@@ -534,7 +534,7 @@ public class MainActivity extends Activity {
         currentScreen = "home";
         StudyWidgetProvider.updateAll(this);
         base("Привет, " + prefs.getString("display_name", "Назка") + "! ♡",
-                "Рада видеть тебя. Продолжим маленькими шагами?");
+                "Хорошо, что ты здесь. Продолжим маленькими шагами?");
 
         int totalTopics = 0, completedTopics = 0;
         for (Map.Entry<String, List<String>> entry : chapters.entrySet()) {
@@ -633,7 +633,7 @@ public class MainActivity extends Activity {
         aiCard.addView(aiIcon, lp(42, 44, 0, 0, 10, 0));
         LinearLayout aiWords = new LinearLayout(this);
         aiWords.setOrientation(LinearLayout.VERTICAL);
-        addText(aiWords, "Не поняла тему?", 15, DARK, true);
+        addText(aiWords, "Есть вопросы по теме?", 15, DARK, true);
         addText(aiWords, "Спроси ИИ-помощника", 12, MUTED, false);
         aiCard.addView(aiWords, new LinearLayout.LayoutParams(0, -2, 1f));
         aiCard.addView(text("›", 27, PINK, true));
