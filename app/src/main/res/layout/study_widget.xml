@@ -2,4 +2,5 @@
 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="STUDY WITH LOVE" android:textStyle="bold" android:textSize="11sp" android:textColor="#FFC97891"/>
 <TextView android:id="@+id/widget_streak" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0 дней подряд" android:textStyle="bold" android:textSize="20sp" android:textColor="#FF3F3439" android:paddingTop="5dp"/>
 <TextView android:id="@+id/widget_exam" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Добавь дату экзамена" android:textSize="12sp" android:textColor="#FF95878C" android:paddingTop="4dp"/>
+<Button android:id="@+id/widget_focus" android:layout_width="match_parent" android:layout_height="40dp" android:text="▶  Фокус 25 минут" android:textAllCaps="false" android:textStyle="bold" android:textColor="#FFFFFFFF" android:backgroundTint="#FFC97891" android:layout_marginTop="8dp" />
 </LinearLayout>
