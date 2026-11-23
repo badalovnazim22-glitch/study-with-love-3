@@ -174,6 +174,27 @@ public class MainActivity extends Activity {
                         .append(android.text.TextUtils.join(", ", names)).append(". ");
             }
         }
+        try {
+            mistakeStore().migrateLegacy(prefs);
+            List<String> recentMistakes = mistakeStore().newestPayloads(4);
+            if (!recentMistakes.isEmpty()) {
+                context.append("Недавние учебные ошибки (помоги понять причину и потренировать похожие задания): ");
+                int added = 0;
+                for (String payload : recentMistakes) {
+                    if (added >= 4) break;
+                    try {
+                        org.json.JSONObject mistake = new org.json.JSONObject(payload);
+                        String topic = mistake.optString("topic", "");
+                        String kind = mistake.optString("kind", "");
+                        String prompt = mistake.optString("prompt", "");
+                        context.append("Тема: ").append(topic).append("; тип затруднения: ").append(kind);
+                        if (!prompt.isEmpty()) context.append("; пример задания: ").append(prompt.length() > 110 ? prompt.substring(0, 110) : prompt);
+                        context.append(". ");
+                        added++;
+                    } catch (Exception ignored) {}
+                }
+            }
+        } catch (Exception ignored) {}
         if (context.length() > 0) {
             intent.putExtra("study_context", context.toString());
         }
