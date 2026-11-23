@@ -49,7 +49,7 @@ public class FocusTimerService extends Service {
         if(!MainActivity.activityVisible){try{android.os.Vibrator vibrator=(android.os.Vibrator)getSystemService(VIBRATOR_SERVICE);if(Build.VERSION.SDK_INT>=26)vibrator.vibrate(VibrationEffect.createWaveform(new long[]{0,350,180,550},-1));else vibrator.vibrate(new long[]{0,350,180,550},-1);}catch(Exception ignored){}}
         Uri sound=RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         Notification.Builder b=Build.VERSION.SDK_INT>=26?new Notification.Builder(this,FINISH_CHANNEL):new Notification.Builder(this);
-        b.setSmallIcon(android.R.drawable.ic_lock_idle_alarm).setContentTitle(rest?"Перерыв окончен":"Фокус-сессия завершена")
+        b.setSmallIcon(R.drawable.ic_notification).setContentTitle(rest?"Перерыв окончен":"Фокус-сессия завершена")
           .setContentText(rest?"Можно возвращаться к занятиям":"Отличная работа! Запиши маленькую победу в дневник.")
           .setAutoCancel(true).setSound(sound).setVibrate(new long[]{0,350,180,550})
           .setContentIntent(PendingIntent.getActivity(this,921,new Intent(this,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE));
