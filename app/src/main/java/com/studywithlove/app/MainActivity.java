@@ -404,16 +404,6 @@ public class MainActivity extends Activity {
         Button saveName=button("Сохранить имя",true);saveName.setOnClickListener(v->{String value=name.getText().toString().trim();if(value.isEmpty()){name.setError("Введи имя");return;}prefs.edit().putString("display_name",value).apply();Toast.makeText(this,"Имя сохранено ♡",Toast.LENGTH_SHORT).show();});
         profile.addView(saveName,lp(-1,48,0,0,0,0));root.addView(profile,lp(-1,-2,0,0,0,4));
         
-        LinearLayout updates=settingsGroup("ОБНОВЛЕНИЕ ПРИЛОЖЕНИЯ");
-        String installedVersion="—";
-        try { installedVersion=getPackageManager().getPackageInfo(getPackageName(),0).versionName; } catch(Exception ignored) {}
-        addText(updates,"Установленная версия: "+installedVersion,13,MUTED,false);
-        addText(updates,"Проверяй наличие новых возможностей и исправлений.",12,MUTED,false);
-        Button checkUpdates=button("Проверить обновления",true);
-        checkUpdates.setOnClickListener(v->AppUpdater.checkAndOffer(this));
-        updates.addView(checkUpdates,lp(-1,48,0,7,0,0));
-        root.addView(updates,lp(-1,-2,0,0,0,4));
-
         LinearLayout appearance=settingsGroup("ВНЕШНИЙ ВИД");
         addText(appearance,"Тема приложения",14,DARK,true);
         addText(appearance,"Нажми на палитру, чтобы сразу применить оформление.",12,MUTED,false);
@@ -474,6 +464,16 @@ public class MainActivity extends Activity {
         addText(backup,"Сохрани уроки, цели, дневник и прогресс в один файл.",12,MUTED,false);
         Button export=button("Экспортировать копию",true);export.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");i.putExtra(Intent.EXTRA_TITLE,"study_with_love_backup.json");startActivityForResult(i,BACKUP_EXPORT);});backup.addView(export,lp(-1, 48,0,7,0,5));
         Button restore=button("Восстановить из копии",false);restore.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");startActivityForResult(i,BACKUP_IMPORT);});backup.addView(restore,lp(-1,48,0,0,0,0));root.addView(backup,lp(-1,-2,0,0,0,4));
+
+        LinearLayout updates=settingsGroup("ОБНОВЛЕНИЕ ПРИЛОЖЕНИЯ");
+        String installedVersion="—";
+        try { installedVersion=getPackageManager().getPackageInfo(getPackageName(),0).versionName; } catch(Exception ignored) {}
+        addText(updates,"Установленная версия: "+installedVersion,13,MUTED,false);
+        addText(updates,"Проверяй наличие новых возможностей и исправлений.",12,MUTED,false);
+        Button checkUpdates=button("Проверить обновления",true);
+        checkUpdates.setOnClickListener(v->AppUpdater.checkAndOffer(this));
+        updates.addView(checkUpdates,lp(-1,48,0,7,0,0));
+        root.addView(updates,lp(-1,-2,0,0,0,4));
 
         Button back=button("← Назад",true);back.setOnClickListener(v->handleBackNavigation());root.addView(back,lp(-1,48,0,8,0,4));
     }
@@ -549,7 +549,6 @@ public class MainActivity extends Activity {
         int done = prefs.getBoolean("exam_topic_filter_enabled", false)
                 ? completedTopics : prefs.getInt("done_count", 0);
 
-        // Resume the most recently opened topic; otherwise choose the first unfinished one.
         String resumeTopic = prefs.getString("recent_topic", "");
         String resumeChapter = prefs.getString("recent_chapter", "");
         boolean resumeFound = !resumeTopic.isEmpty() && !resumeChapter.isEmpty()
@@ -584,7 +583,6 @@ public class MainActivity extends Activity {
         final String chapterToResume = resumeChapter;
         final boolean hasResumeTopic = resumeFound;
 
-        // Main action: continue studying.
         LinearLayout continueCard = card();
         continueCard.setPadding(dp(18), dp(17), dp(18), dp(17));
         continueCard.setBackground(shape(0xFFF8E8EE, 25, 0));
@@ -593,24 +591,43 @@ public class MainActivity extends Activity {
         String resumeLabel = resumeFound
                 ? resumeChapter.replaceFirst("^[^ ]+\\s*", "") : "Учебный план";
         addText(continueCard, resumeLabel, 12, MUTED, false);
+
         int resumeProgress = resumeFound
                 ? topicProgressForChapter(resumeChapter, resumeTopic) : overall;
-        LinearLayout resumeProgressHead = new LinearLayout(this);
-        resumeProgressHead.setGravity(Gravity.CENTER_VERTICAL);
-        TextView progressCaption = text("Прогресс темы", 12, MUTED, false);
-        resumeProgressHead.addView(progressCaption, new LinearLayout.LayoutParams(0, dp(25), 1f));
-        resumeProgressHead.addView(text(resumeProgress + "%", 13, PINK, true));
-        continueCard.addView(resumeProgressHead, lp(-1, 27, 0, 8, 0, 2));
-        ProgressBar resumeBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-        resumeBar.setMax(100);
-        resumeBar.setProgress(resumeProgress);
+        LinearLayout topicHead = new LinearLayout(this);
+        topicHead.setGravity(Gravity.CENTER_VERTICAL);
+        topicHead.addView(text("Прогресс темы", 12, MUTED, false),
+                new LinearLayout.LayoutParams(0, dp(25), 1f));
+        topicHead.addView(text(resumeProgress + "%", 13, PINK, true));
+        continueCard.addView(topicHead, lp(-1, 27, 0, 8, 0, 2));
+        ProgressBar topicBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+        topicBar.setMax(100);
+        topicBar.setProgress(resumeProgress);
         if (Build.VERSION.SDK_INT >= 21) {
-            resumeBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
-            resumeBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFDCE6));
+            topicBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
+            topicBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFDCE6));
         }
-        continueCard.addView(resumeBar, lp(-1, 7, 0, 0, 0, 12));
+        continueCard.addView(topicBar, lp(-1, 7, 0, 0, 0, 9));
+
+        LinearLayout overallHead = new LinearLayout(this);
+        overallHead.setGravity(Gravity.CENTER_VERTICAL);
+        overallHead.addView(text("Общий прогресс", 12, MUTED, false),
+                new LinearLayout.LayoutParams(0, dp(25), 1f));
+        overallHead.addView(text(overall + "%", 13, PINK, true));
+        continueCard.addView(overallHead, lp(-1, 27, 0, 1, 0, 2));
+        ProgressBar overallBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+        overallBar.setMax(100);
+        overallBar.setProgress(overall);
+        if (Build.VERSION.SDK_INT >= 21) {
+            overallBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
+            overallBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFDCE6));
+        }
+        continueCard.addView(overallBar, lp(-1, 7, 0, 0, 0, 7));
+        addText(continueCard, completedTopics + " из " + totalTopics + " тем · "
+                + streak + " дней подряд · " + done + " уроков", 11, MUTED, false);
+
         Button continueButton = button(resumeFound ? "Продолжить урок  →" : "Выбрать тему  →", true);
-        continueCard.addView(continueButton, lp(-1, 49, 0, 2, 0, 0));
+        continueCard.addView(continueButton, lp(-1, 49, 0, 12, 0, 0));
         continueButton.setOnClickListener(v -> {
             if (hasResumeTopic) {
                 selectedChapter = chapterToResume;
@@ -622,7 +639,6 @@ public class MainActivity extends Activity {
         });
         root.addView(continueCard, lp(-1, -2, 0, 2, 0, 13));
 
-        // AI is a prominent action directly below the learning card.
         LinearLayout aiCard = card();
         aiCard.setOrientation(LinearLayout.HORIZONTAL);
         aiCard.setGravity(Gravity.CENTER_VERTICAL);
@@ -640,90 +656,41 @@ public class MainActivity extends Activity {
         aiCard.setOnClickListener(v -> launchAiTutor());
         root.addView(aiCard, lp(-1, -2, 0, 0, 0, 14));
 
-        // Four frequently used destinations remain visible.
-        addText(root, "БЫСТРЫЙ ДОСТУП", 12, PINK, true);
-        LinearLayout quickRow1 = new LinearLayout(this);
-        quickRow1.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(quickRow1, "△", "Уроки", "Все темы", this::showMathChapters);
-        ritualTile(quickRow1, "□", "Планировщик", "План на день", this::showPlanner);
-        root.addView(quickRow1, lp(-1, -2, 0, 7, 0, 8));
-        LinearLayout quickRow2 = new LinearLayout(this);
-        quickRow2.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(quickRow2, "◇", "Слабые места", "Повторить ошибки", this::showWeaknessTrainer);
-        ritualTile(quickRow2, "○", "Мой прогресс", "Темы и календарь", this::showProgress);
-        root.addView(quickRow2, lp(-1, -2, 0, 0, 0, 12));
+        addText(root, "УЧЁБА", 11, PINK, true);
+        LinearLayout study1 = new LinearLayout(this);
+        study1.setOrientation(LinearLayout.HORIZONTAL);
+        ritualTile(study1, "📚", "Уроки", "Все темы", this::showMathChapters);
+        ritualTile(study1, "◎", "Викторина", "Математика", this::showMathQuiz);
+        root.addView(study1, lp(-1, -2, 0, 7, 0, 8));
+        LinearLayout study2 = new LinearLayout(this);
+        study2.setOrientation(LinearLayout.HORIZONTAL);
+        ritualTile(study2, "□", "Планировщик", "План на день", this::showPlanner);
+        ritualTile(study2, "▤", "Слабые места", "Работа над ошибками", this::showWeaknessTrainer);
+        root.addView(study2, lp(-1, -2, 0, 0, 0, 13));
 
-        // Compact progress summary keeps useful context without dominating the first screen.
-        LinearLayout summary = card();
-        summary.setPadding(dp(14), dp(11), dp(14), dp(11));
-        LinearLayout summaryTop = new LinearLayout(this);
-        summaryTop.setGravity(Gravity.CENTER_VERTICAL);
-        TextView summaryTitle = text("Общий прогресс", 13, DARK, true);
-        summaryTop.addView(summaryTitle, new LinearLayout.LayoutParams(0, dp(25), 1f));
-        summaryTop.addView(text(overall + "%", 16, PINK, true));
-        summary.addView(summaryTop);
-        ProgressBar overallBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-        overallBar.setMax(100);
-        overallBar.setProgress(overall);
-        if (Build.VERSION.SDK_INT >= 21) {
-            overallBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
-            overallBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFDCE6));
-        }
-        summary.addView(overallBar, lp(-1, 6, 0, 4, 0, 5));
-        addText(summary, completedTopics + " из " + totalTopics + " тем · " + streak + " дней подряд · " + done + " уроков",
-                11, MUTED, false);
-        root.addView(summary, lp(-1, -2, 0, 0, 0, 13));
-
-        // Less frequent tools are grouped under a single expandable "More" section.
-        LinearLayout extraContent = new LinearLayout(this);
-        extraContent.setOrientation(LinearLayout.VERTICAL);
-        extraContent.setVisibility(View.GONE);
-
-        addText(extraContent, "УЧЁБА", 11, PINK, true);
-        LinearLayout studyMore = new LinearLayout(this);
-        studyMore.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(studyMore, "△", "Викторина", "Математика", this::showMathQuiz);
-        ritualTile(studyMore, "□", "Планировщик", "План на день", this::showPlanner);
-        extraContent.addView(studyMore, lp(-1, -2, 0, 7, 0, 12));
-
-        addText(extraContent, "ЭМОЦИИ И МОТИВАЦИЯ", 11, PINK, true);
+        addText(root, "ЭМОЦИИ И МОТИВАЦИЯ", 11, PINK, true);
         LinearLayout feelings1 = new LinearLayout(this);
         feelings1.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(feelings1, "○", "Дневник", "Маленькие победы", this::showDiary);
-        ritualTile(feelings1, "▱", "Письмо себе", "В будущее", this::showFutureLetters);
-        extraContent.addView(feelings1, lp(-1, -2, 0, 7, 0, 8));
+        ritualTile(feelings1, "♡", "Дневник", "Маленькие победы", this::showDiary);
+        ritualTile(feelings1, "☆", "Письмо себе", "В будущее", this::showFutureLetters);
+        root.addView(feelings1, lp(-1, -2, 0, 7, 0, 8));
         LinearLayout feelings2 = new LinearLayout(this);
         feelings2.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(feelings2, "◇", "Цветочек", "Растёт с тобой", this::showFlower);
-        ritualTile(feelings2, "◌", "Атмосфера", "Звуки для учёбы", this::showAtmosphere);
-        extraContent.addView(feelings2, lp(-1, -2, 0, 0, 0, 12));
+        ritualTile(feelings2, "✿", "Цветочек", "Растёт с тобой", this::showFlower);
+        ritualTile(feelings2, "☼", "Атмосфера", "Звуки для учёбы", this::showAtmosphere);
+        root.addView(feelings2, lp(-1, -2, 0, 0, 0, 13));
 
-        addText(extraContent, "ПРОГРЕСС", 11, PINK, true);
-        LinearLayout progressMore = new LinearLayout(this);
-        progressMore.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(progressMore, "▤", "Статистика", "Подробный обзор", this::showDetailedStats);
-        ritualTile(progressMore, "☆", "Достижения", "Твои награды", this::showAchievements);
-        extraContent.addView(progressMore, lp(-1, -2, 0, 7, 0, 12));
-
-        addText(extraContent, "СОЦИАЛЬНОЕ", 11, PINK, true);
-        LinearLayout socialMore = new LinearLayout(this);
-        socialMore.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(socialMore, "◎", "Напарник", "Общая цель", this::showStudyBuddy);
-        extraContent.addView(socialMore, lp(-1, -2, 0, 7, 0, 12));
-
-        root.addView(extraContent, lp(-1, -2, 0, 0, 0, 8));
-        Button moreButton = button("Ещё возможности  ﹀", false);
-        moreButton.setOnClickListener(v -> {
-            boolean expand = extraContent.getVisibility() != View.VISIBLE;
-            extraContent.setVisibility(expand ? View.VISIBLE : View.GONE);
-            moreButton.setText(expand ? "Скрыть  ﹀" : "Ещё возможности  ﹀");
-            if (expand) {
-                extraContent.setAlpha(0f);
-                extraContent.setTranslationY(dp(8));
-                extraContent.animate().alpha(1f).translationY(0).setDuration(220).start();
-            }
-        });
-        root.addView(moreButton, lp(-1, 46, 0, 0, 0, 12));
+        addText(root, "ПРОГРЕСС", 11, PINK, true);
+        LinearLayout progressRow = new LinearLayout(this);
+        progressRow.setOrientation(LinearLayout.HORIZONTAL);
+        ritualTile(progressRow, "▦", "Мой прогресс", "Календарь и темы", this::showProgress);
+        ritualTile(progressRow, "◇", "Статистика", "Подробный обзор", this::showDetailedStats);
+        root.addView(progressRow, lp(-1, -2, 0, 7, 0, 8));
+        LinearLayout awardsRow = new LinearLayout(this);
+        awardsRow.setOrientation(LinearLayout.HORIZONTAL);
+        ritualTile(awardsRow, "☆", "Достижения", "Твои награды", this::showAchievements);
+        ritualTile(awardsRow, "♡", "Напарник", "Общая цель", this::showStudyBuddy);
+        root.addView(awardsRow, lp(-1, -2, 0, 0, 0, 13));
 
         LinearLayout reminder = card();
         reminder.setOrientation(LinearLayout.HORIZONTAL);
