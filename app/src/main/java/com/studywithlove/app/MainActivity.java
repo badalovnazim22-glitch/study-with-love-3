@@ -743,6 +743,13 @@ public class MainActivity extends Activity {
         else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF75666D; }
         applyAccentOverlay(theme);
         if (prefs != null && prefs.contains("app_accent_color")) PINK = prefs.getInt("app_accent_color", PINK);
+        if (prefs != null && prefs.getBoolean("seasonal_themes_enabled", false)) {
+            int month=Calendar.getInstance(AppTime.zone()).get(Calendar.MONTH);
+            if(month==11||month<=1){BG=0xFFF1F6FC;PINK=0xFF7299C7;PALE=0xFFE5EFF8;DARK=0xFF34475A;MUTED=0xFF6C7E91;}
+            else if(month>=2&&month<=4){BG=0xFFFFF7FA;PINK=0xFFD77E9C;PALE=0xFFFCE7EF;DARK=0xFF4C3841;MUTED=0xFF806B75;}
+            else if(month>=5&&month<=7){BG=0xFFFFF9E9;PINK=0xFFD6A23A;PALE=0xFFF8EDC8;DARK=0xFF51452F;MUTED=0xFF85785C;}
+            else{BG=0xFFFBF3EA;PINK=0xFFBA7650;PALE=0xFFF3E1D2;DARK=0xFF4C3A30;MUTED=0xFF806A5C;}
+        }
         if (getWindow() != null) { getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(BG)); getWindow().getDecorView().setBackgroundColor(BG); if(Build.VERSION.SDK_INT>=30){getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);getWindow().setDecorFitsSystemWindows(false);if(Build.VERSION.SDK_INT>=29){getWindow().setStatusBarContrastEnforced(false);getWindow().setNavigationBarContrastEnforced(false);}}else{getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(BG);} updateSystemBarIcons(); }
     }
     private void applyAccentOverlay(String theme){
@@ -934,7 +941,7 @@ public class MainActivity extends Activity {
         Set<String> days=new TreeSet<>(prefs.getStringSet("study_days",new TreeSet<String>()));
         Calendar from=(Calendar)now.clone();from.add(Calendar.DAY_OF_YEAR,-6);
         int active=0;
-        for(int i=0;i<7;i++){String date=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(from.getTime());if(days.contains(date))active++;from.add(Calendar.DAY_OF_YEAR,1);}
+        for(int i=0;i<7;i++){String date=new new SimpleDateFormat("yyyy-MM-dd",Locale.US) {{ setTimeZone(AppTime.zone()); }}.format(from.getTime());if(days.contains(date))active++;from.add(Calendar.DAY_OF_YEAR,1);}
         LinearLayout summary=card();summary.setPadding(dp(14),dp(12),dp(14),dp(12));
         addText(summary,"🌷  ТВОЯ НЕДЕЛЯ",12,PINK,true);
         addText(summary,minutes+" минут учёбы · "+active+" активных "+dayWord(active),17,DARK,true);
