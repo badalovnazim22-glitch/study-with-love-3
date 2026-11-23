@@ -395,10 +395,21 @@ public class AiTutorActivity extends Activity {
         if (android.os.Build.VERSION.SDK_INT >= 30) {
             android.view.WindowInsetsController c=getWindow().getInsetsController();
             if(c!=null) { int f=android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
-                int appearance=android.graphics.Color.luminance(BG)>0.5f?f:0; c.setSystemBarsAppearance(appearance,f); }
+                int appearance=colorLuminance(BG)>0.5f?f:0; c.setSystemBarsAppearance(appearance,f); }
         } else if (android.os.Build.VERSION.SDK_INT >= 23) {
-            getWindow().getDecorView().setSystemUiVisibility(android.graphics.Color.luminance(BG)>0.5f?View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR:0);
+            getWindow().getDecorView().setSystemUiVisibility(colorLuminance(BG)>0.5f?View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR:0);
         }
+    }
+
+    // Совместимая с minSdk 23 яркость цвета (не использует Color.luminance, API 24).
+    private float colorLuminance(int color) {
+        double r = Color.red(color) / 255.0;
+        double g = Color.green(color) / 255.0;
+        double b = Color.blue(color) / 255.0;
+        r = r <= 0.04045 ? r / 12.92 : Math.pow((r + 0.055) / 1.055, 2.4);
+        g = g <= 0.04045 ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4);
+        b = b <= 0.04045 ? b / 12.92 : Math.pow((b + 0.055) / 1.055, 2.4);
+        return (float) (0.2126 * r + 0.7152 * g + 0.0722 * b);
     }
 
     private String tr(String ru, String en, String az) { return "en".equals(language)?en:("az".equals(language)?az:ru); }
