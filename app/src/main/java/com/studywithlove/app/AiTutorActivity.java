@@ -105,6 +105,7 @@ public class AiTutorActivity extends Activity {
         back.setText("‹");
         back.setContentDescription(tr("Назад", "Back", "Geri"));
         back.setTextSize(34);
+        back.setTypeface(android.graphics.Typeface.create(fontFamily, android.graphics.Typeface.NORMAL));
         back.setTextColor(PINK);
         back.setGravity(Gravity.CENTER);
         top.addView(back, new LinearLayout.LayoutParams(dp(48), dp(48)));
@@ -160,6 +161,7 @@ public class AiTutorActivity extends Activity {
         composer.setBackground(round(PALE, 24, PALE));
         input = new EditText(this);
         input.setTextSize(16);
+        input.setTypeface(android.graphics.Typeface.create(fontFamily, android.graphics.Typeface.NORMAL));
         input.setTextColor(DARK);
         input.setHintTextColor(MUTED);
         input.setHint(tr("Напиши вопрос…", "Type your question…", "Sualını yaz…"));
@@ -173,6 +175,7 @@ public class AiTutorActivity extends Activity {
         sendButton.setText("➤");
         sendButton.setContentDescription(tr("Отправить сообщение", "Send message", "Mesajı göndər"));
         sendButton.setTextSize(18);
+        sendButton.setTypeface(android.graphics.Typeface.create(fontFamily, android.graphics.Typeface.BOLD));
         sendButton.setTextColor(Color.WHITE);
         sendButton.setAllCaps(false);
         sendButton.setPadding(0, 0, 0, 0);
@@ -183,6 +186,7 @@ public class AiTutorActivity extends Activity {
 
         setContentView(page);
         if (android.os.Build.VERSION.SDK_INT >= 21) page.requestApplyInsets();
+        page.post(this::updateSystemBars);
     }
 
     private void sendMessage() {
@@ -311,6 +315,7 @@ public class AiTutorActivity extends Activity {
     private void showEndpointDialog() {
         EditText field = new EditText(this);
         field.setSingleLine(true);
+        field.setTypeface(android.graphics.Typeface.create(fontFamily, android.graphics.Typeface.NORMAL));
         field.setTextColor(DARK);
         field.setHint("https://имя.аккаунт.workers.dev/chat");
         field.setText(endpoint());
