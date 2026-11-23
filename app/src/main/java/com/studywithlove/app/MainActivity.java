@@ -531,108 +531,218 @@ public class MainActivity extends Activity {
     }
 
         private void showHome() {
-        currentScreen = "home"; StudyWidgetProvider.updateAll(this);
-        base("Привет, " + prefs.getString("display_name", "Назка") + "! ♡", "Сегодня — хороший день, чтобы сделать маленький шаг к своей цели.");
-        int done = prefs.getInt("done_count", 0);
-        int streak = currentStreak();
-        int record = prefs.getInt("longest_streak", 0);
+        currentScreen = "home";
+        StudyWidgetProvider.updateAll(this);
+        base("Привет, " + prefs.getString("display_name", "Назка") + "! ♡",
+                "Рада видеть тебя. Продолжим маленькими шагами?");
+
         int totalTopics = 0, completedTopics = 0;
-        for (Map.Entry<String,List<String>> entry : chapters.entrySet()) for (String topic : entry.getValue()) {
-            if(!isTopicInExamScope(entry.getKey(),topic))continue;
-            totalTopics++;
-            if (topicProgressForChapter(entry.getKey(),topic) == 100) completedTopics++;
+        for (Map.Entry<String, List<String>> entry : chapters.entrySet()) {
+            for (String topic : entry.getValue()) {
+                if (!isTopicInExamScope(entry.getKey(), topic)) continue;
+                totalTopics++;
+                if (topicProgressForChapter(entry.getKey(), topic) == 100) completedTopics++;
+            }
         }
         int overall = totalTopics == 0 ? 0 : completedTopics * 100 / totalTopics;
-        if(prefs.getBoolean("exam_topic_filter_enabled",false))done=completedTopics;
+        int streak = currentStreak();
+        int done = prefs.getBoolean("exam_topic_filter_enabled", false)
+                ? completedTopics : prefs.getInt("done_count", 0);
 
-        LinearLayout hero = card();
-        hero.setPadding(dp(20), dp(20), dp(20), dp(18));
-        hero.setBackground(shape(0xFFF8E8EE, 27, 0));
-        addText(hero, "ТВОЙ ПРОГРЕСС", 12, PINK, true);
-        addText(hero, "Ты справляешься.\nПродолжай в своём темпе.", 24, DARK, true);
-        addText(hero, g("Каждое занятие — это забота о себе будущей.","Каждое занятие — это забота о себе будущем."), 14, MUTED, false);
-         addText(hero, dailyMotivation(), 14, PINK, true);
-         addText(hero, mascotMessage(), 14, DARK, true);
-        LinearLayout progressHead = new LinearLayout(this);
-        progressHead.setGravity(Gravity.CENTER_VERTICAL);
-        TextView progressTitle = text("Учебный план", 14, DARK, true);
-        progressHead.addView(progressTitle, new LinearLayout.LayoutParams(0, dp(28), 1f));
-        TextView progressValue = text("0%", 18, PINK, true);animateNumber(progressValue,overall,"%");
-        progressHead.addView(progressValue);
-        hero.addView(progressHead, lp(-1, 30, 0, 12, 0, 4));
+        // Resume the most recently opened topic; otherwise choose the first unfinished one.
+        String resumeTopic = prefs.getString("recent_topic", "");
+        String resumeChapter = prefs.getString("recent_chapter", "");
+        boolean resumeFound = !resumeTopic.isEmpty() && !resumeChapter.isEmpty()
+                && chapters.containsKey(resumeChapter)
+                && chapters.get(resumeChapter).contains(resumeTopic);
+        if (!resumeFound) {
+            for (Map.Entry<String, List<String>> entry : chapters.entrySet()) {
+                for (String topic : entry.getValue()) {
+                    if (!isTopicInExamScope(entry.getKey(), topic)) continue;
+                    if (topicProgressForChapter(entry.getKey(), topic) < 100) {
+                        resumeTopic = topic;
+                        resumeChapter = entry.getKey();
+                        resumeFound = true;
+                        break;
+                    }
+                }
+                if (resumeFound) break;
+            }
+        }
+        if (!resumeFound) {
+            for (Map.Entry<String, List<String>> entry : chapters.entrySet()) {
+                if (!entry.getValue().isEmpty()) {
+                    resumeTopic = entry.getValue().get(0);
+                    resumeChapter = entry.getKey();
+                    resumeFound = true;
+                    break;
+                }
+            }
+        }
+
+        // Main action: continue studying.
+        LinearLayout continueCard = card();
+        continueCard.setPadding(dp(18), dp(17), dp(18), dp(17));
+        continueCard.setBackground(shape(0xFFF8E8EE, 25, 0));
+        addText(continueCard, "ТВОЙ СЛЕДУЮЩИЙ ШАГ", 11, PINK, true);
+        addText(continueCard, resumeFound ? resumeTopic : "Выбери свой первый урок", 21, DARK, true);
+        String resumeLabel = resumeFound
+                ? resumeChapter.replaceFirst("^[^ ]+\\s*", "") : "Учебный план";
+        addText(continueCard, resumeLabel, 12, MUTED, false);
+        int resumeProgress = resumeFound
+                ? topicProgressForChapter(resumeChapter, resumeTopic) : overall;
+        LinearLayout resumeProgressHead = new LinearLayout(this);
+        resumeProgressHead.setGravity(Gravity.CENTER_VERTICAL);
+        TextView progressCaption = text("Прогресс темы", 12, MUTED, false);
+        resumeProgressHead.addView(progressCaption, new LinearLayout.LayoutParams(0, dp(25), 1f));
+        resumeProgressHead.addView(text(resumeProgress + "%", 13, PINK, true));
+        continueCard.addView(resumeProgressHead, lp(-1, 27, 0, 8, 0, 2));
+        ProgressBar resumeBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+        resumeBar.setMax(100);
+        resumeBar.setProgress(resumeProgress);
+        if (Build.VERSION.SDK_INT >= 21) {
+            resumeBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
+            resumeBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFDCE6));
+        }
+        continueCard.addView(resumeBar, lp(-1, 7, 0, 0, 0, 12));
+        Button continueButton = button(resumeFound ? "Продолжить урок  →" : "Выбрать тему  →", true);
+        continueCard.addView(continueButton, lp(-1, 49, 0, 2, 0, 0));
+        continueButton.setOnClickListener(v -> {
+            if (resumeFound) {
+                selectedChapter = resumeChapter;
+                selectedTopic = resumeTopic;
+                showTopic(resumeTopic);
+            } else {
+                showMathChapters();
+            }
+        });
+        root.addView(continueCard, lp(-1, -2, 0, 2, 0, 13));
+
+        // AI is a prominent action directly below the learning card.
+        LinearLayout aiCard = card();
+        aiCard.setOrientation(LinearLayout.HORIZONTAL);
+        aiCard.setGravity(Gravity.CENTER_VERTICAL);
+        aiCard.setPadding(dp(14), dp(10), dp(14), dp(10));
+        aiCard.setBackground(shape(0xFFF3F0FF, 20, 0));
+        TextView aiIcon = text("✧", 28, PINK, true);
+        aiIcon.setGravity(Gravity.CENTER);
+        aiCard.addView(aiIcon, lp(42, 44, 0, 0, 10, 0));
+        LinearLayout aiWords = new LinearLayout(this);
+        aiWords.setOrientation(LinearLayout.VERTICAL);
+        addText(aiWords, "Не поняла тему?", 15, DARK, true);
+        addText(aiWords, "Спроси ИИ-помощника", 12, MUTED, false);
+        aiCard.addView(aiWords, new LinearLayout.LayoutParams(0, -2, 1f));
+        aiCard.addView(text("›", 27, PINK, true));
+        aiCard.setOnClickListener(v -> launchAiTutor());
+        root.addView(aiCard, lp(-1, -2, 0, 0, 0, 14));
+
+        // Four frequently used destinations remain visible.
+        addText(root, "БЫСТРЫЙ ДОСТУП", 12, PINK, true);
+        LinearLayout quickRow1 = new LinearLayout(this);
+        quickRow1.setOrientation(LinearLayout.HORIZONTAL);
+        ritualTile(quickRow1, "△", "Уроки", "Все темы", this::showMathChapters);
+        ritualTile(quickRow1, "□", "Планировщик", "План на день", this::showPlanner);
+        root.addView(quickRow1, lp(-1, -2, 0, 7, 0, 8));
+        LinearLayout quickRow2 = new LinearLayout(this);
+        quickRow2.setOrientation(LinearLayout.HORIZONTAL);
+        ritualTile(quickRow2, "◇", "Слабые места", "Повторить ошибки", this::showWeaknessTrainer);
+        ritualTile(quickRow2, "○", "Мой прогресс", "Темы и календарь", this::showProgress);
+        root.addView(quickRow2, lp(-1, -2, 0, 0, 0, 12));
+
+        // Compact progress summary keeps useful context without dominating the first screen.
+        LinearLayout summary = card();
+        summary.setPadding(dp(14), dp(11), dp(14), dp(11));
+        LinearLayout summaryTop = new LinearLayout(this);
+        summaryTop.setGravity(Gravity.CENTER_VERTICAL);
+        TextView summaryTitle = text("Общий прогресс", 13, DARK, true);
+        summaryTop.addView(summaryTitle, new LinearLayout.LayoutParams(0, dp(25), 1f));
+        summaryTop.addView(text(overall + "%", 16, PINK, true));
+        summary.addView(summaryTop);
         ProgressBar overallBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-        overallBar.setMax(100); overallBar.setProgress(0);overallBar.post(()->animateProgress(overallBar,overall));
+        overallBar.setMax(100);
+        overallBar.setProgress(overall);
         if (Build.VERSION.SDK_INT >= 21) {
             overallBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
             overallBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFDCE6));
         }
-        hero.addView(overallBar, lp(-1, 9, 0, 0, 0, 5));
-        addText(hero, completedTopics + " из " + totalTopics + " тем завершено", 13, MUTED, false);
-        root.addView(hero, lp(-1, -2, 0, 0, 0, 15));
+        summary.addView(overallBar, lp(-1, 6, 0, 4, 0, 5));
+        addText(summary, completedTopics + " из " + totalTopics + " тем · " + streak + " дней подряд · " + done + " уроков",
+                11, MUTED, false);
+        root.addView(summary, lp(-1, -2, 0, 0, 0, 13));
 
-        LinearLayout stats = new LinearLayout(this);
-        stats.setOrientation(LinearLayout.HORIZONTAL);
-        String[][] values = {{String.valueOf(streak), "дней подряд"}, {String.valueOf(done), "уроков"}, {String.valueOf(record), "личный рекорд"}};
-        int[] colors = {0xFFFFF0F4, 0xFFF1F0FF, 0xFFEFF7F1};
-        for (int i = 0; i < values.length; i++) {
-            String[] value = values[i];
-            LinearLayout stat = card(); stat.setGravity(Gravity.CENTER);
-            stat.setPadding(dp(5), dp(7), dp(5), dp(7));
-            stat.setBackground(shape(i == 0 || i == 2 ? 0xFFFFF0F4 : colors[i], 22, 0));
-            TextView number = text("0", 24, PINK, true); number.setGravity(Gravity.CENTER);animateNumber(number,Integer.parseInt(value[0]),"");
-            stat.addView(number, lp(-1, 30, 0, 0, 0, 3));
-            TextView caption = text(value[1], 12, MUTED, false); caption.setGravity(Gravity.CENTER); caption.setMaxLines(2);
-            stat.addView(caption, lp(-1, 38, 0, 0, 0, 0));
-            LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, dp(102), 1f);
-            p.setMargins(dp(3), 0, dp(3), 0); stats.addView(stat, p);
-        }
-        root.addView(stats, lp(-1, -2, 0, 0, 0, 12));
-        int weeklyDone=weeklyMinutesLast7Days(),weeklyGoal=prefs.getInt("weekly_goal_minutes",300);LinearLayout weeklyCard=card();weeklyCard.setOrientation(LinearLayout.HORIZONTAL);weeklyCard.setGravity(Gravity.CENTER_VERTICAL);weeklyCard.setPadding(dp(14),dp(12),dp(14),dp(12));WeeklyGoalRing ring=new WeeklyGoalRing(this,weeklyDone,weeklyGoal);weeklyCard.addView(ring,lp(82,82,0,0,13,0));LinearLayout weeklyWords=new LinearLayout(this);weeklyWords.setOrientation(LinearLayout.VERTICAL);addText(weeklyWords,"ЦЕЛЬ НЕДЕЛИ",11,PINK,true);addText(weeklyWords,weeklyDone+" / "+weeklyGoal+" минут",17,DARK,true);addText(weeklyWords,"Осталось "+Math.max(0,weeklyGoal-weeklyDone)+" минут до цели ♡",11,MUTED,false);weeklyCard.addView(weeklyWords,new LinearLayout.LayoutParams(0,-2,1f));root.addView(weeklyCard,lp(-1,-2,0,0,0,16));
+        // Less frequent tools are grouped under a single expandable "More" section.
+        LinearLayout extraContent = new LinearLayout(this);
+        extraContent.setOrientation(LinearLayout.VERTICAL);
+        extraContent.setVisibility(View.GONE);
 
-        TextView more = text("ТВОИ УЧЕБНЫЕ РИТУАЛЫ", 13, PINK, true);
-        more.setLetterSpacing(0.08f);
-        root.addView(more, lp(-1, -2, 0, 16, 0, 10));
-        LinearLayout ritualRow1 = new LinearLayout(this); ritualRow1.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(ritualRow1, "♡", "Дневник успехов", "Записывай победы", this::showDiary);
-        ritualTile(ritualRow1, "✿", "Мой цветочек", "Растёт с тобой", this::showFlower);
-        root.addView(ritualRow1, lp(-1, -2, 0, 0, 0, 9));
-        LinearLayout ritualRow2 = new LinearLayout(this); ritualRow2.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(ritualRow2, "✧", "Достижения", "Твои маленькие победы", this::showAchievements);
-        ritualTile(ritualRow2, "✉", "Письмо себе", "Послание в будущее", this::showFutureLetters);
-        root.addView(ritualRow2, lp(-1, -2, 0, 0, 0, 9));
-        LinearLayout ritualRow3 = new LinearLayout(this); ritualRow3.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(ritualRow3, "▦", "Календарь привычек", "Отмечай свои занятия", this::showProgress);
-        ritualTile(ritualRow3, "☁", "Атмосфера учёбы", "Уютное настроение", this::showAtmosphere);
-        root.addView(ritualRow3, lp(-1, -2, 0, 0, 0, 9));
-         LinearLayout ritualRow4 = new LinearLayout(this); ritualRow4.setOrientation(LinearLayout.HORIZONTAL);
-         ritualTile(ritualRow4, "▣", "Планировщик", "План на сегодня", this::showPlanner);
-         ritualTile(ritualRow4, "📊", "Статистика", "Подробный разбор", this::showDetailedStats);
-         root.addView(ritualRow4, lp(-1, -2, 0, 0, 0, 14));
-         LinearLayout ritualRow5 = new LinearLayout(this); ritualRow5.setOrientation(LinearLayout.HORIZONTAL);
-         ritualTile(ritualRow5, "🧮", "Математическая викторина", "Играй, повышай уровни и открывай награды", this::showMathQuiz);
-         root.addView(ritualRow5, lp(-1, -2, 0, 0, 0, 9));
-         LinearLayout ritualRow6 = new LinearLayout(this); ritualRow6.setOrientation(LinearLayout.HORIZONTAL);
-         ritualTile(ritualRow6, "♡", "Напарник по учёбе", "Общие недельные цели и тёплые стикеры", this::showStudyBuddy);
-         root.addView(ritualRow6, lp(-1, -2, 0, 0, 0, 14));
-         LinearLayout ritualRow7 = new LinearLayout(this); ritualRow7.setOrientation(LinearLayout.HORIZONTAL);
-         ritualTile(ritualRow7, "✧", "ИИ-помощник", "Объясняет темы и разбирает задачи", () -> launchAiTutor());
-         root.addView(ritualRow7, lp(-1, -2, 0, 0, 0, 14));
+        addText(extraContent, "ЭМОЦИИ И МОТИВАЦИЯ", 11, PINK, true);
+        LinearLayout feelings1 = new LinearLayout(this);
+        feelings1.setOrientation(LinearLayout.HORIZONTAL);
+        ritualTile(feelings1, "♡", "Дневник", "Маленькие победы", this::showDiary);
+        ritualTile(feelings1, "☆", "Письмо себе", "В будущее", this::showFutureLetters);
+        extraContent.addView(feelings1, lp(-1, -2, 0, 7, 0, 8));
+        LinearLayout feelings2 = new LinearLayout(this);
+        feelings2.setOrientation(LinearLayout.HORIZONTAL);
+        ritualTile(feelings2, "✿", "Цветочек", "Растёт с тобой", this::showFlower);
+        ritualTile(feelings2, "☼", "Атмосфера", "Звуки для учёбы", this::showAtmosphere);
+        extraContent.addView(feelings2, lp(-1, -2, 0, 0, 0, 12));
+
+        addText(extraContent, "УЧЁБА", 11, PINK, true);
+        LinearLayout studyMore = new LinearLayout(this);
+        studyMore.setOrientation(LinearLayout.HORIZONTAL);
+        ritualTile(studyMore, "◎", "Викторина", "Математика", this::showMathQuiz);
+        ritualTile(studyMore, "▤", "Слабые места", "Работа над ошибками", this::showWeaknessTrainer);
+        extraContent.addView(studyMore, lp(-1, -2, 0, 7, 0, 12));
+
+        addText(extraContent, "ПРОГРЕСС", 11, PINK, true);
+        LinearLayout progressMore = new LinearLayout(this);
+        progressMore.setOrientation(LinearLayout.HORIZONTAL);
+        ritualTile(progressMore, "▦", "Календарь", "Дни занятий", this::showProgress);
+        ritualTile(progressMore, "◇", "Статистика", "Подробный обзор", this::showDetailedStats);
+        extraContent.addView(progressMore, lp(-1, -2, 0, 7, 0, 8));
+        LinearLayout progressMore2 = new LinearLayout(this);
+        progressMore2.setOrientation(LinearLayout.HORIZONTAL);
+        ritualTile(progressMore2, "☆", "Достижения", "Твои награды", this::showAchievements);
+        ritualTile(progressMore2, "□", "Планировщик", "План на день", this::showPlanner);
+        extraContent.addView(progressMore2, lp(-1, -2, 0, 0, 0, 12));
+
+        addText(extraContent, "СОЦИАЛЬНОЕ", 11, PINK, true);
+        LinearLayout socialMore = new LinearLayout(this);
+        socialMore.setOrientation(LinearLayout.HORIZONTAL);
+        ritualTile(socialMore, "♡", "Напарник", "Общая цель", this::showStudyBuddy);
+        ritualTile(socialMore, "✧", "ИИ-помощник", "Задать вопрос", () -> launchAiTutor());
+        extraContent.addView(socialMore, lp(-1, -2, 0, 7, 0, 12));
+
+        root.addView(extraContent, lp(-1, -2, 0, 0, 0, 8));
+        Button moreButton = button("Ещё возможности  ﹀", false);
+        moreButton.setOnClickListener(v -> {
+            boolean expand = extraContent.getVisibility() != View.VISIBLE;
+            extraContent.setVisibility(expand ? View.VISIBLE : View.GONE);
+            moreButton.setText(expand ? "Скрыть  ﹀" : "Ещё возможности  ﹀");
+            if (expand) {
+                extraContent.setAlpha(0f);
+                extraContent.setTranslationY(dp(8));
+                extraContent.animate().alpha(1f).translationY(0).setDuration(220).start();
+            }
+        });
+        root.addView(moreButton, lp(-1, 46, 0, 0, 0, 12));
 
         LinearLayout reminder = card();
-        reminder.setOrientation(LinearLayout.HORIZONTAL); reminder.setGravity(Gravity.CENTER_VERTICAL);
-        reminder.setBackground(shape(0xFFF3F0FF, 22, 0));
-        LinearLayout reminderWords = new LinearLayout(this); reminderWords.setOrientation(LinearLayout.VERTICAL);
-        addText(reminderWords, "НАПОМИНАНИЯ", 12, PINK, true);
-        addText(reminderWords, reminderSummary(), 13, DARK, false);
+        reminder.setOrientation(LinearLayout.HORIZONTAL);
+        reminder.setGravity(Gravity.CENTER_VERTICAL);
+        reminder.setBackground(shape(0xFFF3F0FF, 20, 0));
+        LinearLayout reminderWords = new LinearLayout(this);
+        reminderWords.setOrientation(LinearLayout.VERTICAL);
+        addText(reminderWords, "НАПОМИНАНИЯ", 11, PINK, true);
+        addText(reminderWords, reminderSummary(), 12, DARK, false);
         reminder.addView(reminderWords, new LinearLayout.LayoutParams(0, -2, 1f));
-        TextView reminderArrow = text("›", 29, PINK, true); reminderArrow.setGravity(Gravity.CENTER);
-        reminder.addView(reminderArrow, lp(30, 40, 5, 0, 0, 0));
+        reminder.addView(text("›", 27, PINK, true), lp(28, 38, 4, 0, 0, 0));
         reminder.setOnClickListener(v -> showReminderSettings());
-        root.addView(reminder, lp(-1, -2, 0, 2, 0, 0));
+        root.addView(reminder, lp(-1, -2, 0, 0, 0, 4));
 
         TextView made = text("Сделано с любовью ♡", 12, MUTED, false);
         made.setGravity(Gravity.CENTER);
-        root.addView(made, lp(-1, 48, 0, 12, 0, 0));
+        root.addView(made, lp(-1, 43, 0, 8, 0, 0));
         animateHomeCascade();
     }
 
