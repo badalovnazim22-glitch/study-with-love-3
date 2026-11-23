@@ -1674,6 +1674,19 @@ public class MainActivity extends Activity {
         query.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int st,int count,int after){}public void onTextChanged(CharSequence s,int st,int before,int count){clear.setVisibility(s.length()>0?View.VISIBLE:View.GONE);}public void afterTextChanged(android.text.Editable e){}});
         dialog.show();
     }
+    private String mainExamDate(){
+        String id=prefs.getString("exam_main_goal_id","");Set<String> ids=prefs.getStringSet("exam_goal_ids",new TreeSet<String>());if(!ids.contains(id)){id="";for(String candidate:ids){if(id.isEmpty()||candidate.compareTo(id)>0)id=candidate;}}
+        return id.isEmpty()?"":prefs.getString("exam_goal_date_"+id,"");
+    }
+    private int ensureExamPlan(){
+        String examDate=mainExamDate();if(examDate.isEmpty())return 0;int days=daysUntil(examDate);if(days<0)return 0;days=Math.max(1,days+1);
+        List<String> pending=new ArrayList<>();for(Map.Entry<String,List<String>> entry:chapters.entrySet())for(String topic:entry.getValue())if(topicProgressForChapter(entry.getKey(),topic)<100)pending.add(topic);
+        Map<String,Set<String>> planned=new LinkedHashMap<>();Calendar start=Calendar.getInstance(AppTime.zone());
+        for(int i=0;i<pending.size();i++){int offset=Math.min(days-1,(int)(((long)i*days)/Math.max(1,pending.size())));Calendar day=(Calendar)start.clone();day.add(Calendar.DAY_OF_YEAR,offset);String date=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(day.getTime());Set<String> tasks=planned.get(date);if(tasks==null){tasks=new TreeSet<>();planned.put(date,tasks);}tasks.add("📘 Экзамен: "+pending.get(i)+" · 20 мин · Повторить правило и решить задачи");}
+        SharedPreferences.Editor edit=prefs.edit();for(String key:prefs.getAll().keySet())if(key.startsWith("planner_tasks_")){Set<String> old=new TreeSet<>(prefs.getStringSet(key,new TreeSet<String>()));boolean changed=old.removeIf(v->v.startsWith("📘 Экзамен:"));if(changed)edit.putStringSet(key,old);}
+        for(Map.Entry<String,Set<String>> e:planned.entrySet()){String key="planner_tasks_"+e.getKey();Set<String> merged=new TreeSet<>(prefs.getStringSet(key,new TreeSet<String>()));merged.addAll(e.getValue());edit.putStringSet(key,merged);}
+        edit.putString("exam_plan_last_built",todayKey()).apply();return pending.size();
+    }
     private void showPlanner() {
         currentScreen="planner";base("Умный планировщик","Небольшой план — уже хороший шаг");
         String[] selectedDate={todayKey()},duration={""},action={""};
@@ -1682,6 +1695,7 @@ public class MainActivity extends Activity {
         TextView todayChip=text("Сегодня",13,PINK,true),tomorrowChip=text("Завтра",13,MUTED,true);todayChip.setGravity(Gravity.CENTER);tomorrowChip.setGravity(Gravity.CENTER);
         switcher.addView(todayChip,new LinearLayout.LayoutParams(0,dp(40),1f));switcher.addView(tomorrowChip,new LinearLayout.LayoutParams(0,dp(40),1f));root.addView(switcher,lp(-1,44,0,0,0,10));
         addSpacedRepetitionSection();
+        int examPlanTopics=ensureExamPlan();if(!mainExamDate().isEmpty()){LinearLayout planCard=card();addText(planCard,"🎯  ПЛАН ДО ЭКЗАМЕНА",11,PINK,true);addText(planCard,examPlanTopics==0?"Все темы завершены или дата экзамена прошла.":"План автоматически распределил "+examPlanTopics+" незавершённых тем до "+mainExamDate()+". При пропуске план пересчитывается при следующем открытии.",13,DARK,false);root.addView(planCard,lp(-1,-2,0,0,0,10));}
         LinearLayout form=card();addText(form,"НОВАЯ ЗАДАЧА",12,PINK,true);TextView counter=text("0 / 3 важных дела",11,MUTED,true);form.addView(counter,lp(-1,22,0,2,0,0));
         EditText task=new EditText(this);task.setSingleLine(true);task.setHint("Например: Дроби");task.setTextColor(DARK);task.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));form.addView(task,lp(-1,48,0,7,0,8));
         addText(form,"СКОЛЬКО ВРЕМЕНИ?",10,MUTED,true);
