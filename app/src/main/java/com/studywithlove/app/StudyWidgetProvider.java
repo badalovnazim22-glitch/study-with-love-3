@@ -19,7 +19,7 @@ public class StudyWidgetProvider extends AppWidgetProvider {
         try{java.util.Date d=f.parse(last);Calendar c=Calendar.getInstance(AppTime.zone());c.setTime(d);Calendar today=Calendar.getInstance(AppTime.zone());today.set(Calendar.HOUR_OF_DAY,0);today.set(Calendar.MINUTE,0);today.set(Calendar.SECOND,0);today.set(Calendar.MILLISECOND,0);c.set(Calendar.HOUR_OF_DAY,0);c.set(Calendar.MINUTE,0);c.set(Calendar.SECOND,0);c.set(Calendar.MILLISECOND,0);long gap=(today.getTimeInMillis()-c.getTimeInMillis())/86400000L;if(gap==0||gap==1||(gap==2&&!weekKey().equals(p.getString("streak_freeze_week",""))))return p.getInt("current_streak",0);}catch(Exception ignored){}return 0;
     }
     private static String dayWord(int n){int x=Math.abs(n)%10,y=Math.abs(n)%100;if(x==1&&y!=11)return "день";if(x>=2&&x<=4&&(y<12||y>14))return "дня";return "дней";}
-    private static String weekKey(){Calendar c=Calendar.getInstance(AppTime.zone());return c.getWeekYear()+"-"+c.get(Calendar.WEEK_OF_YEAR);}
+    private static String weekKey(){Calendar c=Calendar.getInstance(AppTime.zone());c.setFirstDayOfWeek(Calendar.MONDAY);c.setMinimalDaysInFirstWeek(4);int week=c.get(Calendar.WEEK_OF_YEAR),year=c.get(Calendar.YEAR),month=c.get(Calendar.MONTH);if(week==1&&month==Calendar.DECEMBER)year++;else if(week>=52&&month==Calendar.JANUARY)year--;return year+"-"+week;}
     private static void update(Context c,AppWidgetManager m,int id){
         android.content.SharedPreferences p=c.getSharedPreferences("study_progress",Context.MODE_PRIVATE);
         RemoteViews v=new RemoteViews(c.getPackageName(),R.layout.study_widget);
