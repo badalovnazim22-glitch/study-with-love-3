@@ -8,4 +8,17 @@
         <item name="android:windowActionModeOverlay">true</item>
         <item name="android:windowBackground">#FFFFFBFC</item>
     </style>
+
+    <style name="AppAccentPink"><item name="android:colorAccent">#C97891</item></style>
+    <style name="AppAccentLavender"><item name="android:colorAccent">#8979B8</item></style>
+    <style name="AppAccentMint"><item name="android:colorAccent">#659B86</item></style>
+    <style name="AppAccentNight"><item name="android:colorAccent">#E39AB5</item></style>
+    <style name="AppAccentWhite"><item name="android:colorAccent">#65758B</item></style>
+    <style name="AppAccentBrown"><item name="android:colorAccent">#8B6046</item></style>
+    <style name="AppAccentGold"><item name="android:colorAccent">#C49318</item></style>
+    <style name="AppAccentLuxury"><item name="android:colorAccent">#D6B36A</item></style>
+    <style name="AppAccentSky"><item name="android:colorAccent">#5D91B5</item></style>
+    <style name="AppAccentPeach"><item name="android:colorAccent">#D88968</item></style>
+    <style name="AppAccentRed"><item name="android:colorAccent">#B32635</item></style>
+    <style name="AppAccentLv"><item name="android:colorAccent">#76502F</item></style>
 </resources>
