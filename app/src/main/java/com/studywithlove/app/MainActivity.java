@@ -586,7 +586,7 @@ public class MainActivity extends Activity {
         // Restored original large "Your progress" motivational card.
         LinearLayout continueCard = card();
         continueCard.setPadding(dp(20), dp(22), dp(20), dp(22));
-        continueCard.setBackground(shape(0xFFF8E8EE, 30, 0));
+        continueCard.setBackground(shape(0xFFF8E8EE, 24, 0));
         addText(continueCard, "ТВОЙ ПРОГРЕСС", 16, PINK, true);
         addText(continueCard, "Ты справляешься.\\nПродолжай в своём\\nтемпе.", 32, DARK, true);
         addText(continueCard, "Каждое занятие — это забота о себе будущей.", 16, MUTED, false);
@@ -658,7 +658,7 @@ public class MainActivity extends Activity {
         aiCard.setOrientation(LinearLayout.HORIZONTAL);
         aiCard.setGravity(Gravity.CENTER_VERTICAL);
         aiCard.setPadding(dp(14), dp(10), dp(14), dp(10));
-        aiCard.setBackground(shape(0xFFF3F0FF, 20, 0));
+        aiCard.setBackground(shape(0xFFF3F0FF, 24, 0));
         TextView aiIcon = text("✧", 28, PINK, true);
         aiIcon.setGravity(Gravity.CENTER);
         aiCard.addView(aiIcon, lp(42, 44, 0, 0, 10, 0));
@@ -710,7 +710,7 @@ public class MainActivity extends Activity {
         LinearLayout reminder = card();
         reminder.setOrientation(LinearLayout.HORIZONTAL);
         reminder.setGravity(Gravity.CENTER_VERTICAL);
-        reminder.setBackground(shape(0xFFF3F0FF, 20, 0));
+        reminder.setBackground(shape(0xFFF3F0FF, 24, 0));
         LinearLayout reminderWords = new LinearLayout(this);
         reminderWords.setOrientation(LinearLayout.VERTICAL);
         addText(reminderWords, "НАПОМИНАНИЯ", 11, PINK, true);
@@ -2374,7 +2374,7 @@ public class MainActivity extends Activity {
             tile.setOrientation(LinearLayout.VERTICAL);
             tile.setGravity(Gravity.CENTER_VERTICAL);
             tile.setPadding(dp(14), dp(14), dp(12), dp(13));
-            tile.setBackground(shape(0xFFFFFFFF, 22, 0xFFF0E4E8));
+            tile.setBackground(shape(0xFFFFFFFF, 24, 0xFFF0E4E8));
             tile.setElevation(dp(1));
             TextView symbol = text(icon, 25, PINK, true);
             symbol.setGravity(Gravity.CENTER);
@@ -2399,7 +2399,7 @@ public class MainActivity extends Activity {
 
     private void actionRegular(String title, String sub, OnAction run) {
         LinearLayout c = new LinearLayout(this); c.setOrientation(LinearLayout.HORIZONTAL); c.setGravity(Gravity.CENTER_VERTICAL); c.setPadding(dp(16), dp(14), dp(14), dp(14));
-        c.setBackground(shape(0xFFFFFFFF, 22, 0xFFF3E9EC));
+        c.setBackground(shape(0xFFFFFFFF, 24, 0xFFF3E9EC));
         LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL);
         TextView heading = text(title, 17, DARK, false);
         if (title.startsWith("РАЗДЕЛ ")) {
@@ -2417,7 +2417,7 @@ public class MainActivity extends Activity {
 
     private LinearLayout action(String title, String sub, OnAction run) {
         LinearLayout c = new LinearLayout(this); c.setOrientation(LinearLayout.HORIZONTAL); c.setGravity(Gravity.CENTER_VERTICAL); c.setPadding(dp(16), dp(14), dp(14), dp(14));
-        c.setBackground(shape(0xFFFFFFFF, 22, 0xFFF3E9EC)); c.setElevation(dp(2));
+        c.setBackground(shape(0xFFFFFFFF, 24, 0xFFF3E9EC)); c.setElevation(dp(2));
         LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL); words.setGravity(Gravity.CENTER_VERTICAL);
         TextView heading = text(title, 17, DARK, true); heading.setMaxLines(2); words.addView(heading, lp(-1, -2, 0, 0, 0, 4));
         TextView detail = text(sub, 13, MUTED, false); detail.setMaxLines(2); words.addView(detail, lp(-1, -2, 0, 0, 0, 0));
@@ -2462,7 +2462,7 @@ public class MainActivity extends Activity {
         if(view instanceof android.view.ViewGroup)installThemeFontListener((android.view.ViewGroup)view);
     }
     private boolean isDarkAppearance(){String t=prefs==null?"pink":prefs.getString("app_theme","pink");return "night".equals(t)||"luxury".equals(t)||("system".equals(t)&&(getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES);}
-    private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(17), dp(16), dp(17), dp(16)); boolean night = isDarkAppearance(); String theme=prefs==null?"pink":prefs.getString("app_theme","pink");int surface=night?("luxury".equals(theme)?0xFF30251F:0xFF25212B):0xFFFFFFFF;int border=night?("luxury".equals(theme)?0xFF78613D:0xFF403541):0xFFF3E9EC;android.graphics.drawable.Drawable bg=shape(surface,23,border);if(Build.VERSION.SDK_INT>=21)l.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x227D5264),bg,shape(0xFFFFFFFF,23,0)));else l.setBackground(bg);l.setElevation(dp(2)); return l; }
+    private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(17), dp(16), dp(17), dp(16)); boolean night = isDarkAppearance(); String theme=prefs==null?"pink":prefs.getString("app_theme","pink");int surface=night?("luxury".equals(theme)?0xFF30251F:0xFF25212B):0xFFFFFFFF;int border=night?("luxury".equals(theme)?0xFF78613D:0xFF403541):0xFFF3E9EC;android.graphics.drawable.Drawable bg=shape(surface,24,border);if(Build.VERSION.SDK_INT>=21)l.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x227D5264),bg,shape(0xFFFFFFFF,24,0)));else l.setBackground(bg);l.setElevation(dp(2)); return l; }
     private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, size, color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
     private TextView text(String value, int size, int color, boolean bold) {
         if(color==0xFFC97891||color==0xFFD96C91)color=PINK;
