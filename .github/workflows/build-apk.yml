@@ -58,6 +58,11 @@ jobs:
       - name: Validate question bank
         run: python scripts/validate_question_bank.py
 
+      - name: Check Cloudflare Worker syntax and config
+        run: |
+          node --check cloudflare/ai-worker.js
+          python -c "import tomllib; tomllib.load(open('cloudflare/wrangler.toml', 'rb'))"
+
       - name: Run Android Lint
         run: gradle --no-daemon lintDebug
 
