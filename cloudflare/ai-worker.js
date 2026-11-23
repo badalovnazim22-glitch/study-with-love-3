@@ -1,4 +1,4 @@
-const MODEL = "gemini-3.5-flash-lite";
+const MODEL = "@cf/zai-org/glm-4.7-flash";
 
 const SYSTEM_INSTRUCTION = `Ты — доброжелательный ИИ-репетитор приложения Study with Love. Отвечай по-русски, если пользователь не просит другой язык. Объясняй математику и другие учебные темы понятно, по шагам, с небольшими примерами. Не просто выдавай ответ: помогай понять ход решения. Если условие задачи неполное, уточни недостающие данные. Не выдумывай факты и честно отмечай неопределённость. Не проси пароли, адреса, номера документов или другие личные данные. Будь уважительным, спокойным и поддерживающим, без давления и оценок личности.`;
 
@@ -32,7 +32,9 @@ export default {
 
     if (url.pathname !== "/chat") return json({ error: "Адрес не найден." }, 404);
     if (request.method !== "POST") return json({ error: "Используй POST." }, 405);
-    if (!env.GEMINI_API_KEY) return json({ error: "На сервере отсутствует секрет GEMINI_API_KEY." }, 503);
+    if (!env.AI || typeof env.AI.run !== "function") {
+      return json({ error: "Не подключён Cloudflare Workers AI. Добавь AI binding с именем AI в настройках Worker." }, 503);
+    }
 
     let body;
     try {
@@ -47,7 +49,7 @@ export default {
       return json({ error: "Передай от 1 до 12 сообщений." }, 400);
     }
 
-    const contents = [];
+    const messages = [{ role: "system", content: SYSTEM_INSTRUCTION }];
     let totalChars = 0;
     for (const item of body.messages) {
       if (!item || !["user", "model", "assistant"].includes(item.role) ||
@@ -56,72 +58,47 @@ export default {
       }
       totalChars += item.content.length;
       if (totalChars > 12000) return json({ error: "История слишком длинная. Начни новый диалог." }, 413);
-      contents.push({
-        role: item.role === "assistant" ? "model" : item.role,
-        parts: [{ text: item.content }]
+      messages.push({
+        role: item.role === "model" ? "assistant" : item.role,
+        content: item.content
       });
     }
 
     try {
-      const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/" + MODEL + ":generateContent";
-      const requestOptions = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": env.GEMINI_API_KEY
-        },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-          contents,
-          generationConfig: { maxOutputTokens: 800 }
-        })
-      };
-
-      // Gemini 503 означает временную перегрузку. Делаем до двух коротких повторов.
-      let response;
+      let result;
+      let lastError;
       for (let attempt = 0; attempt < 3; attempt++) {
-        response = await fetch(apiUrl, requestOptions);
-        if (response.status !== 503 || attempt === 2) break;
-        await new Promise(resolve => setTimeout(resolve, 1200 * (attempt + 1)));
+        try {
+          result = await env.AI.run(MODEL, {
+            messages,
+            max_tokens: 800,
+            temperature: 0.6
+          });
+          break;
+        } catch (error) {
+          lastError = error;
+          if (attempt === 2) throw error;
+          await new Promise(resolve => setTimeout(resolve, 700 * (attempt + 1)));
+        }
       }
 
-      const result = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        const providerStatus = result?.error?.status || "UNKNOWN";
-        const safeStatus = response.status;
-        console.error("Gemini API error", { httpStatus: safeStatus, providerStatus });
-        let message = "Сервис Gemini вернул ошибку HTTP " + safeStatus + " (" + providerStatus + ").";
-        if (safeStatus === 400) message += " Проверь формат запроса.";
-        else if (safeStatus === 401 || safeStatus === 403) message += " Проверь доступ ключа и проекта в Google AI Studio.";
-        else if (safeStatus === 404) message += " Модель недоступна для этого проекта.";
-        else if (safeStatus === 429) message += " Бесплатная квота или лимит запросов исчерпаны. Попробуй позже.";
-        else if (safeStatus === 503) message += " Модель временно перегружена. Сервер уже сделал повторные попытки. Попробуй ещё раз через минуту.";
-        const providerMessage = typeof result?.error?.message === "string"
-          ? result.error.message.slice(0, 500)
-          : "";
-        return json({
-          error: message,
-          providerHttpStatus: safeStatus,
-          providerStatus,
-          providerMessage
-        }, 502);
+      const reply = result?.choices?.[0]?.message?.content ??
+        result?.response ??
+        result?.output_text ??
+        "";
+      const text = typeof reply === "string" ? reply.trim() : "";
+      if (!text) {
+        console.error("Workers AI returned no text");
+        return json({ error: "ИИ не вернул текстовый ответ. Попробуй задать вопрос иначе." }, 502);
       }
-
-      const reply = (result?.candidates?.[0]?.content?.parts || [])
-        .map(part => typeof part.text === "string" ? part.text : "")
-        .join("")
-        .trim();
-
-      if (!reply) {
-        console.error("Gemini returned no text candidate");
-        return json({ error: "Gemini не вернул текст. Попробуй задать вопрос иначе." }, 502);
-      }
-
-      return json({ reply });
+      return json({ reply: text });
     } catch (error) {
-      console.error("Gemini network error", String(error?.name || "Error"));
-      return json({ error: "Cloudflare не смог связаться с Gemini. Попробуй позже." }, 502);
+      const message = String(error?.message || error || "unknown").slice(0, 400);
+      console.error("Workers AI error", message);
+      return json({
+        error: "Cloudflare Workers AI временно не смог обработать запрос. Попробуй ещё раз через несколько секунд.",
+        providerMessage: message
+      }, 502);
     }
   }
 };
