@@ -4,7 +4,6 @@
         <include domain="sharedpref" path="study_progress.xml" />
     <include domain="database" path="study_mistakes.db" />
         <include domain="file" path="." />
-        <exclude domain="external" path="." />
     </cloud-backup>
     <device-transfer>
         <include domain="sharedpref" path="study_progress.xml" />
