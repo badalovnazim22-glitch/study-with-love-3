@@ -207,7 +207,7 @@ public class MainActivity extends Activity {
         currentScreen = "welcome";
         applyWelcomeTheme(theme);
         int[] liveAccents={0xFFC97891,0xFF8979B8,0xFF659B86,0xFF5D91B5,0xFFD88968,0xFFC49318};
-        if(step==3) PINK=liveAccents[Math.max(0,Math.min(liveAccents.length-1,slide))];
+        if(step==4) PINK=liveAccents[Math.max(0,Math.min(liveAccents.length-1,slide))];
         base("", "");
         root.setPadding(dp(20), dp(16), dp(20), dp(18));
         LinearLayout page = new LinearLayout(this);
@@ -298,27 +298,41 @@ public class MainActivity extends Activity {
             Button next=button("Дальше",true);page.addView(next,lp(-1,52,0,8,0,6));next.setOnClickListener(v->renderWelcomeStep(3,name,address,theme,focus,minutes,slide));
             Button skip=button("Пропустить",false);page.addView(skip,lp(-1,46,0,0,0,0));skip.setOnClickListener(v->renderWelcomeStep(3,name,address,theme,focus,minutes,slide));
         } else if (step == 3) {
-            addText(page,"Выбери оформление",25,DARK,true);
-            addText(page,"Тема и цвет сразу меняются в предпросмотре.",14,MUTED,false);
-            LinearLayout preview=card();preview.setPadding(dp(14),dp(12),dp(14),dp(12));
-            preview.setBackground(shape(PALE,20,PINK));
-            addText(preview,"Так будет выглядеть Study with Love",14,DARK,true);
+            addText(page,"Выбери тему приложения",25,DARK,true);
+            addText(page,"Можно выбрать светлое или тёмное оформление.",14,MUTED,false);
+            String[][] choices={{"pink","☀  Светлая"},{"night","☾  Тёмная"}};
+            for(String[] c:choices){
+                Button option=button((theme.equals(c[0])?"✓  ":"")+c[1],theme.equals(c[0]));
+                page.addView(option,lp(-1,64,0,14,0,4));
+                option.setOnClickListener(v->{v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);renderWelcomeStep(3,name,address,c[0],focus,minutes,slide);});
+            }
+            page.addView(new android.widget.Space(this),new LinearLayout.LayoutParams(1,0,1f));
+            Button next=button("Дальше",true);page.addView(next,lp(-1,52,0,8,0,6));next.setOnClickListener(v->renderWelcomeStep(4,name,address,theme,focus,minutes,slide));
+            Button skip=button("Пропустить",false);page.addView(skip,lp(-1,46,0,0,0,0));skip.setOnClickListener(v->renderWelcomeStep(4,name,address,theme,focus,minutes,slide));
+        } else if (step == 4) {
+            addText(page,"Выбери цвет акцента",25,DARK,true);
+            addText(page,"Он сразу применяется к кнопкам и деталям.",14,MUTED,false);
+            int[] accents={0xFFC97891,0xFF8979B8,0xFF659B86,0xFF5D91B5,0xFFD88968,0xFFC49318};
+            String[] names={"Розовый","Лиловый","Мятный","Голубой","Персик","Золотой"};
+            int accentIndex=Math.max(0,Math.min(accents.length-1,slide));
+            LinearLayout preview=card();preview.setPadding(dp(14),dp(12),dp(14),dp(12));preview.setBackground(shape(PALE,20,PINK));
+            addText(preview,"Предпросмотр",14,DARK,true);
             Button sample=button("Моя первая цель  ·  1 минута",true);preview.addView(sample,lp(-1,46,0,8,0,0));
             page.addView(preview,lp(-1,-2,0,12,0,14));
-            addText(page,"Тема приложения",13,MUTED,true);
-            LinearLayout themes=new LinearLayout(this);themes.setOrientation(LinearLayout.HORIZONTAL);
-            String[][] choices={{"pink","Светлая"},{"night","Тёмная"}};
-            for(String[] c:choices){Button b=button((theme.equals(c[0])?"✓  ":"")+c[1],theme.equals(c[0]));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(48),1f);p.setMargins(dp(3),dp(4),dp(3),dp(4));themes.addView(b,p);b.setOnClickListener(v->{v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);renderWelcomeStep(3,name,address,c[0],focus,minutes,slide);});}
-            page.addView(themes,lp(-1,56,0,0,0,12));
-            addText(page,"Цвет акцента",13,MUTED,true);
-            int[] accents={0xFFC97891,0xFF8979B8,0xFF659B86,0xFF5D91B5,0xFFD88968,0xFFC49318};
-            int accentIndex=Math.max(0,Math.min(accents.length-1,slide));
             android.widget.GridLayout palette=new android.widget.GridLayout(this);palette.setColumnCount(3);
-            for(int i=0;i<accents.length;i++){final int index=i;TextView swatch=text(i==accentIndex?"✓":"●",20,accents[i],true);swatch.setGravity(Gravity.CENTER);swatch.setBackground(shape(PALE,15,accents[i]));android.widget.GridLayout.LayoutParams p=new android.widget.GridLayout.LayoutParams();p.width=0;p.height=dp(46);p.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);p.setMargins(dp(4),dp(3),dp(4),dp(3));palette.addView(swatch,p);swatch.setOnClickListener(v->{v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);renderWelcomeStep(3,name,address,theme,focus,minutes,index);});}
+            for(int i=0;i<accents.length;i++){
+                final int index=i;
+                TextView swatch=text((i==accentIndex?"✓  ":"")+names[i],13,accents[i],true);
+                swatch.setGravity(Gravity.CENTER);swatch.setBackground(shape(PALE,15,accents[i]));
+                android.widget.GridLayout.LayoutParams p=new android.widget.GridLayout.LayoutParams();p.width=0;p.height=dp(52);
+                p.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);p.setMargins(dp(4),dp(4),dp(4),dp(4));
+                palette.addView(swatch,p);
+                swatch.setOnClickListener(v->{v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);renderWelcomeStep(4,name,address,theme,focus,minutes,index);});
+            }
             page.addView(palette,lp(-1,-2,0,0,0,10));
             page.addView(new android.widget.Space(this),new LinearLayout.LayoutParams(1,0,1f));
-            Button next=button("Готово",true);page.addView(next,lp(-1,52,0,8,0,6));next.setOnClickListener(v->renderWelcomeStep(4,name,address,theme,focus,minutes,slide));
-            Button skip=button("Пропустить",false);page.addView(skip,lp(-1,46,0,0,0,0));skip.setOnClickListener(v->renderWelcomeStep(4,name,address,theme,focus,minutes,slide));
+            Button next=button("Готово",true);page.addView(next,lp(-1,52,0,8,0,6));next.setOnClickListener(v->renderWelcomeStep(5,name,address,theme,focus,minutes,slide));
+            Button skip=button("Пропустить",false);page.addView(skip,lp(-1,46,0,0,0,0));skip.setOnClickListener(v->renderWelcomeStep(5,name,address,theme,focus,minutes,slide));
         } else {
             int[] accents={0xFFC97891,0xFF8979B8,0xFF659B86,0xFF5D91B5,0xFFD88968,0xFFC49318};
             int chosen=accents[Math.max(0,Math.min(accents.length-1,slide))];
