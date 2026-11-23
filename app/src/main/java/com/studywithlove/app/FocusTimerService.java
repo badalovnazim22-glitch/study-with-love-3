@@ -20,7 +20,7 @@ public class FocusTimerService extends Service {
         if(intent!=null&&ACTION_STOP.equals(intent.getAction())){if(!intent.getBooleanExtra("break",false))recordFocus(intent.getLongExtra("elapsed_ms",0),dateKey(System.currentTimeMillis()));clearSavedTimer();stopForeground(true);stopSelf();return START_NOT_STICKY;}
         if(intent!=null&&ACTION_PAUSE.equals(intent.getAction())){if(!intent.getBooleanExtra("break",false))recordFocus(intent.getLongExtra("elapsed_ms",0),dateKey(System.currentTimeMillis()));clearSavedTimer();stopForeground(true);stopSelf();return START_NOT_STICKY;}
         if(intent==null){
-            android.content.SharedPreferences p=getSharedPreferences(PREFS,MODE_PRIVATE);
+            android.content.SharedPreferences p=getSharedPreferences("timer_runtime",MODE_PRIVATE);
             long wallEnd=p.getLong("timer_service_end_wall",0);
             if(wallEnd<=0){stopSelf();return START_NOT_STICKY;}
             currentBreak=p.getBoolean("timer_service_break",false);
