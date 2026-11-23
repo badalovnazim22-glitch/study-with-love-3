@@ -77,6 +77,10 @@ public class MainActivity extends Activity {
     private boolean timerRunning = false, timerIsBreak = false;
     private long timerSessionStarted = 0L;
     private volatile boolean ambiencePlaying=false;
+    private volatile boolean ambienceLoading=false;
+    private android.media.AudioManager ambienceAudioManager;
+    private android.media.AudioFocusRequest ambienceFocusRequest;
+    private final android.media.AudioManager.OnAudioFocusChangeListener ambienceFocusListener=change->{if(ambiencePlayer!=null){if(change==android.media.AudioManager.AUDIOFOCUS_LOSS||change==android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT){try{if(ambiencePlayer.isPlaying())ambiencePlayer.pause();}catch(Exception ignored){}}else if(change==android.media.AudioManager.AUDIOFOCUS_GAIN){try{ambiencePlayer.start();}catch(Exception ignored){}}}};
     private volatile int ambienceGeneration=0;
     private android.graphics.Bitmap cachedBackgroundBitmap;
     private String cachedBackgroundUri="";
@@ -860,21 +864,21 @@ public class MainActivity extends Activity {
         int answer;String prompt,explain;boolean decimalAnswer=false;
         if(pct){
             int a=20+quizRandom.nextInt(181),b=2+quizRandom.nextInt(9);
-            if(t.contains("пропорц")||t.contains("отношение")){int k=2+quizRandom.nextInt(6),x=2+quizRandom.nextInt(8);answer=x*k;prompt="В отношении "+x+":"+a+" первая величина равна "+x*k+". Найди множитель";explain="Множитель равен "+k+".";}
+            if(t.contains("пропорц")||t.contains("отношение")){int k=2+quizRandom.nextInt(6),x=2+quizRandom.nextInt(8);answer=x*k;prompt="В отношении "+x+":"+k+" первая величина равна "+x+". Чему равна вторая?";explain="Масштаб "+(answer/x)+": "+x+" · "+k+" = "+answer+".";}
             else if(t.contains("числа по процент")||t.contains("по процент")){int p=10*(1+quizRandom.nextInt(8));answer=a;int part=a*p/100;prompt=part+" составляет "+p+"% какого числа?";answer=part*100/p;explain=answer+" · "+p+"% = "+part+".";}
             else if(t.contains("увелич")||t.contains("уменьш")){int p=10*(1+quizRandom.nextInt(4));answer=t.contains("уменьш")?a-a*p/100:a+a*p/100;prompt="Уменьши "+a+" на "+p+"%";if(t.contains("увелич"))prompt="Увеличь "+a+" на "+p+"%";explain=a+(t.contains("уменьш")?" − ":" + ")+(a*p/100)+" = "+answer+".";}
             else{int p=new int[]{5,10,20,25,50}[quizRandom.nextInt(5)];answer=a*p/100;prompt="Найди "+p+"% от "+a;explain=p+"% от "+a+" = "+answer+".";}
         }else if(dec){
             decimalAnswer=true;int a=12+quizRandom.nextInt(80),b=11+quizRandom.nextInt(70);
-            if(t.contains("сравнен")){answer=Math.max(a,b);prompt="Какое число больше: "+(a/10.0)+ " или "+(b/10.0)+"?";answer=a>=b?1:0;explain="Сравни десятые и целые части чисел.";}
-            else if(t.contains("округлен")){int n=125+quizRandom.nextInt(800);answer=((n+5)/10)*10;prompt="Округли "+(n/100.0)+" до десятых";explain="Получаем "+String.format(Locale.GERMANY,"%.1f",answer/100.0)+".";}
+            if(t.contains("сравнен")){answer=Math.max(a,b);prompt="Какое число больше: "+String.format(Locale.GERMANY,"%.1f",a/10.0)+" или "+String.format(Locale.GERMANY,"%.1f",b/10.0)+"?";explain="Сравни целые и десятые части чисел.";}
+            else if(t.contains("округлен")){int n=125+quizRandom.nextInt(800);answer=(n+5)/10;prompt="Округли "+String.format(Locale.GERMANY,"%.2f",n/100.0)+" до десятых";explain="Получаем "+String.format(Locale.GERMANY,"%.1f",answer/10.0)+".";}
             else{answer=a+b;prompt="Вычисли "+String.format(Locale.GERMANY,"%.1f",a/10.0)+" + "+String.format(Locale.GERMANY,"%.1f",b/10.0);explain=String.format(Locale.GERMANY,"%.1f + %.1f = %.1f",a/10.0,b/10.0,answer/10.0);}
         }else if(frac){
             int d=2+quizRandom.nextInt(8),n=2+quizRandom.nextInt(9);
             if(t.contains("сравнен")){int x=1+quizRandom.nextInt(d-1),y=1+quizRandom.nextInt(d-1);answer=x>=y?1:0;prompt="Сравни дроби "+x+"/"+d+" и "+y+"/"+d+". Какая больше?";explain="При одинаковых знаменателях больше дробь с большим числителем.";}
             else if(t.contains("смешан")||t.contains("правильн")||t.contains("неправильн")){int whole=1+quizRandom.nextInt(8),num=1+quizRandom.nextInt(d-1);answer=whole*d+num;prompt="Преобразуй "+whole+" "+num+"/"+d+" в неправильную дробь (числитель)";explain=whole+" · "+d+" + "+num+" = "+answer+".";}
-            else if(t.contains("делен")){int numerator=1+quizRandom.nextInt(7),denominator=2+quizRandom.nextInt(7);answer=numerator*denominator;prompt="Вычисли "+numerator+"/"+denominator+" ÷ 1/"+denominator+" ";explain="Деление на 1/"+denominator+" даёт "+answer+".";}
-            else if(t.contains("умнож")){int x=1+quizRandom.nextInt(7),y=1+quizRandom.nextInt(7);answer=x*y;prompt="Вычисли "+x+"/3 · 3/"+y+" (числитель произведения)";explain="Перемножаем числители: "+x+" · "+y+" = "+answer+".";}
+            else if(t.contains("делен")){int numerator=1+quizRandom.nextInt(7),denominator=2+quizRandom.nextInt(7);answer=numerator;prompt="Вычисли "+numerator+"/"+denominator+" ÷ 1/"+denominator;explain="Деление на 1/"+denominator+" даёт "+answer+".";}
+            else if(t.contains("умнож")){int x=1+quizRandom.nextInt(7),y=1+quizRandom.nextInt(7);answer=x;prompt="Вычисли "+x+"/3 · 3/"+y+" (числитель произведения)";explain="Сокращаем 3 и 3; числитель результата равен "+answer+".";}
             else{int whole=d*n;answer=n;prompt="Найди 1/"+d+" от "+whole;explain="Одна "+1+"/"+d+" часть от "+whole+" равна "+answer+".";}
         }else{
             int a=17+quizRandom.nextInt(70),b=6+quizRandom.nextInt(30);
@@ -974,14 +978,14 @@ public class MainActivity extends Activity {
                     .putInt("longest_streak", Math.max(streak, prefs.getInt("longest_streak", 0)))
                     .putString("last_study_date", today)
                     .putStringSet("study_days", history).apply();
-            StudyWidgetProvider.updateAll(this);
+            StudyWidgetProvider.updateAll(this);updateAchievementDates();
         } else {
             prefs.edit().putStringSet("study_days", history).apply();
         }
     }
 
     private void markDone() {
-        recordStudyDay();
+        recordStudyDay();updateAchievementDates();
         Toast.makeText(this,"Сегодняшнее занятие отмечено ♡",Toast.LENGTH_SHORT).show();
     }
 
@@ -1460,12 +1464,19 @@ public class MainActivity extends Activity {
         @Override protected void onDraw(android.graphics.Canvas c){super.onDraw(c);p.setColor(0xFF70BDE0);p.setStrokeWidth(4);p.setStrokeCap(android.graphics.Paint.Cap.ROUND);for(int i=0;i<5;i++){float x=dp(10+i*11);c.drawLine(x,dp(i%2*8),x-5,dp(48+i%3*9),p);p.setStyle(android.graphics.Paint.Style.FILL);c.drawCircle(x-5,dp(53+i%3*9),dp(3),p);p.setStyle(android.graphics.Paint.Style.STROKE);}}
     }
 
+    private void updateAchievementDates(){
+        int days=prefs.getStringSet("study_days",new TreeSet<String>()).size(),minutes=totalStudyMinutes(),completed=0;for(List<String> topics:chapters.values())completed+=countCompleted(topics);int sessions=prefs.getInt("done_count",0);
+        String[][] values={{"Первые шаги",String.valueOf(days>=1)},{"Неделя стараний",String.valueOf(days>=7)},{"Две недели",String.valueOf(days>=14)},{"Месяц успеха",String.valueOf(days>=30)},{"Два месяца",String.valueOf(days>=60)},{"Сто дней",String.valueOf(days>=100)},{"Маленький математик",String.valueOf(completed>=1)},{"Счёт — это просто",String.valueOf(completed>=5)},{"Знаток математики",String.valueOf(completed>=10)},{"Мастер знаний",String.valueOf(completed>=41)},{"Первый час",String.valueOf(minutes>=60)},{"10 часов учёбы",String.valueOf(minutes>=600)},{"Настойчивость",String.valueOf(sessions>=25)},{"Пятьдесят побед",String.valueOf(completed+sessions>=50)},{"Возвращаюсь к цели",String.valueOf(days>=3)},{"Ритм учёбы",String.valueOf(days>=5)}};
+        SharedPreferences.Editor e=prefs.edit();String date=new SimpleDateFormat("d MMMM yyyy",new Locale("ru")).format(new Date());boolean changed=false;
+        for(String[] v:values)if(Boolean.parseBoolean(v[1])&&!prefs.contains("achievement_date_"+v[0])){e.putString("achievement_date_"+v[0],date);changed=true;}if(changed)e.apply();
+    }
+
     private void showAchievements() {
         currentScreen="achievements";base("Коллекция достижений","Каждый маленький шаг достоин похвалы");
         int days=prefs.getStringSet("study_days",new TreeSet<String>()).size(),minutes=totalStudyMinutes(),completed=0;for(List<String> topics:chapters.values())completed+=countCompleted(topics);int sessions=prefs.getInt("done_count",0);
         String[][] a={{"🌱","Первые шаги","Первый день занятий",String.valueOf(days>=1),"1"},{"🌷","Неделя стараний","7 дней занятий",String.valueOf(days>=7),"7"},{"🌸","Две недели","14 дней занятий",String.valueOf(days>=14),"14"},{"💐","Месяц успеха","30 дней занятий",String.valueOf(days>=30),"30"},{"🏵️","Два месяца","60 дней занятий",String.valueOf(days>=60),"60"},{"🌻","Сто дней","100 дней занятий",String.valueOf(days>=100),"100"},{"📚","Маленький математик","Завершена первая тема",String.valueOf(completed>=1),"1"},{"🧮","Счёт — это просто","Завершено 5 тем",String.valueOf(completed>=5),"5"},{"🎓","Знаток математики","Завершено 10 тем",String.valueOf(completed>=10),"10"},{"🏆","Мастер знаний","Завершены все 41 темы",String.valueOf(completed>=41),"41"},{"⏳","Первый час","60 минут занятий",String.valueOf(minutes>=60),"60"},{"⌛","10 часов учёбы","600 минут занятий",String.valueOf(minutes>=600),"600"},{"🚀","Настойчивость","25 учебных занятий",String.valueOf(sessions>=25),"25"},{"💎","Пятьдесят побед","50 тем или занятий",String.valueOf(completed+sessions>=50),"50"},{"💗","Возвращаюсь к цели","Занятия в 3 разных дня",String.valueOf(days>=3),"3"},{"✨","Ритм учёбы","Занятия в 5 разных дней",String.valueOf(days>=5),"5"}};
         int unlocked=0;for(String[] x:a)if(Boolean.parseBoolean(x[3]))unlocked++;
-        boolean newAchievement=false;for(int i=0;i<a.length;i++)if(Boolean.parseBoolean(a[i][3])){String dateKey="achievement_date_"+a[i][1];if(!prefs.contains(dateKey)){prefs.edit().putString(dateKey,new SimpleDateFormat("d MMMM yyyy",new Locale("ru")).format(new Date())).apply();newAchievement=true;}}if(newAchievement){haptic(root,true);celebrate();}
+        
         addText(root,unlocked+" / "+a.length+" открыто",15,DARK,true);
         ProgressBar overall=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);overall.setMax(a.length);overall.setProgress(unlocked);overall.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));overall.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFE9D4DE));root.addView(overall,lp(-1,10,0,7,0,9));
         int nextIndex=-1;for(int i=0;i<a.length;i++)if(!Boolean.parseBoolean(a[i][3])){nextIndex=i;break;}
@@ -1635,19 +1646,22 @@ public class MainActivity extends Activity {
     private void startAmbience() {
         stopAmbience();
         String mode=prefs.getString("study_atmosphere","🌧️  Дождь за окном");
+        ambienceAudioManager=(android.media.AudioManager)getSystemService(AUDIO_SERVICE);
+        if(Build.VERSION.SDK_INT>=26){android.media.AudioAttributes attrs=new android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_MEDIA).setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC).build();ambienceFocusRequest=new android.media.AudioFocusRequest.Builder(android.media.AudioManager.AUDIOFOCUS_GAIN).setAudioAttributes(attrs).setOnAudioFocusChangeListener(ambienceFocusListener).setWillPauseWhenDucked(true).build();if(ambienceAudioManager.requestAudioFocus(ambienceFocusRequest)!=android.media.AudioManager.AUDIOFOCUS_REQUEST_GRANTED){Toast.makeText(this,"Звук сейчас недоступен: занят аудиофокус",Toast.LENGTH_SHORT).show();return;}}else if(ambienceAudioManager.requestAudioFocus(ambienceFocusListener,android.media.AudioManager.STREAM_MUSIC,android.media.AudioManager.AUDIOFOCUS_GAIN)!=android.media.AudioManager.AUDIOFOCUS_REQUEST_GRANTED)return;
+        ambienceLoading=true;ambiencePlaying=false;
         String url=mode.contains("Дождь")?"https://upload.wikimedia.org/wikipedia/commons/3/3d/Rain.ogg":
                 mode.contains("кафе")?"https://upload.wikimedia.org/wikipedia/commons/5/54/Cafe_ambiance.ogg":
                 mode.contains("природы")?"https://upload.wikimedia.org/wikipedia/commons/3/38/Birds_forest.ogg":
                 "https://upload.wikimedia.org/wikipedia/commons/f/fb/20121112_TU_Delft_Library%2C_quiet_study_room_-_general_ambience_-_SoundCloud_-_el_mar.ogg";
         try{
             android.media.MediaPlayer player=new android.media.MediaPlayer();ambiencePlayer=player;
-            float volume=prefs.getInt("ambience_volume",35)/100f;player.setVolume(volume,volume);player.setLooping(true);
-            player.setOnPreparedListener(mp->{if(ambiencePlayer==mp){mp.start();ambiencePlaying=true;}});
+            float volume=prefs.getInt("ambience_volume",35)/100f;player.setVolume(volume,volume);player.setLooping(true);if(Build.VERSION.SDK_INT>=21)player.setAudioAttributes(new android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_MEDIA).setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC).build());
+            player.setOnPreparedListener(mp->{if(ambiencePlayer==mp){ambienceLoading=false;mp.start();ambiencePlaying=true;}});
             player.setOnErrorListener((mp,what,extra)->{if(ambiencePlayer==mp)stopAmbience();runOnUiThread(()->Toast.makeText(this,"Не удалось загрузить звук. Проверь интернет.",Toast.LENGTH_SHORT).show());return true;});
-            player.setDataSource(url);ambiencePlaying=true;player.prepareAsync();
+            java.util.Map<String,String> headers=new java.util.HashMap<>();headers.put("User-Agent","StudyWithLove/4.1 (Android; ambience player)");player.setDataSource(this,android.net.Uri.parse(url),headers);player.prepareAsync();
         }catch(Exception e){stopAmbience();Toast.makeText(this,"Не удалось загрузить звук атмосферы",Toast.LENGTH_SHORT).show();}
     }
-    private void stopAmbience(){ambiencePlaying=false;android.media.MediaPlayer player=ambiencePlayer;ambiencePlayer=null;if(player!=null){try{if(player.isPlaying())player.stop();}catch(Exception ignored){}try{player.release();}catch(Exception ignored){}}}
+    private void stopAmbience(){ambiencePlaying=false;ambienceLoading=false;android.media.MediaPlayer player=ambiencePlayer;ambiencePlayer=null;if(player!=null){try{if(player.isPlaying())player.stop();}catch(Exception ignored){}try{player.release();}catch(Exception ignored){}}if(ambienceAudioManager!=null){try{if(Build.VERSION.SDK_INT>=26&&ambienceFocusRequest!=null)ambienceAudioManager.abandonAudioFocusRequest(ambienceFocusRequest);else ambienceAudioManager.abandonAudioFocus(ambienceFocusListener);}catch(Exception ignored){}}}
     @Override protected void onDestroy(){if(flowerBreatheAnimator!=null){flowerBreatheAnimator.cancel();flowerBreatheAnimator=null;}if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}stopAmbience();super.onDestroy();}
 
     private void showAtmosphere() {
@@ -1656,11 +1670,13 @@ public class MainActivity extends Activity {
         String[] names={"🌧️  Дождь за окном","☕  Уютное кафе","🌿  Звуки природы","📚  Тихая библиотека"};
         String[] descriptions={"Мягкий дождливый настрой","Тёплая атмосфера кофейни","Спокойствие и свежесть","Минимум отвлечений"};
         String chosen=prefs.getString("study_atmosphere",names[0]);
-        for(int i=0;i<names.length;i++){final String n=names[i];boolean selected=chosen.equals(n);LinearLayout c=card();addText(c,n,18,DARK,true);addText(c,descriptions[i],13,MUTED,false);TextView state=text(selected?(ambiencePlaying?"Играет сейчас  •  ✓":"Выбрано  •  ▶"):"Нажми, чтобы включить",12,selected?PINK:MUTED,true);c.addView(state,lp(-1,30,0,5,0,0));c.setOnClickListener(v->{prefs.edit().putString("study_atmosphere",n).apply();if(selected&&ambiencePlaying)stopAmbience();else if(!ambiencePlaying)startAmbience();else{stopAmbience();startAmbience();}showAtmosphere();});root.addView(c,lp(-1,-2,0,0,0,9));}
+        for(int i=0;i<names.length;i++){final String n=names[i];boolean selected=chosen.equals(n);LinearLayout c=card();addText(c,n,18,DARK,true);addText(c,descriptions[i],13,MUTED,false);TextView state=text(selected?(ambienceLoading?"Загрузка звука…":ambiencePlaying?"Играет сейчас  •  ✓":"Выбрано  •  ▶"):"Нажми, чтобы включить",12,selected?PINK:MUTED,true);c.addView(state,lp(-1,30,0,5,0,0));c.setOnClickListener(v->{prefs.edit().putString("study_atmosphere",n).apply();if(selected&&ambiencePlaying)stopAmbience();else if(!ambiencePlaying)startAmbience();else{stopAmbience();startAmbience();}showAtmosphere();});root.addView(c,lp(-1,-2,0,0,0,9));}
         android.widget.SeekBar volume=new android.widget.SeekBar(this);volume.setMax(100);volume.setProgress(prefs.getInt("ambience_volume",35));if(Build.VERSION.SDK_INT>=21)volume.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));addText(root,"ГРОМКОСТЬ",11,PINK,true);root.addView(volume,lp(-1,36,0,0,0,8));volume.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener(){public void onProgressChanged(android.widget.SeekBar b,int value,boolean user){if(user){prefs.edit().putInt("ambience_volume",value).apply();if(ambiencePlayer!=null)ambiencePlayer.setVolume(value/100f,value/100f);}}public void onStartTrackingTouch(android.widget.SeekBar b){}public void onStopTrackingTouch(android.widget.SeekBar b){}});
         if(ambiencePlaying){Button stop=button("Остановить звук",false);stop.setOnClickListener(v->{stopAmbience();showAtmosphere();});root.addView(stop,lp(-1,44,0,4,0,8));}
+        Button credits=button("ⓘ  Источники звуков и лицензии",false);credits.setOnClickListener(v->showAudioCredits());root.addView(credits,lp(-1,44,0,6,0,0));
         backHome();
     }
+    private void showAudioCredits(){new android.app.AlertDialog.Builder(this).setTitle("Источники звуков").setMessage("Дождь — ジダネ, Wikimedia Commons, общественное достояние.\n\nКафе — Marble Toast, Wikimedia Commons, CC0 1.0.\n\nПрирода — Barracuda1983, Wikimedia Commons, общественное достояние.\n\nТихая библиотека — “Quiet study room ambience”, el_mar, Wikimedia Commons, CC BY 3.0. Запись используется без изменений.\n\nПодробности: AUDIO_CREDITS.md в репозитории проекта.").setPositiveButton("Понятно",null).show();}
 
     private int countStudyDaysThisMonth(Set<String> days, int year, int month) {
         int count = 0;
@@ -1778,12 +1794,12 @@ public class MainActivity extends Activity {
         if (times.isEmpty() || days.isEmpty()) return "Напоминания выключены. Открой настройки, чтобы включить.";
         List<String> labels = new ArrayList<>();
         for (String day : days) { int index = Integer.parseInt(day) - 1; labels.add(new String[]{"Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"}[index]); }
-        return android.text.TextUtils.join(", ", labels) + "  ·  " + android.text.TextUtils.join(", ", times) + " (Баку)";
+        return android.text.TextUtils.join(", ", labels) + "  ·  " + android.text.TextUtils.join(", ", times) + " (местное время)";
     }
 
     private void showReminderSettings() {
         currentScreen = "reminders";
-        base("Напоминания 🔔", "Выбери дни и время. Часовой пояс — Баку.");
+        base("Напоминания 🔔", "Выбери дни и время. Часовой пояс устройства.");
         addText(root, "ДНИ НЕДЕЛИ", 12, PINK, true);
         dayChecks.clear();
         Set<String> savedDays = selectedDays();
