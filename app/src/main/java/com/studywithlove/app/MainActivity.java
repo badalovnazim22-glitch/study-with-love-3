@@ -865,8 +865,8 @@ public class MainActivity extends Activity {
         List<MiniQuestion> list=wrongOnly?miniWrongQuestions:miniQuestions;
         if(index>=list.size()){showMiniTestResult(wrongOnly);return;}
         MiniQuestion q=list.get(index);LinearLayout panel=card();panel.setPadding(dp(16),dp(18),dp(16),dp(18));addText(panel,"ВОПРОС "+(index+1)+" ИЗ "+list.size(),11,PINK,true);addText(panel,q.prompt,21,DARK,true);root.addView(panel,lp(-1,-2,0,0,0,14));
-        final boolean[] answered={false};
-        for(int i=0;i<q.options.length;i++){final int answer=i;Button b=button(q.options[i],false);b.setTextSize(18);root.addView(b,lp(-1,50,0,0,0,8));b.setOnClickListener(v->{if(answered[0])return;answered[0]=true;for(int k=0;k<q.options.length;k++){View option=root.getChildAt(root.getChildCount()-2-q.options.length+k);if(option instanceof Button){Button choice=(Button)option;if(k==q.correct){choice.setBackground(shape(0xFFE4F4E8,22,0xFF75B987));choice.setTextColor(0xFF287A43);}else if(k==answer){choice.setBackground(shape(0xFFFFE8E8,22,0xFFE58A8A));choice.setTextColor(0xFFB64242);}}}boolean correct=answer==q.correct;if(correct){miniScore++;haptic(b,true);}else{miniWrongQuestions.add(q);haptic(b,false);b.animate().translationX(dp(9)).setDuration(55).withEndAction(()->b.animate().translationX(-dp(9)).setDuration(55).withEndAction(()->b.animate().translationX(0).setDuration(55).start()).start()).start();}new Handler().postDelayed(()->{if(!isFinishing())renderMiniTest(index+1,wrongOnly);},650);});}
+        final boolean[] answered={false};Button[] answerButtons=new Button[q.options.length];
+        for(int i=0;i<q.options.length;i++){final int answer=i;Button b=button(q.options[i],false);answerButtons[i]=b;b.setTextSize(18);root.addView(b,lp(-1,50,0,0,0,8));b.setOnClickListener(v->{if(answered[0])return;answered[0]=true;for(int k=0;k<q.options.length;k++){Button choice=answerButtons[k];if(k==q.correct){choice.setBackground(shape(0xFFE4F4E8,22,0xFF75B987));choice.setTextColor(0xFF287A43);}else if(k==answer){choice.setBackground(shape(0xFFFFE8E8,22,0xFFE58A8A));choice.setTextColor(0xFFB64242);}}boolean correct=answer==q.correct;if(correct){miniScore++;haptic(b,true);}else{miniWrongQuestions.add(q);haptic(b,false);b.animate().translationX(dp(9)).setDuration(55).withEndAction(()->b.animate().translationX(-dp(9)).setDuration(55).withEndAction(()->b.animate().translationX(0).setDuration(55).start()).start()).start();}new Handler().postDelayed(()->{if(!isFinishing())renderMiniTest(index+1,wrongOnly);},650);});}
         Button quit=button("Завершить тест",false);quit.setOnClickListener(v->showMiniTestResult(wrongOnly));root.addView(quit,lp(-1,44,0,8,0,0));
     }
     private void showMiniTestResult(boolean wrongOnly){
@@ -1380,6 +1380,7 @@ public class MainActivity extends Activity {
         LinearLayout care=card();addText(care,"УХОД ЗА ЦВЕТОЧКОМ",12,PINK,true);addText(care,"Поливай цветочек раз в день. Вода появится только после нажатия.",13,MUTED,false);
         boolean watered=prefs.getString("flower_water_date","").equals(todayKey());Button waterButton=button(watered?"Уже полит сегодня ✓":"Полить цветочек",true);waterButton.setEnabled(!watered);
         waterButton.setOnClickListener(v->{
+            haptic(waterButton,true);
             waterButton.setEnabled(false);waterButton.setText("Цветочек пьёт воду…");
             can.setVisibility(View.VISIBLE);stream.setVisibility(View.VISIBLE);
             can.setPivotX(dp(55));can.setPivotY(dp(45));
@@ -1402,8 +1403,8 @@ public class MainActivity extends Activity {
         @Override protected void onDraw(android.graphics.Canvas canvas){super.onDraw(canvas);float w=getWidth(),h=getHeight();p.setShader(new android.graphics.LinearGradient(0,0,w,h,0xFFD58A68,0xFF9D5948,android.graphics.Shader.TileMode.CLAMP));android.graphics.Path pot=new android.graphics.Path();pot.moveTo(w*.12f,h*.12f);pot.lineTo(w*.88f,h*.12f);pot.lineTo(w*.76f,h*.94f);pot.quadTo(w*.5f,h*1.04f,w*.24f,h*.94f);pot.close();canvas.drawPath(pot,p);p.setShader(null);p.setColor(0xFFE8B08D);canvas.drawRoundRect(w*.08f,h*.08f,w*.92f,h*.24f,h*.08f,h*.08f,p);p.setColor(0xFF704638);canvas.drawOval(w*.18f,h*.13f,w*.82f,h*.23f,p);p.setColor(0xFF5D4933);canvas.drawOval(w*.19f,h*.145f,w*.81f,h*.225f,p);p.setColor(0xFF6D9B4C);for(int i=0;i<13;i++){float x=w*(.22f+i*.047f);float y=h*(.17f+(i%3)*.018f);canvas.drawLine(x,y,x-3,y-8,p);canvas.drawLine(x,y,x+4,y-7,p);}}
     }
     private class FlowerArtView extends View {
-        private final android.graphics.Paint p=new android.graphics.Paint(3);private final int type,days;
-        FlowerArtView(android.content.Context c,int t,int d){super(c);type=t;days=d;}
+        private final android.graphics.Paint p=new android.graphics.Paint(3);private final int type,days,streak;
+        FlowerArtView(android.content.Context c,int t,int d,int st){super(c);type=t;days=d;streak=st;}
         private void petal(android.graphics.Canvas c,float x,float y,float rx,float ry,int light,int mid,int dark){
             p.setStyle(android.graphics.Paint.Style.FILL);p.setShader(new android.graphics.LinearGradient(x-rx,y-ry,x+rx,y+ry,light,mid,android.graphics.Shader.TileMode.CLAMP));c.drawOval(x-rx,y-ry,x+rx,y+ry,p);p.setShader(null);p.setStyle(android.graphics.Paint.Style.STROKE);p.setStrokeWidth(dp(1));p.setColor(dark);c.drawLine(x,y-ry*.65f,x,y+ry*.55f,p);p.setStyle(android.graphics.Paint.Style.FILL);
         }
@@ -1413,7 +1414,7 @@ public class MainActivity extends Activity {
             android.graphics.Path right=new android.graphics.Path();right.moveTo(stemX,baseY*.69f);right.cubicTo(stemX+40,baseY*.56f,stemX+49,baseY*.49f,stemX+13,baseY*.55f);right.cubicTo(stemX+4,baseY*.59f,stemX+1,baseY*.64f,stemX,baseY*.69f);p.setShader(new android.graphics.LinearGradient(stemX,baseY*.5f,stemX+45,baseY*.7f,0xFFB5D77C,0xFF397D48,android.graphics.Shader.TileMode.CLAMP));c.drawPath(right,p);p.setShader(null);p.setColor(0xFFDDEBA7);c.drawLine(stemX+5,baseY*.63f,stemX+38,baseY*.55f,p);
             float fx=stemX,fy=headY;float openness=.58f+.42f*Math.min(7,Math.max(0,streak))/7f;c.save();c.scale(openness,openness,fx,fy);for(int ring=0;ring<2;ring++){int count=ring==0?12:10;for(int j=0;j<count;j++){c.save();c.rotate(j*360f/count+(ring==0?0:18),fx,fy);float yy=ring==0?-23:-18;petal(c,fx,fy+yy,ring==0?8.5f:7f,ring==0?27:21,ring==0?col[0]:col[1],col[1],col[2]);c.restore();}}
             p.setShader(new android.graphics.RadialGradient(fx-3,fy-4,14,new int[]{0xFFFFF4B2,0xFFFFC84D,0xFFB66A22},null,android.graphics.Shader.TileMode.CLAMP));c.drawCircle(fx,fy,13,p);p.setShader(null);p.setColor(0xFF8F5523);for(int k=0;k<18;k++){double a=k*2.399;float r=3+(k%4)*2;c.drawCircle(fx+(float)Math.cos(a)*r,fy+(float)Math.sin(a)*r,1.15f,p);}
-            c.restore();c.restore();if(days<3){p.setColor(0xFF6C9D4F);c.drawOval(fx-8,fy+20,fx+8,fy+43,p);}
+            c.restore();if(days<3){p.setColor(0xFF6C9D4F);c.drawOval(fx-8,fy+20,fx+8,fy+43,p);}
         }
     }
 
