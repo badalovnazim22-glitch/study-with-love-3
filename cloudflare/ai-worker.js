@@ -96,8 +96,16 @@ export default {
         else if (safeStatus === 401 || safeStatus === 403) message += " Проверь доступ ключа и проекта в Google AI Studio.";
         else if (safeStatus === 404) message += " Модель недоступна для этого проекта.";
         else if (safeStatus === 429) message += " Бесплатная квота или лимит запросов исчерпаны. Попробуй позже.";
-        else if (safeStatus === 503) message += " Модель временно перегружена. Попробуй ещё раз через минуту.";
-        return json({ error: message, providerHttpStatus: safeStatus, providerStatus }, 502);
+        else if (safeStatus === 503) message += " Модель временно перегружена. Сервер уже сделал повторные попытки. Попробуй ещё раз через минуту.";
+        const providerMessage = typeof result?.error?.message === "string"
+          ? result.error.message.slice(0, 500)
+          : "";
+        return json({
+          error: message,
+          providerHttpStatus: safeStatus,
+          providerStatus,
+          providerMessage
+        }, 502);
       }
 
       const reply = (result?.candidates?.[0]?.content?.parts || [])
