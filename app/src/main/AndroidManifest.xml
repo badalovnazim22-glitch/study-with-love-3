@@ -25,7 +25,7 @@
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Учебный таймер с уведомлением об окончании" />
         </service>
         <receiver android:name=".StudyWidgetProvider" android:exported="true">
-            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.DATE_CHANGED" /><action android:name="android.intent.action.TIME_SET" /><action android:name="android.intent.action.TIMEZONE_CHANGED" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/study_widget_info" />
         </receiver>
         <receiver android:name=".WeeklyReportReceiver" android:exported="false" />
