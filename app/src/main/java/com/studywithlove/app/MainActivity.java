@@ -1912,7 +1912,7 @@ public class MainActivity extends Activity {
     private void celebrate() {
         if(root==null)return;
         final CelebrationView fx=new CelebrationView(this);
-        root.getOverlay().add(fx);
+        root.getOverlay().add(fx);fx.layout(0,0,root.getWidth(),root.getHeight());
         android.animation.ValueAnimator animator=android.animation.ValueAnimator.ofFloat(0f,1f);
         animator.setDuration(1250);
         animator.addUpdateListener(a->{fx.progress=(float)a.getAnimatedValue();fx.invalidate();});
