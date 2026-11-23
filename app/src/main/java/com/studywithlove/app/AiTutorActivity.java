@@ -231,40 +231,56 @@ public class AiTutorActivity extends Activity {
             showEndpointDialog();
             return;
         }
+        retryQuestion = "";
+        sendButton.setText("➤");
         input.setText("");
         ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(input.getWindowToken(), 0);
         addHistory("user", question);
         addBubble(question, true);
         waiting = true;
         sendButton.setEnabled(false);
-        TextView typing = addBubble("Думаю над ответом…", false);
+        typingBubble = addBubble(tr("Думаю над ответом…", "Thinking…", "Düşünürəm…"), false);
+        cancelButton.setVisibility(View.VISIBLE);
         JSONArray payloadMessages = new JSONArray();
-        int start = Math.max(0, history.size() - 10);
-        if (start < history.size() && !"user".equals(history.get(start).optString("role"))) start++;
+        int start = Math.max(0, history.size() - 8);
+        while (start < history.size() - 1 && !"user".equals(history.get(start).optString("role"))) start++;
+        // Keep complete recent turns and stay below the Worker history limit.
+        while (start + 2 < history.size()) {
+            int chars = 0;
+            for (int i = start; i < history.size(); i++) {
+                String value = history.get(i).optString("content", "");
+                chars += Math.min(value.length(), 7800);
+                if (i == history.size() - 1 && "user".equals(history.get(i).optString("role")) && !studyContext.isEmpty()) {
+                    chars += Math.min(1000, studyContext.length()) + 120;
+                }
+            }
+            if (chars <= 28000) break;
+            start += 2;
+            while (start < history.size() - 1 && !"user".equals(history.get(start).optString("role"))) start++;
+        }
         int totalChars = 0;
         for (int i = start; i < history.size(); i++) {
             JSONObject item = history.get(i);
+            String role = item.optString("role", "user");
             String content = item.optString("content", "");
-            if (content.length() > 6000 || totalChars + content.length() > 24000) continue;
-            JSONObject outgoing = item;
-            if (i == history.size() - 1 && "user".equals(item.optString("role")) && !studyContext.isEmpty()) {
-                String contextualQuestion = "Учебный контекст приложения: " + studyContext
-                        + "\nОтвечай с учётом этих тем, объясняй понятным языком и не предполагай, что ученик уже знает сложные термины.\n\nВопрос: "
-                        + content;
-                if (contextualQuestion.length() <= 6000 && totalChars + contextualQuestion.length() <= 24000) {
-                    try {
-                        outgoing = new JSONObject();
-                        outgoing.put("role", item.optString("role"));
-                        outgoing.put("content", contextualQuestion);
-                    } catch (Exception ignored) { outgoing = item; }
-                }
+            if (content.length() > 7800) content = content.substring(content.length() - 7800);
+            if (i == history.size() - 1 && "user".equals(role) && !studyContext.isEmpty()) {
+                String context = studyContext.length() > 1000 ? studyContext.substring(0, 1000) : studyContext;
+                String contextualQuestion = "Учебный контекст: " + context
+                        + "\nУчитывай его в объяснении, но не выдумывай данные.\nВопрос: " + content;
+                if (contextualQuestion.length() <= 7800) content = contextualQuestion;
             }
+            JSONObject outgoing = new JSONObject();
+            outgoing.put("role", role);
+            outgoing.put("content", content);
             payloadMessages.put(outgoing);
-            totalChars += outgoing.optString("content", content).length();
+            totalChars += content.length();
         }
         JSONObject payload = new JSONObject();
-        try { payload.put("messages", payloadMessages); } catch (Exception ignored) {}
-        executor.execute(() -> {
+        payload.put("messages", payloadMessages);
+        final long requestId = ++activeRequestId;
+        requestCancelled = false;
+        activeTask = executor.submit(() -> {
             String answer = null;
             String error = null;
             HttpURLConnection connection = null;
@@ -275,7 +291,7 @@ public class AiTutorActivity extends Activity {
                 activeConnection = connection;
                 connection.setRequestMethod("POST");
                 connection.setConnectTimeout(15000);
-                connection.setReadTimeout(90000);
+                connection.setReadTimeout(60000);
                 connection.setDoOutput(true);
                 connection.setUseCaches(false);
                 connection.setRequestProperty("Accept", "application/json");
@@ -308,10 +324,14 @@ public class AiTutorActivity extends Activity {
             final String finalError = error;
             main.post(() -> {
                 if (destroyed || isFinishing()) return;
-                messages.removeView(typing);
+                if (requestId != activeRequestId) return;
+                if (typingBubble != null) messages.removeView(typingBubble);
+                typingBubble = null;
                 waiting = false;
                 sendButton.setEnabled(true);
+                cancelButton.setVisibility(View.GONE);
                 if (finalAnswer != null) {
+                    retryQuestion = "";
                     addHistory("model", finalAnswer);
                     addBubble(finalAnswer, false);
                 } else {
@@ -323,7 +343,9 @@ public class AiTutorActivity extends Activity {
                             history.remove(history.size() - 1);
                         }
                     }
-                    addBubble("Не получилось получить ответ: " + finalError, false);
+                    retryQuestion = question;
+                    addBubble("Не получилось получить ответ: " + finalError + "\\nНажми ↻, чтобы повторить.", false);
+                    sendButton.setText("↻");
                 }
             });
         });
