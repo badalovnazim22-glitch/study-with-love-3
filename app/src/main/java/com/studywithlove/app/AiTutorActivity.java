@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.text.Html;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -48,6 +49,8 @@ public class AiTutorActivity extends Activity {
     private EditText input;
     private Button sendButton;
     private boolean waiting = false;
+    private volatile HttpURLConnection activeConnection;
+    private volatile boolean destroyed = false;
 
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
@@ -77,7 +80,7 @@ public class AiTutorActivity extends Activity {
         LinearLayout heading = new LinearLayout(this);
         heading.setOrientation(LinearLayout.VERTICAL);
         TextView title = label("ИИ-помощник", 19, DARK, true);
-        TextView subtitle = label("Study with Love · Gemini", 11, MUTED, false);
+        TextView subtitle = label("Study with Love · ИИ-репетитор", 11, MUTED, false);
         heading.addView(title);
         heading.addView(subtitle);
         top.addView(heading, new LinearLayout.LayoutParams(0, -2, 1));
@@ -147,8 +150,8 @@ public class AiTutorActivity extends Activity {
         if (waiting) return;
         String question = input.getText().toString().trim();
         if (question.isEmpty()) return;
-        if (question.length() > 2000) {
-            input.setError("Максимум 2000 символов");
+        if (question.length() > 6000) {
+            input.setError("Максимум 6000 символов");
             return;
         }
         if (endpoint().isEmpty()) {
@@ -163,8 +166,16 @@ public class AiTutorActivity extends Activity {
         sendButton.setEnabled(false);
         TextView typing = addBubble("Думаю над ответом…", false);
         JSONArray payloadMessages = new JSONArray();
-        int start = Math.max(0, history.size() - 12);
-        for (int i = start; i < history.size(); i++) payloadMessages.put(history.get(i));
+        int start = Math.max(0, history.size() - 10);
+        if (start < history.size() && !"user".equals(history.get(start).optString("role"))) start++;
+        int totalChars = 0;
+        for (int i = start; i < history.size(); i++) {
+            JSONObject item = history.get(i);
+            String content = item.optString("content", "");
+            if (content.length() > 6000 || totalChars + content.length() > 24000) continue;
+            payloadMessages.put(item);
+            totalChars += content.length();
+        }
         JSONObject payload = new JSONObject();
         try { payload.put("messages", payloadMessages); } catch (Exception ignored) {}
         executor.execute(() -> {
@@ -175,6 +186,7 @@ public class AiTutorActivity extends Activity {
                 URL url = new URL(endpoint());
                 if (!"https".equalsIgnoreCase(url.getProtocol())) throw new IllegalArgumentException("Адрес сервера должен начинаться с https://");
                 connection = (HttpURLConnection) url.openConnection();
+                activeConnection = connection;
                 connection.setRequestMethod("POST");
                 connection.setConnectTimeout(15000);
                 connection.setReadTimeout(90000);
@@ -188,23 +200,28 @@ public class AiTutorActivity extends Activity {
                 int status = connection.getResponseCode();
                 InputStream stream = status >= 200 && status < 300 ? connection.getInputStream() : connection.getErrorStream();
                 String response = readAll(stream);
-                JSONObject result = new JSONObject(response);
+                JSONObject result = null;
+                try { result = new JSONObject(response); } catch (Exception ignored) {}
                 if (status < 200 || status >= 300) {
-                    error = result.optString("error", "Сервер вернул ошибку " + status);
+                    error = result != null ? result.optString("error", "Сервер вернул ошибку HTTP " + status) : "Сервер вернул некорректный ответ (HTTP " + status + "). Попробуй позже.";
+                } else if (result == null) {
+                    error = "Сервер вернул ответ в неизвестном формате. Попробуй позже.";
                 } else {
                     answer = result.optString("reply", "").trim();
-                    if (answer.isEmpty()) error = "ИИ вернул пустой ответ. Попробуй ещё раз.";
+                    if (answer.isEmpty()) error = "ИИ не прислал текстовый ответ. Попробуй ещё раз.";
                 }
             } catch (java.net.SocketTimeoutException e) {
                 error = "ИИ отвечает слишком долго. Попробуй ещё раз чуть позже.";
             } catch (Exception e) {
-                error = "Не удалось подключиться. Проверь интернет и адрес сервера.";
+                error = destroyed ? "Запрос отменён." : "Ошибка запроса: " + (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
             } finally {
+                activeConnection = null;
                 if (connection != null) connection.disconnect();
             }
             final String finalAnswer = answer;
             final String finalError = error;
             main.post(() -> {
+                if (destroyed || isFinishing()) return;
                 messages.removeView(typing);
                 waiting = false;
                 sendButton.setEnabled(true);
@@ -237,6 +254,11 @@ public class AiTutorActivity extends Activity {
 
     private TextView addBubble(String value, boolean user) {
         TextView bubble = label(value, 14, user ? Color.WHITE : DARK, false);
+        if (!user) {
+            String safe = value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+            safe = safe.replaceAll("(?m)^### (.+)$", "<b>$1</b>").replaceAll("(?m)^## (.+)$", "<big><b>$1</b></big>").replaceAll("\\*\\*(.+?)\\*\\*", "<b>$1</b>").replace("\n", "<br>");
+            bubble.setText(Html.fromHtml(safe, Html.FROM_HTML_MODE_COMPACT));
+        }
         bubble.setTextIsSelectable(true);
         bubble.setPadding(dp(14), dp(12), dp(14), dp(12));
         bubble.setBackground(round(user ? PINK : Color.WHITE, 20, user ? PINK : 0xFFEFE4E8));
@@ -305,7 +327,10 @@ public class AiTutorActivity extends Activity {
     }
 
     @Override protected void onDestroy() {
-        super.onDestroy();
+        destroyed = true;
+        HttpURLConnection connection = activeConnection;
+        if (connection != null) connection.disconnect();
         executor.shutdownNow();
+        super.onDestroy();
     }
 }
