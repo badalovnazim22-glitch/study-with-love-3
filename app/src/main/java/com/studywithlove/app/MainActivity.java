@@ -234,9 +234,9 @@ public class MainActivity extends Activity {
             });
             shell.requestApplyInsets();
         }
-        scroll.setAlpha(0f); scroll.setTranslationY(dp(7));
+        scroll.setAlpha(0f); scroll.setTranslationY(dp(navigatingBack?-12:14));
         scroll.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-        scroll.animate().alpha(1f).translationY(0f).setDuration(230)
+        scroll.animate().alpha(1f).translationY(0f).setDuration(290)
             .setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
         LinearLayout brandRow = new LinearLayout(this);
         brandRow.setGravity(Gravity.CENTER_VERTICAL);
@@ -586,7 +586,7 @@ public class MainActivity extends Activity {
         java.util.Collections.shuffle(choices,quizRandom);
         for(int i=0;i<4;i+=2){
             LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);
-            for(int j=i;j<i+2;j++){final int answer=choices.get(j);Button option=button(String.valueOf(answer),false);option.setTextSize(20);option.setOnClickListener(v->submitMathQuizAnswer(answer));LinearLayout.LayoutParams op=new LinearLayout.LayoutParams(0,dp(62),1f);op.setMargins(dp(3),0,dp(3),0);row.addView(option,op);}
+            for(int j=i;j<i+2;j++){final int answer=choices.get(j);Button option=button(String.valueOf(answer),false);option.setTextSize(20);option.setOnClickListener(v->{if(!quizActive)return;boolean correct=answer==quizAnswer;option.setBackground(shape(correct?0xFFE4F4E8:0xFFFFE8E8,22,correct?0xFF75B987:0xFFE58A8A));option.setTextColor(correct?0xFF287A43:0xFFB64242);if(!correct){for(int k=0;k<row.getChildCount();k++){View child=row.getChildAt(k);if(child instanceof Button&&((Button)child).getText().toString().equals(String.valueOf(quizAnswer))){child.setBackground(shape(0xFFE4F4E8,22,0xFF75B987));((Button)child).setTextColor(0xFF287A43);}}}haptic(option,correct);new Handler().postDelayed(()->submitMathQuizAnswer(answer),450);});LinearLayout.LayoutParams op=new LinearLayout.LayoutParams(0,dp(62),1f);op.setMargins(dp(3),0,dp(3),0);row.addView(option,op);}
             root.addView(row,lp(-1,-2,0,0,0,8));
         }
         TextView streak=text("🔥 Серия правильных ответов: "+quizStreak,13,PINK,true);streak.setGravity(Gravity.CENTER);root.addView(streak,lp(-1,40,0,8,0,0));
@@ -608,9 +608,9 @@ public class MainActivity extends Activity {
         if(!quizActive)return;
         stopQuizTimer();
         if(answer!=quizAnswer){endMathQuiz(false);return;}
-        quizScore+=10;quizStreak++;quizBestStreak=Math.max(quizBestStreak,quizStreak);
+        quizScore+=10;quizStreak++;quizBestStreak=Math.max(quizBestStreak,quizStreak);haptic(root,true);
         prefs.edit().putInt("quiz_total_correct",prefs.getInt("quiz_total_correct",0)+1).apply();
-        if(quizScore>prefs.getInt("quiz_best_score",0))prefs.edit().putInt("quiz_best_score",quizScore).apply();
+        if(quizScore>prefs.getInt("quiz_best_score",0)){prefs.edit().putInt("quiz_best_score",quizScore).apply();celebrate();}
         quizLevel=quizScore/50+1;
         unlockQuizAwards();
         showMathQuizQuestion();
@@ -638,7 +638,7 @@ public class MainActivity extends Activity {
         Button home=button("← Назад",false);home.setOnClickListener(v->onBackPressed());root.addView(home,lp(-1,48,0,0,0,0));
     }
 
-    private void unlockQuizAward(String key){if(!prefs.getBoolean(key,false)){String date=new SimpleDateFormat("d MMMM yyyy",new Locale("ru")).format(new Date());prefs.edit().putBoolean(key,true).putString("achievement_date_"+key,date).apply();}}
+    private void unlockQuizAward(String key){if(!prefs.getBoolean(key,false)){String date=new SimpleDateFormat("d MMMM yyyy",new Locale("ru")).format(new Date());prefs.edit().putBoolean(key,true).putString("achievement_date_"+key,date).apply();haptic(root,true);celebrate();}}
     private void unlockQuizAwards() {
         int total=prefs.getInt("quiz_total_correct",0),best=prefs.getInt("quiz_best_score",0);
         int[] thresholds={1,5,10,25,50,100};
@@ -865,7 +865,8 @@ public class MainActivity extends Activity {
         List<MiniQuestion> list=wrongOnly?miniWrongQuestions:miniQuestions;
         if(index>=list.size()){showMiniTestResult(wrongOnly);return;}
         MiniQuestion q=list.get(index);LinearLayout panel=card();panel.setPadding(dp(16),dp(18),dp(16),dp(18));addText(panel,"ВОПРОС "+(index+1)+" ИЗ "+list.size(),11,PINK,true);addText(panel,q.prompt,21,DARK,true);root.addView(panel,lp(-1,-2,0,0,0,14));
-        for(int i=0;i<q.options.length;i++){final int answer=i;Button b=button(q.options[i],false);b.setTextSize(18);root.addView(b,lp(-1,50,0,0,0,8));b.setOnClickListener(v->{if(answer==q.correct)miniScore++;else miniWrongQuestions.add(q);new android.app.AlertDialog.Builder(this).setTitle(answer==q.correct?"Верно! 🌸":"Разберём ошибку").setMessage((answer==q.correct?"Правильный ответ. ":"Правильный ответ: "+q.options[q.correct]+". ")+q.explanation).setPositiveButton("Дальше",(d,w)->renderMiniTest(index+1,wrongOnly)).setCancelable(false).show();});}
+        final boolean[] answered={false};
+        for(int i=0;i<q.options.length;i++){final int answer=i;Button b=button(q.options[i],false);b.setTextSize(18);root.addView(b,lp(-1,50,0,0,0,8));b.setOnClickListener(v->{if(answered[0])return;answered[0]=true;for(int k=0;k<q.options.length;k++){View option=root.getChildAt(root.getChildCount()-2-q.options.length+k);if(option instanceof Button){Button choice=(Button)option;if(k==q.correct){choice.setBackground(shape(0xFFE4F4E8,22,0xFF75B987));choice.setTextColor(0xFF287A43);}else if(k==answer){choice.setBackground(shape(0xFFFFE8E8,22,0xFFE58A8A));choice.setTextColor(0xFFB64242);}}}boolean correct=answer==q.correct;if(correct){miniScore++;haptic(b,true);}else{miniWrongQuestions.add(q);haptic(b,false);b.animate().translationX(dp(9)).setDuration(55).withEndAction(()->b.animate().translationX(-dp(9)).setDuration(55).withEndAction(()->b.animate().translationX(0).setDuration(55).start()).start()).start();}new Handler().postDelayed(()->{if(!isFinishing())renderMiniTest(index+1,wrongOnly);},650);});}
         Button quit=button("Завершить тест",false);quit.setOnClickListener(v->showMiniTestResult(wrongOnly));root.addView(quit,lp(-1,44,0,8,0,0));
     }
     private void showMiniTestResult(boolean wrongOnly){
@@ -928,7 +929,7 @@ public class MainActivity extends Activity {
     private void saveTopicProgressForChapter(String chapter,String topic,int value){
         int old=topicProgressForChapter(chapter,topic),next=Math.max(0,Math.min(100,value));String suffix=topicStorageSuffix(chapter,topic);
         SharedPreferences.Editor e=prefs.edit().putInt("progress_"+suffix,next).putBoolean("done_"+suffix,next==100);
-        if(old<100&&next==100)e.putInt("done_count",prefs.getInt("done_count",0)+1).putLong("topic_completed_at_"+suffix,System.currentTimeMillis());if(old==100&&next<100)e.putInt("done_count",Math.max(0,prefs.getInt("done_count",0)-1)).remove("topic_completed_at_"+suffix);e.apply();
+        if(old<100&&next==100){e.putInt("done_count",prefs.getInt("done_count",0)+1).putLong("topic_completed_at_"+suffix,System.currentTimeMillis());haptic(root,true);celebrate();}if(old==100&&next<100)e.putInt("done_count",Math.max(0,prefs.getInt("done_count",0)-1)).remove("topic_completed_at_"+suffix);e.apply();
     }
     private void saveTopicProgress(String topic,int value){saveTopicProgressForChapter(selectedChapter,topic,value);}
 
@@ -1363,13 +1364,13 @@ public class MainActivity extends Activity {
         currentScreen="flower";
         Set<String> days=new TreeSet<>(prefs.getStringSet("study_days",new TreeSet<String>()));
         int count=days.size(),waterCount=prefs.getInt("flower_water_count",0),petals=prefs.getInt("flower_petals",0);
-        int flowerIndex=Math.floorMod(prefs.getInt("flower_type",0),5);
+        int flowerIndex=Math.floorMod(prefs.getInt("flower_type",0),5);int streak=currentStreak();
         String stage=count>=30?"Пышное цветение":count>=14?"Цветочек окреп":count>=7?"Появились бутоны":count>=3?"Первые листочки":"Маленький росток";
         base("Мой цветочек","Он растёт вместе с твоими учебными победами");
         LinearLayout c=card();c.setGravity(Gravity.CENTER);
         android.widget.FrameLayout garden=new android.widget.FrameLayout(this);garden.setClipChildren(false);garden.setClipToPadding(false);
         FlowerPotView pot=new FlowerPotView(this);android.widget.FrameLayout.LayoutParams potLp=new android.widget.FrameLayout.LayoutParams(dp(142),dp(112),Gravity.CENTER);potLp.topMargin=dp(70);garden.addView(pot,potLp);
-        FlowerArtView art=new FlowerArtView(this,flowerIndex,count);android.widget.FrameLayout.LayoutParams flowerLp=new android.widget.FrameLayout.LayoutParams(dp(150),dp(150),Gravity.CENTER);flowerLp.topMargin=-dp(27);garden.addView(art,flowerLp);
+        FlowerArtView art=new FlowerArtView(this,flowerIndex,count,streak);android.widget.FrameLayout.LayoutParams flowerLp=new android.widget.FrameLayout.LayoutParams(dp(150),dp(150),Gravity.CENTER);flowerLp.topMargin=-dp(27);garden.addView(art,flowerLp);
         // Draw the pot rim and soil in front of the lower stem so the flower visibly grows from inside the pot.
         android.widget.FrameLayout.LayoutParams frontPotLp=new android.widget.FrameLayout.LayoutParams(dp(142),dp(112),Gravity.CENTER);frontPotLp.topMargin=dp(70);garden.addView(new FlowerPotView(this),frontPotLp);
         WaterCanView can=new WaterCanView(this);can.setVisibility(View.GONE);android.widget.FrameLayout.LayoutParams canLp=new android.widget.FrameLayout.LayoutParams(dp(66),dp(58),Gravity.RIGHT|Gravity.TOP);canLp.setMargins(0,dp(20),dp(12),0);garden.addView(can,canLp);
@@ -1410,9 +1411,9 @@ public class MainActivity extends Activity {
             p.setStyle(android.graphics.Paint.Style.STROKE);p.setStrokeWidth(dp(5));p.setStrokeCap(android.graphics.Paint.Cap.ROUND);p.setColor(0xFF397A45);android.graphics.Path stem=new android.graphics.Path();stem.moveTo(stemX,baseY);stem.cubicTo(stemX-4,baseY-55,stemX+8,headY+55,stemX,headY+8);c.drawPath(stem,p);p.setStyle(android.graphics.Paint.Style.FILL);
             android.graphics.Path left=new android.graphics.Path();left.moveTo(stemX,baseY*.79f);left.cubicTo(stemX-42,baseY*.69f,stemX-48,baseY*.59f,stemX-12,baseY*.64f);left.cubicTo(stemX-4,baseY*.67f,stemX-1,baseY*.73f,stemX,baseY*.79f);p.setShader(new android.graphics.LinearGradient(stemX-45,baseY*.6f,stemX+3,baseY*.8f,0xFF9BCB70,0xFF347A43,android.graphics.Shader.TileMode.CLAMP));c.drawPath(left,p);p.setShader(null);p.setColor(0xFFDBE9A4);p.setStrokeWidth(dp(1));c.drawLine(stemX-5,baseY*.73f,stemX-37,baseY*.65f,p);
             android.graphics.Path right=new android.graphics.Path();right.moveTo(stemX,baseY*.69f);right.cubicTo(stemX+40,baseY*.56f,stemX+49,baseY*.49f,stemX+13,baseY*.55f);right.cubicTo(stemX+4,baseY*.59f,stemX+1,baseY*.64f,stemX,baseY*.69f);p.setShader(new android.graphics.LinearGradient(stemX,baseY*.5f,stemX+45,baseY*.7f,0xFFB5D77C,0xFF397D48,android.graphics.Shader.TileMode.CLAMP));c.drawPath(right,p);p.setShader(null);p.setColor(0xFFDDEBA7);c.drawLine(stemX+5,baseY*.63f,stemX+38,baseY*.55f,p);
-            float fx=stemX,fy=headY;for(int ring=0;ring<2;ring++){int count=ring==0?12:10;for(int j=0;j<count;j++){c.save();c.rotate(j*360f/count+(ring==0?0:18),fx,fy);float yy=ring==0?-23:-18;petal(c,fx,fy+yy,ring==0?8.5f:7f,ring==0?27:21,ring==0?col[0]:col[1],col[1],col[2]);c.restore();}}
+            float fx=stemX,fy=headY;float openness=.58f+.42f*Math.min(7,Math.max(0,streak))/7f;c.save();c.scale(openness,openness,fx,fy);for(int ring=0;ring<2;ring++){int count=ring==0?12:10;for(int j=0;j<count;j++){c.save();c.rotate(j*360f/count+(ring==0?0:18),fx,fy);float yy=ring==0?-23:-18;petal(c,fx,fy+yy,ring==0?8.5f:7f,ring==0?27:21,ring==0?col[0]:col[1],col[1],col[2]);c.restore();}}
             p.setShader(new android.graphics.RadialGradient(fx-3,fy-4,14,new int[]{0xFFFFF4B2,0xFFFFC84D,0xFFB66A22},null,android.graphics.Shader.TileMode.CLAMP));c.drawCircle(fx,fy,13,p);p.setShader(null);p.setColor(0xFF8F5523);for(int k=0;k<18;k++){double a=k*2.399;float r=3+(k%4)*2;c.drawCircle(fx+(float)Math.cos(a)*r,fy+(float)Math.sin(a)*r,1.15f,p);}
-            if(days<3){p.setColor(0xFF6C9D4F);c.drawOval(fx-8,fy+20,fx+8,fy+43,p);}
+            c.restore();if(days<3){p.setColor(0xFF6C9D4F);c.drawOval(fx-8,fy+20,fx+8,fy+43,p);}
         }
     }
 
@@ -1892,7 +1893,38 @@ public class MainActivity extends Activity {
     private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(17), dp(16), dp(17), dp(16)); boolean night = prefs != null && "night".equals(prefs.getString("app_theme", "pink")); l.setBackground(shape(night ? 0xFF25212B : 0xFFFFFFFF, 23, night ? 0xFF403541 : 0xFFF3E9EC)); l.setElevation(dp(2)); return l; }
     private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, size, color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
     private TextView text(String value, int size, int color, boolean bold) { value=translate(value); TextView t = new TextView(this); t.setText(value); t.setTextSize(size); t.setTextColor(color); if (bold) t.setTypeface(Typeface.DEFAULT, Typeface.BOLD); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
-    private Button button(String label, boolean primary) { label=translate(label); Button b = new Button(this); b.setText(label); b.setTextSize(14); b.setTypeface(Typeface.DEFAULT, Typeface.BOLD); b.setAllCaps(false); b.setLetterSpacing(0.01f); b.setMinHeight(dp(48)); b.setPadding(dp(14), dp(8), dp(14), dp(8)); b.setElevation(primary ? dp(2) : 0); b.setTextColor(primary ? 0xFFFFFFFF : PINK); b.setBackground(shape(primary ? PINK : PALE, 22, primary ? PINK : 0xFFF2DDE4)); return b; }
+    private void applyPressFeedback(View view) {
+        view.setOnTouchListener((v,event)->{
+            if(event.getAction()==android.view.MotionEvent.ACTION_DOWN){
+                v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);
+                v.animate().scaleX(.97f).scaleY(.97f).setDuration(85).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
+            }else if(event.getAction()==android.view.MotionEvent.ACTION_UP||event.getAction()==android.view.MotionEvent.ACTION_CANCEL){
+                v.animate().scaleX(1f).scaleY(1f).setDuration(145).setInterpolator(new android.view.animation.OvershootInterpolator(1.15f)).start();
+            }
+            return false;
+        });
+    }
+    private void haptic(View view, boolean success) {
+        if(view!=null)view.performHapticFeedback(success?android.view.HapticFeedbackConstants.CONFIRM:android.view.HapticFeedbackConstants.REJECT);
+    }
+    private void celebrate() {
+        if(root==null)return;
+        final CelebrationView fx=new CelebrationView(this);
+        root.getOverlay().add(fx);
+        android.animation.ValueAnimator animator=android.animation.ValueAnimator.ofFloat(0f,1f);
+        animator.setDuration(1250);
+        animator.addUpdateListener(a->{fx.progress=(float)a.getAnimatedValue();fx.invalidate();});
+        animator.addListener(new android.animation.AnimatorListenerAdapter(){@Override public void onAnimationEnd(android.animation.Animator a){if(root!=null)root.getOverlay().remove(fx);}});
+        animator.start();
+    }
+    private class CelebrationView extends View {
+        float progress=0f; final android.graphics.Paint paint=new android.graphics.Paint(3);
+        final float[] x=new float[34],y=new float[34],speed=new float[34],size=new float[34],rotation=new float[34];
+        final int[] colors={0xFFFF8FB1,0xFFFFC66D,0xFFB7DCA5,0xFFC7A4E8,0xFFFFD9E4};
+        CelebrationView(android.content.Context c){super(c);java.util.Random r=new java.util.Random();for(int i=0;i<x.length;i++){x[i]=r.nextFloat();y[i]=-.12f-r.nextFloat()*.7f;speed=.55f+r.nextFloat()*.9f;size[i]=dp(3+r.nextInt(4));rotation[i]=r.nextFloat()*360f;}}
+        @Override protected void onDraw(android.graphics.Canvas canvas){super.onDraw(canvas);float w=getWidth(),h=getHeight();for(int i=0;i<x.length;i++){float yy=(y[i]+progress*speed[i]*1.5f)*h;if(yy<0||yy>h)continue;canvas.save();canvas.rotate(rotation[i]+progress*360f,x[i]*w,yy);paint.setColor(colors[i%colors.length]);paint.setStyle(android.graphics.Paint.Style.FILL);canvas.drawOval(x[i]*w-size[i],yy-size[i]*1.5f,x[i]*w+size[i],yy+size[i]*1.5f,paint);canvas.restore();}}
+    }
+    private Button button(String label, boolean primary) { label=translate(label); Button b = new Button(this); b.setText(label); b.setTextSize(14); b.setTypeface(Typeface.DEFAULT, Typeface.BOLD); b.setAllCaps(false); b.setLetterSpacing(0.01f); b.setMinHeight(dp(48)); b.setPadding(dp(14), dp(8), dp(14), dp(8)); b.setElevation(primary ? dp(2) : 0); b.setTextColor(primary ? 0xFFFFFFFF : PINK); android.graphics.drawable.Drawable bg=shape(primary ? PINK : PALE, 22, primary ? PINK : 0xFFF2DDE4); if(Build.VERSION.SDK_INT>=21){GradientDrawable mask=shape(0xFFFFFFFF,22,0);b.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x337D5264),bg,mask));}else b.setBackground(bg);applyPressFeedback(b);return b; }
     private String translate(String value){
         String lang=prefs==null?"ru":prefs.getString("app_language","ru");if("ru".equals(lang)||value==null)return value;
         String[][] pairs={
