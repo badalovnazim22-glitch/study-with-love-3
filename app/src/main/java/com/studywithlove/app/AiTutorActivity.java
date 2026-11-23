@@ -225,9 +225,9 @@ public class AiTutorActivity extends Activity {
                 String contextualQuestion = "Учебный контекст приложения: " + studyContext
                         + "\nОтвечай с учётом этих тем, объясняй понятным языком и не предполагай, что ученик уже знает сложные термины.\n\nВопрос: "
                         + content;
-                if (contextualQuestion.length() <= 9000) {
+                if (contextualQuestion.length() <= 6000 && totalChars + contextualQuestion.length() <= 24000) {
                     outgoing.put("content", contextualQuestion);
-                    totalChars += studyContext.length();
+
                 }
             }
             payloadMessages.put(outgoing);
