@@ -241,7 +241,7 @@ public class MainActivity extends Activity {
             addText(page,"Как тебя называть?",25,DARK,true);
             addText(page,"Можно просто ник — имя можно изменить позже в настройках.",14,MUTED,false);
             EditText input = new EditText(this);
-            input.setSingleLine(true); input.setText(name); input.setHint("Например, Аня или Sunny");
+            input.setSingleLine(true); input.setText(name); input.setHint("Можно просто ник"); input.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_DONE);
             input.setTextSize(18); input.setTextColor(DARK); input.setHintTextColor(MUTED);
             input.setPadding(dp(15),dp(10),dp(15),dp(10)); input.setBackground(shape(PALE,16,PINK));
             input.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(24)});
@@ -340,19 +340,21 @@ public class MainActivity extends Activity {
                     .putString("profile_gender",address).putString("app_theme",theme)
                     .putInt("app_accent_color",chosen).putString("learning_focus",focus)
                     .putInt("daily_goal_minutes",minutes).putInt("weekly_goal_minutes",minutes*5)
-                    .putBoolean("welcome_done",true).putBoolean("onboarding_gift_flower",true)
-                    .putInt("flower_petals",Math.max(1,prefs.getInt("flower_petals",0)))
+                    .putBoolean("welcome_done",true)
+                    .putBoolean("onboarding_gift_flower",true)
+                    .putInt("flower_petals",prefs.getInt("flower_petals",0)+(prefs.getBoolean("onboarding_gift_claimed",false)?0:1))
+                    .putBoolean("onboarding_gift_claimed",true)
                     .putString("onboarding_avatar",prefs.getString("onboarding_avatar","🌸")).apply();
             applySavedTheme();
             TextView flower=text("🌸",82,PINK,true);flower.setGravity(Gravity.CENTER);page.addView(flower,lp(-1,145,0,0,0,8));
             TextView confetti=text("✦   ✧   ✦   ✿   ✧",20,PINK,true);confetti.setGravity(Gravity.CENTER);page.addView(confetti,lp(-1,32,0,0,0,8));
             android.animation.ObjectAnimator confettiAnim=android.animation.ObjectAnimator.ofFloat(confetti,View.TRANSLATION_Y,-dp(8),dp(8));confettiAnim.setDuration(700);confettiAnim.setRepeatCount(5);confettiAnim.setRepeatMode(android.animation.ValueAnimator.REVERSE);confettiAnim.start();
             addText(page,"Рада познакомиться, "+(name.isEmpty()?"друг":name)+"!",24,DARK,true);
-            addText(page,"Твой первый цветочек уже ждёт тебя в приложении 🌷",14,MUTED,false);
-            LinearLayout gift=card();gift.setGravity(Gravity.CENTER);gift.setBackground(shape(PALE,18,PINK));addText(gift,"🎁  Подарок за регистрацию: первая наклейка-цветок",14,DARK,true);page.addView(gift,lp(-1,-2,0,16,0,10));
+            addText(page,"Рады, что ты здесь! Имя или ник всегда можно изменить позже в настройках.",14,MUTED,false);
+            LinearLayout gift=card();gift.setGravity(Gravity.CENTER);gift.setBackground(shape(PALE,18,PINK));addText(gift,"🎁  Подарок получен: +1 цветок в коллекцию 🌸",14,DARK,true);page.addView(gift,lp(-1,-2,0,16,0,10));
             addText(page,"Первый маленький успех — сделай 1 минуту фокуса.",14,MUTED,false);
             page.addView(new android.widget.Space(this),new LinearLayout.LayoutParams(1,0,1f));
-            Button begin=button("Начать 1 минуту фокуса",true);page.addView(begin,lp(-1,52,0,18,0,6));begin.setOnClickListener(v->{selectedStudyMinutes=1;timerRemainingMs=60000L;showPomodoro();});
+            Button begin=button("Начать 1 минуту фокуса",true);page.addView(begin,lp(-1,52,0,18,0,6));begin.setOnClickListener(v->{selectedStudyMinutes=1;timerRemainingMs=60000L;timerIsBreak=false;showPomodoro();startTimer();});
             Button later=button("Пропустить",false);page.addView(later,lp(-1,46,0,0,0,0));later.setOnClickListener(v->showHome());
         }
     }
