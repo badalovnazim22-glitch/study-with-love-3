@@ -865,18 +865,18 @@ public class MainActivity extends Activity {
         int answer;String prompt,explain;boolean decimalAnswer=false;
         if(pct){
             int a=20+quizRandom.nextInt(181),b=2+quizRandom.nextInt(9);
-            if(t.contains("пропорц")||t.contains("отношение")){int k=2+quizRandom.nextInt(6),x=2+quizRandom.nextInt(8);answer=x*k;prompt="В отношении "+x+":"+k+" первая величина равна "+x+". Чему равна вторая?";explain="Масштаб "+(answer/x)+": "+x+" · "+k+" = "+answer+".";}
+            if(t.contains("пропорц")||t.contains("отношение")){int unitPrice=2+quizRandom.nextInt(6),baseCount=2+quizRandom.nextInt(5),doubleCount=baseCount*2;answer=unitPrice*2;prompt=baseCount+" одинаковых предмета стоят "+(unitPrice*baseCount)+". Сколько стоят "+doubleCount+" таких предметов?";explain="Количество увеличилось в 2 раза, значит стоимость тоже: "+(unitPrice*baseCount)+" · 2 = "+answer+".";}
             else if(t.contains("числа по процент")||t.contains("по процент")){int p=10*(1+quizRandom.nextInt(8));answer=a;int part=a*p/100;prompt=part+" составляет "+p+"% какого числа?";answer=part*100/p;explain=answer+" · "+p+"% = "+part+".";}
             else if(t.contains("увелич")||t.contains("уменьш")){int p=10*(1+quizRandom.nextInt(4));answer=t.contains("уменьш")?a-a*p/100:a+a*p/100;prompt="Уменьши "+a+" на "+p+"%";if(t.contains("увелич"))prompt="Увеличь "+a+" на "+p+"%";explain=a+(t.contains("уменьш")?" − ":" + ")+(a*p/100)+" = "+answer+".";}
             else{int p=new int[]{5,10,20,25,50}[quizRandom.nextInt(5)];answer=a*p/100;prompt="Найди "+p+"% от "+a;explain=p+"% от "+a+" = "+answer+".";}
         }else if(dec){
             decimalAnswer=true;int a=12+quizRandom.nextInt(80),b=11+quizRandom.nextInt(70);
-            if(t.contains("сравнен")){answer=Math.max(a,b);prompt="Какое число больше: "+String.format(Locale.GERMANY,"%.1f",a/10.0)+" или "+String.format(Locale.GERMANY,"%.1f",b/10.0)+"?";explain="Сравни целые и десятые части чисел.";}
+            if(t.contains("сравнен")){answer=Math.max(a,b);prompt="Какое число больше: "+String.format(Locale.GERMANY,"%.1f",a/10.0)+" или "+String.format(Locale.GERMANY,"%.1f",b/10.0)+"?";explain="Сравни целые и десятые части чисел. Ответ: "+String.format(Locale.GERMANY,"%.1f",answer/10.0)+".";}
             else if(t.contains("округлен")){int n=125+quizRandom.nextInt(800);answer=(n+5)/10;prompt="Округли "+String.format(Locale.GERMANY,"%.2f",n/100.0)+" до десятых";explain="Получаем "+String.format(Locale.GERMANY,"%.1f",answer/10.0)+".";}
             else{answer=a+b;prompt="Вычисли "+String.format(Locale.GERMANY,"%.1f",a/10.0)+" + "+String.format(Locale.GERMANY,"%.1f",b/10.0);explain=String.format(Locale.GERMANY,"%.1f + %.1f = %.1f",a/10.0,b/10.0,answer/10.0);}
         }else if(frac){
             int d=2+quizRandom.nextInt(8),n=2+quizRandom.nextInt(9);
-            if(t.contains("сравнен")){int x=1+quizRandom.nextInt(d-1),y=1+quizRandom.nextInt(d-1);answer=x>=y?1:0;prompt="Сравни дроби "+x+"/"+d+" и "+y+"/"+d+". Какая больше?";explain="При одинаковых знаменателях больше дробь с большим числителем.";}
+            if(t.contains("сравнен")){int x=1+quizRandom.nextInt(d-1),y=1+quizRandom.nextInt(d-1);answer=Math.max(x,y);prompt="Для дробей "+x+"/"+d+" и "+y+"/"+d+" выбери больший числитель";explain="При одинаковых знаменателях больше дробь с большим числителем: "+answer+".";}
             else if(t.contains("смешан")||t.contains("правильн")||t.contains("неправильн")){int whole=1+quizRandom.nextInt(8),num=1+quizRandom.nextInt(d-1);answer=whole*d+num;prompt="Преобразуй "+whole+" "+num+"/"+d+" в неправильную дробь (числитель)";explain=whole+" · "+d+" + "+num+" = "+answer+".";}
             else if(t.contains("делен")){int numerator=1+quizRandom.nextInt(7),denominator=2+quizRandom.nextInt(7);answer=numerator;prompt="Вычисли "+numerator+"/"+denominator+" ÷ 1/"+denominator;explain="Деление на 1/"+denominator+" даёт "+answer+".";}
             else if(t.contains("умнож")){int x=1+quizRandom.nextInt(7),y=1+quizRandom.nextInt(7);answer=x;prompt="Вычисли "+x+"/3 · 3/"+y+" (числитель произведения)";explain="Сокращаем 3 и 3; числитель результата равен "+answer+".";}
