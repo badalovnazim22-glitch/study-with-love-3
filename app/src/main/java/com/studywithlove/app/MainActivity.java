@@ -1616,8 +1616,8 @@ public class MainActivity extends Activity {
         calendarCard.addView(weekHeader, lp(-1, 30, 0, 4, 0, 2));
         LinearLayout week = null;
         for (int slot = 0; slot < 42; slot++) {
-            if (slot % 7 == 0) { week = new LinearLayout(this); week.setOrientation(LinearLayout.HORIZONTAL); week.setGravity(Gravity.CENTER_VERTICAL); calendarCard.addView(week, lp(-1, 36, 0, 1, 0, 1)); }
-            TextView cell = text("", 11, DARK, true); cell.setGravity(Gravity.CENTER); cell.setIncludeFontPadding(false);
+            if (slot % 7 == 0) { week = new LinearLayout(this); week.setOrientation(LinearLayout.HORIZONTAL); week.setGravity(Gravity.CENTER_VERTICAL); calendarCard.addView(week, lp(-1, 48, 0, 1, 0, 1)); }
+            TextView cell = text("", 12, DARK, true); cell.setGravity(Gravity.CENTER); cell.setIncludeFontPadding(false); cell.setMinHeight(dp(48)); cell.setMinWidth(dp(40));
             if (slot >= offset && slot < offset + daysInMonth) {
                 int day = slot - offset + 1;
                 String dateKey = String.format(Locale.US, "%04d-%02d-%02d", yearNumber, monthNumber + 1, day);
@@ -1626,7 +1626,7 @@ public class MainActivity extends Activity {
                 cell.setBackground(shape(heatColor,11,isToday?PINK:(studied?0xFFFFC6D7:0x00FFFFFF)));
                 cell.setElevation(dp(1)); if (isToday) cell.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             }
-            LinearLayout.LayoutParams dayCell=new LinearLayout.LayoutParams(0,dp(30),1f); dayCell.gravity=Gravity.CENTER; dayCell.setMargins(dp(2),0,dp(2),0); week.addView(cell,dayCell);
+            LinearLayout.LayoutParams dayCell=new LinearLayout.LayoutParams(0,dp(48),1f); dayCell.gravity=Gravity.CENTER; dayCell.setMargins(dp(2),0,dp(2),0); week.addView(cell,dayCell);
         }
         addText(calendarCard, "♥ Учебные дни: " + countStudyDaysThisMonth(studiedDays, yearNumber, monthNumber) + "   ·   Заходила: " + countStudyDaysThisMonth(visitedDays, yearNumber, monthNumber), 12, MUTED, false);
         progressCalendarHost.addView(calendarCard, lp(-1, -2, 0, 0, 0, 0));
@@ -1974,7 +1974,7 @@ public class MainActivity extends Activity {
                 String value=prefs.getString("diary_"+id,""),tag=prefs.getString("diary_tag_"+id,"Учёба");
                 LinearLayout entry=new LinearLayout(this);entry.setOrientation(LinearLayout.VERTICAL);entry.setPadding(dp(2),dp(7),dp(2),dp(10));
                 LinearLayout top=new LinearLayout(this);top.setGravity(Gravity.CENTER_VERTICAL);TextView date=text("✿  "+new SimpleDateFormat("d MMMM yyyy · HH:mm",new Locale("ru")).format(new Date(stamp)),10,PINK,true);top.addView(date,new LinearLayout.LayoutParams(0,dp(48),1f));
-                TextView edit=text("✎",19,MUTED,true);edit.setGravity(Gravity.CENTER);top.addView(edit,lp(34,32,0,0,2,0));TextView del=text("⌫",18,MUTED,true);del.setGravity(Gravity.CENTER);top.addView(del,lp(34,32,0,0,0,0));entry.addView(top,lp(-1,34,0,0,0,2));
+                TextView edit=text("✎",19,MUTED,true);edit.setGravity(Gravity.CENTER);edit.setContentDescription("Редактировать запись");top.addView(edit,lp(48,48,0,0,2,0));TextView del=text("⌫",18,MUTED,true);del.setGravity(Gravity.CENTER);del.setContentDescription("Удалить запись");top.addView(del,lp(48,48,0,0,0,0));entry.addView(top,lp(-1,48,0,0,0,2));
                 TextView tagView=text("#"+tag,10,PINK,true);entry.addView(tagView,lp(-1,19,0,0,0,2));TextView body=text(value,14,DARK,false);body.setGravity(Gravity.TOP);body.setPadding(0,dp(2),0,dp(7));entry.addView(body,lp(-1,-2,0,0,0,0));
                 LinearLayout editArea=new LinearLayout(this);editArea.setOrientation(LinearLayout.VERTICAL);editArea.setVisibility(View.GONE);EditText editText=new EditText(this);editText.setText(value);editText.setTextSize(14);editText.setTextColor(DARK);editText.setGravity(Gravity.TOP);editText.setMinLines(3);editText.setBackground(shape(0xFFFFF9F7,14,0xFFEADDE2));editArea.addView(editText,lp(-1,92,0,0,0,6));
                 Button saveInline=button("Сохранить",true),cancel=button("Отмена",false);editArea.addView(saveInline,lp(-1, 48,0,0,0,3));editArea.addView(cancel,lp(-1,38,0,0,0,0));entry.addView(editArea,lp(-1,-2,0,0,0,0));
@@ -2029,8 +2029,8 @@ public class MainActivity extends Activity {
             LinearLayout entry=new LinearLayout(this);entry.setOrientation(LinearLayout.VERTICAL);entry.setPadding(dp(2),dp(9),dp(2),dp(12));
             LinearLayout top=new LinearLayout(this);top.setGravity(Gravity.CENTER_VERTICAL);
             TextView date=text("✿  "+new SimpleDateFormat("d MMMM yyyy · HH:mm",new Locale("ru")).format(new Date(Long.parseLong(id))),11,PINK,true);top.addView(date,new LinearLayout.LayoutParams(0,dp(34),1f));
-            TextView edit=text("✎",21,MUTED,true);edit.setGravity(Gravity.CENTER);top.addView(edit,lp(38,34,0,0,2,0));
-            TextView del=text("⌫",20,MUTED,true);del.setGravity(Gravity.CENTER);top.addView(del,lp(38,34,0,0,0,0));
+            TextView edit=text("✎",21,MUTED,true);edit.setGravity(Gravity.CENTER);edit.setContentDescription("Редактировать запись");top.addView(edit,lp(48,48,0,0,2,0));
+            TextView del=text("⌫",20,MUTED,true);del.setGravity(Gravity.CENTER);del.setContentDescription("Удалить запись");top.addView(del,lp(48,48,0,0,0,0));
             entry.addView(top,lp(-1,36,0,0,0,3));
             String tag=prefs.getString("diary_tag_"+id,"Учёба");TextView tagView=text("#"+tag,11,PINK,true);entry.addView(tagView,lp(-1,22,0,0,0,4));
             TextView body=text(value,15,DARK,false);body.setGravity(Gravity.TOP);body.setPadding(0,dp(3),0,dp(8));entry.addView(body,lp(-1,-2,0,0,0,0));
