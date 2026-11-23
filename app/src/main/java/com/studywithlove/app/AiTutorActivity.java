@@ -87,6 +87,7 @@ public class AiTutorActivity extends Activity {
         top.setGravity(Gravity.CENTER_VERTICAL);
         TextView back = new TextView(this);
         back.setText("‹");
+        back.setContentDescription("Назад");
         back.setTextSize(34);
         back.setTextColor(PINK);
         back.setGravity(Gravity.CENTER);
@@ -95,11 +96,12 @@ public class AiTutorActivity extends Activity {
         LinearLayout heading = new LinearLayout(this);
         heading.setOrientation(LinearLayout.VERTICAL);
         TextView title = label("ИИ-помощник", 19, DARK, true);
-        TextView subtitle = label("Study with Love · ИИ-репетитор", 11, MUTED, false);
+        TextView subtitle = label("Study with Love · ИИ-репетитор", 13, MUTED, false);
         heading.addView(title);
         heading.addView(subtitle);
         top.addView(heading, new LinearLayout.LayoutParams(0, -2, 1));
         TextView settings = label("⚙", 23, PINK, true);
+        settings.setContentDescription("Настройки подключения ИИ");
         settings.setGravity(Gravity.CENTER);
         top.addView(settings, new LinearLayout.LayoutParams(dp(44), dp(44)));
         settings.setOnClickListener(v -> showEndpointDialog());
@@ -117,12 +119,13 @@ public class AiTutorActivity extends Activity {
         suggestions.setOrientation(LinearLayout.HORIZONTAL);
         String[] prompts = {"Объясни тему", "Разбери задачу", "Составь тест"};
         for (String prompt : prompts) {
-            TextView chip = label(prompt, 11, PINK, true);
+            TextView chip = label(prompt, 13, PINK, true);
             chip.setGravity(Gravity.CENTER);
             chip.setPadding(dp(10), dp(9), dp(10), dp(9));
             chip.setBackground(round(Color.WHITE, 18, 0xFFEEDDE3));
-            LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(0, -2, 1);
-            cp.setMargins(dp(2), 0, dp(2), dp(8));
+            chip.setMinHeight(dp(48));
+            LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(-2, -2);
+            cp.setMargins(dp(2), 0, dp(6), dp(8));
             suggestions.addView(chip, cp);
             chip.setOnClickListener(v -> {
                 input.setText(prompt + ": ");
@@ -137,7 +140,7 @@ public class AiTutorActivity extends Activity {
         composer.setPadding(dp(9), dp(5), dp(5), dp(5));
         composer.setBackground(round(Color.WHITE, 24, 0xFFEADDE2));
         input = new EditText(this);
-        input.setTextSize(15);
+        input.setTextSize(16);
         input.setTextColor(DARK);
         input.setHintTextColor(MUTED);
         input.setHint("Напиши вопрос…");
@@ -149,12 +152,13 @@ public class AiTutorActivity extends Activity {
         composer.addView(input, new LinearLayout.LayoutParams(0, -2, 1));
         sendButton = new Button(this);
         sendButton.setText("➤");
+        sendButton.setContentDescription("Отправить сообщение");
         sendButton.setTextSize(18);
         sendButton.setTextColor(Color.WHITE);
         sendButton.setAllCaps(false);
         sendButton.setPadding(0, 0, 0, 0);
         sendButton.setBackground(round(PINK, 20, PINK));
-        composer.addView(sendButton, new LinearLayout.LayoutParams(dp(48), dp(46)));
+        composer.addView(sendButton, new LinearLayout.LayoutParams(dp(48), dp(48)));
         sendButton.setOnClickListener(v -> sendMessage());
         page.addView(composer, new LinearLayout.LayoutParams(-1, -2));
 
@@ -268,7 +272,7 @@ public class AiTutorActivity extends Activity {
     }
 
     private TextView addBubble(String value, boolean user) {
-        TextView bubble = label(value, 14, user ? Color.WHITE : DARK, false);
+        TextView bubble = label(value, 15, user ? Color.WHITE : DARK, false);
         if (!user) {
             String safe = value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
             safe = safe.replaceAll("(?m)^### (.+)$", "<b>$1</b>").replaceAll("(?m)^## (.+)$", "<big><b>$1</b></big>").replaceAll("\\*\\*(.+?)\\*\\*", "<b>$1</b>").replace("\n", "<br>");
@@ -324,6 +328,7 @@ public class AiTutorActivity extends Activity {
         TextView view = new TextView(this);
         view.setText(value);
         view.setTextSize(size);
+        view.setTypeface(android.graphics.Typeface.create(fontFamily, bold ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL));
         view.setTextColor(color);
         if (bold) view.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
         return view;
