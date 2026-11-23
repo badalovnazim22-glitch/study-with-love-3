@@ -820,6 +820,130 @@ public class MainActivity extends Activity {
         host.addView(moodCard, lp(-1, -2, 0, 0, 0, 12));
     }
 
+
+    private String seasonalName(){
+        int month=Calendar.getInstance(AppTime.zone()).get(Calendar.MONTH);
+        if(month==11||month<=1)return "Зима";
+        if(month>=2&&month<=4)return "Весна";
+        if(month>=5&&month<=7)return "Лето";
+        return "Осень";
+    }
+
+    private void addDailyLoginReward(LinearLayout host){
+        String today=todayKey();
+        if(today.equals(prefs.getString("login_reward_date","")))return;
+        LinearLayout reward=card();reward.setPadding(dp(14),dp(12),dp(14),dp(12));
+        reward.setBackground(shape(PALE,18,PINK));
+        addText(reward,"🎁  ЕЖЕДНЕВНЫЙ ПОДАРОК",12,PINK,true);
+        addText(reward,"Ты заглянула сегодня — забери цветочек для своей коллекции.",13,DARK,false);
+        Button claim=button("Получить награду  +1 🌸",true);
+        reward.addView(claim,lp(-1,44,0,8,0,0));
+        claim.setOnClickListener(v->{
+            if(today.equals(prefs.getString("login_reward_date","")))return;
+            prefs.edit().putString("login_reward_date",today)
+                    .putInt("flower_petals",prefs.getInt("flower_petals",0)+1)
+                    .putInt("login_reward_total",prefs.getInt("login_reward_total",0)+1).apply();
+            showHome();
+        });
+        host.addView(reward,lp(-1,-2,0,0,0,10));
+    }
+
+    private void addDailyQuoteCard(LinearLayout host){
+        String[] quotes={
+            "Маленькие шаги каждый день приводят к большим переменам.",
+            "Не нужно быть идеальной — достаточно продолжать.",
+            "Твой темп тоже правильный. Главное — не забывать о себе.",
+            "Каждая попытка — часть твоего роста.",
+            "Сегодня можно начать с самого маленького шага.",
+            "Ты уже проделала путь, которым можно гордиться.",
+            "Отдых и забота о себе тоже часть успеха."
+        };
+        Calendar c=Calendar.getInstance(AppTime.zone());
+        int index=Math.floorMod(c.get(Calendar.DAY_OF_YEAR)+c.get(Calendar.YEAR),quotes.length);
+        LinearLayout quote=card();quote.setPadding(dp(14),dp(12),dp(14),dp(12));
+        addText(quote,"✧  ЦИТАТА ДНЯ",11,PINK,true);
+        addText(quote,"«"+quotes[index]+"»",14,DARK,true);
+        Button toDiary=button("В дневник ♡",false);quote.addView(toDiary,lp(-1,40,0,6,0,0));
+        toDiary.setOnClickListener(v->{
+            String date=todayKey(),id="quote-"+date;
+            Set<String> ids=new TreeSet<>(prefs.getStringSet("diary_ids",new TreeSet<String>()));
+            ids.add(id);
+            prefs.edit().putString("diary_"+id,quotes[index]).putString("diary_tag_"+id,"Цитата дня")
+                    .putString("diary_date_"+id,date).putStringSet("diary_ids",ids).apply();
+            showDiary();
+        });
+        host.addView(quote,lp(-1,-2,0,0,0,10));
+    }
+
+    private void addSeasonalThemeCard(LinearLayout host){
+        String season=seasonalName();
+        String emoji="Зима".equals(season)?"❄":("Весна".equals(season)?"🌷":("Лето".equals(season)?"☀":"🍂"));
+        LinearLayout card=card();card.setOrientation(LinearLayout.HORIZONTAL);card.setGravity(Gravity.CENTER_VERTICAL);
+        card.setPadding(dp(13),dp(10),dp(13),dp(10));
+        LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);
+        addText(words,emoji+"  Сезонное оформление · "+season,13,DARK,true);
+        addText(words,"Нежные сезонные оттенки для приложения",11,MUTED,false);
+        card.addView(words,new LinearLayout.LayoutParams(0,-2,1f));
+        Button toggle=button(prefs.getBoolean("seasonal_themes_enabled",false)?"Выключить":"Включить",true);
+        card.addView(toggle,lp(100,40,6,0,0,0));
+        toggle.setOnClickListener(v->{
+            boolean enabled=!prefs.getBoolean("seasonal_themes_enabled",false);
+            prefs.edit().putBoolean("seasonal_themes_enabled",enabled).apply();
+            applySavedTheme();showHome();
+        });
+        host.addView(card,lp(-1,-2,0,0,0,10));
+    }
+
+    private void addStreakNotice(LinearLayout host){
+        int notice=prefs.getInt("streak_record_notice",0);
+        if(notice<=0)return;
+        LinearLayout card=card();card.setPadding(dp(14),dp(12),dp(14),dp(12));
+        addText(card,"🏆  Новый личный рекорд!",16,PINK,true);
+        addText(card,"Уже "+notice+" "+dayWord(notice)+" серии. Поздравляю — это твой лучший результат!",13,DARK,false);
+        host.addView(card,lp(-1,-2,0,0,0,10));
+        prefs.edit().remove("streak_record_notice").apply();
+    }
+
+    private void addSecretStreakCard(LinearLayout host){
+        int streak=currentStreak();
+        if(streak<7)return;
+        int claimed=prefs.getInt("secret_streak_claimed",0);
+        if(claimed>=streak)return;
+        LinearLayout secret=card();secret.setPadding(dp(14),dp(12),dp(14),dp(12));
+        secret.setBackground(shape(0xFFFFF1D8,18,0xFFE7C78C));
+        addText(secret,"🔒  СЕКРЕТНАЯ НАГРАДА",12,0xFF9A6A24,true);
+        addText(secret,"Семь дней подряд! Ты открыла секретную карточку 🌟",14,DARK,true);
+        Button reveal=button("Открыть подарок",true);secret.addView(reveal,lp(-1,44,0,8,0,0));
+        reveal.setOnClickListener(v->{
+            prefs.edit().putInt("secret_streak_claimed",streak)
+                    .putInt("flower_petals",prefs.getInt("flower_petals",0)+3)
+                    .putBoolean("secret_streak_card_unlocked",true).apply();
+            new android.app.AlertDialog.Builder(this).setTitle("Секрет раскрыт! 🌸")
+                    .setMessage("Ты получила 3 цветочка в коллекцию. Продолжай в своём ритме — без давления и спешки.")
+                    .setPositiveButton("Ура!",(d,w)->showHome()).show();
+        });
+        host.addView(secret,lp(-1,-2,0,0,0,10));
+    }
+
+    private void addSundayWeeklySummary(LinearLayout host){
+        Calendar now=Calendar.getInstance(AppTime.zone());
+        if(now.get(Calendar.DAY_OF_WEEK)!=Calendar.SUNDAY)return;
+        String key=weekKey();
+        if(key.equals(prefs.getString("weekly_summary_seen","")))return;
+        int minutes=weeklyMinutesLast7Days();
+        Set<String> days=new TreeSet<>(prefs.getStringSet("study_days",new TreeSet<String>()));
+        Calendar from=(Calendar)now.clone();from.add(Calendar.DAY_OF_YEAR,-6);
+        int active=0;
+        for(int i=0;i<7;i++){String date=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(from.getTime());if(days.contains(date))active++;from.add(Calendar.DAY_OF_YEAR,1);}
+        LinearLayout summary=card();summary.setPadding(dp(14),dp(12),dp(14),dp(12));
+        addText(summary,"🌷  ТВОЯ НЕДЕЛЯ",12,PINK,true);
+        addText(summary,minutes+" минут учёбы · "+active+" активных "+dayWord(active),17,DARK,true);
+        addText(summary,"Спасибо, что находила время для себя. На следующей неделе можно двигаться в своём темпе.",12,MUTED,false);
+        Button close=button("Спасибо!",false);summary.addView(close,lp(-1,40,0,6,0,0));
+        close.setOnClickListener(v->{prefs.edit().putString("weekly_summary_seen",key).apply();showHome();});
+        host.addView(summary,lp(-1,-2,0,0,0,10));
+    }
+
     private void showHome() {
         currentScreen = "home";
         StudyWidgetProvider.updateAll(this);
@@ -836,6 +960,13 @@ public class MainActivity extends Activity {
                 : (currentStreak() > 0 ? "🔥 Серия: " + currentStreak() + " " + dayWord(currentStreak()) : "Начни новую серию сегодня") + " · Осталось " + remaining + " мин. до цели дня";
         base(greetingTitle, homeSubtitle);
         addDailyMoodCard(root);
+        addDailyLoginReward(root);
+        addDailyQuoteCard(root);
+        addSeasonalThemeCard(root);
+        addStreakNotice(root);
+        addSecretStreakCard(root);
+        addSundayWeeklySummary(root);
+
 
         int totalTopics = 0, completedTopics = 0;
         for (Map.Entry<String, List<String>> entry : chapters.entrySet()) {
@@ -995,6 +1126,10 @@ public class MainActivity extends Activity {
         aiCard.setOnClickListener(v -> launchAiTutor());
         root.addView(aiCard, lp(-1, -2, 0, 0, 0, 14));
 
+        Button moreToggle=button(prefs.getBoolean("home_show_more",false)?"Скрыть дополнительные разделы":"Показать остальные разделы",false);
+        moreToggle.setOnClickListener(v->{prefs.edit().putBoolean("home_show_more",!prefs.getBoolean("home_show_more",false)).apply();showHome();});
+        root.addView(moreToggle,lp(-1,44,0,2,0,8));
+        if(prefs.getBoolean("home_show_more",false)){
         LinearLayout study2 = new LinearLayout(this);
         study2.setOrientation(LinearLayout.HORIZONTAL);
         ritualTile(study2, "▦", "Планировщик", "План на день", this::showPlanner);
@@ -1038,6 +1173,7 @@ public class MainActivity extends Activity {
         reminder.setOnClickListener(v -> showReminderSettings());
         root.addView(reminder, lp(-1, -2, 0, 0, 0, 4));
 
+        }
         TextView made = text("Сделано с любовью ♡", 12, MUTED, false);
         made.setGravity(Gravity.CENTER);
         root.addView(made, lp(-1, 43, 0, 8, 0, 0));
@@ -1666,8 +1802,10 @@ public class MainActivity extends Activity {
         if (!today.equals(last)) {
             int streak = prefs.getInt("current_streak", 0);
             if (isYesterday(last)) streak++; else if(isOneDayGap(last)&&!weekKey().equals(prefs.getString("streak_freeze_week",""))){streak++;prefs.edit().putString("streak_freeze_week",weekKey()).putString("streak_freeze_used_date",today).apply();}else streak = 1;
+            int previousRecord=prefs.getInt("longest_streak",0);
             prefs.edit().putInt("current_streak", streak)
-                    .putInt("longest_streak", Math.max(streak, prefs.getInt("longest_streak", 0)))
+                    .putInt("longest_streak", Math.max(streak, previousRecord))
+                    .putInt("streak_record_notice", streak>previousRecord?streak:0)
                     .putString("last_study_date", today)
                     .putStringSet("study_days", history).apply();
             StudyWidgetProvider.updateAll(this);updateAchievementDates();
