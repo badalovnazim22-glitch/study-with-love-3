@@ -140,7 +140,7 @@ public class AiTutorActivity extends Activity {
             TextView chip = label(prompt, 13, PINK, true);
             chip.setGravity(Gravity.CENTER);
             chip.setPadding(dp(10), dp(9), dp(10), dp(9));
-            chip.setBackground(round(Color.WHITE, 18, 0xFFEEDDE3));
+            chip.setBackground(round(PALE, 18, PALE));
             chip.setMinHeight(dp(48));
             LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(-2, -2);
             cp.setMargins(dp(2), 0, dp(6), dp(8));
@@ -157,7 +157,7 @@ public class AiTutorActivity extends Activity {
         LinearLayout composer = new LinearLayout(this);
         composer.setGravity(Gravity.CENTER_VERTICAL);
         composer.setPadding(dp(9), dp(5), dp(5), dp(5));
-        composer.setBackground(round(Color.WHITE, 24, 0xFFEADDE2));
+        composer.setBackground(round(PALE, 24, PALE));
         input = new EditText(this);
         input.setTextSize(16);
         input.setTextColor(DARK);
@@ -300,7 +300,7 @@ public class AiTutorActivity extends Activity {
         }
         bubble.setTextIsSelectable(true);
         bubble.setPadding(dp(14), dp(12), dp(14), dp(12));
-        bubble.setBackground(round(user ? PINK : Color.WHITE, 20, user ? PINK : 0xFFEFE4E8));
+        bubble.setBackground(round(user ? PINK : PALE, 20, user ? PINK : PALE));
         LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2);
         p.setMargins(user ? dp(34) : 0, 0, user ? 0 : dp(34), dp(9));
         messages.addView(bubble, p);
