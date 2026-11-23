@@ -111,13 +111,13 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 33) {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(0, this::handleBackNavigation);
         }
-        getWindow().getDecorView().setBackgroundColor(BG);
-        getWindow().setStatusBarColor(0xFFFFF9F7);
-        getWindow().setNavigationBarColor(0xFFFFF9F7);
-        updateSystemBarIcons();
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
-        SharedPreferences timerPrefs=getSharedPreferences("timer_runtime",MODE_PRIVATE);if(!timerPrefs.contains("timer_service_end_wall")&&prefs.contains("timer_service_end_wall")){SharedPreferences.Editor migrate=timerPrefs.edit();migrate.putLong("timer_service_end_wall",prefs.getLong("timer_service_end_wall",0)).putLong("timer_service_duration",prefs.getLong("timer_service_duration",60000)).putBoolean("timer_service_break",prefs.getBoolean("timer_service_break",false)).apply();prefs.edit().remove("timer_service_end_wall").remove("timer_service_duration").remove("timer_service_break").apply();}long restoredEnd=timerPrefs.getLong("timer_service_end_wall",0);if(restoredEnd>System.currentTimeMillis()){timerRunning=true;timerIsBreak=timerPrefs.getBoolean("timer_service_break",false);timerRemainingMs=restoredEnd-System.currentTimeMillis();timerEndElapsed=SystemClock.elapsedRealtime()+timerRemainingMs;long duration=timerPrefs.getLong("timer_service_duration",timerRemainingMs);timerSessionStarted=SystemClock.elapsedRealtime()-Math.max(0,duration-timerRemainingMs);}
         applySavedTheme();
+        getWindow().getDecorView().setBackgroundColor(BG);
+        getWindow().setStatusBarColor(BG);
+        getWindow().setNavigationBarColor(BG);
+        updateSystemBarIcons();
+        SharedPreferences timerPrefs=getSharedPreferences("timer_runtime",MODE_PRIVATE);if(!timerPrefs.contains("timer_service_end_wall")&&prefs.contains("timer_service_end_wall")){SharedPreferences.Editor migrate=timerPrefs.edit();migrate.putLong("timer_service_end_wall",prefs.getLong("timer_service_end_wall",0)).putLong("timer_service_duration",prefs.getLong("timer_service_duration",60000)).putBoolean("timer_service_break",prefs.getBoolean("timer_service_break",false)).apply();prefs.edit().remove("timer_service_end_wall").remove("timer_service_duration").remove("timer_service_break").apply();}long restoredEnd=timerPrefs.getLong("timer_service_end_wall",0);if(restoredEnd>System.currentTimeMillis()){timerRunning=true;timerIsBreak=timerPrefs.getBoolean("timer_service_break",false);timerRemainingMs=restoredEnd-System.currentTimeMillis();timerEndElapsed=SystemClock.elapsedRealtime()+timerRemainingMs;long duration=timerPrefs.getLong("timer_service_duration",timerRemainingMs);timerSessionStarted=SystemClock.elapsedRealtime()-Math.max(0,duration-timerRemainingMs);}
         getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG);
         Set<String> visits = new TreeSet<>(prefs.getStringSet("visit_days", new TreeSet<String>())); visits.add(todayKey()); prefs.edit().putStringSet("visit_days", visits).apply();
         // Migrate the last recorded study date from older app versions into the calendar history.
@@ -471,24 +471,6 @@ public class MainActivity extends Activity {
         }
         root.addView(brandRow, lp(-1, 48, 0, 0, 0, 16));
         }
-        if (!currentScreen.equals("home") && !currentScreen.equals("welcome")) {
-            LinearLayout topNav = new LinearLayout(this);
-            topNav.setGravity(Gravity.CENTER_VERTICAL);
-            Button backArrow = button("‹", false);
-            backArrow.setTextSize(28);
-            backArrow.setContentDescription("Назад");
-            topNav.addView(backArrow, lp(48, 48, 0, 0, 10, 0));
-            backArrow.setOnClickListener(v -> handleBackNavigation());
-            String breadcrumb = currentScreen.equals("topic") && selectedChapter != null
-                ? selectedChapter.replaceFirst("^[^ ]+\\s*", "") + "  ›  " + (selectedTopic == null ? title : selectedTopic)
-                : currentScreen.equals("topics") && selectedChapter != null
-                    ? selectedChapter.replaceFirst("^[^ ]+\\s*", "") : "";
-            TextView crumb = text(breadcrumb, 13, MUTED, true);
-            crumb.setMaxLines(1);
-            crumb.setEllipsize(android.text.TextUtils.TruncateAt.END);
-            topNav.addView(crumb, new LinearLayout.LayoutParams(0, dp(48), 1f));
-            root.addView(topNav, lp(-1, 48, 0, 0, 0, 8));
-        }
         TextView h = text(title, 23, DARK, true);
         h.setLetterSpacing(-0.02f);
         root.addView(h, lp(-1, -2, 0, 0, 0, 6));
@@ -503,8 +485,8 @@ public class MainActivity extends Activity {
         String active=currentScreen.equals("home")?"home":(currentScreen.equals("chapters")||currentScreen.equals("math_chapters")||currentScreen.equals("topics")||currentScreen.equals("topic"))?"math":currentScreen.equals("progress")||currentScreen.equals("flower")||currentScreen.equals("achievements")||currentScreen.equals("stats")?"progress":currentScreen.equals("exam")?"exam":currentScreen.equals("diary")||currentScreen.equals("letters")?"diary":currentScreen.equals("pomodoro")?"timer":"";
         String[] keys={"home","math","progress","exam","diary","timer"};
         for(int i=0;i<keys.length;i++){final String key=keys[i];boolean selected=key.equals(active);LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.VERTICAL);item.setGravity(Gravity.CENTER);item.setPadding(dp(1),dp(4),dp(1),dp(3));item.setBackground(selected?shape(PALE,14,0):shape(0x00FFFFFF,14,0));
-            TextView icon=text(icons[i],22,selected?PINK:MUTED,true);icon.setGravity(Gravity.CENTER);icon.setIncludeFontPadding(false);item.addView(icon,lp(-1,29,0,0,0,2));
-            TextView label=text(labels[i],10,selected?PINK:MUTED,selected);label.setGravity(Gravity.CENTER);label.setMaxLines(1);label.setSingleLine(true);label.setIncludeFontPadding(false);item.addView(label,lp(-1,19,0,0,0,0));
+            TextView icon=textFixed(icons[i],22,selected?PINK:MUTED,true);icon.setGravity(Gravity.CENTER);icon.setIncludeFontPadding(false);item.addView(icon,lp(-1,29,0,0,0,2));
+            TextView label=textFixed(labels[i],10,selected?PINK:MUTED,selected);label.setGravity(Gravity.CENTER);label.setMaxLines(1);label.setSingleLine(true);label.setIncludeFontPadding(false);item.addView(label,lp(-1,19,0,0,0,0));
             LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-1,1f);p.setMargins(dp(1),0,dp(1),0);bar.addView(item,p);
             item.setOnClickListener(v->{if(key.equals("home"))showHome();else if(key.equals("math"))showChapters();else if(key.equals("progress"))showProgress();else if(key.equals("exam"))showExam();else if(key.equals("diary"))showDiary();else if(key.equals("timer"))showPomodoro();});
         }return bar;
@@ -525,7 +507,10 @@ public class MainActivity extends Activity {
         currentScreen="settings";
         base("Настройки ⚙","Всё нужное — в одном месте");
 
-        String activeSection = prefs.getString("settings_section", "appearance");
+        String activeSection = currentScreen.startsWith("settings_") ? currentScreen.substring("settings_".length()) : "menu";
+        boolean sectionPage = !"menu".equals(activeSection);
+        String sectionTitle = "appearance".equals(activeSection) ? "Внешний вид" : "reminders".equals(activeSection) ? "Напоминания" : "goals".equals(activeSection) ? "Цели" : "data".equals(activeSection) ? "Данные" : "О приложении";
+        base(sectionPage ? sectionTitle : "Настройки ⚙", sectionPage ? "Настрой приложение под себя" : "Всё нужное — в одном месте");
         LinearLayout sectionMenu = new LinearLayout(this);
         sectionMenu.setOrientation(LinearLayout.VERTICAL);
         String[][] sections = {
@@ -536,12 +521,12 @@ public class MainActivity extends Activity {
             {"about","ⓘ","О приложении"}
         };
         for (String[] section : sections) {
-            Button item = button(section[1] + "   " + section[2] + (activeSection.equals(section[0]) ? "   ✓" : ""), activeSection.equals(section[0]));
+            Button item = button(section[1] + "   " + section[2] + "   ›", false);
             item.setGravity(Gravity.CENTER_VERTICAL);
-            sectionMenu.addView(item, lp(-1, 50, 0, 3, 0, 3));
-            item.setOnClickListener(v -> { prefs.edit().putString("settings_section", section[0]).apply(); showSettings(); });
+            sectionMenu.addView(item, lp(-1, 54, 0, 4, 0, 4));
+            item.setOnClickListener(v -> { currentScreen = "settings_" + section[0]; showSettings(); });
         }
-        root.addView(sectionMenu, lp(-1, -2, 0, 0, 0, 12));
+        if (!sectionPage) root.addView(sectionMenu, lp(-1, -2, 0, 0, 0, 12));
 
         LinearLayout profile=settingsGroup("ПРОФИЛЬ");
         profile.setTag("appearance");
@@ -662,7 +647,7 @@ public class MainActivity extends Activity {
         for (int i = 0; i < root.getChildCount(); i++) {
             View child = root.getChildAt(i);
             Object tag = child.getTag();
-            if (tag instanceof String) child.setVisibility(activeSection.equals(tag) ? View.VISIBLE : View.GONE);
+            if (tag instanceof String) child.setVisibility(sectionPage && activeSection.equals(tag) ? View.VISIBLE : View.GONE);
         }
 
         // Возврат выполняется стрелкой в верхней панели.
@@ -720,11 +705,79 @@ public class MainActivity extends Activity {
         getTheme().applyStyle(style,true);
     }
 
-        private void showHome() {
+        private void addDailyMoodCard(LinearLayout host) {
+        LinearLayout moodCard = card();
+        moodCard.setPadding(dp(13), dp(10), dp(13), dp(10));
+        addText(moodCard, "КАК ТЫ СЕБЯ ЧУВСТВУЕШЬ?", 12, PINK, true);
+        TextView hint = text("Выбери настроение — подскажу, с чего начать.", 12, MUTED, false);
+        moodCard.addView(hint, lp(-1, -2, 0, 2, 0, 7));
+        String[] faces = {"😴", "😌", "🙂", "😊", "⚡"};
+        String[] names = {"Усталость", "Спокойно", "Нормально", "Радостно", "Полон сил"};
+        String[] hints = {"Предлагаю короткую сессию на 5 минут.", "Можно спокойно повторить знакомую тему.", "Выбери одну небольшую задачу.", "Хороший момент для новой темы.", "Попробуй сложную задачу или длинную сессию."};
+        String today = todayKey();
+        String selected = prefs.getString("daily_mood_date", "").equals(today) ? prefs.getString("daily_mood", "") : "";
+        LinearLayout choices = new LinearLayout(this);
+        choices.setOrientation(LinearLayout.HORIZONTAL);
+        for (int i = 0; i < faces.length; i++) {
+            final int index = i;
+            LinearLayout option = new LinearLayout(this);
+            option.setOrientation(LinearLayout.VERTICAL);
+            option.setGravity(Gravity.CENTER);
+            option.setPadding(dp(2), dp(4), dp(2), dp(4));
+            boolean active = selected.equals(String.valueOf(i));
+            option.setBackground(shape(active ? PALE : 0x00FFFFFF, 14, active ? PINK : 0));
+            TextView face = text(faces[i], 22, DARK, false);
+            face.setGravity(Gravity.CENTER);
+            option.addView(face, lp(-1, 32, 0, 0, 0, 1));
+            TextView label = text(names[i], 9, active ? PINK : MUTED, active);
+            label.setGravity(Gravity.CENTER);
+            label.setMaxLines(1);
+            option.addView(label, lp(-1, 18, 0, 0, 0, 0));
+            option.setContentDescription(names[i] + ". " + hints[i]);
+            option.setFocusable(true);
+            choices.addView(option, new LinearLayout.LayoutParams(0, dp(56), 1f));
+            option.setOnClickListener(v -> {
+                String moodDate = todayKey();
+                String entryId = prefs.getString("daily_mood_entry_" + moodDate, "");
+                if (entryId.isEmpty()) entryId = String.valueOf(System.currentTimeMillis());
+                Set<String> ids = new TreeSet<>(prefs.getStringSet("diary_ids", new TreeSet<String>()));
+                ids.add(entryId);
+                String diaryText = "Самочувствие: " + names[index] + ". " + hints[index];
+                prefs.edit().putString("daily_mood_date", moodDate).putString("daily_mood", String.valueOf(index))
+                    .putString("daily_mood_entry_" + moodDate, entryId)
+                    .putString("diary_" + entryId, diaryText).putString("diary_tag_" + entryId, "Самочувствие")
+                    .putStringSet("diary_ids", ids).apply();
+                for (int j = 0; j < choices.getChildCount(); j++) {
+                    View child = choices.getChildAt(j);
+                    child.setBackground(shape(j == index ? PALE : 0x00FFFFFF, 14, j == index ? PINK : 0));
+                    LinearLayout inner = (LinearLayout) child;
+                    TextView labelView = (TextView) inner.getChildAt(1);
+                    labelView.setTextColor(j == index ? PINK : MUTED);
+                    labelView.setTypeface(Typeface.create(selectedFontFamily(), j == index ? Typeface.BOLD : Typeface.NORMAL));
+                }
+                hint.setText(hints[index]);
+                showAppMessage("Настроение сохранено в дневнике ♡");
+            });
+        }
+        moodCard.addView(choices, lp(-1, 56, 0, 0, 0, 0));
+        host.addView(moodCard, lp(-1, -2, 0, 0, 0, 12));
+    }
+
+    private void showHome() {
         currentScreen = "home";
         StudyWidgetProvider.updateAll(this);
-        base("Привет, " + prefs.getString("display_name", "Назка") + "! ♡",
-                "Хорошо, что ты здесь. Продолжим маленькими шагами?");
+        String displayName = prefs.getString("display_name", "Друг");
+        int hourNow = Calendar.getInstance(AppTime.zone()).get(Calendar.HOUR_OF_DAY);
+        String greetingTitle = hourNow < 12 ? "Доброе утро, " + displayName : hourNow < 18 ? "Добрый день, " + displayName : "Как прошёл день, " + displayName + "?";
+        String lastStudy = prefs.getString("last_study_date", "");
+        boolean returningAfterGap = !lastStudy.isEmpty() && !todayKey().equals(lastStudy) && !isYesterday(lastStudy) && !isOneDayGap(lastStudy);
+        int dailyGoal = prefs.getInt("daily_goal_minutes", 15);
+        int dailyDone = prefs.getInt("focus_minutes_" + todayKey(), 0);
+        int remaining = Math.max(0, dailyGoal - dailyDone);
+        String homeSubtitle = returningAfterGap ? "Рада тебя видеть. Давай начнём с малого. · До цели " + remaining + " мин."
+                : (currentStreak() > 0 ? "🔥 Серия: " + currentStreak() + " " + dayWord(currentStreak()) : "Начни новую серию сегодня") + " · Осталось " + remaining + " мин. до цели дня";
+        base(greetingTitle, homeSubtitle);
+        addDailyMoodCard(root);
 
         int totalTopics = 0, completedTopics = 0;
         for (Map.Entry<String, List<String>> entry : chapters.entrySet()) {
@@ -789,7 +842,7 @@ public class MainActivity extends Activity {
         LinearLayout overallHead = new LinearLayout(this);
         overallHead.setGravity(Gravity.CENTER_VERTICAL);
         overallHead.addView(text("Учебный план", 16, DARK, true),
-                new LinearLayout.LayoutParams(0, dp(30), 1f));
+                new LinearLayout.LayoutParams(0, dp(24), 1f));
         overallHead.addView(text(overall + "%", 21, PINK, true));
         continueCard.addView(overallHead, lp(-1, 34, 0, 18, 0, 4));
         ProgressBar overallBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
@@ -884,40 +937,39 @@ public class MainActivity extends Activity {
         aiCard.setOnClickListener(v -> launchAiTutor());
         root.addView(aiCard, lp(-1, -2, 0, 0, 0, 14));
 
-        addText(root, "УЧЁБА", 11, PINK, true);
         LinearLayout study1 = new LinearLayout(this);
         study1.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(study1, "📚", "Уроки", "Все темы", this::showMathChapters);
-        ritualTile(study1, "◎", "Викторина", "Математика", this::showMathQuiz);
+        ritualTile(study1, "▤", "Уроки", "Все темы", this::showMathChapters);
+        ritualTile(study1, "✦", "Викторина", "Математика", this::showMathQuiz);
         root.addView(study1, lp(-1, -2, 0, 7, 0, 8));
         LinearLayout study2 = new LinearLayout(this);
         study2.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(study2, "□", "Планировщик", "План на день", this::showPlanner);
-        ritualTile(study2, "▤", "Слабые места", "Работа над ошибками", this::showWeaknessTrainer);
+        ritualTile(study2, "▦", "Планировщик", "План на день", this::showPlanner);
+        ritualTile(study2, "⌕", "Слабые места", "Работа над ошибками", this::showWeaknessTrainer);
         root.addView(study2, lp(-1, -2, 0, 0, 0, 13));
 
         addText(root, "ЭМОЦИИ И МОТИВАЦИЯ", 11, PINK, true);
         LinearLayout feelings1 = new LinearLayout(this);
         feelings1.setOrientation(LinearLayout.HORIZONTAL);
         ritualTile(feelings1, "♡", "Дневник", "Маленькие победы", this::showDiary);
-        ritualTile(feelings1, "☆", "Письмо себе", "В будущее", this::showFutureLetters);
+        ritualTile(feelings1, "✉", "Письмо себе", "В будущее", this::showFutureLetters);
         root.addView(feelings1, lp(-1, -2, 0, 7, 0, 8));
         LinearLayout feelings2 = new LinearLayout(this);
         feelings2.setOrientation(LinearLayout.HORIZONTAL);
         ritualTile(feelings2, "✿", "Цветочек", "Растёт с тобой", this::showFlower);
-        ritualTile(feelings2, "☼", "Атмосфера", "Звуки для учёбы", this::showAtmosphere);
+        ritualTile(feelings2, "♫", "Атмосфера", "Звуки для учёбы", this::showAtmosphere);
         root.addView(feelings2, lp(-1, -2, 0, 0, 0, 13));
 
         addText(root, "ТВОЙ ПРОГРЕСС", 11, PINK, true);
         LinearLayout progressRow = new LinearLayout(this);
         progressRow.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(progressRow, "▦", "Мой прогресс", "Календарь и темы", this::showProgress);
-        ritualTile(progressRow, "◇", "Статистика", "Подробный обзор", this::showDetailedStats);
+        ritualTile(progressRow, "▣", "Мой прогресс", "Календарь и темы", this::showProgress);
+        ritualTile(progressRow, "◷", "Статистика", "Подробный обзор", this::showDetailedStats);
         root.addView(progressRow, lp(-1, -2, 0, 7, 0, 8));
         LinearLayout awardsRow = new LinearLayout(this);
         awardsRow.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(awardsRow, "☆", "Достижения", "Твои награды", this::showAchievements);
-        ritualTile(awardsRow, "♡", "Напарник", "Общая цель", this::showStudyBuddy);
+        ritualTile(awardsRow, "✧", "Достижения", "Твои награды", this::showAchievements);
+        ritualTile(awardsRow, "♧", "Напарник", "Общая цель", this::showStudyBuddy);
         root.addView(awardsRow, lp(-1, -2, 0, 0, 0, 13));
 
         LinearLayout reminder = card();
@@ -1589,14 +1641,14 @@ public class MainActivity extends Activity {
         String monthLabel = new SimpleDateFormat("LLLL yyyy", new Locale("ru")).format(month.getTime());
         LinearLayout monthNav = new LinearLayout(this); monthNav.setGravity(Gravity.CENTER_VERTICAL);
         Button prevMonth = button("‹", false); prevMonth.setContentDescription(translate("Предыдущий месяц")); prevMonth.setTextSize(22);
-        monthNav.addView(prevMonth, lp(48, 48, 0, 0, 8, 0));
+        monthNav.addView(prevMonth, lp(40, 40, 0, 0, 6, 0));
         TextView monthTitle = text(monthLabel.substring(0, 1).toUpperCase(new Locale("ru")) + monthLabel.substring(1), 17, DARK, true);
         monthTitle.setGravity(Gravity.CENTER);
-        monthNav.addView(monthTitle, new LinearLayout.LayoutParams(0, dp(42), 1f));
+        monthNav.addView(monthTitle, new LinearLayout.LayoutParams(0, dp(36), 1f));
         Button nextMonth = button("›", false); nextMonth.setContentDescription(translate("Следующий месяц")); nextMonth.setTextSize(22);
         nextMonth.setEnabled(progressMonthOffset < 0);
-        monthNav.addView(nextMonth, lp(48, 48, 8, 0, 0, 0));
-        calendarCard.addView(monthNav, lp(-1, 48, 0, 5, 0, 2));
+        monthNav.addView(nextMonth, lp(40, 40, 6, 0, 0, 0));
+        calendarCard.addView(monthNav, lp(-1, 40, 0, 5, 0, 2));
         prevMonth.setOnClickListener(v -> { progressMonthOffset--; renderProgressCalendar(); });
         nextMonth.setOnClickListener(v -> { if (progressMonthOffset < 0) { progressMonthOffset++; renderProgressCalendar(); } });
         Set<String> studiedDays = new TreeSet<>(prefs.getStringSet("study_days", new TreeSet<String>()));
@@ -1613,11 +1665,11 @@ public class MainActivity extends Activity {
             cell.setGravity(Gravity.CENTER);
             weekHeader.addView(cell, new LinearLayout.LayoutParams(0, dp(30), 1f));
         }
-        calendarCard.addView(weekHeader, lp(-1, 30, 0, 4, 0, 2));
+        calendarCard.addView(weekHeader, lp(-1, 24, 0, 4, 0, 2));
         LinearLayout week = null;
         for (int slot = 0; slot < 42; slot++) {
-            if (slot % 7 == 0) { week = new LinearLayout(this); week.setOrientation(LinearLayout.HORIZONTAL); week.setGravity(Gravity.CENTER_VERTICAL); calendarCard.addView(week, lp(-1, 48, 0, 1, 0, 1)); }
-            TextView cell = text("", 12, DARK, true); cell.setGravity(Gravity.CENTER); cell.setIncludeFontPadding(false); cell.setMinHeight(dp(48)); cell.setMinWidth(dp(40));
+            if (slot % 7 == 0) { week = new LinearLayout(this); week.setOrientation(LinearLayout.HORIZONTAL); week.setGravity(Gravity.CENTER_VERTICAL); calendarCard.addView(week, lp(-1, 38, 0, 1, 0, 1)); }
+            TextView cell = text("", 12, DARK, true); cell.setGravity(Gravity.CENTER); cell.setIncludeFontPadding(false); cell.setMinHeight(dp(36)); cell.setMinWidth(dp(32));
             if (slot >= offset && slot < offset + daysInMonth) {
                 int day = slot - offset + 1;
                 String dateKey = String.format(Locale.US, "%04d-%02d-%02d", yearNumber, monthNumber + 1, day);
@@ -1626,7 +1678,7 @@ public class MainActivity extends Activity {
                 cell.setBackground(shape(heatColor,11,isToday?PINK:(studied?0xFFFFC6D7:0x00FFFFFF)));
                 cell.setElevation(dp(1)); if (isToday) cell.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             }
-            LinearLayout.LayoutParams dayCell=new LinearLayout.LayoutParams(0,dp(48),1f); dayCell.gravity=Gravity.CENTER; dayCell.setMargins(dp(2),0,dp(2),0); week.addView(cell,dayCell);
+            LinearLayout.LayoutParams dayCell=new LinearLayout.LayoutParams(0,dp(36),1f); dayCell.gravity=Gravity.CENTER; dayCell.setMargins(dp(2),0,dp(2),0); week.addView(cell,dayCell);
         }
         addText(calendarCard, "♥ Учебные дни: " + countStudyDaysThisMonth(studiedDays, yearNumber, monthNumber) + "   ·   Заходила: " + countStudyDaysThisMonth(visitedDays, yearNumber, monthNumber), 12, MUTED, false);
         progressCalendarHost.addView(calendarCard, lp(-1, -2, 0, 0, 0, 0));
@@ -2442,6 +2494,7 @@ public class MainActivity extends Activity {
             case "topics": if(selectedChapter!=null)showTopics(selectedChapter);else showChapters(); break;
             case "topic": if(selectedTopic!=null)showTopic(selectedTopic);else if(selectedChapter!=null)showTopics(selectedChapter);else showChapters(); break;
             case "settings": showSettings(); break;
+            case "settings_appearance": case "settings_reminders": case "settings_goals": case "settings_data": case "settings_about": showSettings(); break;
             case "progress": showProgress(); break;
             case "pomodoro": showPomodoro(); break;
             case "exam": showExam(); break;
@@ -2613,7 +2666,12 @@ public class MainActivity extends Activity {
         }catch(Exception ignored){showAppMessage("Не удалось изменить время");}
     }
 
-    private void backHome() { /* Единая стрелка возврата находится в верхней панели. */ }
+    private void backHome() {
+        Button back = button("← Назад", false);
+        back.setContentDescription("Вернуться на предыдущий экран");
+        back.setOnClickListener(v -> handleBackNavigation());
+        root.addView(back, lp(-1, 48, 0, 12, 0, 8));
+    }
     private void ritualTile(LinearLayout row, String icon, String title, String subtitle, OnAction run) {
             LinearLayout tile = new LinearLayout(this);
             tile.setOrientation(LinearLayout.VERTICAL);
@@ -2621,9 +2679,10 @@ public class MainActivity extends Activity {
             tile.setPadding(dp(14), dp(14), dp(12), dp(13));
             tile.setBackground(shape(0xFFFFFFFF, 24, 0xFFF0E4E8));
             tile.setElevation(dp(1));
-            TextView symbol = text(icon, 25, PINK, true);
+            TextView symbol = text(icon, 24, PINK, true);
             symbol.setGravity(Gravity.CENTER);
-            symbol.setBackground(shape(0xFFFFF0F4, 15, 0));
+            symbol.setIncludeFontPadding(false);
+            symbol.setBackground(shape(PALE, 15, 0));
             tile.addView(symbol, lp(43, 43, 0, 0, 0, 11));
             TextView heading = text(title, 15, DARK, true);
             heading.setMaxLines(2);
@@ -2637,8 +2696,8 @@ public class MainActivity extends Activity {
             tile.setContentDescription(title + ". " + subtitle);
             tile.setFocusable(true);
             tile.setOnClickListener(v -> {
-                symbol.animate().rotationBy(24f).scaleX(1.16f).scaleY(1.16f).setDuration(180)
-                    .withEndAction(() -> symbol.animate().rotationBy(-24f).scaleX(1f).scaleY(1f).setDuration(180).start()).start();
+                symbol.animate().scaleX(1.08f).scaleY(1.08f).setDuration(140)
+                    .withEndAction(() -> symbol.animate().scaleX(1f).scaleY(1f).setDuration(140).start()).start();
                 tile.animate().scaleX(0.97f).scaleY(0.97f).alpha(0.88f).setDuration(110)
                     .withEndAction(() -> { tile.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(160).start(); run.go(); }).start();
             });
@@ -2713,12 +2772,12 @@ public class MainActivity extends Activity {
     }
     private boolean isDarkAppearance(){String t=prefs==null?"pink":prefs.getString("app_theme","pink");return "night".equals(t)||"luxury".equals(t)||("system".equals(t)&&(getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES);}
     private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(17), dp(16), dp(17), dp(16)); boolean night = isDarkAppearance(); String theme=prefs==null?"pink":prefs.getString("app_theme","pink");int surface=night?("luxury".equals(theme)?0xFF30251F:0xFF25212B):0xFFFFFFFF;int border=night?("luxury".equals(theme)?0xFF78613D:0xFF403541):0xFFF3E9EC;android.graphics.drawable.Drawable bg=shape(surface,24,border);if(Build.VERSION.SDK_INT>=21)l.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x227D5264),bg,shape(0xFFFFFFFF,24,0)));else l.setBackground(bg);l.setElevation(dp(2)); return l; }
-    private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, Math.max(13, size), color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
+    private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, size, color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
     private TextView text(String value, int size, int color, boolean bold) {
         if(color==0xFFC97891||color==0xFFD96C91)color=PINK;
         else if(color==0xFF3F3439||color==0xFF3A3036||color==0xFF382F34||color==0xFF49382E||color==0xFF34443D||color==0xFF303844)color=DARK;
         else if(color==0xFF75666D||color==0xFF6F6684||color==0xFF796657||color==0xFF60786B)color=MUTED;
-        value=translate(value); TextView t = new TextView(this); t.setText(value); t.setTextSize(Math.max(12, size)); t.setTextColor(color); t.setTypeface(Typeface.create(selectedFontFamily(),bold?Typeface.BOLD:Typeface.NORMAL)); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
+        value=translate(value); TextView t = new TextView(this); t.setText(value); float scale=prefs==null?1f:prefs.getFloat("app_text_scale",1f); t.setTextSize(Math.max(12, Math.round(size*scale))); t.setTextColor(color); t.setTypeface(Typeface.create(selectedFontFamily(),bold?Typeface.BOLD:Typeface.NORMAL)); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
     private void applyPressFeedback(View view) {
         if(prefs!=null&&prefs.getBoolean("reduce_motion",false))return;
         view.setOnTouchListener((v,event)->{
@@ -2765,7 +2824,8 @@ public class MainActivity extends Activity {
         CelebrationView(android.content.Context c){super(c);java.util.Random r=new java.util.Random();for(int i=0;i<x.length;i++){x[i]=r.nextFloat();y[i]=-.12f-r.nextFloat()*.7f;speed[i]=.55f+r.nextFloat()*.9f;size[i]=dp(3+r.nextInt(4));rotation[i]=r.nextFloat()*360f;}}
         @Override protected void onDraw(android.graphics.Canvas canvas){super.onDraw(canvas);float w=getWidth(),h=getHeight();for(int i=0;i<x.length;i++){float yy=(y[i]+progress*speed[i]*1.5f)*h;if(yy<0||yy>h)continue;canvas.save();canvas.rotate(rotation[i]+progress*360f,x[i]*w,yy);paint.setColor(colors[i%colors.length]);paint.setStyle(android.graphics.Paint.Style.FILL);canvas.drawOval(x[i]*w-size[i],yy-size[i]*1.5f,x[i]*w+size[i],yy+size[i]*1.5f,paint);canvas.restore();}}
     }
-    private Button button(String label, boolean primary) { label=translate(label); Button b = new Button(this); b.setText(label); b.setTextSize(14); b.setTypeface(Typeface.create(selectedFontFamily(), Typeface.BOLD)); b.setAllCaps(false); b.setLetterSpacing(0.01f); b.setMinHeight(dp(48)); b.setPadding(dp(14), dp(8), dp(14), dp(8)); b.setElevation(primary ? dp(2) : 0); b.setTextColor(primary ? 0xFFFFFFFF : PINK); android.graphics.drawable.Drawable bg=shape(primary ? PINK : PALE, 22, primary ? PINK : 0xFFF2DDE4); if(Build.VERSION.SDK_INT>=21){GradientDrawable mask=shape(0xFFFFFFFF,22,0);b.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x337D5264),bg,mask));}else b.setBackground(bg);applyPressFeedback(b);return b; }
+    private TextView textFixed(String value,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(translate(value));t.setTextSize(size);t.setTextColor(color==0xFFC97891?PINK:color);t.setTypeface(Typeface.create(selectedFontFamily(),bold?Typeface.BOLD:Typeface.NORMAL));t.setGravity(Gravity.CENTER_VERTICAL);return t;}
+    private Button button(String label, boolean primary) { label=translate(label); Button b = new Button(this); b.setText(label); float scale=prefs==null?1f:prefs.getFloat("app_text_scale",1f); b.setTextSize(14f*scale); b.setTypeface(Typeface.create(selectedFontFamily(), Typeface.BOLD)); b.setAllCaps(false); b.setLetterSpacing(0.01f); b.setMinHeight(dp(48)); b.setPadding(dp(14), dp(8), dp(14), dp(8)); b.setElevation(primary ? dp(2) : 0); b.setTextColor(primary ? 0xFFFFFFFF : PINK); android.graphics.drawable.Drawable bg=shape(primary ? PINK : PALE, 22, primary ? PINK : 0xFFF2DDE4); if(Build.VERSION.SDK_INT>=21){GradientDrawable mask=shape(0xFFFFFFFF,22,0);b.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x337D5264),bg,mask));}else b.setBackground(bg);applyPressFeedback(b);return b; }
     private String translate(String value){
         String lang=prefs==null?"ru":prefs.getString("app_language","ru");if("ru".equals(lang)||value==null)return value;
         String[][] pairs={
