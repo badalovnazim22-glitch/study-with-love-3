@@ -983,7 +983,7 @@ public class MainActivity extends Activity {
         LinearLayout c=card();addText(c,"💡  КАРТОЧКА ТЕМЫ",11,PINK,true);addText(c,"Главное правило",15,DARK,true);addText(c,topicRule(topic),13,MUTED,false);addText(c,"Пример решения",14,DARK,true);addText(c,topicExample(topic),14,DARK,false);
         addText(c,"ШАГИ РЕШЕНИЯ",10,PINK,true);String lower=topic.toLowerCase(new Locale("ru"));String[] steps=lower.contains("знаменател")?new String[]{"Найди общий знаменатель для дробей","Преобразуй дроби, сохранив их значения","Выполни действие с числителями и сократи ответ"}:lower.contains("процент")?new String[]{"Переведи процент в дробь со знаменателем 100","Умножь исходное число на эту дробь","Проверь, соответствует ли результат условию"}:lower.contains("десятич")?new String[]{"Выравняй запятые и разряды","Выполни действие по разрядам","Проверь положение запятой в результате"}:lower.contains("смешан")?new String[]{"Преобразуй смешанные числа в неправильные дроби","Выполни действие с дробями","Сократи ответ и при необходимости верни смешанное число"}:lower.contains("делен")?new String[]{"Запиши обратную дробь для делителя","Замени деление умножением","Перемножь и сократи результат"}:new String[]{"Прочитай условие и выдели известные данные","Выбери подходящее правило и выполни действие","Проверь ответ обратным действием"};
         LinearLayout line=new LinearLayout(this);line.setOrientation(LinearLayout.VERTICAL);
-        for(int i=0;i<steps.length;i++){TextView step=text((i+1)+".  "+steps[i],12,DARK,false);step.setPadding(dp(10),dp(8),dp(10),dp(8));step.setBackground(shape(0xFFFFF4F7,13,0));line.addView(step,lp(-1,-2,0,0,0,5));step.setAlpha(0f);step.setTranslationY(dp(8));final TextView animated=step;new Handler().postDelayed(()->animated.animate().alpha(1f).translationY(0).setDuration(220).start(),i*180L);}
+        for(int i=0;i<steps.length;i++){TextView step=text((i+1)+".  "+steps[i],12,DARK,false);step.setPadding(dp(10),dp(8),dp(10),dp(8));step.setBackground(shape(0xFFFFF4F7,13,0));line.addView(step,lp(-1,-2,0,0,0,5));step.setAlpha(0f);step.setTranslationY(dp(8));final TextView animated=step;new Handler(Looper.getMainLooper()).postDelayed(()->animated.animate().alpha(1f).translationY(0).setDuration(220).start(),i*180L);}
         c.addView(line);root.addView(c,lp(-1,-2,0,0,0,12));
     }
     private void addTopicReflection(String topic){
@@ -1069,7 +1069,7 @@ public class MainActivity extends Activity {
         if(correct){miniScore++;clearMistake(q);haptic(source,true);}else{miniWrongQuestions.add(q);recordMistake(q,userAnswer);haptic(source,false);if(source!=null)source.animate().translationX(dp(8)).setDuration(45).withEndAction(()->source.animate().translationX(-dp(8)).setDuration(45).withEndAction(()->source.animate().translationX(0).setDuration(45).start()).start()).start();}
         if(source instanceof Button){Button chosen=(Button)source;chosen.setBackground(shape(correct?0xFFE4F4E8:0xFFFFE8E8,22,correct?0xFF75B987:0xFFE58A8A));chosen.setTextColor(correct?0xFF287A43:0xFFB64242);new Handler(android.os.Looper.getMainLooper()).postDelayed(()->{if(!isFinishing()){chosen.setBackground(shape(0xFFFFFFFF,22,0xFFEADDE2));chosen.setTextColor(DARK);}},1050);}
         TextView feedback=text((correct?"✓  Верно! ":"✦  Правильный ответ: "+q.answer+" · ")+q.explanation,13,correct?0xFF287A43:0xFF9B4A58,true);feedback.setPadding(dp(12),dp(10),dp(12),dp(10));feedback.setBackground(shape(correct?0xFFF0F8F1:0xFFFFF2F2,14,0));root.addView(feedback,lp(-1,-2,0,7,0,4));
-        new Handler().postDelayed(()->{if(!isFinishing())renderMiniTest(index+1,wrongOnly);},1050);
+        new Handler(Looper.getMainLooper()).postDelayed(()->{if(!isFinishing())renderMiniTest(index+1,wrongOnly);},1050);
     }
     private MiniQuestion makeMiniQuestion(String topic){
         String t=topic.toLowerCase(new Locale("ru"));
@@ -1142,7 +1142,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void playTopicCompleteSound(){try{android.media.ToneGenerator tone=new android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION,55);tone.startTone(android.media.ToneGenerator.TONE_PROP_ACK,135);new Handler().postDelayed(tone::release,220);}catch(Exception ignored){}}
+    private void playTopicCompleteSound(){try{android.media.ToneGenerator tone=new android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION,55);tone.startTone(android.media.ToneGenerator.TONE_PROP_ACK,135);new Handler(Looper.getMainLooper()).postDelayed(tone::release,220);}catch(Exception ignored){}}
 
     private void showPraise() {
         LinearLayout toastView = new LinearLayout(this);
@@ -1735,7 +1735,7 @@ public class MainActivity extends Activity {
             android.animation.ObjectAnimator bloom=android.animation.ObjectAnimator.ofFloat(art,View.SCALE_X,1f,1.09f,1f);bloom.setDuration(900);
             pour.start();streamMove.start();streamFade.start();bloom.start();
             prefs.edit().putString("flower_water_date",todayKey()).putInt("flower_water_count",waterCount+1).putInt("flower_petals",petals+1).apply();
-            new Handler().postDelayed(()->{if(!isFinishing()&&"flower".equals(currentScreen))showFlower();},1450);
+            new Handler(Looper.getMainLooper()).postDelayed(()->{if(!isFinishing()&&"flower".equals(currentScreen))showFlower();},1450);
         });
         care.addView(waterButton,lp(-1,48,0,8,0,8));
         Button change=button("Сменить вид цветка",false);change.setOnClickListener(v->{prefs.edit().putInt("flower_type",(flowerIndex+1)%5).apply();showFlower();});care.addView(change,lp(-1,46,0,0,0,0));root.addView(care,lp(-1,-2,0,0,0,12));
