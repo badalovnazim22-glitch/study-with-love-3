@@ -67,7 +67,8 @@ export default {
     try {
       let result;
       let lastError;
-      for (let attempt = 0; attempt < 3; attempt++) {
+      // Four attempts with exponential backoff for temporary Workers AI overload.
+      for (let attempt = 0; attempt < 4; attempt++) {
         try {
           result = await env.AI.run(MODEL, {
             messages,
@@ -77,8 +78,10 @@ export default {
           break;
         } catch (error) {
           lastError = error;
-          if (attempt === 2) throw error;
-          await new Promise(resolve => setTimeout(resolve, 700 * (attempt + 1)));
+          if (attempt === 3) throw error;
+          const delay = 1200 * (2 ** attempt);
+          console.warn(`Workers AI attempt ${attempt + 1} failed; retrying in ${delay}ms`);
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
 
@@ -96,9 +99,9 @@ export default {
       const message = String(error?.message || error || "unknown").slice(0, 400);
       console.error("Workers AI error", message);
       return json({
-        error: "Cloudflare Workers AI временно не смог обработать запрос. Попробуй ещё раз через несколько секунд.",
+        error: "Cloudflare Workers AI временно перегружен или недоступен. Worker уже повторил запрос несколько раз. Подожди 10–20 секунд и попробуй снова.",
         providerMessage: message
-      }, 502);
+      }, 503);
     }
   }
 };
