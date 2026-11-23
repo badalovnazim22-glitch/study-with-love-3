@@ -31,7 +31,7 @@ public class FocusTimerService extends Service {
             segmentDuration=Math.max(1000,intent.getLongExtra("duration_ms",60000));
             currentBreak=intent.getBooleanExtra("break",false);
             endAt=SystemClock.elapsedRealtime()+segmentDuration;
-            getSharedPreferences(PREFS,MODE_PRIVATE).edit()
+            getSharedPreferences("timer_runtime",MODE_PRIVATE).edit()
                     .putLong("timer_service_end_wall",System.currentTimeMillis()+segmentDuration)
                     .putLong("timer_service_duration",segmentDuration)
                     .putBoolean("timer_service_break",currentBreak).apply();
@@ -44,7 +44,7 @@ public class FocusTimerService extends Service {
     }
     private void finish(boolean rest){
         handler.removeCallbacks(tick);
-        if(!rest){long finishWall=getSharedPreferences(PREFS,MODE_PRIVATE).getLong("timer_service_end_wall",System.currentTimeMillis());String finishDate=dateKey(finishWall);recordFocus(segmentDuration,finishDate);recordStudyDay(finishDate);android.content.SharedPreferences.Editor reward=getSharedPreferences(PREFS,MODE_PRIVATE).edit();reward.putInt("postcard_focus_count",getSharedPreferences(PREFS,MODE_PRIVATE).getInt("postcard_focus_count",0)+1).putInt("flower_petals",getSharedPreferences(PREFS,MODE_PRIVATE).getInt("flower_petals",0)+1).apply();StudyWidgetProvider.updateAll(this);if(!MainActivity.activityVisible)getSharedPreferences(PREFS,MODE_PRIVATE).edit().putBoolean("diary_prefill_timer_win",true).putBoolean("timer_finish_prompt_pending",true).apply();}
+        if(!rest){long finishWall=getSharedPreferences("timer_runtime",MODE_PRIVATE).getLong("timer_service_end_wall",System.currentTimeMillis());String finishDate=dateKey(finishWall);recordFocus(segmentDuration,finishDate);recordStudyDay(finishDate);android.content.SharedPreferences.Editor reward=getSharedPreferences(PREFS,MODE_PRIVATE).edit();reward.putInt("postcard_focus_count",getSharedPreferences(PREFS,MODE_PRIVATE).getInt("postcard_focus_count",0)+1).putInt("flower_petals",getSharedPreferences(PREFS,MODE_PRIVATE).getInt("flower_petals",0)+1).apply();StudyWidgetProvider.updateAll(this);if(!MainActivity.activityVisible)getSharedPreferences(PREFS,MODE_PRIVATE).edit().putBoolean("diary_prefill_timer_win",true).putBoolean("timer_finish_prompt_pending",true).apply();}
         clearSavedTimer();
         if(!MainActivity.activityVisible){try{android.os.Vibrator vibrator=(android.os.Vibrator)getSystemService(VIBRATOR_SERVICE);if(Build.VERSION.SDK_INT>=26)vibrator.vibrate(VibrationEffect.createWaveform(new long[]{0,350,180,550},-1));else vibrator.vibrate(new long[]{0,350,180,550},-1);}catch(Exception ignored){}}
         Uri sound=RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
@@ -55,7 +55,7 @@ public class FocusTimerService extends Service {
           .setContentIntent(PendingIntent.getActivity(this,921,new Intent(this,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE));
         if(!MainActivity.activityVisible)nm.notify(921,b.build());stopForeground(true);stopSelf();
     }
-    private void clearSavedTimer(){getSharedPreferences(PREFS,MODE_PRIVATE).edit().remove("timer_service_end_wall").remove("timer_service_duration").remove("timer_service_break").apply();}
+    private void clearSavedTimer(){getSharedPreferences("timer_runtime",MODE_PRIVATE).edit().remove("timer_service_end_wall").remove("timer_service_duration").remove("timer_service_break").apply();}
     private String dateKey(long wall){java.text.SimpleDateFormat fmt=new java.text.SimpleDateFormat("yyyy-MM-dd",java.util.Locale.US);fmt.setTimeZone(AppTime.zone());return fmt.format(new java.util.Date(wall));}
     private void recordFocus(long ms,String date){try{android.content.SharedPreferences p=getSharedPreferences(PREFS,MODE_PRIVATE);long total=p.getLong("focus_remainder_ms_"+date,0)+Math.max(0,ms);int add=(int)(total/60000L);p.edit().putLong("focus_remainder_ms_"+date,total%60000L).putInt("focus_minutes_"+date,p.getInt("focus_minutes_"+date,0)+add).putInt("focus_total_minutes",p.getInt("focus_total_minutes",0)+add).apply();StudyWidgetProvider.updateAll(this);}catch(Exception ignored){}}
     private void recordStudyDay(String date){
