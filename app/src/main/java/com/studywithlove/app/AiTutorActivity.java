@@ -58,7 +58,6 @@ public class AiTutorActivity extends Activity {
     private TextView typingBubble;
     private Future<?> activeTask;
     private volatile long activeRequestId = 0;
-    private volatile boolean requestCancelled = false;
     private String retryQuestion = "";
     private String pendingQuestion = "";
     private boolean waiting = false;
@@ -281,7 +280,6 @@ public class AiTutorActivity extends Activity {
         try { payload.put("messages", payloadMessages); } catch (Exception ignored) {}
         pendingQuestion = question;
         final long requestId = ++activeRequestId;
-        requestCancelled = false;
         activeTask = executor.submit(() -> {
             String answer = null;
             String error = null;
@@ -290,6 +288,7 @@ public class AiTutorActivity extends Activity {
                 URL url = new URL(endpoint());
                 if (!"https".equalsIgnoreCase(url.getProtocol())) throw new IllegalArgumentException("Адрес сервера должен начинаться с https://");
                 connection = (HttpURLConnection) url.openConnection();
+                if (destroyed || requestId != activeRequestId || Thread.currentThread().isInterrupted()) return;
                 activeConnection = connection;
                 connection.setRequestMethod("POST");
                 connection.setConnectTimeout(15000);
@@ -327,6 +326,7 @@ public class AiTutorActivity extends Activity {
             main.post(() -> {
                 if (destroyed || isFinishing()) return;
                 if (requestId != activeRequestId) return;
+                activeTask = null;
                 if (typingBubble != null) messages.removeView(typingBubble);
                 typingBubble = null;
                 waiting = false;
@@ -358,7 +358,6 @@ public class AiTutorActivity extends Activity {
     private void cancelActiveRequest() {
         if (!waiting) return;
         activeRequestId++;
-        requestCancelled = true;
         HttpURLConnection connection = activeConnection;
         activeConnection = null;
         if (connection != null) connection.disconnect();
@@ -381,6 +380,7 @@ public class AiTutorActivity extends Activity {
 
     private boolean restoreChat(Bundle state) {
         if (state == null) return false;
+        studyContext = state.getString("ai_study_context", studyContext);
         String saved = state.getString("ai_chat_history", "");
         if (saved.isEmpty()) return false;
         try {
@@ -412,11 +412,37 @@ public class AiTutorActivity extends Activity {
         JSONArray array = new JSONArray();
         for (JSONObject item : history) array.put(item);
         outState.putString("ai_chat_history", array.toString());
+        outState.putString("ai_study_context", studyContext);
     }
 
     @Override public void onConfigurationChanged(android.content.res.Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         // Keep the current chat when orientation or screen size changes.
+    }
+
+    private String formatMarkdown(String value) {
+        String safe = value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+        safe = safe.replaceAll("(?m)^### (.+)$", "<big><b>$1</b></big>");
+        safe = safe.replaceAll("(?m)^## (.+)$", "<big><b>$1</b></big>");
+        safe = safe.replaceAll("(?m)^# (.+)$", "<big><b>$1</b></big>");
+        safe = safe.replaceAll("(?m)^\\s*[-*] +", "• ");
+        safe = safe.replaceAll("(?m)^\\d+\\. +", "• ");
+        safe = safe.replaceAll("\\x60([^\\x60]+)\\x60", "<tt>$1</tt>");
+        safe = safe.replaceAll("\\*\\*(.+?)\\*\\*", "<b>$1</b>");
+        safe = safe.replaceAll("(?<!\\*)\\*([^*\\n]+)\\*(?!\\*)", "<i>$1</i>");
+        // Common LaTeX commands are converted to readable mathematical symbols.
+        safe = safe.replaceAll("\\\\times", "×").replaceAll("\\\\cdot", "·")
+                .replaceAll("\\\\div", "÷").replaceAll("\\\\pi", "π")
+                .replaceAll("\\\\leq?", "≤").replaceAll("\\\\geq?", "≥")
+                .replaceAll("\\\\neq", "≠").replaceAll("\\\\infty", "∞")
+                .replaceAll("\\\\left", "").replaceAll("\\\\right", "")
+                .replaceAll("\\\\,", " ").replaceAll("\\\\;", " ");
+        safe = safe.replaceAll("\\\\sqrt\\{([^{}]+)\\}", "√($1)");
+        safe = safe.replaceAll("\\\\frac\\{([^{}]+)\\}\\{([^{}]+)\\}", "($1)/($2)");
+        safe = safe.replaceAll("\\^\\{([^{}]+)\\}", "^($1)");
+        safe = safe.replaceAll("\\$\\$([\\s\\S]+?)\\$\\$", "<br><tt>$1</tt><br>");
+        safe = safe.replaceAll("\\$([^$\\n]+)\\$", "<tt>$1</tt>");
+        return safe.replace("\n", "<br>");
     }
 
     private void addHistory(String role, String content) {
@@ -431,8 +457,7 @@ public class AiTutorActivity extends Activity {
     private TextView addBubble(String value, boolean user) {
         TextView bubble = label(value, 15, user ? Color.WHITE : DARK, false);
         if (!user) {
-            String safe = value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
-            safe = safe.replaceAll("(?m)^### (.+)$", "<b>$1</b>").replaceAll("(?m)^## (.+)$", "<big><b>$1</b></big>").replaceAll("\\*\\*(.+?)\\*\\*", "<b>$1</b>").replace("\n", "<br>");
+            String safe = formatMarkdown(value);
             if (android.os.Build.VERSION.SDK_INT >= 24) {
             bubble.setText(Html.fromHtml(safe, Html.FROM_HTML_MODE_COMPACT));
         } else {
