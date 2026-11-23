@@ -1,0 +1,13 @@
+name = "study-with-love-ai"
+main = "ai-worker.js"
+compatibility_date = "2026-11-23"
+
+# Edge rate limiting: approximate 12 requests per minute per client IP.
+# The Worker code uses this binding when deployed with Wrangler.
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "20261123"
+
+[ratelimits.simple]
+limit = 12
+period = 60
