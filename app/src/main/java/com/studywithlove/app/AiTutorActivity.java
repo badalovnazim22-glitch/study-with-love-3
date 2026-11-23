@@ -16,6 +16,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.HorizontalScrollView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
