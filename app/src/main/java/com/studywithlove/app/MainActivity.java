@@ -482,7 +482,7 @@ public class MainActivity extends Activity {
             String breadcrumb = currentScreen.equals("topic") && selectedChapter != null
                 ? selectedChapter.replaceFirst("^[^ ]+\\s*", "") + "  ›  " + (selectedTopic == null ? title : selectedTopic)
                 : currentScreen.equals("topics") && selectedChapter != null
-                    ? selectedChapter.replaceFirst("^[^ ]+\\s*", "") : title;
+                    ? selectedChapter.replaceFirst("^[^ ]+\\s*", "") : "";
             TextView crumb = text(breadcrumb, 13, MUTED, true);
             crumb.setMaxLines(1);
             crumb.setEllipsize(android.text.TextUtils.TruncateAt.END);
