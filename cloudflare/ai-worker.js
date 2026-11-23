@@ -53,11 +53,11 @@ export default {
     let totalChars = 0;
     for (const item of body.messages) {
       if (!item || !["user", "model", "assistant"].includes(item.role) ||
-          typeof item.content !== "string" || !item.content.trim() || item.content.length > 2000) {
+          typeof item.content !== "string" || !item.content.trim() || item.content.length > 6000) {
         return json({ error: "Одно из сообщений имеет неверный формат или слишком длинное." }, 400);
       }
       totalChars += item.content.length;
-      if (totalChars > 12000) return json({ error: "История слишком длинная. Начни новый диалог." }, 413);
+      if (totalChars > 24000) return json({ error: "История слишком длинная. Начни новый диалог." }, 413);
       messages.push({
         role: item.role === "model" ? "assistant" : item.role,
         content: item.content
@@ -72,7 +72,7 @@ export default {
         try {
           result = await env.AI.run(MODEL, {
             messages,
-            max_tokens: 800,
+            max_tokens: 1200,
             temperature: 0.6
           });
           break;
