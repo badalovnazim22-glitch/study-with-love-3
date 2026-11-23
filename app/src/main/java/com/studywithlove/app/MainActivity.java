@@ -583,38 +583,25 @@ public class MainActivity extends Activity {
         final String chapterToResume = resumeChapter;
         final boolean hasResumeTopic = resumeFound;
 
+        // Restored original large "Your progress" motivational card.
         LinearLayout continueCard = card();
-        continueCard.setPadding(dp(18), dp(17), dp(18), dp(17));
-        continueCard.setBackground(shape(0xFFF8E8EE, 25, 0));
-        addText(continueCard, "ТВОЙ СЛЕДУЮЩИЙ ШАГ", 11, PINK, true);
-        addText(continueCard, resumeFound ? resumeTopic : "Выбери свой первый урок", 21, DARK, true);
-        String resumeLabel = resumeFound
-                ? resumeChapter.replaceFirst("^[^ ]+\\s*", "") : "Учебный план";
-        addText(continueCard, resumeLabel, 12, MUTED, false);
-
-        int resumeProgress = resumeFound
-                ? topicProgressForChapter(resumeChapter, resumeTopic) : overall;
-        LinearLayout topicHead = new LinearLayout(this);
-        topicHead.setGravity(Gravity.CENTER_VERTICAL);
-        topicHead.addView(text("Прогресс темы", 12, MUTED, false),
-                new LinearLayout.LayoutParams(0, dp(25), 1f));
-        topicHead.addView(text(resumeProgress + "%", 13, PINK, true));
-        continueCard.addView(topicHead, lp(-1, 27, 0, 8, 0, 2));
-        ProgressBar topicBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-        topicBar.setMax(100);
-        topicBar.setProgress(resumeProgress);
-        if (Build.VERSION.SDK_INT >= 21) {
-            topicBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
-            topicBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFDCE6));
-        }
-        continueCard.addView(topicBar, lp(-1, 7, 0, 0, 0, 9));
-
+        continueCard.setPadding(dp(20), dp(22), dp(20), dp(22));
+        continueCard.setBackground(shape(0xFFF8E8EE, 30, 0));
+        addText(continueCard, "ТВОЙ ПРОГРЕСС", 16, PINK, true);
+        addText(continueCard, "Ты справляешься.\\nПродолжай в своём\\nтемпе.", 32, DARK, true);
+        addText(continueCard, "Каждое занятие — это забота о себе будущей.", 16, MUTED, false);
+        addText(continueCard, "✧  Ты отлично справляешься! ❤️", 18, PINK, true);
+        int hour = Calendar.getInstance(AppTime.zone()).get(Calendar.HOUR_OF_DAY);
+        String greeting = hour < 12 ? "🐰 Доброе утро! Начнём день с маленькой победы?"
+                : hour < 18 ? "🐰 Хорошего дня! Сделаем ещё один маленький шаг?"
+                : "🐰 Добрый вечер! Даже маленькое занятие — уже победа.";
+        addText(continueCard, greeting, 17, DARK, true);
         LinearLayout overallHead = new LinearLayout(this);
         overallHead.setGravity(Gravity.CENTER_VERTICAL);
-        overallHead.addView(text("Общий прогресс", 12, MUTED, false),
-                new LinearLayout.LayoutParams(0, dp(25), 1f));
-        overallHead.addView(text(overall + "%", 13, PINK, true));
-        continueCard.addView(overallHead, lp(-1, 27, 0, 1, 0, 2));
+        overallHead.addView(text("Учебный план", 19, DARK, true),
+                new LinearLayout.LayoutParams(0, dp(34), 1f));
+        overallHead.addView(text(overall + "%", 24, PINK, true));
+        continueCard.addView(overallHead, lp(-1, 42, 0, 50, 0, 7));
         ProgressBar overallBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         overallBar.setMax(100);
         overallBar.setProgress(overall);
@@ -622,21 +609,8 @@ public class MainActivity extends Activity {
             overallBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
             overallBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFDCE6));
         }
-        continueCard.addView(overallBar, lp(-1, 7, 0, 0, 0, 7));
-        addText(continueCard, completedTopics + " из " + totalTopics + " тем · "
-                + streak + " дней подряд · " + done + " уроков", 11, MUTED, false);
-
-        Button continueButton = button(resumeFound ? "Продолжить урок  →" : "Выбрать тему  →", true);
-        continueCard.addView(continueButton, lp(-1, 49, 0, 12, 0, 0));
-        continueButton.setOnClickListener(v -> {
-            if (hasResumeTopic) {
-                selectedChapter = chapterToResume;
-                selectedTopic = topicToResume;
-                showTopic(topicToResume);
-            } else {
-                showMathChapters();
-            }
-        });
+        continueCard.addView(overallBar, lp(-1, 8, 0, 0, 0, 16));
+        addText(continueCard, completedTopics + " из " + totalTopics + " тем завершено", 17, MUTED, false);
         root.addView(continueCard, lp(-1, -2, 0, 2, 0, 13));
 
         // Weekly goal with a Monday-to-Sunday activity strip on the home screen.
