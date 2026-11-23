@@ -60,6 +60,7 @@ public class AiTutorActivity extends Activity {
     private volatile long activeRequestId = 0;
     private volatile boolean requestCancelled = false;
     private String retryQuestion = "";
+    private String pendingQuestion = "";
     private boolean waiting = false;
     private volatile HttpURLConnection activeConnection;
     private volatile boolean destroyed = false;
@@ -209,7 +210,7 @@ public class AiTutorActivity extends Activity {
         cancelButton.setBackground(round(BG, 18, BG));
         cancelButton.setVisibility(View.GONE);
         cancelButton.setOnClickListener(v -> cancelActiveRequest());
-        LinearLayout.LayoutParams cancelLp = new LinearLayout.LayoutParams(dp(44), dp(48));
+        LinearLayout.LayoutParams cancelLp = new LinearLayout.LayoutParams(dp(48), dp(48));
         cancelLp.leftMargin = dp(4);
         composer.addView(cancelButton, cancelLp);
         page.addView(composer, new LinearLayout.LayoutParams(-1, -2));
@@ -258,7 +259,6 @@ public class AiTutorActivity extends Activity {
             start += 2;
             while (start < history.size() - 1 && !"user".equals(history.get(start).optString("role"))) start++;
         }
-        int totalChars = 0;
         for (int i = start; i < history.size(); i++) {
             JSONObject item = history.get(i);
             String role = item.optString("role", "user");
@@ -271,13 +271,15 @@ public class AiTutorActivity extends Activity {
                 if (contextualQuestion.length() <= 7800) content = contextualQuestion;
             }
             JSONObject outgoing = new JSONObject();
-            outgoing.put("role", role);
-            outgoing.put("content", content);
-            payloadMessages.put(outgoing);
-            totalChars += content.length();
+            try {
+                outgoing.put("role", role);
+                outgoing.put("content", content);
+                payloadMessages.put(outgoing);
+            } catch (Exception ignored) {}
         }
         JSONObject payload = new JSONObject();
-        payload.put("messages", payloadMessages);
+        try { payload.put("messages", payloadMessages); } catch (Exception ignored) {}
+        pendingQuestion = question;
         final long requestId = ++activeRequestId;
         requestCancelled = false;
         activeTask = executor.submit(() -> {
@@ -332,6 +334,7 @@ public class AiTutorActivity extends Activity {
                 cancelButton.setVisibility(View.GONE);
                 if (finalAnswer != null) {
                     retryQuestion = "";
+                    pendingQuestion = "";
                     addHistory("model", finalAnswer);
                     addBubble(finalAnswer, false);
                 } else {
@@ -344,11 +347,76 @@ public class AiTutorActivity extends Activity {
                         }
                     }
                     retryQuestion = question;
-                    addBubble("Не получилось получить ответ: " + finalError + "\\nНажми ↻, чтобы повторить.", false);
+                    pendingQuestion = "";
+                    addBubble("Не получилось получить ответ: " + finalError + "\nНажми ↻, чтобы повторить.", false);
                     sendButton.setText("↻");
                 }
             });
         });
+    }
+
+    private void cancelActiveRequest() {
+        if (!waiting) return;
+        activeRequestId++;
+        requestCancelled = true;
+        HttpURLConnection connection = activeConnection;
+        activeConnection = null;
+        if (connection != null) connection.disconnect();
+        Future<?> task = activeTask;
+        activeTask = null;
+        if (task != null) task.cancel(true);
+        waiting = false;
+        sendButton.setEnabled(true);
+        sendButton.setText("↻");
+        cancelButton.setVisibility(View.GONE);
+        if (typingBubble != null) messages.removeView(typingBubble);
+        typingBubble = null;
+        if (!history.isEmpty() && "user".equals(history.get(history.size() - 1).optString("role"))) {
+            history.remove(history.size() - 1);
+        }
+        retryQuestion = pendingQuestion;
+        pendingQuestion = "";
+        addBubble(tr("Запрос отменён. Нажми ↻, чтобы повторить.", "Request cancelled. Tap ↻ to retry it.", "Sorğu ləğv edildi. Təkrar üçün ↻ düyməsinə toxun."), false);
+    }
+
+    private boolean restoreChat(Bundle state) {
+        if (state == null) return false;
+        String saved = state.getString("ai_chat_history", "");
+        if (saved.isEmpty()) return false;
+        try {
+            JSONArray array = new JSONArray(saved);
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject item = array.optJSONObject(i);
+                if (item == null) continue;
+                String role = item.optString("role", "");
+                String content = item.optString("content", "");
+                if (!("user".equals(role) || "model".equals(role)) || content.isEmpty()) continue;
+                addHistory(role, content);
+                addBubble(content, "user".equals(role));
+            }
+            if (!history.isEmpty() && "user".equals(history.get(history.size() - 1).optString("role"))) {
+                JSONObject last = history.remove(history.size() - 1);
+                retryQuestion = last.optString("content", "");
+                addBubble(tr("Предыдущий запрос прервался. Его можно отправить повторно кнопкой ↻.", "The previous request was interrupted. Tap ↻ to retry it.", "Əvvəlki sorğu yarımçıq qaldı. ↻ düyməsi ilə yenidən göndərə bilərsən."), false);
+                sendButton.setText("↻");
+            }
+            return !history.isEmpty() || !retryQuestion.isEmpty();
+        } catch (Exception ignored) {
+            history.clear();
+            return false;
+        }
+    }
+
+    @Override protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        JSONArray array = new JSONArray();
+        for (JSONObject item : history) array.put(item);
+        outState.putString("ai_chat_history", array.toString());
+    }
+
+    @Override public void onConfigurationChanged(android.content.res.Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // Keep the current chat when orientation or screen size changes.
     }
 
     private void addHistory(String role, String content) {
@@ -502,8 +570,11 @@ public class AiTutorActivity extends Activity {
 
     @Override protected void onDestroy() {
         destroyed = true;
+        activeRequestId++;
         HttpURLConnection connection = activeConnection;
         if (connection != null) connection.disconnect();
+        Future<?> task = activeTask;
+        if (task != null) task.cancel(true);
         executor.shutdownNow();
         super.onDestroy();
     }
