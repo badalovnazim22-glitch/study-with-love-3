@@ -580,6 +580,10 @@ public class MainActivity extends Activity {
             }
         }
 
+        final String topicToResume = resumeTopic;
+        final String chapterToResume = resumeChapter;
+        final boolean hasResumeTopic = resumeFound;
+
         // Main action: continue studying.
         LinearLayout continueCard = card();
         continueCard.setPadding(dp(18), dp(17), dp(18), dp(17));
@@ -608,10 +612,10 @@ public class MainActivity extends Activity {
         Button continueButton = button(resumeFound ? "Продолжить урок  →" : "Выбрать тему  →", true);
         continueCard.addView(continueButton, lp(-1, 49, 0, 2, 0, 0));
         continueButton.setOnClickListener(v -> {
-            if (resumeFound) {
-                selectedChapter = resumeChapter;
-                selectedTopic = resumeTopic;
-                showTopic(resumeTopic);
+            if (hasResumeTopic) {
+                selectedChapter = chapterToResume;
+                selectedTopic = topicToResume;
+                showTopic(topicToResume);
             } else {
                 showMathChapters();
             }
