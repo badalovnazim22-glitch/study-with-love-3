@@ -327,6 +327,7 @@ public class MainActivity extends Activity {
                     .putInt("app_accent_color",chosen).putString("learning_focus",focus)
                     .putInt("daily_goal_minutes",minutes).putInt("weekly_goal_minutes",minutes*5)
                     .putBoolean("welcome_done",true).putBoolean("onboarding_gift_flower",true)
+                    .putInt("flower_petals",Math.max(1,prefs.getInt("flower_petals",0)))
                     .putString("onboarding_avatar",prefs.getString("onboarding_avatar","🌸")).apply();
             applySavedTheme();
             TextView flower=text("🌸",82,PINK,true);flower.setGravity(Gravity.CENTER);page.addView(flower,lp(-1,145,0,0,0,8));
@@ -338,7 +339,7 @@ public class MainActivity extends Activity {
             addText(page,"Первый маленький успех — сделай 1 минуту фокуса.",14,MUTED,false);
             page.addView(new android.widget.Space(this),new LinearLayout.LayoutParams(1,0,1f));
             Button begin=button("Начать 1 минуту фокуса",true);page.addView(begin,lp(-1,52,0,18,0,6));begin.setOnClickListener(v->{selectedStudyMinutes=1;timerRemainingMs=60000L;showPomodoro();});
-            Button later=button("Перейти на главный экран",false);page.addView(later,lp(-1,46,0,0,0,0));later.setOnClickListener(v->showHome());
+            Button later=button("Пропустить",false);page.addView(later,lp(-1,46,0,0,0,0));later.setOnClickListener(v->showHome());
         }
     }
 
@@ -494,12 +495,16 @@ public class MainActivity extends Activity {
         }
         root.addView(brandRow, lp(-1, 48, 0, 0, 0, 16));
         }
-        TextView h = text(title, 23, DARK, true);
-        h.setLetterSpacing(-0.02f);
-        root.addView(h, lp(-1, -2, 0, 0, 0, 6));
-        TextView sub = text(subtitle, 13, MUTED, false);
-        sub.setLineSpacing(dp(2), 1f);
-        root.addView(sub, lp(-1, -2, 0, 0, 0, 16));
+        if (!title.isEmpty()) {
+            TextView h = text(title, 23, DARK, true);
+            h.setLetterSpacing(-0.02f);
+            root.addView(h, lp(-1, -2, 0, 0, 0, 6));
+        }
+        if (!subtitle.isEmpty()) {
+            TextView sub = text(subtitle, 13, MUTED, false);
+            sub.setLineSpacing(dp(2), 1f);
+            root.addView(sub, lp(-1, -2, 0, 0, 0, 16));
+        }
     }
 
     private View bottomNavigation() {
