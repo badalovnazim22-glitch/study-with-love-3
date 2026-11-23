@@ -344,6 +344,54 @@ public class AiTutorActivity extends Activity {
         }
     }
 
+    private void loadAppearance() {
+        SharedPreferences p = getSharedPreferences("study_progress", MODE_PRIVATE);
+        String theme = p.getString("app_theme", "pink");
+        language = p.getString("app_language", "ru");
+        String font = p.getString("app_font", "sans");
+        if ("rounded".equals(font)) fontFamily = "sans-serif-rounded";
+        else if ("serif".equals(font)) fontFamily = "serif";
+        else if ("mono".equals(font)) fontFamily = "monospace";
+        else if ("condensed".equals(font)) fontFamily = "sans-serif-condensed";
+        else if ("medium".equals(font)) fontFamily = "sans-serif-medium";
+        else fontFamily = "sans-serif";
+        if ("night".equals(theme)) { BG=0xFF17151D; PINK=0xFFE39AB5; PALE=0xFF302735; DARK=0xFFF4EAF0; MUTED=0xFFB6A8B2; }
+        else if ("lavender".equals(theme)) { BG=0xFFF8F6FF; PINK=0xFF8979B8; PALE=0xFFF0ECFA; DARK=0xFF393448; MUTED=0xFF8E879E; }
+        else if ("mint".equals(theme)) { BG=0xFFF5FAF7; PINK=0xFF659B86; PALE=0xFFEAF5EF; DARK=0xFF34443D; MUTED=0xFF84958C; }
+        else if ("white".equals(theme)) { BG=0xFFF7F8FA; PINK=0xFF65758B; PALE=0xFFE9EDF2; DARK=0xFF303844; MUTED=0xFF87919E; }
+        else if ("brown".equals(theme)) { BG=0xFFF7F1EA; PINK=0xFF8B6046; PALE=0xFFEDE0D2; DARK=0xFF49382E; MUTED=0xFF9B8778; }
+        else if ("gold".equals(theme)) { BG=0xFFFFF8DF; PINK=0xFFC49318; PALE=0xFFF5E2A6; DARK=0xFF49340B; MUTED=0xFF92712C; }
+        else if ("luxury".equals(theme)) { BG=0xFF211B18; PINK=0xFFD6B36A; PALE=0xFF3A3028; DARK=0xFFF3E7D0; MUTED=0xFFB7A68B; }
+        else if ("sky".equals(theme)) { BG=0xFFF1F8FC; PINK=0xFF5D91B5; PALE=0xFFE1EFF8; DARK=0xFF304656; MUTED=0xFF8199A8; }
+        else if ("peach".equals(theme)) { BG=0xFFFFF5EF; PINK=0xFFD88968; PALE=0xFFFBE5D9; DARK=0xFF513D34; MUTED=0xFFA88D80; }
+        else if ("red".equals(theme)) { BG=0xFFFFF5F4; PINK=0xFFB32635; PALE=0xFFF8E2E3; DARK=0xFF4B2026; MUTED=0xFF9D777B; }
+        else if ("lv".equals(theme)) { BG=0xFFF4E8D5; PINK=0xFF76502F; PALE=0xFFE7D2B3; DARK=0xFF3B281C; MUTED=0xFF92775E; }
+        else if ("system".equals(theme) && (getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES) { BG=0xFF17151D; PINK=0xFFE39AB5; PALE=0xFF302735; DARK=0xFFF4EAF0; MUTED=0xFFB6A8B2; }
+        if ("system".equals(theme) && android.os.Build.VERSION.SDK_INT >= 31) {
+            try {
+                boolean night=(getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES;
+                int a=getResources().getIdentifier("system_accent1_600","color","android");
+                int b=getResources().getIdentifier(night?"system_neutral1_900":"system_neutral1_10","color","android");
+                int c=getResources().getIdentifier(night?"system_neutral1_800":"system_neutral1_50","color","android");
+                int d=getResources().getIdentifier(night?"system_neutral1_50":"system_neutral1_900","color","android");
+                if(a!=0) PINK=getResources().getColor(a,getTheme()); if(b!=0) BG=getResources().getColor(b,getTheme());
+                if(c!=0) PALE=getResources().getColor(c,getTheme()); if(d!=0) DARK=getResources().getColor(d,getTheme());
+            } catch(Exception ignored) {}
+        }
+    }
+
+    private void updateSystemBars() {
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
+            android.view.WindowInsetsController c=getWindow().getInsetsController();
+            if(c!=null) { int f=android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+                int appearance=android.graphics.Color.luminance(BG)>0.5f?f:0; c.setSystemBarsAppearance(appearance,f); }
+        } else if (android.os.Build.VERSION.SDK_INT >= 23) {
+            getWindow().getDecorView().setSystemUiVisibility(android.graphics.Color.luminance(BG)>0.5f?View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR:0);
+        }
+    }
+
+    private String tr(String ru, String en, String az) { return "en".equals(language)?en:("az".equals(language)?az:ru); }
+
     private TextView label(String value, int size, int color, boolean bold) {
         TextView view = new TextView(this);
         view.setText(value);
