@@ -465,7 +465,8 @@ public class MainActivity extends Activity {
         if (currentScreen.equals("home")) {
             TextView settings = text("⚙", 17, PINK, false); settings.setGravity(Gravity.CENTER);
             settings.setBackground(shape(PALE, 16, "night".equals(prefs.getString("app_theme","pink"))?0xFF65566A:0xFFF1DDE4));
-            brandRow.addView(settings, lp(32, 30, 5, 0, 0, 0));
+            settings.setContentDescription("Открыть настройки");
+            brandRow.addView(settings, lp(48, 48, 5, 0, 0, 0));
             settings.setOnClickListener(v -> {settings.animate().rotationBy(90f).scaleX(1.18f).scaleY(1.18f).setDuration(170).withEndAction(()->{settings.animate().rotationBy(90f).scaleX(1f).scaleY(1f).setDuration(180).start();showSettings();}).start();});
         }
         root.addView(brandRow, lp(-1, 48, 0, 0, 0, 16));
@@ -1491,11 +1492,29 @@ public class MainActivity extends Activity {
         Map<String,Integer> byTopic=new TreeMap<>();Map<String,Map<String,Integer>> kinds=new TreeMap<>();List<String> keys=new ArrayList<>();
         for(String key:prefs.getAll().keySet())if(key.startsWith("mistake_")){keys.add(key);try{org.json.JSONObject o=new org.json.JSONObject(prefs.getString(key,"{}"));String topic=o.optString("topic","Другая тема"),kind=o.optString("kind","Вычисление");byTopic.put(topic,byTopic.containsKey(topic)?byTopic.get(topic)+1:1);Map<String,Integer> group=kinds.get(topic);if(group==null){group=new TreeMap<>();kinds.put(topic,group);}group.put(kind,group.containsKey(kind)?group.get(kind)+1:1);}catch(Exception ignored){}}
         LinearLayout summary=card();addText(summary,"ЗАПИСЕЙ В ЖУРНАЛЕ",11,PINK,true);addText(summary,String.valueOf(keys.size()),34,DARK,true);addText(summary,"Сохраняются неверные ответы и тип затруднения.",12,MUTED,false);root.addView(summary,lp(-1,-2,0,0,0,12));
-        if(keys.isEmpty())addText(root,"Пока ошибок нет. Решай мини-тесты — если что-то не получится, задание появится здесь.",14,MUTED,false);
-        else for(Map.Entry<String,Integer> e:byTopic.entrySet()){LinearLayout item=card();addText(item,e.getKey(),14,DARK,true);addText(item,e.getValue()+" ошибок в журнале",12,MUTED,false);Map<String,Integer> group=kinds.get(e.getKey());if(group!=null){StringBuilder types=new StringBuilder("Типы: ");for(Map.Entry<String,Integer> kind:group.entrySet()){if(types.length()>6)types.append(" · ");types.append(kind.getKey()).append(" (").append(kind.getValue()).append(")");}addText(item,types.toString(),11,PINK,false);}root.addView(item,lp(-1,-2,0,0,0,6));}
-        Button train=button("🧠  Тренировать мои ошибки",true);train.setEnabled(!keys.isEmpty());train.setAlpha(keys.isEmpty()?.45f:1f);train.setOnClickListener(v->startWeaknessTraining());root.addView(train,lp(-1,50,0,10,0,8));
-        Button back=button("← К урокам",false);back.setOnClickListener(v->showChapters());root.addView(back,lp(-1,48,0,0,0,0));
+        if(keys.isEmpty()) {
+            addEmptyState(root, "🌷", "Пока всё получается!", "Здесь появятся темы, которые стоит повторить. Начни с любого урока.", "Перейти к урокам", () -> showChapters());
+        } else for(Map.Entry<String,Integer> e:byTopic.entrySet()){LinearLayout item=card();addText(item,e.getKey(),14,DARK,true);addText(item,e.getValue()+" ошибок в журнале",12,MUTED,false);Map<String,Integer> group=kinds.get(e.getKey());if(group!=null){StringBuilder types=new StringBuilder("Типы: ");for(Map.Entry<String,Integer> kind:group.entrySet()){if(types.length()>6)types.append(" · ");types.append(kind.getKey()).append(" (").append(kind.getValue()).append(")");}addText(item,types.toString(),11,PINK,false);}root.addView(item,lp(-1,-2,0,0,0,6));}
+        if(!keys.isEmpty()) {
+            Button train=button("🧠  Тренировать мои ошибки",true);
+            train.setOnClickListener(v->startWeaknessTraining());
+            root.addView(train,lp(-1,50,0,10,0,8));
+        }
     }
+    private void addEmptyState(LinearLayout host, String emoji, String title, String description, String actionLabel, Runnable action) {
+        LinearLayout empty = card();
+        empty.setGravity(Gravity.CENTER_HORIZONTAL);
+        empty.setPadding(dp(18), dp(18), dp(18), dp(18));
+        TextView art = text(emoji, 44, PINK, true); art.setGravity(Gravity.CENTER); art.setContentDescription(title);
+        empty.addView(art, lp(-1, 66, 0, 0, 0, 8));
+        TextView heading = text(title, 17, DARK, true); heading.setGravity(Gravity.CENTER);
+        empty.addView(heading, lp(-1, -2, 0, 0, 0, 6));
+        TextView detail = text(description, 13, MUTED, false); detail.setGravity(Gravity.CENTER);
+        empty.addView(detail, lp(-1, -2, 0, 0, 0, 12));
+        Button actionButton = button(actionLabel, true); empty.addView(actionButton, lp(-1, 48, 0, 0, 0, 0));
+        actionButton.setOnClickListener(v -> action.run()); host.addView(empty, lp(-1, -2, 0, 0, 0, 10));
+    }
+
     private void addSpacedRepetitionSection(){
         LinearLayout section=card();addText(section,"🔁  ПОРА ПОВТОРИТЬ",12,PINK,true);int count=0;long now=System.currentTimeMillis();
         for(Map.Entry<String,List<String>> entry:chapters.entrySet())for(String topic:entry.getValue()){
@@ -1953,7 +1972,11 @@ public class MainActivity extends Activity {
             boolean filtering=!q.isEmpty()||!activeFilter[0].equals("Все");
             counter.setText(filtering?"Найдено: "+matches.size():"Всего: "+ids.size());
             if(filtering){TextView reset=text("Сбросить",12,PINK,true);reset.setGravity(Gravity.CENTER);reset.setPadding(dp(8),0,0,0);heading.addView(reset,lp(-2,48,5,0,0,0));reset.setOnClickListener(v->{queryValue[0]="";search.setText("");activeFilter[0]="Все";render[0].run();});}
-            if(matches.isEmpty()){addText(entries,filtering?"Ничего не найдено. Попробуй изменить запрос или фильтр.":"🌷 Здесь появятся твои маленькие победы. Сохрани первую запись — и возвращайся к ней в трудные дни.",13,MUTED,false);return;}
+            if(matches.isEmpty()){
+                if(filtering) addEmptyState(entries, "⌕", "Ничего не найдено", "Попробуй изменить запрос или фильтр.", "Сбросить поиск", () -> { queryValue[0]=""; search.setText(""); activeFilter[0]="Все"; render[0].run(); });
+                else addEmptyState(entries, "🌷", "Здесь будут твои победы", "Сохрани первую запись — и возвращайся к ней, чтобы вспомнить, как много уже получилось.", "Написать первую запись", () -> { note.requestFocus(); ((android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).showSoftInput(note, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT); });
+                return;
+            }
             String currentMonth="";
             Set<String> collapsed=new TreeSet<>(prefs.getStringSet("diary_collapsed_months",new TreeSet<String>()));
             for(String id:matches){long stamp=Long.parseLong(id);Calendar cal=Calendar.getInstance();cal.setTimeInMillis(stamp);String monthKey=new SimpleDateFormat("yyyy-MM",Locale.US).format(new Date(stamp));
@@ -1997,8 +2020,8 @@ public class MainActivity extends Activity {
         android.view.ViewGroup decor = (android.view.ViewGroup) getWindow().getDecorView();
         android.widget.FrameLayout.LayoutParams params = new android.widget.FrameLayout.LayoutParams(
                 Math.min(getResources().getDisplayMetrics().widthPixels - dp(32), dp(420)), -2,
-                Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
-        params.setMargins(dp(16), 0, dp(16), dp(28));
+                Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        params.setMargins(dp(16), dp(12), dp(16), 0);
         decor.addView(overlay, params);
         overlay.setAlpha(0f);
         overlay.setTranslationY(dp(18));
@@ -2691,7 +2714,7 @@ public class MainActivity extends Activity {
         if(color==0xFFC97891||color==0xFFD96C91)color=PINK;
         else if(color==0xFF3F3439||color==0xFF3A3036||color==0xFF382F34||color==0xFF49382E||color==0xFF34443D||color==0xFF303844)color=DARK;
         else if(color==0xFF95878C||color==0xFF8E879E||color==0xFF9B8778||color==0xFF84958C)color=MUTED;
-        value=translate(value); TextView t = new TextView(this); t.setText(value); t.setTextSize(size); t.setTextColor(color); t.setTypeface(Typeface.create(selectedFontFamily(),bold?Typeface.BOLD:Typeface.NORMAL)); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
+        value=translate(value); TextView t = new TextView(this); t.setText(value); t.setTextSize(Math.max(12, size)); t.setTextColor(color); t.setTypeface(Typeface.create(selectedFontFamily(),bold?Typeface.BOLD:Typeface.NORMAL)); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
     private void applyPressFeedback(View view) {
         view.setOnTouchListener((v,event)->{
             if(event.getAction()==android.view.MotionEvent.ACTION_DOWN){
