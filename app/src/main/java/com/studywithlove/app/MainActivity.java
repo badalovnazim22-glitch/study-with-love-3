@@ -450,6 +450,7 @@ public class MainActivity extends Activity {
         int record = prefs.getInt("longest_streak", 0);
         int totalTopics = 0, completedTopics = 0;
         for (Map.Entry<String,List<String>> entry : chapters.entrySet()) for (String topic : entry.getValue()) {
+            if(!isTopicInExamScope(entry.getKey(),topic))continue;
             totalTopics++;
             if (topicProgressForChapter(entry.getKey(),topic) == 100) completedTopics++;
         }
@@ -520,7 +521,10 @@ public class MainActivity extends Activity {
          root.addView(ritualRow4, lp(-1, -2, 0, 0, 0, 14));
          LinearLayout ritualRow5 = new LinearLayout(this); ritualRow5.setOrientation(LinearLayout.HORIZONTAL);
          ritualTile(ritualRow5, "🧮", "Математическая викторина", "Играй, повышай уровни и открывай награды", this::showMathQuiz);
-         root.addView(ritualRow5, lp(-1, -2, 0, 0, 0, 14));
+         root.addView(ritualRow5, lp(-1, -2, 0, 0, 0, 9));
+         LinearLayout ritualRow6 = new LinearLayout(this); ritualRow6.setOrientation(LinearLayout.HORIZONTAL);
+         ritualTile(ritualRow6, "♡", "Напарник по учёбе", "Общие недельные цели и тёплые стикеры", this::showStudyBuddy);
+         root.addView(ritualRow6, lp(-1, -2, 0, 0, 0, 14));
 
         LinearLayout reminder = card();
         reminder.setOrientation(LinearLayout.HORIZONTAL); reminder.setGravity(Gravity.CENTER_VERTICAL);
@@ -876,6 +880,7 @@ public class MainActivity extends Activity {
         root.addView(box, lp(-1, -2, 0, 0, 0, 14));
         addTopicStudyCard(topic);
         addTopicReflection(topic);
+        addOwnQuestionCard(topic);
         addTopicPhoto(topic);
         if(selectedChapter!=null&&selectedChapter.startsWith("CUSTOM:")){String[] cp=selectedChapter.split(":",3);if(cp.length>=2){LinearLayout manage=new LinearLayout(this);Button editTopic=button("✎  Изменить содержание",false),deleteTopic=button("Удалить тему",false);manage.addView(editTopic,new LinearLayout.LayoutParams(0,dp(44),1f));manage.addView(deleteTopic,new LinearLayout.LayoutParams(0,dp(44),1f));editTopic.setOnClickListener(v->openCustomTopicDialog(selectedChapter,topic,prefs.getString(topicContentKey(cp[1],topic),"")));deleteTopic.setOnClickListener(v->{new android.app.AlertDialog.Builder(this).setTitle("Удалить тему?").setMessage("Тема и её содержание будут удалены.").setNegativeButton("Отмена",null).setPositiveButton("Удалить",(d,w)->{Set<String> ts=new TreeSet<>(prefs.getStringSet("custom_lesson_topics_"+cp[1],new TreeSet<String>()));ts.remove(topic);prefs.edit().putStringSet("custom_lesson_topics_"+cp[1],ts).remove(topicContentKey(cp[1],topic)).remove("progress_"+topic).remove("done_"+topic).apply();chapters.put(selectedChapter,new ArrayList<>(ts));showTopics(selectedChapter);}).show();});root.addView(manage,lp(-1,48,0,0,0,12));}}
 
@@ -976,6 +981,30 @@ public class MainActivity extends Activity {
                 List<MiniQuestion> list=questionBank.get(topic);if(list==null){list=new ArrayList<>();questionBank.put(topic,list);}list.add(q);
             }
         }catch(Exception e){android.util.Log.e("StudyWithLove","Question bank load failed",e);}
+        Set<String> customCards=prefs.getStringSet("custom_question_cards",new TreeSet<String>());
+        for(String payload:customCards){try{org.json.JSONObject item=new org.json.JSONObject(payload);String topic=item.optString("topic",""),prompt=item.optString("prompt","").trim(),answer=item.optString("answer","").trim();if(topic.isEmpty()||prompt.isEmpty()||answer.isEmpty())continue;List<MiniQuestion> list=questionBank.get(topic);if(list==null){list=new ArrayList<>();questionBank.put(topic,list);}boolean duplicate=false;for(MiniQuestion existing:list)if(normalizeAnswer(existing.prompt).equals(normalizeAnswer(prompt))){duplicate=true;break;}if(!duplicate){MiniQuestion q=new MiniQuestion(prompt,null,-1,item.optString("note",""),"input",answer);q.topic=topic;list.add(q);}}catch(Exception ignored){}}
+    }
+    private void addOwnQuestionCard(String topic){
+        Set<String> saved=prefs.getStringSet("custom_question_cards",new TreeSet<String>());int count=0;for(String payload:saved)try{if(topic.equals(new org.json.JSONObject(payload).optString("topic","")))count++;}catch(Exception ignored){}
+        LinearLayout section=card();addText(section,"✎  МОИ КАРТОЧКИ И ЗАМЕТКИ",11,PINK,true);addText(section,"Добавляй свои вопросы прямо во время учёбы. Они сохраняются на устройстве и попадут в мини-тесты этой темы.",12,MUTED,false);addText(section,"Сохранено карточек: "+count,12,DARK,true);
+        Button add=button("＋  Быстро добавить карточку",true);section.addView(add,lp(-1,44,0,5,0,0));
+        add.setOnClickListener(v->{
+            LinearLayout form=new LinearLayout(this);form.setOrientation(LinearLayout.VERTICAL);form.setPadding(dp(4),dp(4),dp(4),dp(2));
+            EditText prompt=new EditText(this);prompt.setHint("Вопрос или формулировка правила");prompt.setMinLines(2);prompt.setGravity(Gravity.TOP);prompt.setTextSize(14);prompt.setTextColor(DARK);form.addView(prompt,lp(-1,78,0,0,0,8));
+            EditText answer=new EditText(this);answer.setHint("Краткий правильный ответ");answer.setSingleLine(true);answer.setTextSize(14);answer.setTextColor(DARK);form.addView(answer,lp(-1,48,0,0,0,8));
+            EditText note=new EditText(this);note.setHint("Пояснение или заметка (необязательно)");note.setMinLines(2);note.setGravity(Gravity.TOP);note.setTextSize(13);note.setTextColor(DARK);form.addView(note,lp(-1,68,0,0,0,0));
+            android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("Новая карточка").setView(form).setNegativeButton("Отмена",null).setPositiveButton("Сохранить",null).create();dialog.setOnShowListener(d->dialog.getButton(-1).setOnClickListener(v2->{
+                String p=prompt.getText().toString().trim(),a=answer.getText().toString().trim(),n=note.getText().toString().trim();
+                if(p.length()<5||p.length()>240){prompt.setError("Вопрос должен содержать от 5 до 240 символов");return;}
+                if(a.isEmpty()||a.length()>120){answer.setError("Ответ должен содержать от 1 до 120 символов");return;}
+                if(n.length()>400){note.setError("Пояснение — не более 400 символов");return;}
+                List<MiniQuestion> existing=questionBank.get(topic);if(existing!=null)for(MiniQuestion q:existing)if(normalizeAnswer(q.prompt).equals(normalizeAnswer(p))){prompt.setError("Такой вопрос уже есть в этой теме");return;}
+                int ownCount=0;for(String raw:prefs.getStringSet("custom_question_cards",new TreeSet<String>()))try{if(topic.equals(new org.json.JSONObject(raw).optString("topic","")))ownCount++;}catch(Exception ignored){}
+                if(ownCount>=100){Toast.makeText(this,"В одной теме можно сохранить не более 100 карточек",Toast.LENGTH_LONG).show();return;}
+                try{org.json.JSONObject item=new org.json.JSONObject();item.put("topic",topic);item.put("prompt",p);item.put("answer",a);item.put("note",n);Set<String> cards=new TreeSet<>(prefs.getStringSet("custom_question_cards",new TreeSet<String>()));cards.add(item.toString());prefs.edit().putStringSet("custom_question_cards",cards).apply();loadQuestionBank();dialog.dismiss();showTopic(topic);Toast.makeText(this,"Карточка сохранена ♡",Toast.LENGTH_SHORT).show();}catch(Exception ex){Toast.makeText(this,"Не удалось сохранить карточку",Toast.LENGTH_SHORT).show();}
+            }));dialog.show();
+        });
+        root.addView(section,lp(-1,-2,0,0,0,12));
     }
     private void startMiniTest(String topic){
         miniTopic=topic;miniQuestions.clear();miniWrongQuestions.clear();miniScore=0;weaknessTrainingMode=false;miniResultSaved=false;
@@ -1203,8 +1232,9 @@ public class MainActivity extends Activity {
         int totalTopics = 0, completedTopics = 0;
         for (String chapter : chapters.keySet()) {
             for (String topic : chapters.get(chapter)) {
+                if(!isTopicInExamScope(chapter,topic))continue;
                 totalTopics++;
-                if (topicProgress(topic) == 100) completedTopics++;
+                if (topicProgressForChapter(chapter,topic) == 100) completedTopics++;
             }
         }
         int overall = totalTopics == 0 ? 0 : completedTopics * 100 / totalTopics;
@@ -1221,10 +1251,12 @@ public class MainActivity extends Activity {
         root.addView(summary, lp(-1, -2, 0, 0, 0, 16));
 
         for (String chapter : chapters.keySet()) {
-            List<String> topics = chapters.get(chapter);
+            List<String> topics = new ArrayList<>();
+            for(String topic:chapters.get(chapter))if(isTopicInExamScope(chapter,topic))topics.add(topic);
+            if(topics.isEmpty())continue;
             int sum = 0;
             for (String topic : topics) sum += topicProgressForChapter(chapter,topic);
-            int chapterPercent = topics.isEmpty() ? 0 : sum / topics.size();
+            int chapterPercent = sum / topics.size();
             LinearLayout section = card();
             TextView chapterBadge = text("✿  РАЗДЕЛ " + (new ArrayList<>(chapters.keySet()).indexOf(chapter) + 1), 12, PINK, true);
             chapterBadge.setBackground(shape(0xFFFFEEF3, 16, 0xFFFFD5E1));
@@ -1432,7 +1464,46 @@ public class MainActivity extends Activity {
         };
         save.setOnClickListener(v->{String n=title.getText().toString().trim(),d=date.getText().toString().trim();if(n.isEmpty()){title.setError("Введи название цели");return;}if(d.isEmpty()){showSavedBanner("Выбери дату","Укажи день экзамена ♡");return;}if(daysUntil(d)<0){showSavedBanner("Неверная дата","Выбери сегодняшнюю или будущую дату");return;}boolean isNew=editing[0]==null;String id=isNew?String.valueOf(System.currentTimeMillis()):editing[0];Set<String> ids=new TreeSet<>(prefs.getStringSet("exam_goal_ids",new TreeSet<String>()));ids.add(id);SharedPreferences.Editor e=prefs.edit().putString("exam_goal_title_"+id,n).putString("exam_goal_date_"+id,d).putStringSet("exam_goal_ids",ids);if(isNew)e.putString("exam_goal_created_"+id,todayKey());if(prefs.getString("exam_main_goal_id","").isEmpty())e.putString("exam_main_goal_id",id);e.apply();StudyWidgetProvider.updateAll(this);editing[0]=null;title.setText("");date.setText("");save.setText("＋  Добавить цель");render[0].run();showSavedBanner("Цель сохранена","Она появилась в твоём списке ♡");});
         render[0].run();
+        addExamTopicSelector();
     }
+    private String examTopicKey(String chapter,String topic){return topicStorageSuffix(chapter,topic);}
+    private boolean isTopicInExamScope(String chapter,String topic){
+        if(!prefs.getBoolean("exam_topic_filter_enabled",false))return true;
+        return prefs.getStringSet("exam_topic_ids",new TreeSet<String>()).contains(examTopicKey(chapter,topic));
+    }
+    private void addExamTopicSelector(){
+        LinearLayout section=card();addText(section,"📚  ТЕМЫ ДЛЯ ЭКЗАМЕНА",12,PINK,true);
+        addText(section,"Отметь только те темы, которые входят в твой экзамен. При включённом фильтре общий прогресс и планировщик будут учитывать именно их.",12,MUTED,false);
+        CheckBox enabled=new CheckBox(this);enabled.setText("Считать прогресс и план только по отмеченным темам");enabled.setTextColor(DARK);enabled.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));enabled.setChecked(prefs.getBoolean("exam_topic_filter_enabled",false));section.addView(enabled,lp(-1,-2,0,5,0,6));
+        enabled.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("exam_topic_filter_enabled",on).apply();Toast.makeText(this,on?"Фильтр тем экзамена включён":"Весь учебный план снова учитывается",Toast.LENGTH_SHORT).show();});
+        LinearLayout actions=new LinearLayout(this);Button all=button("Выбрать все",false),none=button("Снять выбор",false);actions.addView(all,new LinearLayout.LayoutParams(0,dp(40),1f));actions.addView(none,new LinearLayout.LayoutParams(0,dp(40),1f));section.addView(actions,lp(-1,42,0,0,0,6));
+        all.setOnClickListener(v->{Set<String> ids=new TreeSet<>();for(Map.Entry<String,List<String>> e:chapters.entrySet())for(String topic:e.getValue())ids.add(examTopicKey(e.getKey(),topic));prefs.edit().putStringSet("exam_topic_ids",ids).apply();showExam();});
+        none.setOnClickListener(v->{prefs.edit().putStringSet("exam_topic_ids",new TreeSet<String>()).apply();showExam();});
+        Set<String> selected=new TreeSet<>(prefs.getStringSet("exam_topic_ids",new TreeSet<String>()));
+        for(Map.Entry<String,List<String>> entry:chapters.entrySet()){
+            addText(section,entry.getKey().replaceFirst("^[^ ]+\\s*",""),13,DARK,true);
+            for(String topic:entry.getValue()){
+                String key=examTopicKey(entry.getKey(),topic);CheckBox check=new CheckBox(this);check.setText(topic);check.setTextSize(12);check.setTextColor(DARK);check.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));check.setChecked(selected.contains(key));section.addView(check,lp(-1,-2,0,0,0,1));
+                check.setOnCheckedChangeListener((v,checked)->{Set<String> ids=new TreeSet<>(prefs.getStringSet("exam_topic_ids",new TreeSet<String>()));if(checked)ids.add(key);else ids.remove(key);prefs.edit().putStringSet("exam_topic_ids",ids).apply();});
+            }
+        }
+        root.addView(section,lp(-1,-2,0,0,0,14));
+    }
+    private String createBuddyCode(String sticker){
+        try{org.json.JSONObject o=new org.json.JSONObject();o.put("version",1);o.put("alias",prefs.getString("buddy_alias",prefs.getString("display_name","Напарник")));o.put("weekly_goal",prefs.getInt("weekly_goal_minutes",300));o.put("weekly_done",weeklyMinutesLast7Days());o.put("sticker",sticker==null?"🌷":sticker);o.put("message","Рада учиться рядом, даже если мы занимаемся в разное время ♡");o.put("date",todayKey());return "SWL_BUDDY_V1:"+android.util.Base64.encodeToString(o.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8),android.util.Base64.URL_SAFE|android.util.Base64.NO_WRAP|android.util.Base64.NO_PADDING);}catch(Exception e){return "";}}
+    private boolean importBuddyCode(String raw){
+        try{String code=raw.trim();if(code.startsWith("SWL_BUDDY_V1:"))code=code.substring("SWL_BUDDY_V1:".length());byte[] bytes=android.util.Base64.decode(code,android.util.Base64.URL_SAFE|android.util.Base64.NO_WRAP);org.json.JSONObject o=new org.json.JSONObject(new String(bytes,java.nio.charset.StandardCharsets.UTF_8));if(o.optInt("version",0)!=1)return false;String alias=o.optString("alias","Напарник").trim();int goal=o.optInt("weekly_goal",0),done=o.optInt("weekly_done",0);if(alias.isEmpty()||alias.length()>30||goal<30||goal>10080||done<0||done>10080)return false;prefs.edit().putString("buddy_partner_alias",alias).putInt("buddy_partner_goal",goal).putInt("buddy_partner_done",done).putString("buddy_partner_sticker",o.optString("sticker","🌷")).putString("buddy_partner_message",o.optString("message","")).putString("buddy_partner_date",o.optString("date","")).apply();return true;}catch(Exception e){return false;}}
+    private void showStudyBuddy(){
+        currentScreen="study_buddy";base("Напарник по учёбе ♡","Поддерживайте друг друга без соревнования и спешки");
+        LinearLayout own=card();addText(own,"ТВОЯ НЕДЕЛЯ",11,PINK,true);int ownGoal=prefs.getInt("weekly_goal_minutes",300),ownDone=weeklyMinutesLast7Days();addText(own,ownDone+" из "+ownGoal+" минут",22,DARK,true);addProgressLine(own,"Твой вклад в общую цель",ownGoal<=0?0:Math.min(100,ownDone*100/ownGoal));EditText alias=new EditText(this);alias.setSingleLine(true);alias.setText(prefs.getString("buddy_alias",prefs.getString("display_name","")));alias.setHint("Как тебя называть напарнику");alias.setTextColor(DARK);alias.setBackground(shape(0xFFFFFFFF,14,0xFFEADDE2));own.addView(alias,lp(-1,46,0,7,0,6));Button saveAlias=button("Сохранить имя для обмена",false);saveAlias.setOnClickListener(v->{String n=alias.getText().toString().trim();if(n.isEmpty()||n.length()>30){alias.setError("До 30 символов");return;}prefs.edit().putString("buddy_alias",n).apply();Toast.makeText(this,"Имя сохранено",Toast.LENGTH_SHORT).show();});own.addView(saveAlias,lp(-1,42,0,0,0,0));root.addView(own,lp(-1,-2,0,0,0,10));
+        String partner=prefs.getString("buddy_partner_alias","");if(!partner.isEmpty()){LinearLayout shared=card();addText(shared,"ВАШ ОБЩИЙ РИТМ",11,PINK,true);int partnerDone=prefs.getInt("buddy_partner_done",0),partnerGoal=prefs.getInt("buddy_partner_goal",300),combinedGoal=ownGoal+partnerGoal,combinedDone=ownDone+partnerDone;addText(shared,"Ты + "+partner,18,DARK,true);addText(shared,combinedDone+" из "+combinedGoal+" минут за неделю",15,DARK,true);addProgressLine(shared,"Общая цель",combinedGoal<=0?0:Math.min(100,combinedDone*100/combinedGoal));String sticker=prefs.getString("buddy_partner_sticker","🌷");addText(shared,"Стикер от напарника: "+sticker,14,PINK,true);addText(shared,prefs.getString("buddy_partner_message",""),12,MUTED,false);addText(shared,"Последнее обновление: "+prefs.getString("buddy_partner_date","—"),11,MUTED,false);root.addView(shared,lp(-1,-2,0,0,0,10));}
+        LinearLayout exchange=card();addText(exchange,"ОБМЕН ОБНОВЛЕНИЯМИ",11,PINK,true);addText(exchange,"Создай короткий код и отправь его напарнику любым удобным способом. Он сможет прислать ответный код — синхронизация асинхронная, без аккаунтов и публичного профиля.",12,MUTED,false);
+        Button share=button("↗  Отправить недельное обновление",true);exchange.addView(share,lp(-1,46,0,7,0,6));share.setOnClickListener(v->{String code=createBuddyCode("🌷");if(code.isEmpty())return;Intent send=new Intent(Intent.ACTION_SEND);send.setType("text/plain");send.putExtra(Intent.EXTRA_SUBJECT,"Study with Love — обновление напарнику");send.putExtra(Intent.EXTRA_TEXT,code);startActivity(Intent.createChooser(send,"Отправить напарнику"));});
+        Button sticker=button("♡  Отправить тёплый стикер",false);exchange.addView(sticker,lp(-1,44,0,0,0,8));sticker.setOnClickListener(v->{String[] options={"🌷 Поддерживаю!","✨ У тебя получится!","☕ Время маленького перерыва","💗 Спасибо за совместную учёбу"};new android.app.AlertDialog.Builder(this).setTitle("Выбери стикер").setItems(options,(d,w)->{String code=createBuddyCode(options[w].substring(0,2));Intent send=new Intent(Intent.ACTION_SEND);send.setType("text/plain");send.putExtra(Intent.EXTRA_TEXT,code);startActivity(Intent.createChooser(send,"Отправить стикер"));}).show();});
+        EditText incoming=new EditText(this);incoming.setHint("Вставь код, который прислал напарник");incoming.setMinLines(2);incoming.setGravity(Gravity.TOP);incoming.setTextSize(12);incoming.setTextColor(DARK);incoming.setBackground(shape(0xFFFFFFFF,14,0xFFEADDE2));exchange.addView(incoming,lp(-1,76,0,0,0,6));Button accept=button("Получить обновление",false);exchange.addView(accept,lp(-1,44,0,0,0,0));accept.setOnClickListener(v->{if(importBuddyCode(incoming.getText().toString())){Toast.makeText(this,"Обновление напарника принято ♡",Toast.LENGTH_SHORT).show();showStudyBuddy();}else incoming.setError("Код не распознан. Проверь, что скопирован весь текст.");});root.addView(exchange,lp(-1,-2,0,0,0,10));
+        Button back=button("← На главную",true);back.setOnClickListener(v->showHome());root.addView(back,lp(-1,48,0,0,0,0));
+    }
+
     private long daysUntil(String isoDate) {
         try {SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd",Locale.US);f.setLenient(false);f.setTimeZone(AppTime.zone());Date target=f.parse(isoDate);Calendar a=Calendar.getInstance(AppTime.zone());a.set(Calendar.HOUR_OF_DAY,0);a.set(Calendar.MINUTE,0);a.set(Calendar.SECOND,0);a.set(Calendar.MILLISECOND,0);Calendar b=Calendar.getInstance(AppTime.zone());b.setTime(target);b.set(Calendar.HOUR_OF_DAY,0);b.set(Calendar.MINUTE,0);b.set(Calendar.SECOND,0);b.set(Calendar.MILLISECOND,0);return (b.getTimeInMillis()-a.getTimeInMillis())/86400000L;}catch(Exception e){return -1;}
     }
@@ -1782,7 +1853,7 @@ public class MainActivity extends Activity {
     }
     private int ensureExamPlan(){
         String examDate=mainExamDate();if(examDate.isEmpty())return 0;long daysUntilExam=daysUntil(examDate);if(daysUntilExam<0)return 0;int days=(int)Math.min(3650L,Math.max(1L,daysUntilExam+1));
-        List<String> pending=new ArrayList<>();for(Map.Entry<String,List<String>> entry:chapters.entrySet())for(String topic:entry.getValue())if(topicProgressForChapter(entry.getKey(),topic)<100)pending.add(topic);
+        List<String> pending=new ArrayList<>();for(Map.Entry<String,List<String>> entry:chapters.entrySet())for(String topic:entry.getValue())if(isTopicInExamScope(entry.getKey(),topic)&&topicProgressForChapter(entry.getKey(),topic)<100)pending.add(topic);
         Map<String,Set<String>> planned=new LinkedHashMap<>();Calendar start=Calendar.getInstance(AppTime.zone());
         for(int i=0;i<pending.size();i++){int offset=Math.min(days-1,(int)(((long)i*days)/Math.max(1,pending.size())));Calendar day=(Calendar)start.clone();day.add(Calendar.DAY_OF_YEAR,offset);String date=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(day.getTime());Set<String> tasks=planned.get(date);if(tasks==null){tasks=new TreeSet<>();planned.put(date,tasks);}tasks.add("📘 Экзамен: "+pending.get(i)+" · 20 мин · Повторить правило и решить задачи");}
         SharedPreferences.Editor edit=prefs.edit();for(String key:prefs.getAll().keySet())if(key.startsWith("planner_tasks_")){Set<String> old=new TreeSet<>(prefs.getStringSet(key,new TreeSet<String>()));boolean changed=false;java.util.Iterator<String> it=old.iterator();while(it.hasNext())if(it.next().startsWith("📘 Экзамен:")){it.remove();changed=true;}if(changed)edit.putStringSet(key,old);}
