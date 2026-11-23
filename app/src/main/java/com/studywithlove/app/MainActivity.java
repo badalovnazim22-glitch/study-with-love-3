@@ -123,12 +123,25 @@ public class MainActivity extends Activity {
         }
         loadChapters();
         loadQuestionBank();
+        setupDynamicShortcuts();
         scheduleReminders(this); rescheduleFutureLetterReminders(this); WeeklyReportReceiver.schedule(this); StudyWidgetProvider.updateAll(this);
         if (prefs.getBoolean("notifications_enabled", true) && Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 20);
-        if (!prefs.getBoolean("welcome_done", false)) showWelcome(); else showHome();
+        if (!prefs.getBoolean("welcome_done", false)) showWelcome(); else { showHome(); handleQuickAction(getIntent()); }
     }
 
+    private void setupDynamicShortcuts(){
+        if(Build.VERSION.SDK_INT<25)return;try{android.content.pm.ShortcutManager manager=getSystemService(android.content.pm.ShortcutManager.class);if(manager==null)return;List<android.content.pm.ShortcutInfo> items=new ArrayList<>();
+            String[] ids={"focus25","future_letter","diary"};String[] labels={"Фокус 25 минут","Письмо себе","Дневник"};String[] actions={"com.studywithlove.app.SHORTCUT_FOCUS","com.studywithlove.app.SHORTCUT_LETTER","com.studywithlove.app.SHORTCUT_DIARY"};
+            for(int i=0;i<ids.length;i++){Intent intent=new Intent(this,MainActivity.class).setAction(actions[i]).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP);android.content.pm.ShortcutInfo info=new android.content.pm.ShortcutInfo.Builder(this,ids[i]).setShortLabel(labels[i]).setLongLabel(labels[i]).setIcon(android.graphics.drawable.Icon.createWithResource(this,R.mipmap.ic_launcher)).setIntent(intent).build();items.add(info);}manager.setDynamicShortcuts(items);
+        }catch(Exception ignored){}
+    }
+    private void handleQuickAction(Intent intent){
+        if(intent==null)return;String action=intent.getAction();if("com.studywithlove.app.SHORTCUT_FOCUS".equals(action)){intent.setAction(null);showPomodoro();selectedStudyMinutes=25;timerRemainingMs=25*60000L;updateTimerDisplay();startTimer();}
+        else if("com.studywithlove.app.SHORTCUT_LETTER".equals(action)){intent.setAction(null);showFutureLetters();}
+        else if("com.studywithlove.app.SHORTCUT_DIARY".equals(action)){intent.setAction(null);showDiary();}
+    }
+    @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);setIntent(intent);handleQuickAction(intent);}
     private void showWelcome() {
         currentScreen="welcome"; base("Добро пожаловать ♡","Давай познакомимся и настроим Study with Love");
         LinearLayout panel=card();panel.setGravity(Gravity.CENTER_HORIZONTAL);panel.setPadding(dp(20),dp(20),dp(20),dp(20));
