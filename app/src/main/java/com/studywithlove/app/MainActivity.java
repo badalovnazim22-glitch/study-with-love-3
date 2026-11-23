@@ -1717,7 +1717,7 @@ public class MainActivity extends Activity {
         return id.isEmpty()?"":prefs.getString("exam_goal_date_"+id,"");
     }
     private int ensureExamPlan(){
-        String examDate=mainExamDate();if(examDate.isEmpty())return 0;int days=daysUntil(examDate);if(days<0)return 0;days=Math.max(1,days+1);
+        String examDate=mainExamDate();if(examDate.isEmpty())return 0;long daysUntilExam=daysUntil(examDate);if(daysUntilExam<0)return 0;int days=(int)Math.min(3650L,Math.max(1L,daysUntilExam+1));
         List<String> pending=new ArrayList<>();for(Map.Entry<String,List<String>> entry:chapters.entrySet())for(String topic:entry.getValue())if(topicProgressForChapter(entry.getKey(),topic)<100)pending.add(topic);
         Map<String,Set<String>> planned=new LinkedHashMap<>();Calendar start=Calendar.getInstance(AppTime.zone());
         for(int i=0;i<pending.size();i++){int offset=Math.min(days-1,(int)(((long)i*days)/Math.max(1,pending.size())));Calendar day=(Calendar)start.clone();day.add(Calendar.DAY_OF_YEAR,offset);String date=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(day.getTime());Set<String> tasks=planned.get(date);if(tasks==null){tasks=new TreeSet<>();planned.put(date,tasks);}tasks.add("📘 Экзамен: "+pending.get(i)+" · 20 мин · Повторить правило и решить задачи");}
