@@ -9,8 +9,12 @@ const LOCAL_WINDOW_MS = 60_000;
 async function isRateLimited(request, env) {
   const ip = request.headers.get("CF-Connecting-IP") || "unknown";
   if (env.RATE_LIMITER && typeof env.RATE_LIMITER.limit === "function") {
-    const result = await env.RATE_LIMITER.limit({ key: ip });
-    return !result.success;
+    try {
+      const result = await env.RATE_LIMITER.limit({ key: ip });
+      return !result.success;
+    } catch (error) {
+      console.warn("Rate limiting binding failed; using isolate-local fallback", String(error?.message || error));
+    }
   }
   const now = Date.now();
   let bucket = localRateBuckets.get(ip);
