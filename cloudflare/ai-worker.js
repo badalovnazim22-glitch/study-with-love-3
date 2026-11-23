@@ -1,4 +1,4 @@
-const MODEL = "gemini-3.8-flash";
+const MODEL = "gemini-3.5-flash-lite";
 
 const SYSTEM_INSTRUCTION = `Ты — доброжелательный ИИ-репетитор приложения Study with Love. Отвечай по-русски, если пользователь не просит другой язык. Объясняй математику и другие учебные темы понятно, по шагам, с небольшими примерами. Не просто выдавай ответ: помогай понять ход решения. Если условие задачи неполное, уточни недостающие данные. Не выдумывай факты и честно отмечай неопределённость. Не проси пароли, адреса, номера документов или другие личные данные. Будь уважительным, спокойным и поддерживающим, без давления и оценок личности.`;
 
@@ -74,7 +74,7 @@ export default {
           body: JSON.stringify({
             systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
             contents,
-            generationConfig: { temperature: 0.55, maxOutputTokens: 1200 }
+            generationConfig: { maxOutputTokens: 800 }
           })
         }
       );
