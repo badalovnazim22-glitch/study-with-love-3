@@ -2713,7 +2713,7 @@ public class MainActivity extends Activity {
     }
     private boolean isDarkAppearance(){String t=prefs==null?"pink":prefs.getString("app_theme","pink");return "night".equals(t)||"luxury".equals(t)||("system".equals(t)&&(getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES);}
     private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(17), dp(16), dp(17), dp(16)); boolean night = isDarkAppearance(); String theme=prefs==null?"pink":prefs.getString("app_theme","pink");int surface=night?("luxury".equals(theme)?0xFF30251F:0xFF25212B):0xFFFFFFFF;int border=night?("luxury".equals(theme)?0xFF78613D:0xFF403541):0xFFF3E9EC;android.graphics.drawable.Drawable bg=shape(surface,24,border);if(Build.VERSION.SDK_INT>=21)l.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x227D5264),bg,shape(0xFFFFFFFF,24,0)));else l.setBackground(bg);l.setElevation(dp(2)); return l; }
-    private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, size, color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
+    private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, Math.max(13, size), color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
     private TextView text(String value, int size, int color, boolean bold) {
         if(color==0xFFC97891||color==0xFFD96C91)color=PINK;
         else if(color==0xFF3F3439||color==0xFF3A3036||color==0xFF382F34||color==0xFF49382E||color==0xFF34443D||color==0xFF303844)color=DARK;
