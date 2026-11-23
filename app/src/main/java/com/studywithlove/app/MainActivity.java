@@ -92,7 +92,7 @@ public class MainActivity extends Activity {
 
     private String pendingReviewKey="";
     private static final String PREFS = "study_progress";
-    private static final int PICK_BACKGROUND = 7412;
+    private static final int PICK_BACKGROUND = 7412, PICK_TOPIC_PHOTO = 7415;
     private static final int BACKUP_EXPORT = 7413, BACKUP_IMPORT = 7414;
     private static final String[] DAY_NAMES = {"Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"};
     private final List<String> reminderTimes = new ArrayList<>();
@@ -284,7 +284,7 @@ public class MainActivity extends Activity {
         }return bar;
     }
 
-    @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){super.onActivityResult(requestCode,resultCode,data);if(resultCode!=RESULT_OK||data==null||data.getData()==null)return;android.net.Uri uri=data.getData();if(requestCode==PICK_BACKGROUND){try{getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);}catch(Exception ignored){}prefs.edit().putString("custom_background_uri",uri.toString()).apply();showSettings();Toast.makeText(this,"Фото установлено как фон ♡",Toast.LENGTH_SHORT).show();}else if(requestCode==BACKUP_EXPORT){try{java.io.OutputStream out=getContentResolver().openOutputStream(uri,"wt");if(out==null)throw new Exception();out.write(createBackupJson().getBytes("UTF-8"));out.close();Toast.makeText(this,"Резервная копия сохранена ♡",Toast.LENGTH_LONG).show();}catch(Exception e){Toast.makeText(this,"Не удалось сохранить копию",Toast.LENGTH_LONG).show();}}else if(requestCode==BACKUP_IMPORT){try{java.io.InputStream in=getContentResolver().openInputStream(uri);java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();byte[] buffer=new byte[4096];int n;while((n=in.read(buffer))>0)bytes.write(buffer,0,n);in.close();restoreBackupJson(new String(bytes.toByteArray(),"UTF-8"));Toast.makeText(this,"Данные восстановлены ♡",Toast.LENGTH_LONG).show();loadChapters();showHome();}catch(Exception e){Toast.makeText(this,"Файл копии не удалось прочитать",Toast.LENGTH_LONG).show();}}}
+    @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){super.onActivityResult(requestCode,resultCode,data);if(resultCode!=RESULT_OK||data==null||data.getData()==null)return;android.net.Uri uri=data.getData();if(requestCode==PICK_BACKGROUND){try{getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);}catch(Exception ignored){}prefs.edit().putString("custom_background_uri",uri.toString()).apply();showSettings();Toast.makeText(this,"Фото установлено как фон ♡",Toast.LENGTH_SHORT).show();}else if(requestCode==PICK_TOPIC_PHOTO){try{getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);}catch(Exception ignored){}prefs.edit().putString("topic_photo_"+topicStorageSuffix(selectedChapter,selectedTopic),uri.toString()).apply();showTopic(selectedTopic);}else if(requestCode==BACKUP_EXPORT){try{java.io.OutputStream out=getContentResolver().openOutputStream(uri,"wt");if(out==null)throw new Exception();out.write(createBackupJson().getBytes("UTF-8"));out.close();Toast.makeText(this,"Резервная копия сохранена ♡",Toast.LENGTH_LONG).show();}catch(Exception e){Toast.makeText(this,"Не удалось сохранить копию",Toast.LENGTH_LONG).show();}}else if(requestCode==BACKUP_IMPORT){try{java.io.InputStream in=getContentResolver().openInputStream(uri);java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();byte[] buffer=new byte[4096];int n;while((n=in.read(buffer))>0)bytes.write(buffer,0,n);in.close();restoreBackupJson(new String(bytes.toByteArray(),"UTF-8"));Toast.makeText(this,"Данные восстановлены ♡",Toast.LENGTH_LONG).show();loadChapters();showHome();}catch(Exception e){Toast.makeText(this,"Файл копии не удалось прочитать",Toast.LENGTH_LONG).show();}}}
 
     private LinearLayout settingsGroup(String title) {
         LinearLayout group=new LinearLayout(this);group.setOrientation(LinearLayout.VERTICAL);
@@ -807,6 +807,7 @@ public class MainActivity extends Activity {
     private void showTopic(String topic) {
         currentScreen = "topic";
         if(selectedChapter!=null)prefs.edit().putString("recent_chapter",selectedChapter).putString("recent_topic",topic).apply();
+        selectedTopic=topic;
         base("Твоя тема 📖", "Учись в своём темпе — каждый шаг важен");
         int percent = topicProgress(topic);
         LinearLayout box = card();
@@ -818,6 +819,9 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 21) { topicProgressBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK)); topicProgressBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFE2EA)); }
         box.addView(topicProgressBar, lp(-1, 8, 0, 0, 0, 5));
         root.addView(box, lp(-1, -2, 0, 0, 0, 14));
+        addTopicStudyCard(topic);
+        addTopicReflection(topic);
+        addTopicPhoto(topic);
         if(selectedChapter!=null&&selectedChapter.startsWith("CUSTOM:")){String[] cp=selectedChapter.split(":",3);if(cp.length>=2){LinearLayout manage=new LinearLayout(this);Button editTopic=button("✎  Изменить содержание",false),deleteTopic=button("Удалить тему",false);manage.addView(editTopic,new LinearLayout.LayoutParams(0,dp(44),1f));manage.addView(deleteTopic,new LinearLayout.LayoutParams(0,dp(44),1f));editTopic.setOnClickListener(v->openCustomTopicDialog(selectedChapter,topic,prefs.getString(topicContentKey(cp[1],topic),"")));deleteTopic.setOnClickListener(v->{new android.app.AlertDialog.Builder(this).setTitle("Удалить тему?").setMessage("Тема и её содержание будут удалены.").setNegativeButton("Отмена",null).setPositiveButton("Удалить",(d,w)->{Set<String> ts=new TreeSet<>(prefs.getStringSet("custom_lesson_topics_"+cp[1],new TreeSet<String>()));ts.remove(topic);prefs.edit().putStringSet("custom_lesson_topics_"+cp[1],ts).remove(topicContentKey(cp[1],topic)).remove("progress_"+topic).remove("done_"+topic).apply();chapters.put(selectedChapter,new ArrayList<>(ts));showTopics(selectedChapter);}).show();});root.addView(manage,lp(-1,48,0,0,0,12));}}
 
         addText(root, "ОТМЕТИТЬ ПРОГРЕСС", 12, PINK, true);
@@ -848,6 +852,61 @@ public class MainActivity extends Activity {
         root.addView(back, lp(-1, 50, 0, 0, 0, 0));
     }
 
+    private String topicRule(String topic){
+        String t=topic.toLowerCase(new Locale("ru"));
+        if(t.contains("процент"))return "1% — это одна сотая часть числа. Чтобы найти p% от числа, умножь число на p/100. Чтобы найти число по его проценту, раздели известную часть на p/100.";
+        if(t.contains("пропорц")||t.contains("отношение"))return "В пропорции a/b = c/d произведение крайних членов равно произведению средних: a · d = b · c. В отношении сохраняй один и тот же множитель для обеих величин.";
+        if(t.contains("десятич")||t.contains("округлен")||t.contains("среднее"))return "Записывай числа так, чтобы запятые стояли друг под другом. При умножении учитывай общее число знаков после запятой, при делении перенеси запятую в делителе и делимом одинаково.";
+        if(t.contains("сокращ"))return "Раздели числитель и знаменатель на одно и то же общее число, отличное от нуля. Значение дроби при этом не меняется.";
+        if(t.contains("знаменател"))return "Чтобы сложить или вычесть дроби, сначала приведи их к общему знаменателю. Затем выполни действие с числителями.";
+        if(t.contains("сравнен"))return "Сначала приведи числа к сопоставимому виду. Для дробей с одинаковым знаменателем сравни числители; для десятичных дробей сравни разряды слева направо.";
+        if(t.contains("смешан"))return "Для сложения или вычитания смешанных чисел отдельно работай с целыми и дробными частями. Если нужно, преобразуй смешанное число в неправильную дробь.";
+        if(t.contains("умнож"))return "При умножении дробей перемножь числители и знаменатели. Перед вычислением можно сократить общий множитель по диагонали.";
+        if(t.contains("делен"))return "Деление на дробь замени умножением на обратную дробь. Переверни вторую дробь, затем перемножь.";
+        if(t.contains("части числа"))return "Чтобы найти часть числа, раздели число на знаменатель и умножь на числитель. Чтобы найти целое по части, выполни обратные действия.";
+        if(t.contains("округлен"))return "Посмотри на цифру справа от нужного разряда: 0–4 — оставь разряд без изменения, 5–9 — увеличь его на единицу.";
+        if(t.contains("делим")||t.contains("делител")||t.contains("кратн"))return "Делитель делит число без остатка. Кратные получаются умножением числа на натуральные множители.";
+        if(t.contains("прост")||t.contains("состав"))return "Простое число имеет ровно два натуральных делителя: 1 и само число. У составного делителей больше двух.";
+        if(t.contains("квадрат")||t.contains("куб"))return "Квадрат числа — произведение числа на себя. Куб — произведение трёх одинаковых множителей.";
+        if(t.contains("выражен"))return "Соблюдай порядок действий: сначала скобки, затем умножение и деление, после этого сложение и вычитание.";
+        if(t.contains("сложен")||t.contains("вычит"))return "При сложении и вычитании выравнивай разряды. Проверяй вычитание обратным сложением.";
+        if(t.contains("умножен")||t.contains("делен"))return "Умножение можно проверить делением, а деление — умножением. Следи за разрядами и остатком.";
+        return "Прочитай условие, выдели известные данные, выбери подходящее действие и проверь результат обратным действием.";
+    }
+    private String topicExample(String topic){
+        String t=topic.toLowerCase(new Locale("ru"));
+        if(t.contains("процент"))return "20% от 150: 150 · 20/100 = 30.";
+        if(t.contains("пропорц")||t.contains("отношение"))return "2 : 3 = 8 : 12, потому что обе части первого отношения умножили на 4.";
+        if(t.contains("десятич"))return "2,4 + 0,35 = 2,75. Запятые записываем друг под другом.";
+        if(t.contains("сокращ"))return "6/8 = 3/4: делим числитель и знаменатель на 2.";
+        if(t.contains("знаменател"))return "1/3 + 1/4 = 4/12 + 3/12 = 7/12.";
+        if(t.contains("сравнен"))return "3/8 меньше 5/8, потому что знаменатели одинаковы, а 3 меньше 5.";
+        if(t.contains("смешан"))return "2 1/3 = (2 · 3 + 1)/3 = 7/3.";
+        if(t.contains("умнож"))return "2/3 · 3/5 = 6/15 = 2/5.";
+        if(t.contains("делен"))return "2/3 ÷ 4/5 = 2/3 · 5/4 = 10/12 = 5/6.";
+        if(t.contains("части числа"))return "3/4 от 20: 20 ÷ 4 · 3 = 15.";
+        if(t.contains("округлен"))return "7,46 до десятых = 7,5.";
+        if(t.contains("квадрат"))return "6² = 6 · 6 = 36; 6³ = 6 · 6 · 6 = 216.";
+        if(t.contains("выражен"))return "8 + 3 · 4 = 8 + 12 = 20.";
+        return "Если 24 разделить на 6, получится 4; проверка: 4 · 6 = 24.";
+    }
+    private void addTopicStudyCard(String topic){
+        LinearLayout c=card();addText(c,"💡  КАРТОЧКА ТЕМЫ",11,PINK,true);addText(c,"Главное правило",15,DARK,true);addText(c,topicRule(topic),13,MUTED,false);addText(c,"Пример решения",14,DARK,true);addText(c,topicExample(topic),14,DARK,false);
+        addText(c,"ШАГИ РЕШЕНИЯ",10,PINK,true);String[] steps={"Прочитай условие и определи, что нужно найти","Выбери правило и выполни действие","Проверь ответ обратным действием"};
+        LinearLayout line=new LinearLayout(this);line.setOrientation(LinearLayout.VERTICAL);
+        for(int i=0;i<steps.length;i++){TextView step=text((i+1)+".  "+steps[i],12,DARK,false);step.setPadding(dp(10),dp(8),dp(10),dp(8));step.setBackground(shape(0xFFFFF4F7,13,0));line.addView(step,lp(-1,-2,0,0,0,5));step.setAlpha(0f);step.setTranslationY(dp(8));final TextView animated=step;new Handler().postDelayed(()->animated.animate().alpha(1f).translationY(0).setDuration(220).start(),i*180L);}
+        c.addView(line);root.addView(c,lp(-1,-2,0,0,0,12));
+    }
+    private void addTopicReflection(String topic){
+        LinearLayout c=card();addText(c,"✍️  ОБЪЯСНИ СВОИМИ СЛОВАМИ",11,PINK,true);addText(c,"Представь, что объясняешь правило другу. Что самое важное нужно запомнить?",13,MUTED,false);
+        EditText explanation=new EditText(this);explanation.setHint("Я понял(а), что...");explanation.setTextSize(14);explanation.setTextColor(DARK);explanation.setGravity(Gravity.TOP);explanation.setMinLines(3);explanation.setPadding(dp(12),dp(9),dp(12),dp(9));explanation.setBackground(shape(0xFFFFFBFC,14,0xFFEADDE2));String saved=prefs.getString("topic_explanation_"+topicStorageSuffix(selectedChapter,topic),"");explanation.setText(saved);c.addView(explanation,lp(-1,96,0,7,0,8));
+        Button save=button("Сохранить объяснение в дневник",false);save.setOnClickListener(v->{String value=explanation.getText().toString().trim();if(value.isEmpty()){explanation.setError("Напиши объяснение");return;}String id=String.valueOf(System.currentTimeMillis());String entry="Моё объяснение темы «"+topic+"»:\\n"+value;Set<String> ids=new TreeSet<>(prefs.getStringSet("diary_ids",new TreeSet<String>()));ids.add(id);prefs.edit().putString("topic_explanation_"+topicStorageSuffix(selectedChapter,topic),value).putString("diary_"+id,entry).putString("diary_tag_"+id,"Учёба").putStringSet("diary_ids",ids).apply();Toast.makeText(this,"Объяснение сохранено в дневник ♡",Toast.LENGTH_SHORT).show();});c.addView(save,lp(-1,44,0,0,0,0));root.addView(c,lp(-1,-2,0,0,0,12));
+    }
+    private void addTopicPhoto(String topic){
+        String key="topic_photo_"+topicStorageSuffix(selectedChapter,topic);String uri=prefs.getString(key,"");LinearLayout c=card();addText(c,"📷  ФОТО ЗАДАЧИ",11,PINK,true);addText(c,"Сохрани снимок задания из учебника, чтобы вернуться к нему позже.",12,MUTED,false);
+        if(!uri.isEmpty()){try{ImageView image=new ImageView(this);image.setImageURI(android.net.Uri.parse(uri));image.setScaleType(ImageView.ScaleType.CENTER_INSIDE);c.addView(image,lp(-1,190,0,6,0,7));}catch(Exception ignored){}}
+        Button photo=button(uri.isEmpty()?"＋  Добавить фото из галереи":"Изменить фото задачи",false);photo.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT);pick.addCategory(Intent.CATEGORY_OPENABLE);pick.setType("image/*");pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,PICK_TOPIC_PHOTO);});c.addView(photo,lp(-1,44,0,5,0,0));root.addView(c,lp(-1,-2,0,0,0,12));
+    }
     private void loadQuestionBank(){
         questionBank.clear();
         try(java.io.InputStream in=getAssets().open("question_bank.json")){
