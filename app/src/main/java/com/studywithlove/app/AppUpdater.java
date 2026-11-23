@@ -47,12 +47,17 @@ public final class AppUpdater {
             String error = null;
             HttpURLConnection connection = null;
             try {
-                // Add a unique query parameter and explicit no-cache headers so GitHub/CDN\n                // cannot return an older "latest release" response.\n                String uncachedApi = RELEASE_API + "?_=" + System.currentTimeMillis();\n                connection = (HttpURLConnection) new URL(uncachedApi).openConnection();
+                // Add a unique query parameter and explicit no-cache headers so GitHub/CDN
+                // cannot return an older "latest release" response.
+                String uncachedApi = RELEASE_API + "?_=" + System.currentTimeMillis();
+                connection = (HttpURLConnection) new URL(uncachedApi).openConnection();
                 connection.setRequestMethod("GET");
                 connection.setConnectTimeout(12000);
                 connection.setReadTimeout(15000);
                 connection.setRequestProperty("Accept", "application/vnd.github+json");
-                connection.setRequestProperty("User-Agent", "Study-with-Love-Updater");\n                connection.setRequestProperty("Cache-Control", "no-cache, no-store, max-age=0");\n                connection.setRequestProperty("Pragma", "no-cache");
+                connection.setRequestProperty("User-Agent", "Study-with-Love-Updater");
+                connection.setRequestProperty("Cache-Control", "no-cache, no-store, max-age=0");
+                connection.setRequestProperty("Pragma", "no-cache");
                 int status = connection.getResponseCode();
                 if (status != 200) throw new Exception("HTTP " + status);
                 String json = readText(connection.getInputStream(), 1024 * 1024);
