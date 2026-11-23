@@ -208,6 +208,7 @@ public class MainActivity extends Activity {
     }
 
     private void base(String title, String subtitle) {
+        final boolean backNavigation=navigatingBack;
         if (!"flower".equals(currentScreen) && flowerBreatheAnimator!=null) { flowerBreatheAnimator.cancel(); flowerBreatheAnimator=null; }
         if (!currentScreen.equals(renderedScreen)) { if (!renderedScreen.isEmpty() && !navigatingBack) screenHistory.add(renderedScreen); renderedScreen=currentScreen; }
         navigatingBack=false;
@@ -234,7 +235,7 @@ public class MainActivity extends Activity {
             });
             shell.requestApplyInsets();
         }
-        scroll.setAlpha(0f); scroll.setTranslationY(dp(navigatingBack?-12:14));
+        scroll.setAlpha(0f); scroll.setTranslationY(dp(backNavigation?-12:14));
         scroll.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         scroll.animate().alpha(1f).translationY(0f).setDuration(290)
             .setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
@@ -1891,7 +1892,7 @@ public class MainActivity extends Activity {
         root.addView(c, lp(-1, -2, 0, 0, 0, 9));
         return c;
     }
-    private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(17), dp(16), dp(17), dp(16)); boolean night = prefs != null && "night".equals(prefs.getString("app_theme", "pink")); l.setBackground(shape(night ? 0xFF25212B : 0xFFFFFFFF, 23, night ? 0xFF403541 : 0xFFF3E9EC)); l.setElevation(dp(2)); return l; }
+    private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(17), dp(16), dp(17), dp(16)); boolean night = prefs != null && "night".equals(prefs.getString("app_theme", "pink")); android.graphics.drawable.Drawable bg=shape(night ? 0xFF25212B : 0xFFFFFFFF,23,night ? 0xFF403541 : 0xFFF3E9EC);if(Build.VERSION.SDK_INT>=21)l.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x227D5264),bg,shape(0xFFFFFFFF,23,0)));else l.setBackground(bg);l.setElevation(dp(2)); return l; }
     private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, size, color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
     private TextView text(String value, int size, int color, boolean bold) { value=translate(value); TextView t = new TextView(this); t.setText(value); t.setTextSize(size); t.setTextColor(color); if (bold) t.setTypeface(Typeface.DEFAULT, Typeface.BOLD); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
     private void applyPressFeedback(View view) {
