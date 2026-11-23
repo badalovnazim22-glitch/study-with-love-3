@@ -990,8 +990,9 @@ public class MainActivity extends Activity {
     private void acceptMiniAnswer(MiniQuestion q,String userAnswer,int index,boolean wrongOnly,View source){
         boolean correct=normalizeAnswer(userAnswer).equals(normalizeAnswer(q.answer));
         if(correct){miniScore++;haptic(source,true);}else{miniWrongQuestions.add(q);recordMistake(q,userAnswer);haptic(source,false);if(source!=null)source.animate().translationX(dp(8)).setDuration(45).withEndAction(()->source.animate().translationX(-dp(8)).setDuration(45).withEndAction(()->source.animate().translationX(0).setDuration(45).start()).start()).start();}
-        if(q.options!=null&&source instanceof Button){Button chosen=(Button)source;chosen.setBackground(shape(correct?0xFFE4F4E8:0xFFFFE8E8,22,correct?0xFF75B987:0xFFE58A8A));chosen.setTextColor(correct?0xFF287A43:0xFFB64242);}
-        new Handler().postDelayed(()->{if(!isFinishing())renderMiniTest(index+1,wrongOnly);},correct?220:260);
+        if(source instanceof Button){Button chosen=(Button)source;chosen.setBackground(shape(correct?0xFFE4F4E8:0xFFFFE8E8,22,correct?0xFF75B987:0xFFE58A8A));chosen.setTextColor(correct?0xFF287A43:0xFFB64242);new Handler().postDelayed(()->{if(!isFinishing()){chosen.setBackground(shape(0xFFFFFFFF,22,0xFFEADDE2));chosen.setTextColor(DARK);}},260);}
+        TextView feedback=text((correct?"✓  Верно! ":"✦  Правильный ответ: "+q.answer+" · ")+q.explanation,13,correct?0xFF287A43:0xFF9B4A58,true);feedback.setPadding(dp(12),dp(10),dp(12),dp(10));feedback.setBackground(shape(correct?0xFFF0F8F1:0xFFFFF2F2,14,0));root.addView(feedback,lp(-1,-2,0,7,0,4));
+        new Handler().postDelayed(()->{if(!isFinishing())renderMiniTest(index+1,wrongOnly);},1050);
     }
     private MiniQuestion makeMiniQuestion(String topic){
         String t=topic.toLowerCase(new Locale("ru"));
