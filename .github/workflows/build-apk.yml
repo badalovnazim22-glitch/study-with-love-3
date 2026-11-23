@@ -33,9 +33,11 @@ jobs:
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/study-with-love.jks"
           echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/study-with-love.jks" >> "$GITHUB_ENV"
 
-      - name: Warn when permanent signing is not configured
-        if: ${{ env.ANDROID_KEYSTORE_BASE64 == '' }}
-        run: echo "::warning::Permanent signing is not configured; this APK uses the temporary runner debug key."
+      - name: Require permanent APK signing key
+        if: ${{ env.ANDROID_KEYSTORE_BASE64 == '' || env.ANDROID_KEYSTORE_PASSWORD == '' || env.ANDROID_KEY_ALIAS == '' || env.ANDROID_KEY_PASSWORD == '' }}
+        run: |
+          echo "::error::Permanent APK signing is required for safe in-app updates."
+          exit 1
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
