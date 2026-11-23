@@ -6,7 +6,7 @@ on:
     branches: [ main ]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -75,3 +75,36 @@ jobs:
           name: Study-with-Love-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      - name: Read app version
+        id: app_version
+        shell: bash
+        run: |
+          VERSION_NAME=$(sed -n "s/.*versionName '\\([^']*\\)'.*/\\1/p" app/build.gradle | head -n1)
+          if [ -z "$VERSION_NAME" ]; then echo "Could not read versionName"; exit 1; fi
+          echo "version=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether this version already has a release
+        id: release_check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v${{ steps.app_version.outputs.version }}" >/dev/null 2>&1; then
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish update release
+        if: steps.release_check.outputs.needed == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.app_version.outputs.version }}
+          name: Study with Love v${{ steps.app_version.outputs.version }}
+          body: |
+            Новая версия Study with Love.
+
+            APK подписан постоянным ключом приложения. Установить обновление можно прямо из настроек приложения через кнопку «Проверить обновления».
+          files: app/build/outputs/apk/debug/app-debug.apk
+          make_latest: true
+          fail_on_unmatched_files: true
