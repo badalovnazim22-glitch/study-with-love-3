@@ -1499,11 +1499,14 @@ public class MainActivity extends Activity {
         all.setOnClickListener(v->{Set<String> ids=new TreeSet<>();for(Map.Entry<String,List<String>> e:chapters.entrySet())for(String topic:e.getValue())ids.add(examTopicKey(e.getKey(),topic));prefs.edit().putStringSet("exam_topic_ids",ids).apply();showExam();});
         none.setOnClickListener(v->{prefs.edit().putStringSet("exam_topic_ids",new TreeSet<String>()).apply();showExam();});
         Set<String> selected=new TreeSet<>(prefs.getStringSet("exam_topic_ids",new TreeSet<String>()));
+        int allTopicCount=0;for(List<String> topics:chapters.values())allTopicCount+=topics.size();
+        TextView selectionSummary=text("Отмечено тем: "+selected.size()+" из "+allTopicCount,12,MUTED,false);section.addView(selectionSummary,lp(-1,24,0,0,0,4));
+        if(enabled.isChecked()&&selected.isEmpty())addText(section,"Сначала отметь хотя бы одну тему — иначе экзаменационный прогресс будет равен 0%.",12,PINK,true);
         for(Map.Entry<String,List<String>> entry:chapters.entrySet()){
             addText(section,entry.getKey().replaceFirst("^[^ ]+\\s*",""),13,DARK,true);
             for(String topic:entry.getValue()){
                 String key=examTopicKey(entry.getKey(),topic);CheckBox check=new CheckBox(this);check.setText(topic);check.setTextSize(12);check.setTextColor(DARK);check.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));check.setChecked(selected.contains(key));section.addView(check,lp(-1,-2,0,0,0,1));
-                check.setOnCheckedChangeListener((v,checked)->{Set<String> ids=new TreeSet<>(prefs.getStringSet("exam_topic_ids",new TreeSet<String>()));if(checked)ids.add(key);else ids.remove(key);prefs.edit().putStringSet("exam_topic_ids",ids).apply();});
+                check.setOnCheckedChangeListener((v,checked)->{Set<String> ids=new TreeSet<>(prefs.getStringSet("exam_topic_ids",new TreeSet<String>()));if(checked)ids.add(key);else ids.remove(key);prefs.edit().putStringSet("exam_topic_ids",ids).apply();selectionSummary.setText("Отмечено тем: "+ids.size()+" из "+allTopicCount);});
             }
         }
         root.addView(section,lp(-1,-2,0,0,0,14));
