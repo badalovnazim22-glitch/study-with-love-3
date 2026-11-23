@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
     <include domain="sharedpref" path="study_progress.xml" />
+    <include domain="database" path="study_mistakes.db" />
     <include domain="file" path="." />
     <exclude domain="sharedpref" path="timer_runtime.xml" />
     <exclude domain="cache" path="." />
