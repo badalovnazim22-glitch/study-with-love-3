@@ -1737,7 +1737,7 @@ public class MainActivity extends Activity {
         try{Intent service=new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_START).putExtra("duration_ms",timerRemainingMs).putExtra("break",timerIsBreak);if(Build.VERSION.SDK_INT>=26)startForegroundService(service);else startService(service);}catch(Exception ignored){}
         getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         timerTick = new Runnable() { @Override public void run() { updateTimerDisplay(); long left = timerEndElapsed - SystemClock.elapsedRealtime(); if (left <= 0) finishTimerPhase(); else timerHandler.postDelayed(this, 250); } };
-        if(timerPulseAnimator!=null)timerPulseAnimator.cancel();if(timerDisplay!=null){timerPulseAnimator=android.animation.ValueAnimator.ofFloat(1f,1.045f);timerPulseAnimator.setDuration(1050);timerPulseAnimator.setRepeatMode(android.animation.ValueAnimator.REVERSE);timerPulseAnimator.setRepeatCount(android.animation.ValueAnimator.INFINITE);timerPulseAnimator.addUpdateListener(a->{if(timerDisplay!=null){float s=(float)a.getAnimatedValue();timerDisplay.setScaleX(s);timerDisplay.setScaleY(s);}});timerPulseAnimator.start();}
+        if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}if(timerDisplay!=null){timerDisplay.setScaleX(1f);timerDisplay.setScaleY(1f);if(!prefs.getBoolean("reduce_motion",false)){timerPulseAnimator=android.animation.ValueAnimator.ofFloat(1f,1.045f);timerPulseAnimator.setDuration(1050);timerPulseAnimator.setRepeatMode(android.animation.ValueAnimator.REVERSE);timerPulseAnimator.setRepeatCount(android.animation.ValueAnimator.INFINITE);timerPulseAnimator.addUpdateListener(a->{if(timerDisplay!=null){float s=(float)a.getAnimatedValue();timerDisplay.setScaleX(s);timerDisplay.setScaleY(s);}});timerPulseAnimator.start();}}
         if (timerStartButton != null) timerStartButton.setEnabled(false);
         if (timerPauseButton != null) timerPauseButton.setEnabled(true);
         timerHandler.post(timerTick);
@@ -2720,6 +2720,7 @@ public class MainActivity extends Activity {
         else if(color==0xFF75666D||color==0xFF6F6684||color==0xFF796657||color==0xFF60786B)color=MUTED;
         value=translate(value); TextView t = new TextView(this); t.setText(value); t.setTextSize(Math.max(12, size)); t.setTextColor(color); t.setTypeface(Typeface.create(selectedFontFamily(),bold?Typeface.BOLD:Typeface.NORMAL)); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
     private void applyPressFeedback(View view) {
+        if(prefs!=null&&prefs.getBoolean("reduce_motion",false))return;
         view.setOnTouchListener((v,event)->{
             if(event.getAction()==android.view.MotionEvent.ACTION_DOWN){
                 v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);
@@ -2731,22 +2732,24 @@ public class MainActivity extends Activity {
         });
     }
     private void animateNumber(TextView view,int target,String suffix) {
+        if(prefs.getBoolean("reduce_motion",false)){view.setText(Math.max(0,target)+suffix);return;}
         android.animation.ValueAnimator animator=android.animation.ValueAnimator.ofInt(0,Math.max(0,target));
         animator.setDuration(720);animator.setInterpolator(new android.view.animation.DecelerateInterpolator());
         animator.addUpdateListener(a->view.setText(a.getAnimatedValue()+suffix));animator.start();
     }
     private void animateProgress(ProgressBar bar,int target) {
+        if(prefs.getBoolean("reduce_motion",false)){bar.setProgress(Math.max(0,target));return;}
         bar.setProgress(0);android.animation.ObjectAnimator.ofInt(bar,"progress",0,Math.max(0,target)).setDuration(850).start();
     }
     private void animateHomeCascade() {
-        if(root==null)return;
+        if(root==null||prefs.getBoolean("reduce_motion",false))return;
         for(int i=0;i<root.getChildCount();i++){View child=root.getChildAt(i);child.setAlpha(0f);child.setTranslationY(dp(12));child.animate().alpha(1f).translationY(0f).setStartDelay(i*40L).setDuration(300).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();}
     }
     private void haptic(View view, boolean success) {
         if(view!=null)view.performHapticFeedback(success?android.view.HapticFeedbackConstants.CONFIRM:android.view.HapticFeedbackConstants.REJECT);
     }
     private void celebrate() {
-        if(root==null)return;
+        if(root==null||prefs.getBoolean("reduce_motion",false))return;
         final CelebrationView fx=new CelebrationView(this);
         root.getOverlay().add(fx);fx.layout(0,0,root.getWidth(),root.getHeight());
         android.animation.ValueAnimator animator=android.animation.ValueAnimator.ofFloat(0f,1f);
