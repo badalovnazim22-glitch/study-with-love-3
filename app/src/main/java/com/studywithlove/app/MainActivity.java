@@ -2362,45 +2362,46 @@ public class MainActivity extends Activity {
         String theme = prefs == null ? "pink" : prefs.getString("app_theme", "pink");
         if(color==0xFFC97891||color==0xFFD96C91)color=PINK;
         if(stroke==0xFFC97891||stroke==0xFFD96C91)stroke=PINK;
-        boolean white = color == 0xFFFFFFFF || color == 0xFFFFF9F7;
-        boolean soft = color == 0xFFFCEEF2 || color == 0xFFFFF0F4 || color == 0xFFFFF0F5 || color == 0xFFFFEEF3 || color == 0xFFFFF1F5 || color == 0xFFF8E8EE;
-        boolean pale = color == 0xFFF3F0FF || color == 0xFFF1F0FF || color == 0xFFEFF7F1 || color == 0xFFF5F2F1 || color == 0xFFF0E4E8 || color == 0xFFF1F0F2;
+        boolean white = color == 0xFFFFFFFF || color == 0xFFFFF9F7 || color == 0xFFFFFBFC || color == 0xFFFFF5F8 || color == 0xFFFFF4F7 || color == 0xFFFFF5F7 || color == 0xFFFFF8F6 || color == 0xFFF7F4F2 || color == 0xFFFFFCF7 || color == 0xFFFFFCFC || color == 0xFFFFF9EF;
+        boolean soft = color == 0xFFFCEEF2 || color == 0xFFFFF0F4 || color == 0xFFFFF0F5 || color == 0xFFFFEEF3 || color == 0xFFFFF1F5 || color == 0xFFF8E8EE || color == 0xFFFFF4F7 || color == 0xFFFFF5F8 || color == 0xFFFFF5F7 || color == 0xFFFFF5F4;
+        boolean pale = color == 0xFFF3F0FF || color == 0xFFF1F0FF || color == 0xFFEFF7F1 || color == 0xFFF5F2F1 || color == 0xFFF0E4E8 || color == 0xFFF1F0F2 || color == 0xFFF7F4F2 || color == 0xFFF7F4F5;
+        boolean border = border || stroke == 0xFFEADDE2 || stroke == 0xFFFFD5E1 || stroke == 0xFFF4DCE5 || stroke == 0xFFF2DDE4 || stroke == 0xFFEEDFE4;
         if ("system".equals(theme)) {
             if(white)color=color==0xFFFFF9F7?BG:(isDarkAppearance()?PALE:0xFFFFFFFF);
             else if(soft||pale)color=PALE;
-            if(stroke==0xFFF3E9EC||stroke==0xFFF0E4E8)stroke=isDarkAppearance()?0xFF49404B:0xFFE0D8DF;
+            if(border)stroke=isDarkAppearance()?0xFF49404B:0xFFE0D8DF;
         } else if ("night".equals(theme)) {
             if (white) color = color == 0xFFFFF9F7 ? 0xFF17151D : 0xFF25212B;
             else if (soft) color = 0xFF302735; else if (pale) color = 0xFF342E39;
-            if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFF403541;
+            if (border) stroke = 0xFF403541;
         } else if ("lavender".equals(theme)) {
             if (white) color = color == 0xFFFFF9F7 ? 0xFFF8F6FF : 0xFFFEFDFF;
             else if (soft || pale) color = 0xFFF0ECFA;
-            if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFFE0D9F0;
+            if (border) stroke = 0xFFE0D9F0;
         } else if ("mint".equals(theme)) {
             if (white) color = color == 0xFFFFF9F7 ? 0xFFF5FAF7 : 0xFFFEFFFE;
             else if (soft || pale) color = 0xFFEAF5EF;
-            if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFFDCEBE2;
+            if (border) stroke = 0xFFDCEBE2;
         } else if ("white".equals(theme)) {
             if (white) color = color == 0xFFFFF9F7 ? 0xFFF7F8FA : 0xFFFFFFFF; else if (soft || pale) color = 0xFFE9EDF2;
-            if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFFDCE1E8;
+            if (border) stroke = 0xFFDCE1E8;
         } else if ("brown".equals(theme)) {
             if (white) color = color == 0xFFFFF9F7 ? 0xFFF7F1EA : 0xFFFFFCF7; else if (soft || pale) color = 0xFFEDE0D2;
-            if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFFE1D0BE;
+            if (border) stroke = 0xFFE1D0BE;
         } else if ("gold".equals(theme)) {
             if (white) color = color == 0xFFFFF9F7 ? 0xFFFFF5D0 : 0xFFFFFBEA; else if (soft || pale) color = 0xFFF5E2A6;
-            if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFFD9B64B;
+            if (border) stroke = 0xFFD9B64B;
         } else if ("luxury".equals(theme)) {
             if (white) color = color == 0xFFFFF9F7 ? 0xFF211B18 : 0xFF30251F; else if (soft || pale) color = 0xFF3A3028;
-            if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFF78613D;
+            if (border) stroke = 0xFF78613D;
         } else if ("sky".equals(theme)) {
             if (white) color = color == 0xFFFFF9F7 ? 0xFFF1F8FC : 0xFFFFFFFF; else if (soft || pale) color = 0xFFE1EFF8;
-            if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFFD4E5F0;
-        } else if ("red".equals(theme)) { if (white) color = color == 0xFFFFF9F7 ? 0xFFFFF5F4 : 0xFFFFFCFC; else if (soft || pale) color = 0xFFF8E2E3; if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFFECC9CC;
-        } else if ("lv".equals(theme)) { if (white) color = color == 0xFFFFF9F7 ? 0xFFF4E8D5 : 0xFFFFF9EF; else if (soft || pale) color = 0xFFE7D2B3; if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFFC6A779;
+            if (border) stroke = 0xFFD4E5F0;
+        } else if ("red".equals(theme)) { if (white) color = color == 0xFFFFF9F7 ? 0xFFFFF5F4 : 0xFFFFFCFC; else if (soft || pale) color = 0xFFF8E2E3; if (border) stroke = 0xFFECC9CC;
+        } else if ("lv".equals(theme)) { if (white) color = color == 0xFFFFF9F7 ? 0xFFF4E8D5 : 0xFFFFF9EF; else if (soft || pale) color = 0xFFE7D2B3; if (border) stroke = 0xFFC6A779;
         } else if ("peach".equals(theme)) {
             if (white) color = color == 0xFFFFF9F7 ? 0xFFFFF5EF : 0xFFFFFCF9; else if (soft || pale) color = 0xFFFBE5D9;
-            if (stroke == 0xFFF3E9EC || stroke == 0xFFF0E4E8) stroke = 0xFFF0D2C4;
+            if (border) stroke = 0xFFF0D2C4;
         }
         GradientDrawable d = new GradientDrawable(); d.setColor(color); d.setCornerRadius(dp(radius)); if (stroke != 0) d.setStroke(dp(1), stroke); return d;
     }
