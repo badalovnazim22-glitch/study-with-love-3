@@ -77,7 +77,7 @@ public class AiTutorActivity extends Activity {
         }
         updateSystemBars();
         buildUi();
-        addBubble(tr("Привет! Я ИИ-помощник. Могу объяснить математическую тему, разобрать задачу по шагам или составить тренировку.\n\nНе отправляй сюда пароли, адреса и другие личные данные. История этого чата не сохраняется после закрытия экрана.", "Hi! I’m the Study with Love AI tutor. I can explain a math topic, work through a problem step by step, or create a practice quiz.\n\nDon’t send passwords, addresses, or other personal information. This chat history is not saved after you close the screen.", "Salam! Mən Study with Love süni intellekt köməkçisiyəm. Riyaziyyat mövzusunu izah edə, məsələni addım-addım həll edə və ya məşq testi hazırlaya bilərəm.\n\nŞifrələri, ünvanları və digər şəxsi məlumatları göndərmə. Ekranı bağladıqdan sonra bu söhbətin tarixçəsi saxlanılmır."), false);
+        addBubble(tr("Привет! Я ИИ-помощник. Могу объяснить математическую тему, разобрать задачу по шагам или составить тренировку.\n\nНе отправляй сюда пароли, адреса и другие личные данные. История этого чата не сохраняется после закрытия экрана.", "Hi! I’m the AI tutor. I can explain a math topic, work through a problem step by step, or create a practice quiz.\n\nDon’t send passwords, addresses, or other personal information. This chat history is not saved after you close the screen.", "Salam! Mən Study with Love süni intellekt köməkçisiyəm. Riyaziyyat mövzusunu izah edə, məsələni addım-addım həll edə və ya məşq testi hazırlaya bilərəm.\n\nŞifrələri, ünvanları və digər şəxsi məlumatları göndərmə. Ekranı bağladıqdan sonra bu söhbətin tarixçəsi saxlanılmır."), false);
         if (endpoint().isEmpty()) main.postDelayed(this::showEndpointDialog, 350);
     }
 
