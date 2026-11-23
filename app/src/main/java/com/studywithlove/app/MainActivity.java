@@ -504,9 +504,7 @@ public class MainActivity extends Activity {
     }
 
     private void showSettings() {
-        currentScreen="settings";
-        base("Настройки ⚙","Всё нужное — в одном месте");
-
+        if (!currentScreen.startsWith("settings_")) currentScreen="settings";
         String activeSection = currentScreen.startsWith("settings_") ? currentScreen.substring("settings_".length()) : "menu";
         boolean sectionPage = !"menu".equals(activeSection);
         String sectionTitle = "appearance".equals(activeSection) ? "Внешний вид" : "reminders".equals(activeSection) ? "Напоминания" : "goals".equals(activeSection) ? "Цели" : "data".equals(activeSection) ? "Данные" : "О приложении";
@@ -581,6 +579,21 @@ public class MainActivity extends Activity {
         android.widget.GridLayout fontGrid=new android.widget.GridLayout(this);fontGrid.setColumnCount(2);
         for(int i=0;i<fontKeys.length;i++){final String key=fontKeys[i],family=fontFamilies[i];Button choice=button((activeFont.equals(key)?"✓  ":"")+fontNames[i],activeFont.equals(key));choice.setTypeface(Typeface.create(family,Typeface.BOLD));android.widget.GridLayout.LayoutParams fp=new android.widget.GridLayout.LayoutParams();fp.width=0;fp.height=dp(44);fp.columnSpec=android.widget.GridLayout.spec(i%2,1f);fp.setMargins(dp(3),dp(3),dp(3),dp(3));fp.height=dp(48);fontGrid.addView(choice,fp);choice.setOnClickListener(v->{prefs.edit().putString("app_font",key).apply();showSettings();});}
         fontGroup.addView(fontGrid,lp(-1,-2,0,4,0,0));appearance.addView(fontGroup,lp(-1,-2,0,4,0,6));
+        LinearLayout fontSizeGroup=settingsGroup("РАЗМЕР ТЕКСТА");
+        fontSizeGroup.setTag("appearance");
+        addText(fontSizeGroup,"Выбери удобный размер надписей. Нижние иконки навигации останутся прежнего размера.",12,MUTED,false);
+        float[] textScales={0.9f,1.0f,1.15f,1.3f};
+        String[] textScaleNames={"Маленький","Обычный","Крупный","Очень крупный"};
+        float activeScale=prefs.getFloat("app_text_scale",1.0f);
+        LinearLayout scaleRow=new LinearLayout(this);scaleRow.setOrientation(LinearLayout.HORIZONTAL);
+        for(int i=0;i<textScales.length;i++){
+            final float scale=textScales[i];
+            Button choice=button((Math.abs(activeScale-scale)<0.01f?"✓  ":"")+textScaleNames[i],Math.abs(activeScale-scale)<0.01f);
+            LinearLayout.LayoutParams scaleLp=new LinearLayout.LayoutParams(0,dp(48),1f);scaleLp.setMargins(dp(2),dp(4),dp(2),0);scaleRow.addView(choice,scaleLp);
+            choice.setOnClickListener(v->{prefs.edit().putFloat("app_text_scale",scale).apply();showSettings();});
+        }
+        fontSizeGroup.addView(scaleRow,lp(-1,52,0,2,0,0));
+        appearance.addView(fontSizeGroup,lp(-1,-2,0,4,0,6));
         Button systemTheme=button("◐  Цвета и тёмная тема — как в системе","system".equals(activeTheme));systemTheme.setOnClickListener(v->{prefs.edit().putString("app_theme","system").apply();applySavedTheme();showSettings();});appearance.addView(systemTheme,lp(-1, 48,0,3,0,0));
         Button choosePhoto=button("＋  Выбрать фото фона",false);choosePhoto.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT);pick.addCategory(Intent.CATEGORY_OPENABLE);pick.setType("image/*");pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,PICK_BACKGROUND);});
         appearance.addView(choosePhoto,lp(-1, 48,0,3,0,4));
@@ -770,7 +783,7 @@ public class MainActivity extends Activity {
         int hourNow = Calendar.getInstance(AppTime.zone()).get(Calendar.HOUR_OF_DAY);
         String greetingTitle = hourNow < 12 ? "Доброе утро, " + displayName : hourNow < 18 ? "Добрый день, " + displayName : "Как прошёл день, " + displayName + "?";
         String lastStudy = prefs.getString("last_study_date", "");
-        boolean returningAfterGap = !lastStudy.isEmpty() && !todayKey().equals(lastStudy) && !isYesterday(lastStudy) && !isOneDayGap(lastStudy);
+        boolean returningAfterGap = !lastStudy.isEmpty() && !todayKey().equals(lastStudy) && !isYesterday(lastStudy);
         int dailyGoal = prefs.getInt("daily_goal_minutes", 15);
         int dailyDone = prefs.getInt("focus_minutes_" + todayKey(), 0);
         int remaining = Math.max(0, dailyGoal - dailyDone);
