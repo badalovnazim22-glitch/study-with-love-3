@@ -149,7 +149,7 @@ public class MainActivity extends Activity {
 
     private static String todayKey() {
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-        f.setTimeZone(TimeZone.getTimeZone("Asia/Baku"));
+        f.setTimeZone(AppTime.zone());
         return f.format(new Date());
     }
 
@@ -844,7 +844,7 @@ public class MainActivity extends Activity {
         currentScreen="topic_quiz_categories";base("Викторина по темам","Выбери раздел — вопросы будут по его материалу");
         String[] cats={"Обыкновенные дроби","Проценты","Десятичные дроби","Натуральные числа"};
         String[] desc={"Состав, часть числа и действия с дробями","Процент от числа и обратные задачи","Сложение, вычитание и сравнение","Числа, действия и делимость"};
-        for(int i=0;i<cats.length;i++){final String c=cats[i];LinearLayout item=card();addText(item,c,17,DARK,true);addText(item,desc[i],12,MUTED,false);item.setOnClickListener(v->{selectedChapter="2️⃣ Обыкновенные дроби";startMiniTest(c);});root.addView(item,lp(-1,-2,0,0,0,9));}
+        for(int i=0;i<cats.length;i++){final String c=cats[i];LinearLayout item=card();addText(item,c,17,DARK,true);addText(item,desc[i],12,MUTED,false);item.setOnClickListener(v->{selectedChapter=c.equals("Проценты")?"4️⃣ Процент":c.equals("Десятичные дроби")?"3️⃣ Десятичные дроби":c.equals("Натуральные числа")?"1️⃣ Натуральные числа и действия с ними":"2️⃣ Обыкновенные дроби";startMiniTest(c);});root.addView(item,lp(-1,-2,0,0,0,9));}
         backHome();
     }
     private void startMiniTest(String topic){
@@ -853,13 +853,40 @@ public class MainActivity extends Activity {
         renderMiniTest(0,false);
     }
     private MiniQuestion makeMiniQuestion(String topic){
-        String t=topic.toLowerCase(new Locale("ru"));boolean pct=t.contains("процент"),dec=t.contains("десятич"),frac=t.contains("дроб");
-        int answer;String prompt,explain;
-        if(pct){int[] ps={5,10,20,25,50};int p=ps[quizRandom.nextInt(ps.length)],base=quizRandom.nextBoolean()?200:400;answer=base*p/100;prompt="Найди "+p+"% от "+base;explain=p+"% от "+base+" = "+answer+".";}
-        else if(dec){int a=12+quizRandom.nextInt(50),b=23+quizRandom.nextInt(50);answer=a+b;prompt=String.format(Locale.US,"Сколько будет %.1f + %.1f?",a/10.0,b/10.0);explain=String.format(Locale.US,"%.1f + %.1f = %.1f.",a/10.0,b/10.0,answer/10.0);}
-        else if(frac){int d=2+quizRandom.nextInt(9),whole=d*(3+quizRandom.nextInt(12));answer=whole/d;prompt="Найди "+(1)+"/"+d+" от "+whole;explain="Одна "+(1)+"/"+d+" часть от "+whole+" равна "+answer+".";}
-        else {int a=17+quizRandom.nextInt(70),b=6+quizRandom.nextInt(30);answer=a+b;prompt="Вычисли "+a+" + "+b;explain=a+" + "+b+" = "+answer+".";}
-        int[] vals={answer,answer+1,Math.max(0,answer-2),answer+3};java.util.List<Integer> order=new java.util.ArrayList<>();for(int v:vals)if(!order.contains(v))order.add(v);java.util.Collections.shuffle(order,quizRandom);String[] opts=new String[order.size()];int correct=0;for(int i=0;i<order.size();i++){opts[i]=dec?String.format(Locale.US,"%.1f",order.get(i)/10.0):String.valueOf(order.get(i));if(order.get(i)==answer)correct=i;}
+        String t=topic.toLowerCase(new Locale("ru"));
+        boolean pct=t.contains("процент")||t.contains("отношение")||t.contains("пропорц");
+        boolean dec=t.contains("десятич")||t.contains("округлен")||t.contains("среднее арифмет");
+        boolean frac=t.contains("дроб")||t.contains("смешан")||t.contains("часть числа")||t.contains("числа по его части");
+        int answer;String prompt,explain;boolean decimalAnswer=false;
+        if(pct){
+            int a=20+quizRandom.nextInt(181),b=2+quizRandom.nextInt(9);
+            if(t.contains("пропорц")||t.contains("отношение")){int k=2+quizRandom.nextInt(6),x=2+quizRandom.nextInt(8);answer=x*k;prompt="В отношении "+x+":"+a+" первая величина равна "+x*k+". Найди множитель";explain="Множитель равен "+k+".";}
+            else if(t.contains("числа по процент")||t.contains("по процент")){int p=10*(1+quizRandom.nextInt(8));answer=a;int part=a*p/100;prompt=part+" составляет "+p+"% какого числа?";answer=part*100/p;explain=answer+" · "+p+"% = "+part+".";}
+            else if(t.contains("увелич")||t.contains("уменьш")){int p=10*(1+quizRandom.nextInt(4));answer=t.contains("уменьш")?a-a*p/100:a+a*p/100;prompt="Уменьши "+a+" на "+p+"%";if(t.contains("увелич"))prompt="Увеличь "+a+" на "+p+"%";explain=a+(t.contains("уменьш")?" − ":" + ")+(a*p/100)+" = "+answer+".";}
+            else{int p=new int[]{5,10,20,25,50}[quizRandom.nextInt(5)];answer=a*p/100;prompt="Найди "+p+"% от "+a;explain=p+"% от "+a+" = "+answer+".";}
+        }else if(dec){
+            decimalAnswer=true;int a=12+quizRandom.nextInt(80),b=11+quizRandom.nextInt(70);
+            if(t.contains("сравнен")){answer=Math.max(a,b);prompt="Какое число больше: "+(a/10.0)+ " или "+(b/10.0)+"?";answer=a>=b?1:0;explain="Сравни десятые и целые части чисел.";}
+            else if(t.contains("округлен")){int n=125+quizRandom.nextInt(800);answer=((n+5)/10)*10;prompt="Округли "+(n/100.0)+" до десятых";explain="Получаем "+String.format(Locale.GERMANY,"%.1f",answer/100.0)+".";}
+            else{answer=a+b;prompt="Вычисли "+String.format(Locale.GERMANY,"%.1f",a/10.0)+" + "+String.format(Locale.GERMANY,"%.1f",b/10.0);explain=String.format(Locale.GERMANY,"%.1f + %.1f = %.1f",a/10.0,b/10.0,answer/10.0);}
+        }else if(frac){
+            int d=2+quizRandom.nextInt(8),n=2+quizRandom.nextInt(9);
+            if(t.contains("сравнен")){int x=1+quizRandom.nextInt(d-1),y=1+quizRandom.nextInt(d-1);answer=x>=y?1:0;prompt="Сравни дроби "+x+"/"+d+" и "+y+"/"+d+". Какая больше?";explain="При одинаковых знаменателях больше дробь с большим числителем.";}
+            else if(t.contains("смешан")||t.contains("правильн")||t.contains("неправильн")){int whole=1+quizRandom.nextInt(8),num=1+quizRandom.nextInt(d-1);answer=whole*d+num;prompt="Преобразуй "+whole+" "+num+"/"+d+" в неправильную дробь (числитель)";explain=whole+" · "+d+" + "+num+" = "+answer+".";}
+            else if(t.contains("делен")){int numerator=1+quizRandom.nextInt(7),denominator=2+quizRandom.nextInt(7);answer=numerator*denominator;prompt="Вычисли "+numerator+"/"+denominator+" ÷ 1/"+denominator+" ";explain="Деление на 1/"+denominator+" даёт "+answer+".";}
+            else if(t.contains("умнож")){int x=1+quizRandom.nextInt(7),y=1+quizRandom.nextInt(7);answer=x*y;prompt="Вычисли "+x+"/3 · 3/"+y+" (числитель произведения)";explain="Перемножаем числители: "+x+" · "+y+" = "+answer+".";}
+            else{int whole=d*n;answer=n;prompt="Найди 1/"+d+" от "+whole;explain="Одна "+1+"/"+d+" часть от "+whole+" равна "+answer+".";}
+        }else{
+            int a=17+quizRandom.nextInt(70),b=6+quizRandom.nextInt(30);
+            if(t.contains("сравнен")||t.contains("упорядоч")){answer=Math.max(a,b);prompt="Какое число больше: "+a+" или "+b+"?";explain="Больше число "+answer+".";}
+            else if(t.contains("делител")||t.contains("кратн")||t.contains("делим")){int k=2+quizRandom.nextInt(8);answer=k;prompt="Какое число нужно умножить на "+k+"?";answer=k;prompt="Назови делитель числа "+(k*12)+" из вариантов: найди простой делитель";explain=k+" делит "+(k*12)+" без остатка.";}
+            else{answer=a+b;prompt="Вычисли "+a+" + "+b;explain=a+" + "+b+" = "+answer+".";}
+        }
+        java.util.List<Integer> order=new java.util.ArrayList<>();order.add(answer);
+        int attempts=0;while(order.size()<4&&attempts++<100){int delta=1+quizRandom.nextInt(Math.max(4,Math.min(12,Math.abs(answer)/3+3)));if(quizRandom.nextBoolean())delta=-delta;int candidate=answer+delta;if(candidate>=0&&!order.contains(candidate))order.add(candidate);}
+        while(order.size()<4){int candidate=answer+order.size()+attempts++;if(!order.contains(candidate))order.add(candidate);}
+        java.util.Collections.shuffle(order,quizRandom);String[] opts=new String[4];int correct=0;
+        for(int i=0;i<4;i++){opts[i]=decimalAnswer?String.format(Locale.GERMANY,"%.1f",order.get(i)/10.0):String.valueOf(order.get(i));if(order.get(i)==answer)correct=i;}
         return new MiniQuestion(prompt,opts,correct,explain);
     }
     private void renderMiniTest(int index,boolean wrongOnly){
@@ -883,7 +910,7 @@ public class MainActivity extends Activity {
         for(Map.Entry<String,List<String>> entry:chapters.entrySet())for(String topic:entry.getValue()){
             String suffix=topicStorageSuffix(entry.getKey(),topic);long completed=prefs.getLong("topic_completed_at_"+suffix,0);if(completed<=0)continue;long age=(now-completed)/86400000L;
             for(int interval:new int[]{3,7,14})if(age>=interval&&!prefs.getBoolean("review_done_"+suffix+"_"+interval,false)){
-                final int dueInterval=interval;count++;TextView item=text("•  "+topic+"  ·  "+interval+" дня",13,DARK,true);section.addView(item,lp(-1,34,0,1,0,1));Button review=button("Повторить тему",false);review.setOnClickListener(v->{selectedChapter=entry.getKey();selectedTopic=topic;pendingReviewKey="review_done_"+suffix+"_"+dueInterval;startMiniTest(topic);});section.addView(review,lp(-1,40,0,0,0,8));
+                final int dueInterval=interval;count++;TextView item=text("•  "+topic+"  ·  "+interval+" "+dayWord(interval),13,DARK,true);section.addView(item,lp(-1,34,0,1,0,1));Button review=button("Повторить тему",false);review.setOnClickListener(v->{selectedChapter=entry.getKey();selectedTopic=topic;pendingReviewKey="review_done_"+suffix+"_"+dueInterval;startMiniTest(topic);});section.addView(review,lp(-1,40,0,0,0,8));
             }
         }
         if(count==0)addText(section,"Пока всё повторено. Следующая проверка появится через 3, 7 и 14 дней после завершения темы ♡",12,MUTED,false);
@@ -1083,7 +1110,7 @@ public class MainActivity extends Activity {
         LinearLayout timerControls = new LinearLayout(this); timerControls.setOrientation(LinearLayout.HORIZONTAL); timerControls.setGravity(Gravity.CENTER);
         timerStartButton=button(timerRunning?"Идёт":"▶  Начать",true);timerStartButton.setEnabled(!timerRunning);timerStartButton.setOnClickListener(v->startTimer());
         timerPauseButton=button("Ⅱ  Пауза",false);timerPauseButton.setEnabled(timerRunning);timerPauseButton.setOnClickListener(v->pauseTimer());
-        Button reset=button("↺  Сброс",false);reset.setOnClickListener(v->{timerHandler.removeCallbacks(timerTick);timerRunning=false;cancelTimerFinishAlarm();try{startService(new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_STOP));}catch(Exception ignored){}getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}if(timerDisplay!=null)timerDisplay.animate().cancel();timerIsBreak=false;timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();});
+        Button reset=button("↺  Сброс",false);reset.setOnClickListener(v->{long elapsed=timerRunning&&!timerIsBreak?Math.max(0,SystemClock.elapsedRealtime()-timerSessionStarted):0;timerHandler.removeCallbacks(timerTick);timerRunning=false;cancelTimerFinishAlarm();try{startService(new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_STOP).putExtra("elapsed_ms",elapsed).putExtra("break",timerIsBreak));}catch(Exception ignored){}getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}if(timerDisplay!=null)timerDisplay.animate().cancel();timerIsBreak=false;timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();});
         Button[] controls={timerStartButton,timerPauseButton,reset};
         for(Button control:controls){
             LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(48),1f); cp.setMargins(dp(3),0,dp(3),0);
@@ -1170,13 +1197,15 @@ public class MainActivity extends Activity {
         if (!timerIsBreak) { recordStudyDay(); timerIsBreak = true; timerRemainingMs = selectedBreakMinutes * 60000L; Toast.makeText(this, g("Ты большая умничка! Время отдохнуть 🌸","Ты большой молодец! Время отдохнуть 🌸"), Toast.LENGTH_LONG).show(); }
         else { timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; Toast.makeText(this, g("Перерыв окончен. Ты готова продолжать! 💗","Перерыв окончен. Ты готов продолжать! 💗"), Toast.LENGTH_LONG).show(); }
         if ("pomodoro".equals(currentScreen)) showPomodoro();
-        if(focusFinished){prefs.edit().putBoolean("diary_prefill_timer_win",true).putBoolean("timer_finish_prompt_pending",false).apply();new android.app.AlertDialog.Builder(this).setTitle("Фокус-сессия завершена 🌸").setMessage("Хочешь записать эту маленькую победу в дневник?").setNegativeButton("Позже",null).setPositiveButton("Записать",(d,w)->showDiary()).show();}
+        if(focusFinished){prefs.edit().putBoolean("diary_prefill_timer_win",true).putBoolean("timer_finish_prompt_pending",false).apply();showTimerFinishPrompt();}
     }
+
+    private void showTimerFinishPrompt(){new android.app.AlertDialog.Builder(this).setTitle("Фокус-сессия завершена 🌸").setMessage("Хочешь записать эту маленькую победу в дневник?").setNegativeButton("Позже",null).setPositiveButton("Записать",(d,w)->showDiary()).show();}
 
     // App usage is tracked separately; only an explicit study action records a study day.
     private void saveForegroundUsage() { appUsageStartedElapsed=0L; }
 
-    @Override protected void onResume() { super.onResume(); activityVisible=true; appUsageStartedElapsed = SystemClock.elapsedRealtime(); if (prefs != null) {scheduleReminders(this);rescheduleFutureLetterReminders(this);WeeklyReportReceiver.schedule(this);StudyWidgetProvider.updateAll(this);if(prefs.getBoolean("timer_finish_prompt_pending",false)){prefs.edit().putBoolean("timer_finish_prompt_pending",false).apply();new android.app.AlertDialog.Builder(this).setTitle("Фокус-сессия завершена 🌸").setMessage("Хочешь записать эту маленькую победу в дневник?").setNegativeButton("Позже",null).setPositiveButton("Записать",(d,w)->showDiary()).show();}} }
+    @Override protected void onResume() { super.onResume(); activityVisible=true; appUsageStartedElapsed = SystemClock.elapsedRealtime(); if (prefs != null) {scheduleReminders(this);rescheduleFutureLetterReminders(this);WeeklyReportReceiver.schedule(this);StudyWidgetProvider.updateAll(this);if(prefs.getBoolean("timer_finish_prompt_pending",false)){prefs.edit().putBoolean("timer_finish_prompt_pending",false).apply();recordStudyDay();showTimerFinishPrompt();}} }
     @Override protected void onPause() { activityVisible=false; saveForegroundUsage(); appUsageStartedElapsed = 0L; super.onPause(); }
 
     private void showMessage() {
@@ -1451,7 +1480,7 @@ public class MainActivity extends Activity {
             TextView state=text(open?"Открыто ✓":progress,10,open?PINK:0xFF625A61,true);state.setGravity(Gravity.CENTER);tile.addView(state,lp(-1,18,0,0,0,2));
             if(!open){ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(Math.max(1,target));bar.setProgress(Math.min(current,target));bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFE6DFE2));tile.addView(bar,lp(-1,5,0,2,0,0));}
             android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(116);gp.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);gp.setMargins(dp(4),dp(4),dp(4),dp(4));grid.addView(tile,gp);
-            tile.setOnClickListener(v->{String detail=x[2];if(open){String date=prefs.getString("achievement_date_"+x[1],"");if(date.isEmpty())date=new SimpleDateFormat("d MMMM yyyy",new Locale("ru")).format(new Date());detail+="\n\nОткрыто ✓ · "+date;}else detail+="\n\nПрогресс: "+Math.min(current,target)+" из "+target;new android.app.AlertDialog.Builder(this).setTitle(x[0]+"  "+x[1]).setMessage(detail).setPositiveButton("Понятно",null).show();});
+            tile.setOnClickListener(v->{String detail=x[2];if(open){String date=prefs.getString("achievement_date_"+x[1],"");if(date.isEmpty())date="Дата получения не сохранена";detail+="\n\nОткрыто ✓ · "+date;}else detail+="\n\nПрогресс: "+Math.min(current,target)+" из "+target;new android.app.AlertDialog.Builder(this).setTitle(x[0]+"  "+x[1]).setMessage(detail).setPositiveButton("Понятно",null).show();});
         }
         root.addView(grid,lp(-1,-2,0,8,0,8));backHome();
     }
@@ -1721,7 +1750,7 @@ public class MainActivity extends Activity {
     }
 
     private boolean isOneDayGap(String date){try{SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd",Locale.US);f.setTimeZone(TimeZone.getTimeZone("Asia/Baku"));Date d=f.parse(date);Calendar c=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));c.setTime(d);c.add(Calendar.DAY_OF_YEAR,2);return todayKey().equals(f.format(c.getTime()));}catch(Exception e){return false;}}
-    private String weekKey(){Calendar c=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));return c.get(Calendar.YEAR)+"-"+c.get(Calendar.WEEK_OF_YEAR);}
+    private String weekKey(){Calendar c=Calendar.getInstance(AppTime.zone());return c.getWeekYear()+"-"+c.get(Calendar.WEEK_OF_YEAR);}
     private String dayWord(int n) {
         int x = Math.abs(n) % 10, y = Math.abs(n) % 100;
         if (x == 1 && y != 11) return "день";
