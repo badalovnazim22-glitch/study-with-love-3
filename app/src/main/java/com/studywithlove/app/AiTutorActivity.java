@@ -301,7 +301,12 @@ public class AiTutorActivity extends Activity {
         if (!user) {
             String safe = value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
             safe = safe.replaceAll("(?m)^### (.+)$", "<b>$1</b>").replaceAll("(?m)^## (.+)$", "<big><b>$1</b></big>").replaceAll("\\*\\*(.+?)\\*\\*", "<b>$1</b>").replace("\n", "<br>");
+            if (android.os.Build.VERSION.SDK_INT >= 24) {
             bubble.setText(Html.fromHtml(safe, Html.FROM_HTML_MODE_COMPACT));
+        } else {
+            // API 23 compatibility.
+            bubble.setText(Html.fromHtml(safe));
+        }
         }
         bubble.setTextIsSelectable(true);
         bubble.setPadding(dp(14), dp(12), dp(14), dp(12));
