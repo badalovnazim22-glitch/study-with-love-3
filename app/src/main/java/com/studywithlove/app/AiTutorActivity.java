@@ -73,7 +73,7 @@ public class AiTutorActivity extends Activity {
         }
         updateSystemBars();
         buildUi();
-        addBubble("Привет! Я ИИ-помощник Study with Love. Могу объяснить математическую тему, разобрать задачу по шагам или составить тренировку.\n\nНе отправляй сюда пароли, адреса и другие личные данные. История этого чата не сохраняется после закрытия экрана.", false);
+        addBubble(tr("Привет! Я ИИ-помощник Study with Love. Могу объяснить математическую тему, разобрать задачу по шагам или составить тренировку.\n\nНе отправляй сюда пароли, адреса и другие личные данные. История этого чата не сохраняется после закрытия экрана.", "Hi! I’m the Study with Love AI tutor. I can explain a math topic, work through a problem step by step, or create a practice quiz.\n\nDon’t send passwords, addresses, or other personal information. This chat history is not saved after you close the screen.", "Salam! Mən Study with Love süni intellekt köməkçisiyəm. Riyaziyyat mövzusunu izah edə, məsələni addım-addım həll edə və ya məşq testi hazırlaya bilərəm.\n\nŞifrələri, ünvanları və digər şəxsi məlumatları göndərmə. Ekranı bağladıqdan sonra bu söhbətin tarixçəsi saxlanılmır."), false);
         if (endpoint().isEmpty()) main.postDelayed(this::showEndpointDialog, 350);
     }
 
@@ -103,7 +103,7 @@ public class AiTutorActivity extends Activity {
         top.setGravity(Gravity.CENTER_VERTICAL);
         TextView back = new TextView(this);
         back.setText("‹");
-        back.setContentDescription("Назад");
+        back.setContentDescription(tr("Назад", "Back", "Geri"));
         back.setTextSize(34);
         back.setTextColor(PINK);
         back.setGravity(Gravity.CENTER);
@@ -117,7 +117,7 @@ public class AiTutorActivity extends Activity {
         heading.addView(subtitle);
         top.addView(heading, new LinearLayout.LayoutParams(0, -2, 1));
         TextView settings = label("⚙", 23, PINK, true);
-        settings.setContentDescription("Настройки подключения ИИ");
+        settings.setContentDescription(tr("Настройки подключения ИИ", "AI connection settings", "Süni intellekt bağlantı ayarları"));
         settings.setGravity(Gravity.CENTER);
         top.addView(settings, new LinearLayout.LayoutParams(dp(44), dp(44)));
         settings.setOnClickListener(v -> showEndpointDialog());
@@ -135,7 +135,7 @@ public class AiTutorActivity extends Activity {
         suggestionScroll.setHorizontalScrollBarEnabled(false);
         LinearLayout suggestions = new LinearLayout(this);
         suggestions.setOrientation(LinearLayout.HORIZONTAL);
-        String[] prompts = {"Объясни тему", "Разбери задачу", "Составь тест"};
+        String[] prompts = {tr("Объясни тему", "Explain a topic", "Mövzunu izah et"), tr("Разбери задачу", "Solve a problem", "Məsələni izah et"), tr("Составь тест", "Create a quiz", "Test hazırla")};
         for (String prompt : prompts) {
             TextView chip = label(prompt, 13, PINK, true);
             chip.setGravity(Gravity.CENTER);
@@ -162,7 +162,7 @@ public class AiTutorActivity extends Activity {
         input.setTextSize(16);
         input.setTextColor(DARK);
         input.setHintTextColor(MUTED);
-        input.setHint("Напиши вопрос…");
+        input.setHint(tr("Напиши вопрос…", "Type your question…", "Sualını yaz…"));
         input.setBackgroundColor(Color.TRANSPARENT);
         input.setPadding(dp(8), dp(7), dp(5), dp(7));
         input.setMinLines(1);
@@ -171,7 +171,7 @@ public class AiTutorActivity extends Activity {
         composer.addView(input, new LinearLayout.LayoutParams(0, -2, 1));
         sendButton = new Button(this);
         sendButton.setText("➤");
-        sendButton.setContentDescription("Отправить сообщение");
+        sendButton.setContentDescription(tr("Отправить сообщение", "Send message", "Mesajı göndər"));
         sendButton.setTextSize(18);
         sendButton.setTextColor(Color.WHITE);
         sendButton.setAllCaps(false);
@@ -315,11 +315,11 @@ public class AiTutorActivity extends Activity {
         field.setHint("https://имя.аккаунт.workers.dev/chat");
         field.setText(endpoint());
         new AlertDialog.Builder(this)
-            .setTitle("Подключение ИИ")
-            .setMessage("Вставь адрес защищённого сервера Study with Love. Секретный ключ Google сюда вводить не нужно.")
+            .setTitle(tr("Подключение ИИ", "AI connection", "Süni intellekt bağlantısı"))
+            .setMessage(tr("Вставь адрес защищённого сервера Study with Love. Секретный ключ Google сюда вводить не нужно.", "Enter the Study with Love secure server address. Do not enter a Google secret key here.", "Study with Love təhlükəsiz server ünvanını daxil et. Google gizli açarını bura yazma."))
             .setView(field)
-            .setNegativeButton("Позже", null)
-            .setPositiveButton("Сохранить", (dialog, which) -> {
+            .setNegativeButton(tr("Позже", "Later", "Sonra"), null)
+            .setPositiveButton(tr("Сохранить", "Save", "Yadda saxla"), (dialog, which) -> {
                 String value = field.getText().toString().trim();
                 if (!value.isEmpty() && (!value.startsWith("https://") || !value.endsWith("/chat"))) {
                     Toast.makeText(this, "Нужен HTTPS-адрес сервера, заканчивающийся на /chat", Toast.LENGTH_LONG).show();
@@ -398,7 +398,7 @@ public class AiTutorActivity extends Activity {
         view.setTextSize(size);
         view.setTypeface(android.graphics.Typeface.create(fontFamily, bold ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL));
         view.setTextColor(color);
-        if (bold) view.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
+        
         return view;
     }
 
