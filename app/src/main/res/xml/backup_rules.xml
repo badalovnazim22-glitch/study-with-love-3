@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <include domain="sharedpref" path="study_progress.xml" />
+    <include domain="file" path="." />
+    <exclude domain="sharedpref" path="timer_runtime.xml" />
+    <exclude domain="cache" path="." />
+    <exclude domain="external" path="." />
+</full-backup-content>
