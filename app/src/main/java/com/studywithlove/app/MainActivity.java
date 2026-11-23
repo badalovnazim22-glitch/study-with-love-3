@@ -201,18 +201,133 @@ public class MainActivity extends Activity {
         startActivity(intent);
     }
 
-    private void showWelcome() {
-        currentScreen="welcome"; base("Добро пожаловать ♡","Давай познакомимся и настроим приложение");
-        LinearLayout panel=card();panel.setGravity(Gravity.CENTER_HORIZONTAL);panel.setPadding(dp(20),dp(20),dp(20),dp(20));
-        TextView flower=text("🌷",64,PINK,true);flower.setGravity(Gravity.CENTER);panel.addView(flower,lp(-1,92,0,0,0,8));
-        EditText name=new EditText(this);name.setSingleLine(true);name.setTextSize(17);name.setTextColor(DARK);name.setHint("Как тебя зовут?");name.setPadding(dp(14),dp(8),dp(14),dp(8));name.setBackground(shape(0xFFFFFFFF,16,0xFFEADDE2));panel.addView(name,lp(-1,52,0,0,0,12));
-        addText(panel,"КАК К ТЕБЕ ОБРАЩАТЬСЯ?",11,PINK,true);addText(panel,"Выбери обращение",13,MUTED,false);
-        final String[] gender={""};LinearLayout choices=new LinearLayout(this);choices.setOrientation(LinearLayout.HORIZONTAL);
-        Button[] opts={button("Девушка",false),button("Парень",false)};String[] vals={"female","male"};
-        for(int i=0;i<2;i++){final int k=i;LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(48),1f);p.setMargins(dp(3),0,dp(3),0);choices.addView(opts[i],p);opts[i].setOnClickListener(v->{gender[0]=vals[k];for(Button q:opts)q.setAlpha(.65f);opts[k].setAlpha(1f);opts[k].setBackground(shape(PALE,18,PINK));opts[k].setTextColor(PINK);opts[k].animate().scaleX(1.05f).scaleY(1.05f).setDuration(160).withEndAction(()->opts[k].animate().scaleX(1f).scaleY(1f).setDuration(130).start()).start();});}
-        panel.addView(choices,lp(-1,52,0,5,0,16));Button start=button("Начать путешествие ✨",true);panel.addView(start,lp(-1,54,0,4,0,0));root.addView(panel,lp(-1,-2,0,0,0,18));
-        start.setOnClickListener(v->{String n=name.getText().toString().trim();if(n.isEmpty()){name.setError("Введи имя");return;}if(gender[0].isEmpty()){Toast.makeText(this,"Выбери пол",Toast.LENGTH_SHORT).show();return;}prefs.edit().putString("display_name",n).putString("profile_gender",gender[0]).putBoolean("welcome_done",true).apply();panel.animate().alpha(0f).translationY(dp(28)).scaleX(.97f).scaleY(.97f).setDuration(950).setInterpolator(new android.view.animation.DecelerateInterpolator()).withEndAction(()->{showHome();View decor=getWindow().getDecorView();decor.setAlpha(0f);decor.setScaleX(1.025f);decor.setScaleY(1.025f);decor.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(1100).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();}).start();});
-        panel.setAlpha(0f);panel.setTranslationY(dp(24));panel.animate().alpha(1f).translationY(0).setDuration(520).start();
+    private void showWelcome() { renderWelcomeStep(0, "", "neutral", "pink", "Математика", 15, 0); }
+
+    private void renderWelcomeStep(int step, String name, String address, String theme, String focus, int minutes, int slide) {
+        currentScreen = "welcome";
+        applyWelcomeTheme(theme);
+        base("Знакомство · " + Math.min(step + 1, 3) + " из 3", "Настроим Study with Love под тебя");
+        LinearLayout page = new LinearLayout(this);
+        page.setOrientation(LinearLayout.VERTICAL);
+        page.setPadding(dp(18), dp(8), dp(18), dp(18));
+        root.addView(page, lp(-1, -2, 0, 0, 0, 0));
+        if (step <= 2) {
+            android.widget.ProgressBar progress = new android.widget.ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+            progress.setMax(3); progress.setProgress(step + 1);
+            if (Build.VERSION.SDK_INT >= 21) progress.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
+            page.addView(progress, lp(-1, 4, 0, 0, 0, 18));
+        } else {
+            TextView dots = text("●  ●  ●", 14, PINK, true); dots.setGravity(Gravity.CENTER);
+            page.addView(dots, lp(-1, 28, 0, 0, 0, 12));
+        }
+
+        if (step == 0) {
+            TextView flower = text("🌷", 88, PINK, true); flower.setGravity(Gravity.CENTER);
+            page.addView(flower, lp(-1, 210, 0, 12, 0, 12));
+            addText(page, "Место, где маленькие шаги становятся большими победами.", 23, DARK, true);
+            addText(page, "Учись в своём ритме, отмечай успехи и береги силы.", 15, MUTED, false);
+            Button next = button("Познакомимся", true); page.addView(next, lp(-1, 54, 0, 22, 0, 8));
+            next.setOnClickListener(v -> renderWelcomeStep(1, name, address, theme, focus, minutes, slide));
+            Button later = button("Позже", false); page.addView(later, lp(-1, 48, 0, 0, 0, 0));
+            later.setOnClickListener(v -> renderWelcomeStep(3, name, address, theme, focus, minutes, 0));
+        } else if (step == 1) {
+            addText(page, "Как тебя называть?", 26, DARK, true);
+            addText(page, "Имя нужно только для обращения в приложении и не отправляется в интернет.", 14, MUTED, false);
+            EditText input = new EditText(this); input.setSingleLine(true); input.setText(name); input.setHint("Твоё имя");
+            input.setTextSize(19); input.setTextColor(DARK); input.setHintTextColor(MUTED); input.setPadding(dp(14), dp(8), dp(14), dp(8));
+            input.setBackground(shape(PALE, 16, PINK)); input.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(24)});
+            page.addView(input, lp(-1, 58, 0, 18, 0, 4));
+            TextView count = text(name.length() + "/24", 12, MUTED, false); count.setGravity(Gravity.RIGHT);
+            page.addView(count, lp(-1, 22, 0, 0, 0, 14));
+            input.addTextChangedListener(new android.text.TextWatcher() {
+                public void beforeTextChanged(CharSequence s,int st,int n,int a) {}
+                public void onTextChanged(CharSequence s,int st,int before,int countChanged) { count.setText(s.length()+"/24"); }
+                public void afterTextChanged(android.text.Editable e) {}
+            });
+            Button next = button("Дальше", true); next.setEnabled(!name.trim().isEmpty()); page.addView(next, lp(-1, 54, 0, 4, 0, 8));
+            input.addTextChangedListener(new android.text.TextWatcher() {
+                public void beforeTextChanged(CharSequence s,int st,int n,int a) {}
+                public void onTextChanged(CharSequence s,int st,int before,int countChanged) { next.setEnabled(!s.toString().trim().isEmpty()); }
+                public void afterTextChanged(android.text.Editable e) {}
+            });
+            next.setOnClickListener(v -> { String value=input.getText().toString().trim(); if(!value.isEmpty()){ ((android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(input.getWindowToken(),0); renderWelcomeStep(2,value,address,theme,focus,minutes,slide); }});
+            Button later = button("Позже", false); page.addView(later, lp(-1, 48, 0, 0, 0, 0));
+            later.setOnClickListener(v -> renderWelcomeStep(2, "", address, theme, focus, minutes, slide));
+            input.requestFocus();
+            getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        } else if (step == 2) {
+            addText(page, "Как тебе удобнее?", 26, DARK, true);
+            addText(page, "Выбери вариант обращения или не указывай его.", 14, MUTED, false);
+            String[] labels = {"Она / её", "Он / его", "Не указывать"};
+            String[] values = {"female", "male", "neutral"};
+            LinearLayout choices = new LinearLayout(this); choices.setOrientation(LinearLayout.VERTICAL);
+            for (int i=0;i<3;i++) {
+                final String value=values[i];
+                Button option=button((address.equals(value)?"✓  ":"")+" "+labels[i],address.equals(value));
+                option.setGravity(Gravity.CENTER_VERTICAL); option.setOnClickListener(v->renderWelcomeStep(2,name,value,theme,focus,minutes,slide));
+                choices.addView(option,lp(-1,52,0,5,0,5));
+            }
+            page.addView(choices,lp(-1,-2,0,16,0,12));
+            Button next=button("Дальше",true); page.addView(next,lp(-1,54,0,4,0,8));
+            next.setOnClickListener(v->renderWelcomeStep(3,name,address,theme,focus,minutes,slide));
+            Button later=button("Позже",false); page.addView(later,lp(-1,48,0,0,0,0));
+            later.setOnClickListener(v->renderWelcomeStep(3,name,"neutral",theme,focus,minutes,slide));
+        } else if (step == 3) {
+            addText(page, "Настроим под тебя", 25, DARK, true);
+            addText(page, "Цвет и тема", 14, MUTED, true);
+            LinearLayout preview=card(); preview.setBackground(shape(PALE,20,PINK)); preview.setPadding(dp(14),dp(12),dp(14),dp(12));
+            addText(preview,"Так будет выглядеть приложение",15,DARK,true);
+            Button sample=button("Пример кнопки",true); preview.addView(sample,lp(-1,48,0,8,0,0));
+            page.addView(preview,lp(-1,-2,0,8,0,12));
+            String[] themes={"pink","lavender","mint","night","white"};
+            String[] themeNames={"Розовый","Лавандовый","Мятный","Тёмный","Светлый"};
+            android.widget.GridLayout colors=new android.widget.GridLayout(this); colors.setColumnCount(3);
+            for(int i=0;i<themes.length;i++){final String t=themes[i];Button b=button((theme.equals(t)?"✓ ":"")+themeNames[i],theme.equals(t));android.widget.GridLayout.LayoutParams p=new android.widget.GridLayout.LayoutParams();p.width=0;p.height=dp(48);p.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);p.setMargins(dp(3),dp(3),dp(3),dp(3));colors.addView(b,p);b.setOnClickListener(v->renderWelcomeStep(3,name,address,t,focus,minutes,slide));}
+            page.addView(colors,lp(-1,-2,0,0,0,10));
+            addText(page,"Что учим?",14,MUTED,true);
+            String[] subjects={"Математика","Языки","Экзамены"};String[] subjectValues={"Математика","Языки","Экзамены"};
+            for(int i=0;i<subjects.length;i++){final String f=subjectValues[i];Button b=button((focus.equals(f)?"✓  ":"")+subjects[i],focus.equals(f));page.addView(b,lp(-1,44,0,3,0,3));b.setOnClickListener(v->renderWelcomeStep(3,name,address,theme,f,minutes,slide));}
+            addText(page,"Сколько минут в день?",14,MUTED,true);
+            String[] minuteOptions={"5","15","25","45"};LinearLayout minuteRow=new LinearLayout(this);minuteRow.setOrientation(LinearLayout.HORIZONTAL);
+            for(String m:minuteOptions){int value=Integer.parseInt(m);Button b=button(value+" мин",minutes==value);LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(48),1f);p.setMargins(dp(2),0,dp(2),0);minuteRow.addView(b,p);b.setOnClickListener(v->renderWelcomeStep(3,name,address,theme,focus,value,slide));}
+            page.addView(minuteRow,lp(-1,48,0,4,0,14));
+            Button next=button("Дальше",true);page.addView(next,lp(-1,54,0,0,0,6));next.setOnClickListener(v->renderWelcomeStep(4,name,address,theme,focus,minutes,0));
+            Button later=button("Позже",false);page.addView(later,lp(-1,48,0,0,0,0));later.setOnClickListener(v->renderWelcomeStep(4,name,address,theme,focus,minutes,0));
+        } else if (step >= 4 && step <= 6) {
+            String[] titles={"Фокус и таймер","Разбор задач с ИИ","Дневник и цветочек"};
+            String[] descriptions={"Выделяй время на учёбу и отдыхай вовремя.","Задавай вопросы и разбирай сложные задания с ИИ.","Записывай мысли, а цветочек будет расти вместе с твоими занятиями."};
+            String[] art={"⏳","✨","🌱"};
+            TextView illustration=text(art[step-4],76,PINK,true);illustration.setGravity(Gravity.CENTER);page.addView(illustration,lp(-1,190,0,16,0,12));
+            addText(page,titles[step-4],24,DARK,true);addText(page,descriptions[step-4],15,MUTED,false);
+            LinearLayout nav=new LinearLayout(this);nav.setOrientation(LinearLayout.HORIZONTAL);
+            Button skip=button("Пропустить",false);nav.addView(skip,new LinearLayout.LayoutParams(0,dp(50),1f));skip.setOnClickListener(v->renderWelcomeStep(7,name,address,theme,focus,minutes,slide));
+            Button next=button(step==6?"Завершить":"Дальше",true);LinearLayout.LayoutParams np=new LinearLayout.LayoutParams(0,dp(50),1f);np.setMargins(dp(6),0,0,0);nav.addView(next,np);
+            next.setOnClickListener(v->renderWelcomeStep(step==6?7:step+1,name,address,theme,focus,minutes,slide));
+            page.addView(nav,lp(-1,50,0,28,0,0));
+            page.setOnTouchListener(new android.view.View.OnTouchListener(){float downX;public boolean onTouch(View v,android.view.MotionEvent e){if(e.getAction()==0){downX=e.getX();return true;}if(e.getAction()==1){float dx=e.getX()-downX;if(Math.abs(dx)>dp(60))renderWelcomeStep(dx<0?Math.min(6,step+1):Math.max(4,step-1),name,address,theme,focus,minutes,slide);return true;}return true;}});
+        } else {
+            prefs.edit().putString("display_name",name.isEmpty()?"Друг":name).putString("profile_gender",address)
+                    .putString("app_theme",theme).putString("learning_focus",focus)
+                    .putInt("daily_goal_minutes",minutes).putInt("weekly_goal_minutes",minutes*5)
+                    .putBoolean("welcome_done",true).apply();
+            applySavedTheme();
+            TextView flower=text("🌸",88,PINK,true);flower.setGravity(Gravity.CENTER);page.addView(flower,lp(-1,170,0,10,0,10));
+            addText(page,"Рада познакомиться, "+(name.isEmpty()?"друг":name)+"!",25,DARK,true);
+            addText(page,"Начнём спокойно — всего с пяти минут.",15,MUTED,false);
+            Button begin=button("Давай начнём с 5 минут",true);page.addView(begin,lp(-1,54,0,24,0,8));
+            begin.setOnClickListener(v->{selectedStudyMinutes=5;timerRemainingMs=5*60000L;showPomodoro();});
+            Button later=button("Перейти на главный экран",false);page.addView(later,lp(-1,48,0,0,0,0));later.setOnClickListener(v->showHome());
+        }
+        if(step>=4 && step<=6) { Button skipAll=button("Пропустить знакомство",false);page.addView(skipAll,lp(-1,46,0,14,0,0));skipAll.setOnClickListener(v->renderWelcomeStep(7,name,address,theme,focus,minutes,slide)); }
+    }
+
+    private void applyWelcomeTheme(String theme) {
+        if ("night".equals(theme)) { BG=0xFF17151D; PINK=0xFFE39AB5; PALE=0xFF302735; DARK=0xFFF4EAF0; MUTED=0xFFB6A8B2; }
+        else if ("lavender".equals(theme)) { BG=0xFFF8F6FF; PINK=0xFF8979B8; PALE=0xFFF0ECFA; DARK=0xFF393448; MUTED=0xFF8E879E; }
+        else if ("mint".equals(theme)) { BG=0xFFF5FAF7; PINK=0xFF659B86; PALE=0xFFEAF5EF; DARK=0xFF34443D; MUTED=0xFF84958C; }
+        else if ("white".equals(theme)) { BG=0xFFF7F8FA; PINK=0xFF65758B; PALE=0xFFE9EDF2; DARK=0xFF303844; MUTED=0xFF87919E; }
+        else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF95878C; }
+        if (getWindow()!=null) { getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG); }
     }
 
     private void loadChapters() {
