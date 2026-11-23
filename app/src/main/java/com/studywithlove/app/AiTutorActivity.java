@@ -510,11 +510,11 @@ public class AiTutorActivity extends Activity {
             .setPositiveButton(tr("Сохранить", "Save", "Yadda saxla"), (dialog, which) -> {
                 String value = field.getText().toString().trim();
                 if (!value.isEmpty() && (!value.startsWith("https://") || !value.endsWith("/chat"))) {
-                    Toast.makeText(this, "Нужен HTTPS-адрес сервера, заканчивающийся на /chat", Toast.LENGTH_LONG).show();
+                    showStatusBanner("Нужен HTTPS-адрес сервера, заканчивающийся на /chat");
                     return;
                 }
                 getSharedPreferences(AI_PREFS, MODE_PRIVATE).edit().putString(ENDPOINT_KEY, value).apply();
-                Toast.makeText(this, value.isEmpty() ? "Адрес не задан" : "Адрес сервера сохранён", Toast.LENGTH_SHORT).show();
+                showStatusBanner(value.isEmpty() ? "Адрес не задан" : "Адрес сервера сохранён");
             }).show();
     }
 
@@ -590,6 +590,27 @@ public class AiTutorActivity extends Activity {
     }
 
     private String tr(String ru, String en, String az) { return "en".equals(language)?en:("az".equals(language)?az:ru); }
+
+    private void showStatusBanner(String message) {
+        android.widget.FrameLayout overlay = new android.widget.FrameLayout(this);
+        TextView banner = label(message, 13, DARK, true);
+        banner.setPadding(dp(16), dp(13), dp(16), dp(13));
+        banner.setBackground(round(PALE, 18, 0));
+        banner.setElevation(dp(8));
+        overlay.addView(banner, new android.widget.FrameLayout.LayoutParams(-1, -2));
+        android.view.ViewGroup decor = (android.view.ViewGroup) getWindow().getDecorView();
+        android.widget.FrameLayout.LayoutParams params = new android.widget.FrameLayout.LayoutParams(
+            Math.min(getResources().getDisplayMetrics().widthPixels - dp(32), dp(420)), -2,
+            Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        params.setMargins(dp(16), dp(12), dp(16), 0);
+        decor.addView(overlay, params);
+        overlay.setAlpha(0f);
+        overlay.animate().alpha(1f).setDuration(180).start();
+        main.postDelayed(() -> {
+            if (overlay.getParent() != null) overlay.animate().alpha(0f).setDuration(160)
+                .withEndAction(() -> { if (overlay.getParent() != null) decor.removeView(overlay); }).start();
+        }, 2400);
+    }
 
     private TextView label(String value, int size, int color, boolean bold) {
         TextView view = new TextView(this);
