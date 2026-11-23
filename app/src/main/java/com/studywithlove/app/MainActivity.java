@@ -611,7 +611,30 @@ public class MainActivity extends Activity {
         }
         continueCard.addView(overallBar, lp(-1, 6, 0, 0, 0, 8));
         addText(continueCard, completedTopics + " из " + totalTopics + " тем завершено", 14, MUTED, false);
-        root.addView(continueCard, lp(-1, -2, 0, 2, 0, 13));
+        root.addView(continueCard, lp(-1, -2, 0, 2, 0, 10));
+
+        // Three compact home summary tiles restored from the earlier design.
+        LinearLayout homeStats = new LinearLayout(this);
+        homeStats.setOrientation(LinearLayout.HORIZONTAL);
+        homeStats.setGravity(Gravity.CENTER_VERTICAL);
+        int[] statValues = {streak, done, prefs.getInt("longest_streak", streak)};
+        String[] statLabels = {"дней подряд", "уроков", "личный рекорд"};
+        for (int statIndex = 0; statIndex < statValues.length; statIndex++) {
+            LinearLayout statCard = card();
+            statCard.setOrientation(LinearLayout.VERTICAL);
+            statCard.setGravity(Gravity.CENTER);
+            statCard.setPadding(dp(5), dp(12), dp(5), dp(12));
+            TextView statValue = text(String.valueOf(statValues[statIndex]), 23, DARK, true);
+            statValue.setGravity(Gravity.CENTER);
+            statCard.addView(statValue, lp(-1, 30, 0, 0, 0, 3));
+            TextView statLabel = text(statLabels[statIndex], 12, MUTED, false);
+            statLabel.setGravity(Gravity.CENTER);
+            statCard.addView(statLabel, lp(-1, -2, 0, 0, 0, 0));
+            LinearLayout.LayoutParams statLp = new LinearLayout.LayoutParams(0, dp(82), 1f);
+            if (statIndex > 0) statLp.setMargins(dp(6), 0, 0, 0);
+            homeStats.addView(statCard, statLp);
+        }
+        root.addView(homeStats, lp(-1, -2, 0, 0, 0, 12));
 
         // Weekly goal with a Monday-to-Sunday activity strip on the home screen.
         int weeklyGoal = prefs.getInt("weekly_goal_minutes", 300);
