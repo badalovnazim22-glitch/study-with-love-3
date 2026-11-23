@@ -223,7 +223,7 @@ public class AiTutorActivity extends Activity {
             JSONObject outgoing = new JSONObject(item.toString());
             if (i == history.size() - 1 && "user".equals(item.optString("role")) && !studyContext.isEmpty()) {
                 String contextualQuestion = "Учебный контекст приложения: " + studyContext
-                        + "\\nОтвечай с учётом этих тем, объясняй понятным языком и не предполагай, что ученик уже знает сложные термины.\\n\\nВопрос: "
+                        + "\nОтвечай с учётом этих тем, объясняй понятным языком и не предполагай, что ученик уже знает сложные термины.\n\nВопрос: "
                         + content;
                 if (contextualQuestion.length() <= 9000) {
                     outgoing.put("content", contextualQuestion);
@@ -231,7 +231,7 @@ public class AiTutorActivity extends Activity {
                 }
             }
             payloadMessages.put(outgoing);
-            totalChars += content.length();
+            totalChars += outgoing.optString("content", content).length();
         }
         JSONObject payload = new JSONObject();
         try { payload.put("messages", payloadMessages); } catch (Exception ignored) {}
