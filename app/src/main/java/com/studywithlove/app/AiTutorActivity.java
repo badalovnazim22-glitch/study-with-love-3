@@ -115,6 +115,8 @@ public class AiTutorActivity extends Activity {
         scroll.addView(messages);
         page.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
 
+        HorizontalScrollView suggestionScroll = new HorizontalScrollView(this);
+        suggestionScroll.setHorizontalScrollBarEnabled(false);
         LinearLayout suggestions = new LinearLayout(this);
         suggestions.setOrientation(LinearLayout.HORIZONTAL);
         String[] prompts = {"Объясни тему", "Разбери задачу", "Составь тест"};
@@ -133,7 +135,8 @@ public class AiTutorActivity extends Activity {
                 input.requestFocus();
             });
         }
-        page.addView(suggestions, new LinearLayout.LayoutParams(-1, -2));
+        suggestionScroll.addView(suggestions, new HorizontalScrollView.LayoutParams(-2, -2));
+        page.addView(suggestionScroll, new LinearLayout.LayoutParams(-1, -2));
 
         LinearLayout composer = new LinearLayout(this);
         composer.setGravity(Gravity.CENTER_VERTICAL);
