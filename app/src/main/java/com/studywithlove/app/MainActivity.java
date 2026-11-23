@@ -1221,8 +1221,19 @@ public class MainActivity extends Activity {
         boolean correct=normalizeAnswer(userAnswer).equals(normalizeAnswer(q.answer));
         if(correct){miniScore++;clearMistake(q);haptic(source,true);}else{miniWrongQuestions.add(q);recordMistake(q,userAnswer);haptic(source,false);if(source!=null)source.animate().translationX(dp(8)).setDuration(45).withEndAction(()->source.animate().translationX(-dp(8)).setDuration(45).withEndAction(()->source.animate().translationX(0).setDuration(45).start()).start()).start();}
         if(source instanceof Button){Button chosen=(Button)source;chosen.setBackground(shape(correct?0xFFE4F4E8:0xFFFFE8E8,22,correct?0xFF75B987:0xFFE58A8A));chosen.setTextColor(correct?0xFF287A43:0xFFB64242);new Handler(android.os.Looper.getMainLooper()).postDelayed(()->{if(!isFinishing()){chosen.setBackground(shape(0xFFFFFFFF,22,0xFFEADDE2));chosen.setTextColor(DARK);}},1050);}
-        TextView feedback=text((correct?"✓  Верно! ":"✦  Правильный ответ: "+q.answer+" · ")+q.explanation,13,correct?0xFF287A43:0xFF9B4A58,true);feedback.setPadding(dp(12),dp(10),dp(12),dp(10));feedback.setBackground(shape(correct?0xFFF0F8F1:0xFFFFF2F2,14,0));root.addView(feedback,lp(-1,-2,0,7,0,4));
-        new Handler(Looper.getMainLooper()).postDelayed(()->{if(!isFinishing())renderMiniTest(index+1,wrongOnly);},1050);
+        TextView feedback=text((correct?"✓  Верно! ":"✦  Правильный ответ: "+q.answer+"\\n")+q.explanation,13,correct?0xFF287A43:0xFF9B4A58,true);feedback.setPadding(dp(12),dp(10),dp(12),dp(10));feedback.setBackground(shape(correct?0xFFF0F8F1:0xFFFFF2F2,14,0));root.addView(feedback,lp(-1,-2,0,7,0,4));
+        if(!correct){
+            Button explainAi=button("✧  Объясни с ИИ",false);
+            explainAi.setContentDescription("Попросить ИИ объяснить ошибку в задании");
+            explainAi.setOnClickListener(v->{
+                Intent intent=new Intent(this,AiTutorActivity.class);
+                String context="Помоги разобраться с ошибкой в учебном задании. Тема: "+(q.topic==null||q.topic.isEmpty()?miniTopic:q.topic)+". Вопрос: "+q.prompt+". Мой неверный ответ: "+userAnswer+". Правильный ответ: "+q.answer+". Краткое объяснение: "+q.explanation+". Объясни пошагово и доброжелательно, не просто сообщай ответ.";
+                intent.putExtra("study_context",context);
+                startActivity(intent);
+            });
+            root.addView(explainAi,lp(-1,48,0,0,0,4));
+        }
+        new Handler(Looper.getMainLooper()).postDelayed(()->{if(!isFinishing())renderMiniTest(index+1,wrongOnly);},correct?1050:3500);
     }
     private MiniQuestion makeMiniQuestion(String topic){
         String t=topic.toLowerCase(new Locale("ru"));
