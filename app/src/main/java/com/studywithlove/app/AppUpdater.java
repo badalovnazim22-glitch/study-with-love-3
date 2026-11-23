@@ -27,7 +27,7 @@ public final class AppUpdater {
     private static final String RELEASE_API =
             "https://api.github.com/repos/badalovnazim22-glitch/study-with-love-3/releases/latest";
     private static final String APK_URL =
-            "https://github.com/badalovnazim22-glitch/study-with-love-3/releases/latest/download/study-with-love.apk";
+            "https://github.com/badalovnazim22-glitch/study-with-love-3/releases/latest/download/app-debug.apk";
     private static final String PREFS = "study_app_updates";
     private static final String PENDING_APK = "pending_apk";
     private static final int MAX_APK_BYTES = 100 * 1024 * 1024;
