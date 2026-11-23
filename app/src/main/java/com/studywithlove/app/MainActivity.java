@@ -385,6 +385,11 @@ public class MainActivity extends Activity {
         return group;
     }
 
+    @Override protected void onResume() {
+        super.onResume();
+        AppUpdater.resumePendingInstall(this);
+    }
+
     private void showSettings() {
         currentScreen="settings";
         base("Настройки ⚙","Всё нужное — в одном месте");
@@ -403,6 +408,16 @@ public class MainActivity extends Activity {
         profile.addView(genderRow,lp(-1,48,0,4,0,8));
         Button saveName=button("Сохранить имя",true);saveName.setOnClickListener(v->{String value=name.getText().toString().trim();if(value.isEmpty()){name.setError("Введи имя");return;}prefs.edit().putString("display_name",value).apply();Toast.makeText(this,"Имя сохранено ♡",Toast.LENGTH_SHORT).show();});
         profile.addView(saveName,lp(-1,48,0,0,0,0));root.addView(profile,lp(-1,-2,0,0,0,4));
+        
+        LinearLayout updates=settingsGroup("ОБНОВЛЕНИЕ ПРИЛОЖЕНИЯ");
+        String installedVersion="—";
+        try { installedVersion=getPackageManager().getPackageInfo(getPackageName(),0).versionName; } catch(Exception ignored) {}
+        addText(updates,"Установленная версия: "+installedVersion,13,MUTED,false);
+        addText(updates,"Проверяй наличие новых возможностей и исправлений.",12,MUTED,false);
+        Button checkUpdates=button("Проверить обновления",true);
+        checkUpdates.setOnClickListener(v->AppUpdater.checkAndOffer(this));
+        updates.addView(checkUpdates,lp(-1,48,0,7,0,0));
+        root.addView(updates,lp(-1,-2,0,0,0,4));
 
         LinearLayout appearance=settingsGroup("ВНЕШНИЙ ВИД");
         addText(appearance,"Тема приложения",14,DARK,true);
@@ -2416,6 +2431,10 @@ public class MainActivity extends Activity {
     private String translate(String value){
         String lang=prefs==null?"ru":prefs.getString("app_language","ru");if("ru".equals(lang)||value==null)return value;
         String[][] pairs={
+            {"ОБНОВЛЕНИЕ ПРИЛОЖЕНИЯ","APP UPDATES","YENİLƏNMƏLƏR"},
+            {"Установленная версия: ","Installed version: ","Quraşdırılmış versiya: "},
+            {"Проверяй наличие новых возможностей и исправлений.","Check for new features and fixes.","Yeni funksiyaları və düzəlişləri yoxla."},
+            {"Проверить обновления","Check for updates","Yeniləmələri yoxla"},
             {"Сортировка предметов","Sort subjects","Fənləri çeşidlə"},
             {"Предыдущий месяц","Previous month","Əvvəlki ay"},
             {"Следующий месяц","Next month","Növbəti ay"},
