@@ -37,10 +37,13 @@ import java.util.concurrent.Executors;
 public class AiTutorActivity extends Activity {
     private static final String AI_PREFS = "study_ai_settings";
     private static final String ENDPOINT_KEY = "backend_url";
-    private static final int BG = Color.rgb(255, 249, 247);
-    private static final int PINK = Color.rgb(201, 120, 145);
-    private static final int DARK = Color.rgb(63, 52, 57);
-    private static final int MUTED = Color.rgb(145, 132, 139);
+    private int BG = Color.rgb(255, 249, 247);
+    private int PINK = Color.rgb(201, 120, 145);
+    private int DARK = Color.rgb(63, 52, 57);
+    private int MUTED = Color.rgb(145, 132, 139);
+    private int PALE = 0xFFFCEEF2;
+    private String fontFamily = "sans-serif";
+    private String language = "ru";
     private final Handler main = new Handler(Looper.getMainLooper());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final List<JSONObject> history = new ArrayList<>();
@@ -54,9 +57,21 @@ public class AiTutorActivity extends Activity {
 
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
-        getWindow().setStatusBarColor(BG);
-        getWindow().setNavigationBarColor(BG);
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        loadAppearance();
+        getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
+            getWindow().setStatusBarColor(Color.TRANSPARENT);
+            getWindow().setNavigationBarColor(Color.TRANSPARENT);
+            getWindow().setDecorFitsSystemWindows(false);
+            if (android.os.Build.VERSION.SDK_INT >= 29) {
+                getWindow().setStatusBarContrastEnforced(false);
+                getWindow().setNavigationBarContrastEnforced(false);
+            }
+        } else {
+            getWindow().setStatusBarColor(BG);
+            getWindow().setNavigationBarColor(BG);
+        }
+        updateSystemBars();
         buildUi();
         addBubble("Привет! Я ИИ-помощник Study with Love. Могу объяснить математическую тему, разобрать задачу по шагам или составить тренировку.\n\nНе отправляй сюда пароли, адреса и другие личные данные. История этого чата не сохраняется после закрытия экрана.", false);
         if (endpoint().isEmpty()) main.postDelayed(this::showEndpointDialog, 350);
