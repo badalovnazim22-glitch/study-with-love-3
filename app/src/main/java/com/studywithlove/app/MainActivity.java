@@ -1596,8 +1596,8 @@ public class MainActivity extends Activity {
     private void showDetailedStats() {
         currentScreen="stats";saveForegroundUsage();base("Подробная статистика","Посмотри, как растёт твой учебный путь");int completed=0,total=0;
         for(List<String> topics:chapters.values()){total+=topics.size();completed+=countCompleted(topics);}LinearLayout summary=card();addText(summary,"📚  ИЗУЧЕНИЕ",12,PINK,true);addText(summary,completed+" из "+total+" тем завершено",22,DARK,true);
-        addProgressLine(summary,"Общий прогресс",total==0?0:completed*100/total);Set<String> days=prefs.getStringSet("study_days",new TreeSet<String>());addText(summary,"Учебных дней: "+days.size(),14,MUTED,false);
-        addText(summary,"Всего времени: "+(totalStudyMinutes()/60)+" ч "+(totalStudyMinutes()%60)+" мин",14,MUTED,false);addText(summary,"Завершённых занятий: "+prefs.getInt("done_count",0),14,MUTED,false);root.addView(summary,lp(-1,-2,0,0,0,12));
+        addProgressLine(summary,"Общий прогресс",total==0?0:completed*100/total);Set<String> days=prefs.getStringSet("study_days",new TreeSet<String>());TextView studyDays=text("Учебных дней: 0",14,MUTED,false);summary.addView(studyDays);animateNumber(studyDays,days.size()," учебных дней");
+        TextView totalTime=text("Всего времени: 0 мин",14,MUTED,false);summary.addView(totalTime);animateNumber(totalTime,totalStudyMinutes()," мин всего");addText(summary,"Завершённых занятий: "+prefs.getInt("done_count",0),14,MUTED,false);root.addView(summary,lp(-1,-2,0,0,0,12));
         Calendar c=Calendar.getInstance(TimeZone.getTimeZone("Asia/Baku"));LinearLayout week=card();addText(week,"ПОСЛЕДНИЕ 7 ДНЕЙ",12,PINK,true);
         for(int i=6;i>=0;i--){Calendar day=(Calendar)c.clone();day.add(Calendar.DAY_OF_YEAR,-i);String date=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(day.getTime());int mins=prefs.getInt("focus_minutes_"+date,0);addProgressLine(week,new SimpleDateFormat("EEE, d MMM",new Locale("ru")).format(day.getTime())+" · "+mins+" мин",Math.min(100,mins*2));}
         root.addView(week,lp(-1,-2,0,0,0,12));backHome();
