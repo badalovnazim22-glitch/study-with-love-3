@@ -941,7 +941,7 @@ public class MainActivity extends Activity {
         Set<String> days=new TreeSet<>(prefs.getStringSet("study_days",new TreeSet<String>()));
         Calendar from=(Calendar)now.clone();from.add(Calendar.DAY_OF_YEAR,-6);
         int active=0;
-        for(int i=0;i<7;i++){String date=new new SimpleDateFormat("yyyy-MM-dd",Locale.US) {{ setTimeZone(AppTime.zone()); }}.format(from.getTime());if(days.contains(date))active++;from.add(Calendar.DAY_OF_YEAR,1);}
+        for(int i=0;i<7;i++){String date=new SimpleDateFormat("yyyy-MM-dd",Locale.US) {{ setTimeZone(AppTime.zone()); }}.format(from.getTime());if(days.contains(date))active++;from.add(Calendar.DAY_OF_YEAR,1);}
         LinearLayout summary=card();summary.setPadding(dp(14),dp(12),dp(14),dp(12));
         addText(summary,"🌷  ТВОЯ НЕДЕЛЯ",12,PINK,true);
         addText(summary,minutes+" минут учёбы · "+active+" активных "+dayWord(active),17,DARK,true);
