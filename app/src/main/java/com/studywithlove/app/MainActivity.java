@@ -80,13 +80,14 @@ public class MainActivity extends Activity {
     private volatile boolean ambienceLoading=false;
     private android.media.AudioManager ambienceAudioManager;
     private android.media.AudioFocusRequest ambienceFocusRequest;
-    private final android.media.AudioManager.OnAudioFocusChangeListener ambienceFocusListener=change->{if(ambiencePlayer!=null){if(change==android.media.AudioManager.AUDIOFOCUS_LOSS||change==android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT){try{if(ambiencePlayer.isPlaying())ambiencePlayer.pause();}catch(Exception ignored){}}else if(change==android.media.AudioManager.AUDIOFOCUS_GAIN){try{ambiencePlayer.start();}catch(Exception ignored){}}}};
     private volatile int ambienceGeneration=0;
     private android.graphics.Bitmap cachedBackgroundBitmap;
     private String cachedBackgroundUri="";
     private Thread ambienceThread;
     private android.media.AudioTrack ambienceTrack;
     private android.media.MediaPlayer ambiencePlayer;
+    private final android.media.AudioManager.OnAudioFocusChangeListener ambienceFocusListener=change->{if(ambiencePlayer!=null){if(change==android.media.AudioManager.AUDIOFOCUS_LOSS||change==android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT){try{if(ambiencePlayer.isPlaying())ambiencePlayer.pause();}catch(Exception ignored){}}else if(change==android.media.AudioManager.AUDIOFOCUS_GAIN){try{ambiencePlayer.start();}catch(Exception ignored){}}}};
+
     private String pendingReviewKey="";
     private static final String PREFS = "study_progress";
     private static final int PICK_BACKGROUND = 7412;
