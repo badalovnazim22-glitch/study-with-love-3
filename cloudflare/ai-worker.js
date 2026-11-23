@@ -15,7 +15,7 @@ function json(data, status = 200) {
 
 export default {
   async fetch(request, env) {
-    if (request.method === "OPTIONS") return json({}, 204);
+    if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type" } });
     if (request.method !== "POST") return json({ error: "Используй POST." }, 405);
     if (!env.GEMINI_API_KEY) return json({ error: "Сервер ещё не настроен: отсутствует ключ модели." }, 503);
 
