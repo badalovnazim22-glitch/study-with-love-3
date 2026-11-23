@@ -47,11 +47,15 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // This endpoint is used by the native Android app; no wildcard browser CORS is needed.\n    if (request.method === "OPTIONS") return new Response(null, { status: 405 });
+    // This endpoint is used by the native Android app; no wildcard browser CORS is needed.
+    if (request.method === "OPTIONS") return new Response(null, { status: 405 });
 
     if (url.pathname !== "/chat") return json({ error: "Адрес не найден." }, 404);
     if (request.method !== "POST") return json({ error: "Используй POST." }, 405);
-    if (await isRateLimited(request, env)) {\n      return json({ error: "Слишком много запросов. Подожди минуту и попробуй снова." }, 429);\n    }\n    if (!env.AI || typeof env.AI.run !== "function") {
+    if (await isRateLimited(request, env)) {
+      return json({ error: "Слишком много запросов. Подожди минуту и попробуй снова." }, 429);
+    }
+    if (!env.AI || typeof env.AI.run !== "function") {
       return json({ error: "Не подключён Cloudflare Workers AI. Добавь AI binding с именем AI в настройках Worker." }, 503);
     }
 
