@@ -28,6 +28,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.DatePicker;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.widget.Toast;
 import java.util.ArrayList;
@@ -61,7 +62,7 @@ public class MainActivity extends Activity {
     private TextView topicProgressLabel;
     private ProgressBar topicProgressBar;
     private Button[] progressButtons = new Button[4];
-    private final Handler timerHandler = new Handler();
+    private final Handler timerHandler = new Handler(Looper.getMainLooper());
     private Runnable timerTick;
     private TextView timerDisplay, timerStatus, studyTimeValue, breakTimeValue;
     private android.animation.ValueAnimator timerPulseAnimator;
@@ -368,12 +369,12 @@ public class MainActivity extends Activity {
         String[] fontFamilies={"sans-serif","sans-serif-rounded","serif","monospace","sans-serif-condensed","sans-serif-medium"};
         String activeFont=prefs.getString("app_font","sans");
         android.widget.GridLayout fontGrid=new android.widget.GridLayout(this);fontGrid.setColumnCount(2);
-        for(int i=0;i<fontKeys.length;i++){final String key=fontKeys[i],family=fontFamilies[i];Button choice=button((activeFont.equals(key)?"✓  ":"")+fontNames[i],activeFont.equals(key));choice.setTypeface(Typeface.create(family,Typeface.BOLD));android.widget.GridLayout.LayoutParams fp=new android.widget.GridLayout.LayoutParams();fp.width=0;fp.height=dp(44);fp.columnSpec=android.widget.GridLayout.spec(i%2,1f);fp.setMargins(dp(3),dp(3),dp(3),dp(3));fontGrid.addView(choice,fp);choice.setOnClickListener(v->{prefs.edit().putString("app_font",key).apply();showSettings();});}
+        for(int i=0;i<fontKeys.length;i++){final String key=fontKeys[i],family=fontFamilies[i];Button choice=button((activeFont.equals(key)?"✓  ":"")+fontNames[i],activeFont.equals(key));choice.setTypeface(Typeface.create(family,Typeface.BOLD));android.widget.GridLayout.LayoutParams fp=new android.widget.GridLayout.LayoutParams();fp.width=0;fp.height=dp(44);fp.columnSpec=android.widget.GridLayout.spec(i%2,1f);fp.setMargins(dp(3),dp(3),dp(3),dp(3));fp.height=dp(48);fontGrid.addView(choice,fp);choice.setOnClickListener(v->{prefs.edit().putString("app_font",key).apply();showSettings();});}
         fontGroup.addView(fontGrid,lp(-1,-2,0,4,0,0));appearance.addView(fontGroup,lp(-1,-2,0,4,0,6));
         Button systemTheme=button("◐  Цвета и тёмная тема — как в системе","system".equals(activeTheme));systemTheme.setOnClickListener(v->{prefs.edit().putString("app_theme","system").apply();applySavedTheme();showSettings();});appearance.addView(systemTheme,lp(-1,44,0,3,0,0));
         Button choosePhoto=button("＋  Выбрать фото фона",false);choosePhoto.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT);pick.addCategory(Intent.CATEGORY_OPENABLE);pick.setType("image/*");pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,PICK_BACKGROUND);});
         appearance.addView(choosePhoto,lp(-1,44,0,3,0,4));
-        Button clearPhoto=button("Убрать фото фона",false);clearPhoto.setOnClickListener(v->{prefs.edit().remove("custom_background_uri").apply();showSettings();});appearance.addView(clearPhoto,lp(-1,40,0,0,0,0));
+        Button clearPhoto=button("Убрать фото фона",false);clearPhoto.setOnClickListener(v->{prefs.edit().remove("custom_background_uri").apply();showSettings();});appearance.addView(clearPhoto,lp(-1,48,0,0,0,0));
         root.addView(appearance,lp(-1,-2,0,0,0,4));
 
         LinearLayout language=settingsGroup("ЯЗЫК ПРИЛОЖЕНИЯ");
@@ -406,7 +407,7 @@ public class MainActivity extends Activity {
         LinearLayout backup=settingsGroup("РЕЗЕРВНАЯ КОПИЯ");
         addText(backup,"Сохрани уроки, цели, дневник и прогресс в один файл.",12,MUTED,false);
         Button export=button("Экспортировать копию",true);export.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");i.putExtra(Intent.EXTRA_TITLE,"study_with_love_backup.json");startActivityForResult(i,BACKUP_EXPORT);});backup.addView(export,lp(-1,44,0,7,0,5));
-        Button restore=button("Восстановить из копии",false);restore.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");startActivityForResult(i,BACKUP_IMPORT);});backup.addView(restore,lp(-1,42,0,0,0,0));root.addView(backup,lp(-1,-2,0,0,0,4));
+        Button restore=button("Восстановить из копии",false);restore.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");startActivityForResult(i,BACKUP_IMPORT);});backup.addView(restore,lp(-1,48,0,0,0,0));root.addView(backup,lp(-1,-2,0,0,0,4));
 
         Button back=button("← Назад",true);back.setOnClickListener(v->onBackPressed());root.addView(back,lp(-1,48,0,8,0,4));
     }
@@ -1605,15 +1606,38 @@ public class MainActivity extends Activity {
     }
 
     private void showSavedBanner(String title, String subtitle) {
-        LinearLayout banner=new LinearLayout(this);banner.setOrientation(LinearLayout.HORIZONTAL);banner.setGravity(Gravity.CENTER_VERTICAL);
-        banner.setPadding(dp(16),dp(11),dp(18),dp(11));banner.setBackground(shape(PALE,20,0));banner.setElevation(dp(8));
-        TextView icon=text("♡",25,PINK,true);icon.setGravity(Gravity.CENTER);banner.addView(icon,lp(34,36,0,0,10,0));
-        LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);
-        addText(words,title,14,DARK,true);addText(words,subtitle,11,MUTED,false);banner.addView(words,new LinearLayout.LayoutParams(0,-2,1f));
-        Toast toast=new Toast(this);toast.setView(banner);toast.setDuration(Toast.LENGTH_SHORT);toast.setGravity(Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL,0,dp(82));toast.show();
-        banner.setAlpha(0f);banner.setTranslationY(dp(18));banner.animate().alpha(1f).translationY(0).setDuration(260).start();
+        android.widget.FrameLayout overlay = new android.widget.FrameLayout(this);
+        LinearLayout banner = new LinearLayout(this);
+        banner.setOrientation(LinearLayout.HORIZONTAL);
+        banner.setGravity(Gravity.CENTER_VERTICAL);
+        banner.setPadding(dp(16), dp(11), dp(18), dp(11));
+        banner.setBackground(shape(PALE, 20, 0));
+        banner.setElevation(dp(8));
+        TextView icon = text("♡", 25, PINK, true);
+        icon.setGravity(Gravity.CENTER);
+        banner.addView(icon, lp(34, 36, 0, 0, 10, 0));
+        LinearLayout words = new LinearLayout(this);
+        words.setOrientation(LinearLayout.VERTICAL);
+        addText(words, title, 14, DARK, true);
+        addText(words, subtitle, 12, MUTED, false);
+        banner.addView(words, new LinearLayout.LayoutParams(0, -2, 1f));
+        overlay.addView(banner, new android.widget.FrameLayout.LayoutParams(-1, -2));
+        android.view.ViewGroup decor = (android.view.ViewGroup) getWindow().getDecorView();
+        android.widget.FrameLayout.LayoutParams params = new android.widget.FrameLayout.LayoutParams(
+                Math.min(getResources().getDisplayMetrics().widthPixels - dp(32), dp(420)), -2,
+                Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+        params.setMargins(dp(16), 0, dp(16), dp(28));
+        decor.addView(overlay, params);
+        overlay.setAlpha(0f);
+        overlay.setTranslationY(dp(18));
+        overlay.animate().alpha(1f).translationY(0).setDuration(220).start();
+        overlay.postDelayed(() -> {
+            if (overlay.getParent() != null) {
+                overlay.animate().alpha(0f).translationY(dp(12)).setDuration(180)
+                        .withEndAction(() -> { if (overlay.getParent() != null) decor.removeView(overlay); }).start();
+            }
+        }, 2400);
     }
-
     private void renderDiaryEntries(LinearLayout entries,EditText note,Button save,String[] editingId){
         entries.removeAllViews();Set<String> ids=new TreeSet<>(prefs.getStringSet("diary_ids",new TreeSet<String>()));List<String> sorted=new ArrayList<>(ids);java.util.Collections.sort(sorted,java.util.Collections.reverseOrder());
         if(sorted.isEmpty()){addText(entries,"🌷 Здесь появятся твои маленькие победы. Сохрани первую запись — и возвращайся к ней в трудные дни.",14,MUTED,false);}
