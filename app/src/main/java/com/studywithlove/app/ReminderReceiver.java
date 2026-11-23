@@ -21,7 +21,7 @@ public class ReminderReceiver extends BroadcastReceiver {
         android.app.Notification.Builder builder = Build.VERSION.SDK_INT >= 26
                 ? new android.app.Notification.Builder(context, CHANNEL)
                 : new android.app.Notification.Builder(context);
-        builder.setSmallIcon(android.R.drawable.ic_dialog_info).setContentTitle("Study with Love 🌸")
+        builder.setSmallIcon(R.drawable.ic_notification).setContentTitle("Study with Love 🌸")
                 .setContentText(message == null ? "Пора немного позаниматься!" : message)
                 .setAutoCancel(true).setContentIntent(pi);
         manager.notify(intent.getIntExtra("id", 1), builder.build());
