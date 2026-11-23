@@ -186,7 +186,7 @@ public class MainActivity extends Activity {
         if(!p.getBoolean("quiet_hours_enabled",false)){am.cancel(pi);pi.cancel();return;}
         int hour=21,minute=0;try{String[] bits=p.getString("quiet_hours_start","22:00").split(":");hour=Integer.parseInt(bits[0]);minute=Integer.parseInt(bits[1]);if(hour<18){hour=21;minute=0;}}catch(Exception ignored){}
         Calendar next=Calendar.getInstance(AppTime.zone());next.set(Calendar.HOUR_OF_DAY,hour);next.set(Calendar.MINUTE,minute);next.set(Calendar.SECOND,0);next.set(Calendar.MILLISECOND,0);if(next.getTimeInMillis()<=System.currentTimeMillis())next.add(Calendar.DAY_OF_YEAR,1);
-        if(Build.VERSION.SDK_INT>=23)am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,next.getTimeInMillis(),pi);else am.setExact(AlarmManager.RTC_WAKEUP,next.getTimeInMillis(),pi);
+        if(Build.VERSION.SDK_INT>=31&&!am.canScheduleExactAlarms())am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,next.getTimeInMillis(),pi);else if(Build.VERSION.SDK_INT>=23)am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,next.getTimeInMillis(),pi);else am.setExact(AlarmManager.RTC_WAKEUP,next.getTimeInMillis(),pi);
     }
     private static boolean isQuietHour(int hour,int minute,SharedPreferences p){if(!p.getBoolean("quiet_hours_enabled",false))return false;try{String[] a=p.getString("quiet_hours_start","22:00").split(":"),b=p.getString("quiet_hours_end","08:00").split(":");int start=Integer.parseInt(a[0])*60+Integer.parseInt(a[1]),end=Integer.parseInt(b[0])*60+Integer.parseInt(b[1]),now=hour*60+minute;if(start==end)return true;return start<end?(now>=start&&now<end):(now>=start||now<end);}catch(Exception e){return false;}}
     public static void scheduleReminders(Context context) {
