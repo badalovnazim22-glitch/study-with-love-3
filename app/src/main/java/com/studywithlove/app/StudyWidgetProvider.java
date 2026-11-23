@@ -18,7 +18,7 @@ public class StudyWidgetProvider extends AppWidgetProvider {
     private static int streak(android.content.SharedPreferences p){
         String last=p.getString("last_study_date","");
         if(last.isEmpty())return 0;
-        try{LocalDate today=LocalDate.now(AppTime.zone().toZoneId());long gap=ChronoUnit.DAYS.between(LocalDate.parse(last),today);if(gap==0||gap==1||(gap==2&&!weekKey().equals(p.getString("streak_freeze_week",""))))return p.getInt("current_streak",0);}catch(Exception ignored){}return 0;
+        try{LocalDate today=LocalDate.now(java.time.ZoneId.of(AppTime.zone().getID()));long gap=ChronoUnit.DAYS.between(LocalDate.parse(last),today);if(gap==0||gap==1||(gap==2&&!weekKey().equals(p.getString("streak_freeze_week",""))))return p.getInt("current_streak",0);}catch(Exception ignored){}return 0;
     }
     private static String dayWord(int n){int x=Math.abs(n)%10,y=Math.abs(n)%100;if(x==1&&y!=11)return "день";if(x>=2&&x<=4&&(y<12||y>14))return "дня";return "дней";}
     private static String weekKey(){Calendar c=Calendar.getInstance(AppTime.zone());c.setFirstDayOfWeek(Calendar.MONDAY);c.setMinimalDaysInFirstWeek(4);int week=c.get(Calendar.WEEK_OF_YEAR),year=c.get(Calendar.YEAR),month=c.get(Calendar.MONTH);if(week==1&&month==Calendar.DECEMBER)year++;else if(week>=52&&month==Calendar.JANUARY)year--;return year+"-"+week;}
