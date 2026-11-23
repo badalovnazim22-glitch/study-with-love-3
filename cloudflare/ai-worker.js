@@ -63,21 +63,27 @@ export default {
     }
 
     try {
-      const response = await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/models/" + MODEL + ":generateContent",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": env.GEMINI_API_KEY
-          },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-            contents,
-            generationConfig: { maxOutputTokens: 800 }
-          })
-        }
-      );
+      const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/" + MODEL + ":generateContent";
+      const requestOptions = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": env.GEMINI_API_KEY
+        },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+          contents,
+          generationConfig: { maxOutputTokens: 800 }
+        })
+      };
+
+      // Gemini 503 означает временную перегрузку. Делаем до двух коротких повторов.
+      let response;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        response = await fetch(apiUrl, requestOptions);
+        if (response.status !== 503 || attempt === 2) break;
+        await new Promise(resolve => setTimeout(resolve, 1200 * (attempt + 1)));
+      }
 
       const result = await response.json().catch(() => ({}));
 
