@@ -50,6 +50,17 @@ jobs:
       - name: Install Android platform and build tools
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Validate question bank
+        run: python scripts/validate_question_bank.py
+
+      - name: Run Android Lint
+        run: gradle --no-daemon lintDebug
+
       - name: Build debug APK
         run: gradle --no-daemon assembleDebug
 
