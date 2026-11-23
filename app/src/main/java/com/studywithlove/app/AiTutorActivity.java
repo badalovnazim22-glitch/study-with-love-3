@@ -484,7 +484,7 @@ public class AiTutorActivity extends Activity {
         field.setText(endpoint());
         new AlertDialog.Builder(this)
             .setTitle(tr("Подключение ИИ", "AI connection", "Süni intellekt bağlantısı"))
-            .setMessage(tr("Вставь адрес защищённого сервера. Секретный ключ Google сюда вводить не нужно.", "Enter the secure server address. Do not enter a Google secret key here.", "təhlükəsiz server ünvanını daxil et. Google gizli açarını bura yazma."))
+            .setMessage(tr("Вставь адрес сервера ИИ. Не вводи сюда пароли или секретные API-ключи.", "Enter the AI server address. Do not enter passwords or secret API keys here.", "Süni intellekt serverinin ünvanını daxil et. Buraya parol və ya gizli API açarı yazma."))
             .setView(field)
             .setNegativeButton(tr("Позже", "Later", "Sonra"), null)
             .setPositiveButton(tr("Сохранить", "Save", "Yadda saxla"), (dialog, which) -> {
