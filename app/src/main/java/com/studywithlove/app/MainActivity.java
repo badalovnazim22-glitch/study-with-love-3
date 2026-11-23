@@ -680,7 +680,7 @@ public class MainActivity extends Activity {
         ritualTile(feelings2, "☼", "Атмосфера", "Звуки для учёбы", this::showAtmosphere);
         root.addView(feelings2, lp(-1, -2, 0, 0, 0, 13));
 
-        addText(root, "ПРОГРЕСС", 11, PINK, true);
+        addText(root, "ТВОЙ ПРОГРЕСС", 11, PINK, true);
         LinearLayout progressRow = new LinearLayout(this);
         progressRow.setOrientation(LinearLayout.HORIZONTAL);
         ritualTile(progressRow, "▦", "Мой прогресс", "Календарь и темы", this::showProgress);
