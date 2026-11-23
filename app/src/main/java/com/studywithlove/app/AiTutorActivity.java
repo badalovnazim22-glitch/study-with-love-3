@@ -177,8 +177,10 @@ public class AiTutorActivity extends Activity {
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
                 connection.setConnectTimeout(15000);
-                connection.setReadTimeout(60000);
+                connection.setReadTimeout(90000);
                 connection.setDoOutput(true);
+                connection.setUseCaches(false);
+                connection.setRequestProperty("Accept", "application/json");
                 connection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
                 byte[] bytes = payload.toString().getBytes(StandardCharsets.UTF_8);
                 connection.setFixedLengthStreamingMode(bytes.length);
@@ -210,6 +212,14 @@ public class AiTutorActivity extends Activity {
                     addHistory("model", finalAnswer);
                     addBubble(finalAnswer, false);
                 } else {
+                    // Не оставляем в контексте сообщение без ответа.
+                    if (!history.isEmpty()) {
+                        JSONObject last = history.get(history.size() - 1);
+                        if ("user".equals(last.optString("role")) &&
+                            question.equals(last.optString("content"))) {
+                            history.remove(history.size() - 1);
+                        }
+                    }
                     addBubble("Не получилось получить ответ: " + finalError, false);
                 }
             });
