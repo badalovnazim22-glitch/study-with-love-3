@@ -100,13 +100,16 @@ export default {
         }
       }
 
-      const reply = result?.choices?.[0]?.message?.content ??
-        result?.response ??
-        result?.output_text ??
-        "";
+      let reply = result?.choices?.[0]?.message?.content;
+      if (typeof reply !== "string" || !reply.trim()) {
+        reply = result?.response ?? result?.output_text ?? "";
+      }
+      if (Array.isArray(reply)) {
+        reply = reply.map(part => typeof part === "string" ? part : (part?.text || "")).join("");
+      }
       const text = typeof reply === "string" ? reply.trim() : "";
       if (!text) {
-        console.error("Workers AI returned no text");
+        console.error("Workers AI returned no visible answer", { finishReason: result?.choices?.[0]?.finish_reason || "unknown" });
         return json({ error: "ИИ не вернул текстовый ответ. Попробуй задать вопрос иначе." }, 502);
       }
       return json({ reply: text });
