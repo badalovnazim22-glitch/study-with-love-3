@@ -663,7 +663,7 @@ public class MainActivity extends Activity {
             if (tag instanceof String) child.setVisibility(sectionPage && activeSection.equals(tag) ? View.VISIBLE : View.GONE);
         }
 
-        // Возврат выполняется стрелкой в верхней панели.
+        backHome();
     }
 
     private void updateSystemBarIcons() {
@@ -700,7 +700,7 @@ public class MainActivity extends Activity {
         else if ("lv".equals(theme)) { BG=0xFFF4E8D5; PINK=0xFF76502F; PALE=0xFFE7D2B3; DARK=0xFF3B281C; MUTED=0xFF76604A; }
         else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF75666D; }
         applyAccentOverlay(theme);
-        if (getWindow() != null) { if(Build.VERSION.SDK_INT>=30){getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);getWindow().setDecorFitsSystemWindows(false);if(Build.VERSION.SDK_INT>=29){getWindow().setStatusBarContrastEnforced(false);getWindow().setNavigationBarContrastEnforced(false);}}else{getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(BG);} updateSystemBarIcons(); }
+        if (getWindow() != null) { getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(BG)); getWindow().getDecorView().setBackgroundColor(BG); if(Build.VERSION.SDK_INT>=30){getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);getWindow().setDecorFitsSystemWindows(false);if(Build.VERSION.SDK_INT>=29){getWindow().setStatusBarContrastEnforced(false);getWindow().setNavigationBarContrastEnforced(false);}}else{getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(BG);} updateSystemBarIcons(); }
     }
     private void applyAccentOverlay(String theme){
         int style=R.style.AppAccentPink;
