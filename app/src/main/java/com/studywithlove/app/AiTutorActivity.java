@@ -77,7 +77,7 @@ public class AiTutorActivity extends Activity {
         }
         updateSystemBars();
         buildUi();
-        addBubble(tr("Привет! Я ИИ-помощник Study with Love. Могу объяснить математическую тему, разобрать задачу по шагам или составить тренировку.\n\nНе отправляй сюда пароли, адреса и другие личные данные. История этого чата не сохраняется после закрытия экрана.", "Hi! I’m the Study with Love AI tutor. I can explain a math topic, work through a problem step by step, or create a practice quiz.\n\nDon’t send passwords, addresses, or other personal information. This chat history is not saved after you close the screen.", "Salam! Mən Study with Love süni intellekt köməkçisiyəm. Riyaziyyat mövzusunu izah edə, məsələni addım-addım həll edə və ya məşq testi hazırlaya bilərəm.\n\nŞifrələri, ünvanları və digər şəxsi məlumatları göndərmə. Ekranı bağladıqdan sonra bu söhbətin tarixçəsi saxlanılmır."), false);
+        addBubble(tr("Привет! Я ИИ-помощник. Могу объяснить математическую тему, разобрать задачу по шагам или составить тренировку.\n\nНе отправляй сюда пароли, адреса и другие личные данные. История этого чата не сохраняется после закрытия экрана.", "Hi! I’m the Study with Love AI tutor. I can explain a math topic, work through a problem step by step, or create a practice quiz.\n\nDon’t send passwords, addresses, or other personal information. This chat history is not saved after you close the screen.", "Salam! Mən Study with Love süni intellekt köməkçisiyəm. Riyaziyyat mövzusunu izah edə, məsələni addım-addım həll edə və ya məşq testi hazırlaya bilərəm.\n\nŞifrələri, ünvanları və digər şəxsi məlumatları göndərmə. Ekranı bağladıqdan sonra bu söhbətin tarixçəsi saxlanılmır."), false);
         if (endpoint().isEmpty()) main.postDelayed(this::showEndpointDialog, 350);
     }
 
@@ -117,7 +117,7 @@ public class AiTutorActivity extends Activity {
         LinearLayout heading = new LinearLayout(this);
         heading.setOrientation(LinearLayout.VERTICAL);
         TextView title = label(tr("ИИ-помощник", "AI tutor", "Süni intellekt köməkçisi"), 19, DARK, true);
-        TextView subtitle = label(tr("Study with Love · ИИ-репетитор", "Study with Love · AI tutor", "Study with Love · Süni intellekt köməkçisi"), 13, MUTED, false);
+        TextView subtitle = label(tr("ИИ-репетитор по математике", "Math AI tutor", "Riyaziyyat köməkçisi"), 13, MUTED, false);
         heading.addView(title);
         heading.addView(subtitle);
         top.addView(heading, new LinearLayout.LayoutParams(0, -2, 1));
@@ -343,7 +343,7 @@ public class AiTutorActivity extends Activity {
         field.setText(endpoint());
         new AlertDialog.Builder(this)
             .setTitle(tr("Подключение ИИ", "AI connection", "Süni intellekt bağlantısı"))
-            .setMessage(tr("Вставь адрес защищённого сервера Study with Love. Секретный ключ Google сюда вводить не нужно.", "Enter the Study with Love secure server address. Do not enter a Google secret key here.", "Study with Love təhlükəsiz server ünvanını daxil et. Google gizli açarını bura yazma."))
+            .setMessage(tr("Вставь адрес защищённого сервера. Секретный ключ Google сюда вводить не нужно.", "Enter the secure server address. Do not enter a Google secret key here.", "təhlükəsiz server ünvanını daxil et. Google gizli açarını bura yazma."))
             .setView(field)
             .setNegativeButton(tr("Позже", "Later", "Sonra"), null)
             .setPositiveButton(tr("Сохранить", "Save", "Yadda saxla"), (dialog, which) -> {
