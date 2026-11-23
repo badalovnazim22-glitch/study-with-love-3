@@ -992,7 +992,6 @@ public class MainActivity extends Activity {
         addText(stats,prefs.getInt("quiz_best_score",0)+" очков  ·  "+prefs.getInt("quiz_total_correct",0)+" правильных ответов за всё время",14,DARK,true);
         root.addView(stats,lp(-1,-2,0,8,0,10));
         Button awards=button("🏅  Посмотреть достижения",false);awards.setOnClickListener(v->showMathQuizAchievements());root.addView(awards,lp(-1,48,0,0,0,6));
-        Button back=button("← Назад",false);back.setOnClickListener(v->handleBackNavigation());root.addView(back,lp(-1,48,0,0,0,0));
     }
 
     private void startMathQuiz() {
@@ -1098,7 +1097,6 @@ public class MainActivity extends Activity {
         root.addView(result,lp(-1,-2,0,0,0,15));
         Button retry=button("↻  Играть ещё раз",true);retry.setOnClickListener(v->showMathQuiz());root.addView(retry,lp(-1,52,0,0,0,8));
         Button awards=button("🏅  Мои достижения",false);awards.setOnClickListener(v->showMathQuizAchievements());root.addView(awards,lp(-1,48,0,0,0,8));
-        Button home=button("← Назад",false);home.setOnClickListener(v->handleBackNavigation());root.addView(home,lp(-1,48,0,0,0,0));
     }
 
     private void unlockQuizAward(String key){if(!prefs.getBoolean(key,false)){String date=new SimpleDateFormat("d MMMM yyyy",new Locale("ru")).format(new Date());prefs.edit().putBoolean(key,true).putString("achievement_date_"+key,date).apply();haptic(root,true);celebrate();}}
@@ -1141,7 +1139,6 @@ public class MainActivity extends Activity {
             TextView state=text(unlocked?"✓":"···",17,unlocked?PINK:MUTED,true);item.addView(state);
             root.addView(item,lp(-1,-2,0,0,0,7));
         }
-        Button back=button("← Назад",true);back.setOnClickListener(v->handleBackNavigation());root.addView(back,lp(-1,50,0,10,0,0));
     }
 
     private int countQuizAwards(){
@@ -1180,7 +1177,6 @@ public class MainActivity extends Activity {
             final String selected = chapter; String pretty = chapter.replaceFirst("^[^ ]+\\s*", "");
             actionRegular("РАЗДЕЛ " + number + "\n" + pretty, chapters.get(chapter).size() + " учебных тем", () -> { selectedChapter = selected; showTopics(selected); }); number++;
         }
-        Button back = button("← К урокам", false); back.setOnClickListener(v -> handleBackNavigation()); root.addView(back, lp(-1, 50, 0, 12, 0, 0));
     }
     private void addCustomLesson() {
         final String[] chosenEmoji={"📚"};String[] emojis={"📚","📐","🌸","🧪","🌍","🎨","🎵","📝","💡","⭐","📖","✏️","🧠","🔬","🧬","🧮","🗺️","🏛️","🎭","🎹","🪴","🦋","☀️","🌙","💗","💜","🩵","🍀","🌷","🪻","🧸","🐱","🐰","🍓","🍒","🍉","🍰","🧁","☕","🫧","✨","🔥","🏆","🎯","💫","🪄","🧩","🪐","🌈","🦄"};
@@ -1302,9 +1298,6 @@ public class MainActivity extends Activity {
         Button done = button("✅  "+(g("Я позанималась сегодня","Я позанимался сегодня")), true);
         done.setOnClickListener(v -> markDone());
         root.addView(done, lp(-1, 54, 0, 4, 0, 10));
-        Button back = button("← К темам", false);
-        back.setOnClickListener(v -> handleBackNavigation());
-        root.addView(back, lp(-1, 50, 0, 0, 0, 0));
     }
 
     private String topicRule(String topic){
@@ -1685,9 +1678,6 @@ public class MainActivity extends Activity {
             }
             root.addView(section, lp(-1, -2, 0, 0, 0, 12));
         }
-        Button back = button("← Назад", true);
-        back.setOnClickListener(v -> handleBackNavigation());
-        root.addView(back, lp(-1, 52, 0, 4, 0, 0));
     }
 
     private int totalStudyMinutes() { return prefs.getInt("focus_total_minutes",0); }
@@ -1918,7 +1908,6 @@ public class MainActivity extends Activity {
         Button share=button("↗  Отправить недельное обновление",true);exchange.addView(share,lp(-1,48,0,7,0,6));share.setOnClickListener(v->{String code=createBuddyCode("🌷");if(code.isEmpty())return;Intent send=new Intent(Intent.ACTION_SEND);send.setType("text/plain");send.putExtra(Intent.EXTRA_SUBJECT,"Недельное обновление");send.putExtra(Intent.EXTRA_TEXT,code);startActivity(Intent.createChooser(send,"Отправить напарнику"));});
         Button sticker=button("♡  Отправить тёплый стикер",false);exchange.addView(sticker,lp(-1, 48,0,0,0,8));sticker.setOnClickListener(v->{String[] options={"🌷 Поддерживаю!","✨ У тебя получится!","☕ Время маленького перерыва","💗 Спасибо за совместную учёбу"};new android.app.AlertDialog.Builder(this).setTitle("Выбери стикер").setItems(options,(d,w)->{String code=createBuddyCode(options[w].substring(0,2));Intent send=new Intent(Intent.ACTION_SEND);send.setType("text/plain");send.putExtra(Intent.EXTRA_TEXT,code);startActivity(Intent.createChooser(send,"Отправить стикер"));}).show();});
         EditText incoming=new EditText(this);incoming.setHint("Вставь код, который прислал напарник");incoming.setMinLines(2);incoming.setGravity(Gravity.TOP);incoming.setTextSize(12);incoming.setTextColor(DARK);incoming.setBackground(shape(0xFFFFFFFF,14,0xFFEADDE2));exchange.addView(incoming,lp(-1,76,0,0,0,6));Button accept=button("Получить обновление",false);exchange.addView(accept,lp(-1, 48,0,0,0,0));accept.setOnClickListener(v->{if(importBuddyCode(incoming.getText().toString())){Toast.makeText(this,"Обновление напарника принято ♡",Toast.LENGTH_SHORT).show();showStudyBuddy();}else incoming.setError("Код не распознан. Проверь, что скопирован весь текст.");});root.addView(exchange,lp(-1,-2,0,0,0,10));
-        Button back=button("← На главную",true);back.setOnClickListener(v->showHome());root.addView(back,lp(-1,48,0,0,0,0));
     }
 
     private long daysUntil(String isoDate) {
