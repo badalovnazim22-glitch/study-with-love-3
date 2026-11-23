@@ -1064,7 +1064,7 @@ public class MainActivity extends Activity {
 
     private void refreshTopicProgress(int value) {
         if (topicProgressLabel != null) topicProgressLabel.setText("ТВОЙ ПРОГРЕСС: " + value + "%");
-        if (topicProgressBar != null) topicProgressBar.setProgress(value, true);
+        if (topicProgressBar != null) topicProgressBar.setProgress(value);
         int[] values = {25, 50, 75, 100};
         for (int i = 0; i < progressButtons.length; i++) {
             if (progressButtons[i] != null) progressButtons[i].setBackground(shape(value >= values[i] ? PINK : PALE, 18, value >= values[i] ? PINK : 0xFFFFDCE6));
