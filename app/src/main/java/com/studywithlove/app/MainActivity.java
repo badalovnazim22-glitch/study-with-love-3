@@ -48,7 +48,7 @@ import java.util.TimeZone;
 
 public class MainActivity extends Activity {
     public static volatile boolean activityVisible=false;
-    private int BG = 0xFFFFF9F7, PINK = 0xFFC97891, PALE = 0xFFFCEEF2, DARK = 0xFF3F3439, MUTED = 0xFF95878C;
+    private int BG = 0xFFFFF9F7, PINK = 0xFFC97891, PALE = 0xFFFCEEF2, DARK = 0xFF3F3439, MUTED = 0xFF75666D;
     private int progressMonthOffset = 0;
     private LinearLayout progressCalendarHost;
     private LinearLayout root;
@@ -322,11 +322,11 @@ public class MainActivity extends Activity {
     }
 
     private void applyWelcomeTheme(String theme) {
-        if ("night".equals(theme)) { BG=0xFF17151D; PINK=0xFFE39AB5; PALE=0xFF302735; DARK=0xFFF4EAF0; MUTED=0xFFB6A8B2; }
-        else if ("lavender".equals(theme)) { BG=0xFFF8F6FF; PINK=0xFF8979B8; PALE=0xFFF0ECFA; DARK=0xFF393448; MUTED=0xFF8E879E; }
-        else if ("mint".equals(theme)) { BG=0xFFF5FAF7; PINK=0xFF659B86; PALE=0xFFEAF5EF; DARK=0xFF34443D; MUTED=0xFF84958C; }
-        else if ("white".equals(theme)) { BG=0xFFF7F8FA; PINK=0xFF65758B; PALE=0xFFE9EDF2; DARK=0xFF303844; MUTED=0xFF87919E; }
-        else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF95878C; }
+        if ("night".equals(theme)) { BG=0xFF17151D; PINK=0xFFE39AB5; PALE=0xFF302735; DARK=0xFFF4EAF0; MUTED=0xFFC8BDC8; }
+        else if ("lavender".equals(theme)) { BG=0xFFF8F6FF; PINK=0xFF8979B8; PALE=0xFFF0ECFA; DARK=0xFF393448; MUTED=0xFF6F6684; }
+        else if ("mint".equals(theme)) { BG=0xFFF5FAF7; PINK=0xFF659B86; PALE=0xFFEAF5EF; DARK=0xFF34443D; MUTED=0xFF60786B; }
+        else if ("white".equals(theme)) { BG=0xFFF7F8FA; PINK=0xFF65758B; PALE=0xFFE9EDF2; DARK=0xFF303844; MUTED=0xFF65717F; }
+        else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF75666D; }
         if (getWindow()!=null) { getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG); }
     }
 
@@ -685,22 +685,22 @@ public class MainActivity extends Activity {
         String theme = prefs == null ? "pink" : prefs.getString("app_theme", "pink");
         if ("system".equals(theme)) {
             boolean darkMode=(getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES;
-            if(Build.VERSION.SDK_INT>=31){try{int accent=getResources().getIdentifier("system_accent1_600","color","android"),bg=getResources().getIdentifier(darkMode?"system_neutral1_900":"system_neutral1_10","color","android"),surface=getResources().getIdentifier(darkMode?"system_neutral1_800":"system_neutral1_50","color","android"),fg=getResources().getIdentifier(darkMode?"system_neutral1_50":"system_neutral1_900","color","android");PINK=getResources().getColor(accent,getTheme());BG=getResources().getColor(bg,getTheme());PALE=getResources().getColor(surface,getTheme());DARK=getResources().getColor(fg,getTheme());MUTED=darkMode?0xFFBDB5C1:0xFF827A83;}catch(Exception e){BG=darkMode?0xFF17151D:0xFFFFF9F7;PINK=0xFFC97891;PALE=darkMode?0xFF302735:0xFFFCEEF2;DARK=darkMode?0xFFF4EAF0:0xFF3F3439;MUTED=darkMode?0xFFB6A8B2:0xFF95878C;}}
-            else if(darkMode){BG=0xFF17151D;PINK=0xFFE39AB5;PALE=0xFF302735;DARK=0xFFF4EAF0;MUTED=0xFFB6A8B2;}
-            else{BG=0xFFFFF9F7;PINK=0xFFC97891;PALE=0xFFFCEEF2;DARK=0xFF3F3439;MUTED=0xFF95878C;}
+            if(Build.VERSION.SDK_INT>=31){try{int accent=getResources().getIdentifier("system_accent1_600","color","android"),bg=getResources().getIdentifier(darkMode?"system_neutral1_900":"system_neutral1_10","color","android"),surface=getResources().getIdentifier(darkMode?"system_neutral1_800":"system_neutral1_50","color","android"),fg=getResources().getIdentifier(darkMode?"system_neutral1_50":"system_neutral1_900","color","android");PINK=getResources().getColor(accent,getTheme());BG=getResources().getColor(bg,getTheme());PALE=getResources().getColor(surface,getTheme());DARK=getResources().getColor(fg,getTheme());MUTED=darkMode?0xFFBDB5C1:0xFF827A83;}catch(Exception e){BG=darkMode?0xFF17151D:0xFFFFF9F7;PINK=0xFFC97891;PALE=darkMode?0xFF302735:0xFFFCEEF2;DARK=darkMode?0xFFF4EAF0:0xFF3F3439;MUTED=darkMode?0xFFC8BDC8:0xFF75666D;}}
+            else if(darkMode){BG=0xFF17151D;PINK=0xFFE39AB5;PALE=0xFF302735;DARK=0xFFF4EAF0;MUTED=0xFFC8BDC8;}
+            else{BG=0xFFFFF9F7;PINK=0xFFC97891;PALE=0xFFFCEEF2;DARK=0xFF3F3439;MUTED=0xFF75666D;}
         }
-        else if ("night".equals(theme)) { BG=0xFF17151D; PINK=0xFFE39AB5; PALE=0xFF302735; DARK=0xFFF4EAF0; MUTED=0xFFB6A8B2; }
-        else if ("lavender".equals(theme)) { BG=0xFFF8F6FF; PINK=0xFF8979B8; PALE=0xFFF0ECFA; DARK=0xFF393448; MUTED=0xFF8E879E; }
-        else if ("mint".equals(theme)) { BG=0xFFF5FAF7; PINK=0xFF659B86; PALE=0xFFEAF5EF; DARK=0xFF34443D; MUTED=0xFF84958C; }
-        else if ("white".equals(theme)) { BG=0xFFF7F8FA; PINK=0xFF65758B; PALE=0xFFE9EDF2; DARK=0xFF303844; MUTED=0xFF87919E; }
-        else if ("brown".equals(theme)) { BG=0xFFF7F1EA; PINK=0xFF8B6046; PALE=0xFFEDE0D2; DARK=0xFF49382E; MUTED=0xFF9B8778; }
-        else if ("gold".equals(theme)) { BG=0xFFFFF8DF; PINK=0xFFC49318; PALE=0xFFF5E2A6; DARK=0xFF49340B; MUTED=0xFF92712C; }
-        else if ("luxury".equals(theme)) { BG=0xFF211B18; PINK=0xFFD6B36A; PALE=0xFF3A3028; DARK=0xFFF3E7D0; MUTED=0xFFB7A68B; }
-        else if ("sky".equals(theme)) { BG=0xFFF1F8FC; PINK=0xFF5D91B5; PALE=0xFFE1EFF8; DARK=0xFF304656; MUTED=0xFF8199A8; }
-        else if ("peach".equals(theme)) { BG=0xFFFFF5EF; PINK=0xFFD88968; PALE=0xFFFBE5D9; DARK=0xFF513D34; MUTED=0xFFA88D80; }
-        else if ("red".equals(theme)) { BG=0xFFFFF5F4; PINK=0xFFB32635; PALE=0xFFF8E2E3; DARK=0xFF4B2026; MUTED=0xFF9D777B; }
-        else if ("lv".equals(theme)) { BG=0xFFF4E8D5; PINK=0xFF76502F; PALE=0xFFE7D2B3; DARK=0xFF3B281C; MUTED=0xFF92775E; }
-        else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF95878C; }
+        else if ("night".equals(theme)) { BG=0xFF17151D; PINK=0xFFE39AB5; PALE=0xFF302735; DARK=0xFFF4EAF0; MUTED=0xFFC8BDC8; }
+        else if ("lavender".equals(theme)) { BG=0xFFF8F6FF; PINK=0xFF8979B8; PALE=0xFFF0ECFA; DARK=0xFF393448; MUTED=0xFF6F6684; }
+        else if ("mint".equals(theme)) { BG=0xFFF5FAF7; PINK=0xFF659B86; PALE=0xFFEAF5EF; DARK=0xFF34443D; MUTED=0xFF60786B; }
+        else if ("white".equals(theme)) { BG=0xFFF7F8FA; PINK=0xFF65758B; PALE=0xFFE9EDF2; DARK=0xFF303844; MUTED=0xFF65717F; }
+        else if ("brown".equals(theme)) { BG=0xFFF7F1EA; PINK=0xFF8B6046; PALE=0xFFEDE0D2; DARK=0xFF49382E; MUTED=0xFF796657; }
+        else if ("gold".equals(theme)) { BG=0xFFFFF8DF; PINK=0xFFC49318; PALE=0xFFF5E2A6; DARK=0xFF49340B; MUTED=0xFF795B1E; }
+        else if ("luxury".equals(theme)) { BG=0xFF211B18; PINK=0xFFD6B36A; PALE=0xFF3A3028; DARK=0xFFF3E7D0; MUTED=0xFFC5B598; }
+        else if ("sky".equals(theme)) { BG=0xFFF1F8FC; PINK=0xFF5D91B5; PALE=0xFFE1EFF8; DARK=0xFF304656; MUTED=0xFF5E788A; }
+        else if ("peach".equals(theme)) { BG=0xFFFFF5EF; PINK=0xFFD88968; PALE=0xFFFBE5D9; DARK=0xFF513D34; MUTED=0xFF856C60; }
+        else if ("red".equals(theme)) { BG=0xFFFFF5F4; PINK=0xFFB32635; PALE=0xFFF8E2E3; DARK=0xFF4B2026; MUTED=0xFF81595E; }
+        else if ("lv".equals(theme)) { BG=0xFFF4E8D5; PINK=0xFF76502F; PALE=0xFFE7D2B3; DARK=0xFF3B281C; MUTED=0xFF76604A; }
+        else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF75666D; }
         applyAccentOverlay(theme);
         if (getWindow() != null) { if(Build.VERSION.SDK_INT>=30){getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);getWindow().setDecorFitsSystemWindows(false);if(Build.VERSION.SDK_INT>=29){getWindow().setStatusBarContrastEnforced(false);getWindow().setNavigationBarContrastEnforced(false);}}else{getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(BG);} updateSystemBarIcons(); }
     }
@@ -2624,6 +2624,8 @@ public class MainActivity extends Activity {
             LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, dp(139), 1f);
             p.setMargins(dp(3), 0, dp(3), 0);
             row.addView(tile, p);
+            tile.setContentDescription(title + ". " + subtitle);
+            tile.setFocusable(true);
             tile.setOnClickListener(v -> {
                 symbol.animate().rotationBy(24f).scaleX(1.16f).scaleY(1.16f).setDuration(180)
                     .withEndAction(() -> symbol.animate().rotationBy(-24f).scaleX(1f).scaleY(1f).setDuration(180).start()).start();
@@ -2659,6 +2661,9 @@ public class MainActivity extends Activity {
         c.addView(words, new LinearLayout.LayoutParams(0, -2, 1f));
         TextView arrow = text("›", 28, PINK, false); arrow.setGravity(Gravity.CENTER); c.addView(arrow, lp(24, 34, 8, 0, 0, 0));
         c.setOnClickListener(v -> { c.animate().scaleX(0.985f).scaleY(0.985f).setDuration(100).withEndAction(() -> { c.animate().scaleX(1f).scaleY(1f).setDuration(150).start(); run.go(); }).start(); });
+        c.setContentDescription(title + ". " + sub);
+        c.setFocusable(true);
+        c.setMinimumHeight(dp(48));
         root.addView(c, lp(-1, -2, 0, 0, 0, 9));
         return c;
     }
@@ -2685,7 +2690,7 @@ public class MainActivity extends Activity {
             int c=t.getCurrentTextColor();
             if(c==0xFFC97891||c==0xFFD96C91)t.setTextColor(PINK);
             else if(c==0xFF3F3439||c==0xFF3A3036||c==0xFF382F34||c==0xFF49382E)t.setTextColor(DARK);
-            else if(c==0xFF95878C||c==0xFF8E879E||c==0xFF9B8778)t.setTextColor(MUTED);
+            else if(c==0xFF75666D||c==0xFF6F6684||c==0xFF796657)t.setTextColor(MUTED);
         }
         if(view instanceof android.widget.ProgressBar&&Build.VERSION.SDK_INT>=21){
             android.widget.ProgressBar bar=(android.widget.ProgressBar)view;
@@ -2702,7 +2707,7 @@ public class MainActivity extends Activity {
     private TextView text(String value, int size, int color, boolean bold) {
         if(color==0xFFC97891||color==0xFFD96C91)color=PINK;
         else if(color==0xFF3F3439||color==0xFF3A3036||color==0xFF382F34||color==0xFF49382E||color==0xFF34443D||color==0xFF303844)color=DARK;
-        else if(color==0xFF95878C||color==0xFF8E879E||color==0xFF9B8778||color==0xFF84958C)color=MUTED;
+        else if(color==0xFF75666D||color==0xFF6F6684||color==0xFF796657||color==0xFF60786B)color=MUTED;
         value=translate(value); TextView t = new TextView(this); t.setText(value); t.setTextSize(Math.max(12, size)); t.setTextColor(color); t.setTypeface(Typeface.create(selectedFontFamily(),bold?Typeface.BOLD:Typeface.NORMAL)); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
     private void applyPressFeedback(View view) {
         view.setOnTouchListener((v,event)->{
