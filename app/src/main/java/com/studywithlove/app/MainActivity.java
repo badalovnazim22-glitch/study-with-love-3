@@ -400,7 +400,7 @@ public class MainActivity extends Activity {
     private void updateSystemBarIcons() {
         if (Build.VERSION.SDK_INT >= 23 && getWindow() != null) {
             String t=prefs==null?"pink":prefs.getString("app_theme","pink");
-            boolean darkIcons=!("night".equals(t)||"luxury".equals(t));
+            boolean darkIcons=!("night".equals(t)||"luxury".equals(t)||("system".equals(t)&&(getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES));
             getWindow().getDecorView().setSystemUiVisibility(darkIcons?View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR:0);
         }
     }
@@ -2091,9 +2091,12 @@ public class MainActivity extends Activity {
         root.addView(c, lp(-1, -2, 0, 0, 0, 9));
         return c;
     }
-    private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(17), dp(16), dp(17), dp(16)); boolean night = prefs != null && "night".equals(prefs.getString("app_theme", "pink")); android.graphics.drawable.Drawable bg=shape(night ? 0xFF25212B : 0xFFFFFFFF,23,night ? 0xFF403541 : 0xFFF3E9EC);if(Build.VERSION.SDK_INT>=21)l.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x227D5264),bg,shape(0xFFFFFFFF,23,0)));else l.setBackground(bg);l.setElevation(dp(2)); return l; }
+    private boolean isDarkAppearance(){String t=prefs==null?"pink":prefs.getString("app_theme","pink");return "night".equals(t)||"luxury".equals(t)||("system".equals(t)&&(getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES);}
+    private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(17), dp(16), dp(17), dp(16)); boolean night = isDarkAppearance(); android.graphics.drawable.Drawable bg=shape(night ? 0xFF25212B : 0xFFFFFFFF,23,night ? 0xFF403541 : 0xFFF3E9EC);if(Build.VERSION.SDK_INT>=21)l.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x227D5264),bg,shape(0xFFFFFFFF,23,0)));else l.setBackground(bg);l.setElevation(dp(2)); return l; }
     private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, size, color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
-    private TextView text(String value, int size, int color, boolean bold) { value=translate(value); TextView t = new TextView(this); t.setText(value); t.setTextSize(size); t.setTextColor(color); if (bold) t.setTypeface(Typeface.DEFAULT, Typeface.BOLD); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
+    private TextView text(String value, int size, int color, boolean bold) {
+        if("system".equals(prefs==null?"":prefs.getString("app_theme",""))&&isDarkAppearance()){if(color==0xFF3F3439||color==0xFF3A3036||color==0xFF382F34||color==0xFF49382E)color=DARK;else if(color==0xFF95878C||color==0xFF8E879E||color==0xFF9B8778)color=MUTED;else if(color==0xFFC97891)color=PINK;}
+ value=translate(value); TextView t = new TextView(this); t.setText(value); t.setTextSize(size); t.setTextColor(color); if (bold) t.setTypeface(Typeface.DEFAULT, Typeface.BOLD); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
     private void applyPressFeedback(View view) {
         view.setOnTouchListener((v,event)->{
             if(event.getAction()==android.view.MotionEvent.ACTION_DOWN){
