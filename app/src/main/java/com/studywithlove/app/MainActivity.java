@@ -2260,7 +2260,6 @@ public class MainActivity extends Activity {
             if(view instanceof android.widget.SeekBar)((android.widget.SeekBar)view).setThumbTintList(android.content.res.ColorStateList.valueOf(PINK));
         }
         if(view instanceof CheckBox&&Build.VERSION.SDK_INT>=21)((CheckBox)view).setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));
-        if(view instanceof EditText&&Build.VERSION.SDK_INT>=21)((EditText)view).setBackgroundTintList(android.content.res.ColorStateList.valueOf(PINK));
         if(view instanceof android.view.ViewGroup)installThemeFontListener((android.view.ViewGroup)view);
     }
     private boolean isDarkAppearance(){String t=prefs==null?"pink":prefs.getString("app_theme","pink");return "night".equals(t)||"luxury".equals(t)||("system".equals(t)&&(getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES);}
