@@ -1928,8 +1928,9 @@ public class MainActivity extends Activity {
         timerPauseButton=button("Пауза",false);timerPauseButton.setTextSize(14);timerPauseButton.setEnabled(timerRunning);timerPauseButton.setOnClickListener(v->pauseTimer());
         Button reset=button("Сбросить",false);reset.setTextSize(14);reset.setOnClickListener(v->{
             long elapsed=timerRunning&&!timerIsBreak?Math.max(0,System.currentTimeMillis()-timerSessionStarted):0;
+            FocusTimerController.clearIfMatches(this,timerEndElapsed);
             timerHandler.removeCallbacks(timerTick);timerRunning=false;cancelTimerFinishAlarm();
-            try{startService(new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_STOP).putExtra("elapsed_ms",elapsed).putExtra("break",timerIsBreak));}catch(Exception ignored){}
+            try{startService(new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_STOP).putExtra("elapsed_ms",elapsed).putExtra("break",timerIsBreak).putExtra("expected_end_wall",timerEndElapsed));}catch(Exception ignored){}
             getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}
             if(timerDisplay!=null)timerDisplay.animate().cancel();timerIsBreak=false;timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();
@@ -1964,7 +1965,8 @@ public class MainActivity extends Activity {
     private void pauseTimer() {
         if (!timerRunning) return;
         timerRemainingMs = FocusTimerController.remainingUntil(timerEndElapsed);
-        timerRunning = false; timerHandler.removeCallbacks(timerTick); cancelTimerFinishAlarm(); try{Intent pause=new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_PAUSE).putExtra("elapsed_ms",Math.max(0,System.currentTimeMillis()-timerSessionStarted)).putExtra("break",timerIsBreak);startService(pause);}catch(Exception ignored){} getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        FocusTimerController.clearIfMatches(this,timerEndElapsed);
+        timerRunning = false; timerHandler.removeCallbacks(timerTick); cancelTimerFinishAlarm(); try{Intent pause=new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_PAUSE).putExtra("elapsed_ms",Math.max(0,System.currentTimeMillis()-timerSessionStarted)).putExtra("break",timerIsBreak).putExtra("expected_end_wall",timerEndElapsed);startService(pause);}catch(Exception ignored){} getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}if(timerRing!=null)timerRing.setRunning(false);if (timerDisplay != null) { timerDisplay.setText(formatTimer(timerRemainingMs)); timerDisplay.animate().scaleX(1f).scaleY(1f).setDuration(220).start(); }
         if (timerStartButton != null) { timerStartButton.setEnabled(true); timerStartButton.setText("▶  Продолжить"); }
         if (timerPauseButton != null) timerPauseButton.setEnabled(false);
