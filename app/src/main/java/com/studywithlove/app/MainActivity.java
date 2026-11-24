@@ -134,6 +134,7 @@ public class MainActivity extends Activity {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(0, this::handleBackNavigation);
         }
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+        selectedStudyMinutes=Math.max(1,Math.min(600,prefs.getInt("selected_study_minutes",25)));
         int openedReminder=getIntent()==null?-1:getIntent().getIntExtra("opened_reminder_id",-1);if(openedReminder>0)prefs.edit().putLong("reminder_opened_at_"+openedReminder,System.currentTimeMillis()).apply();
         if(prefs.getBoolean("hide_recent_preview",false))getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);
         applySavedTheme();
@@ -141,7 +142,7 @@ public class MainActivity extends Activity {
         getWindow().setStatusBarColor(BG);
         getWindow().setNavigationBarColor(BG);
         updateSystemBarIcons();
-        SharedPreferences timerPrefs=getSharedPreferences("timer_runtime",MODE_PRIVATE);if(!timerPrefs.contains("timer_service_end_wall")&&prefs.contains("timer_service_end_wall")){SharedPreferences.Editor migrate=timerPrefs.edit();migrate.putLong("timer_service_end_wall",prefs.getLong("timer_service_end_wall",0)).putLong("timer_service_duration",prefs.getLong("timer_service_duration",60000)).putBoolean("timer_service_break",prefs.getBoolean("timer_service_break",false)).apply();prefs.edit().remove("timer_service_end_wall").remove("timer_service_duration").remove("timer_service_break").apply();}long restoredEnd=timerPrefs.getLong("timer_service_end_wall",0);if(restoredEnd>System.currentTimeMillis()){timerRunning=true;timerIsBreak=timerPrefs.getBoolean("timer_service_break",false);timerRemainingMs=restoredEnd-System.currentTimeMillis();timerEndElapsed=SystemClock.elapsedRealtime()+timerRemainingMs;long duration=timerPrefs.getLong("timer_service_duration",timerRemainingMs);timerSessionStarted=SystemClock.elapsedRealtime()-Math.max(0,duration-timerRemainingMs);}
+        SharedPreferences timerPrefs=getSharedPreferences("timer_runtime",MODE_PRIVATE);if(!timerPrefs.contains("timer_service_end_wall")&&prefs.contains("timer_service_end_wall")){SharedPreferences.Editor migrate=timerPrefs.edit();migrate.putLong("timer_service_end_wall",prefs.getLong("timer_service_end_wall",0)).putLong("timer_service_duration",prefs.getLong("timer_service_duration",60000)).putBoolean("timer_service_break",prefs.getBoolean("timer_service_break",false)).apply();prefs.edit().remove("timer_service_end_wall").remove("timer_service_duration").remove("timer_service_break").apply();}long restoredEnd=timerPrefs.getLong("timer_service_end_wall",0);if(restoredEnd>System.currentTimeMillis()){timerRunning=true;timerIsBreak=timerPrefs.getBoolean("timer_service_break",false);timerRemainingMs=restoredEnd-System.currentTimeMillis();timerEndElapsed=restoredEnd;long duration=timerPrefs.getLong("timer_service_duration",timerRemainingMs);timerSessionStarted=System.currentTimeMillis()-Math.max(0,duration-timerRemainingMs);}
         getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG);
         Set<String> visits = new TreeSet<>(prefs.getStringSet("visit_days", new TreeSet<String>())); visits.add(todayKey()); prefs.edit().putStringSet("visit_days", visits).apply();
         // Migrate the last recorded study date from older app versions into the calendar history.
@@ -1622,22 +1623,24 @@ public class MainActivity extends Activity {
     private String normalizeAnswer(String value){return value==null?"":value.trim().toLowerCase(new Locale("ru")).replace(" ","").replace(",",".").replace("−","-");}
     private void acceptMiniAnswer(MiniQuestion q,String userAnswer,int index,boolean wrongOnly,View source){
         boolean correct=normalizeAnswer(userAnswer).equals(normalizeAnswer(q.answer));
-        if(correct){miniScore++;clearMistake(q);haptic(source,true);}else{miniWrongQuestions.add(q);recordMistake(q,userAnswer);haptic(source,false);if(source!=null)source.animate().translationX(dp(8)).setDuration(45).withEndAction(()->source.animate().translationX(-dp(8)).setDuration(45).withEndAction(()->source.animate().translationX(0).setDuration(45).start()).start()).start();}
+        if(correct){miniScore++;clearMistake(q);haptic(source,true);playCorrectAnswerSound();}else{miniWrongQuestions.add(q);recordMistake(q,userAnswer);haptic(source,false);if(source!=null)source.animate().translationX(dp(8)).setDuration(45).withEndAction(()->source.animate().translationX(-dp(8)).setDuration(45).withEndAction(()->source.animate().translationX(0).setDuration(45).start()).start()).start();}
         if(source instanceof Button){Button chosen=(Button)source;chosen.setBackground(shape(correct?0xFFE4F4E8:0xFFFFE8E8,22,correct?0xFF75B987:0xFFE58A8A));chosen.setTextColor(correct?0xFF287A43:0xFFB64242);new Handler(android.os.Looper.getMainLooper()).postDelayed(()->{if(!isFinishing()){chosen.setBackground(shape(0xFFFFFFFF,22,0xFFEADDE2));chosen.setTextColor(DARK);}},1050);}
         boolean immediate=prefs.getBoolean("show_correct_immediately",true);
         if(!correct&&!immediate){if(miniDeferredFeedback.length()>0)miniDeferredFeedback.append("\\n\\n");miniDeferredFeedback.append("• ").append(q.prompt).append("\\nПравильный ответ: ").append(q.answer).append("\\n").append(q.explanation);}
         TextView feedback=text(correct?"✓  Верно! "+q.explanation:immediate?("✦  Правильный ответ: "+q.answer+"\\n"+q.explanation):"Ответ сохранён. Разбор появится в конце теста.",13,correct?0xFF287A43:0xFF9B4A58,true);feedback.setPadding(dp(12),dp(10),dp(12),dp(10));feedback.setBackground(shape(correct?0xFFF0F8F1:0xFFFFF2F2,14,0));root.addView(feedback,lp(-1,-2,0,7,0,4));
         if(!correct){
-            Button explainAi=button("✧  Объясни с ИИ",false);
+            Button explainAi=button("✧  Объясни эту ошибку",false);
             explainAi.setContentDescription("Попросить ИИ объяснить ошибку в задании");
             explainAi.setOnClickListener(v->{
                 Intent intent=new Intent(this,AiTutorActivity.class);
                 String context="Помоги разобраться с ошибкой в учебном задании. Тема: "+(q.topic==null||q.topic.isEmpty()?miniTopic:q.topic)+". Вопрос: "+q.prompt+". Мой неверный ответ: "+userAnswer+". Правильный ответ: "+q.answer+". Краткое объяснение: "+q.explanation+". Объясни пошагово и доброжелательно, не просто сообщай ответ.";
                 intent.putExtra("study_context",context);
+                intent.putExtra("offline_fallback","Нет интернета — вот разбор из банка:\n\nТема: "+(q.topic==null||q.topic.isEmpty()?miniTopic:q.topic)+"\nЗадание: "+q.prompt+"\nПравильный ответ: "+q.answer+"\n\n"+q.explanation);
                 startActivity(intent);
             });
             root.addView(explainAi,lp(-1,48,0,0,0,4));
         }
+        if(!wrongOnly){Button similar=button("↻  Дай похожую задачу",false);similar.setOnClickListener(v->{MiniQuestion next=makeMiniQuestion(q.topic==null||q.topic.isEmpty()?miniTopic:q.topic);miniQuestions.add(Math.min(index+1,miniQuestions.size()),next);showAppMessage("Похожая задача добавлена в тест");});root.addView(similar,lp(-1,46,0,0,0,4));}
         new Handler(Looper.getMainLooper()).postDelayed(()->{if(!isFinishing())renderMiniTest(index+1,wrongOnly);},correct?1050:3500);
     }
     private MiniQuestion makeMiniQuestion(String topic){
@@ -1729,7 +1732,8 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void playTimerFinishSound(){if(prefs==null||!prefs.getBoolean("timer_sound_enabled",true))return;try{android.media.ToneGenerator tone=new android.media.ToneGenerator(android.media.AudioManager.STREAM_ALARM,prefs.getInt("completion_sound_volume",55));tone.startTone(android.media.ToneGenerator.TONE_PROP_BEEP,650);new Handler(Looper.getMainLooper()).postDelayed(tone::release,850);}catch(Exception ignored){}}
+    private void playTimerFinishSound(){if(prefs==null||!prefs.getBoolean("timer_sound_enabled",true))return;LocalSoundPlayer.play(this,true,prefs.getInt("completion_sound_volume",55));}
+    private void playCorrectAnswerSound(){if(prefs!=null&&prefs.getBoolean("correct_answer_sound_enabled",true))LocalSoundPlayer.play(this,false,prefs.getInt("completion_sound_volume",55));}
     private void playTopicCompleteSound(){if(prefs==null||!prefs.getBoolean("topic_sound_enabled",true))return;try{android.media.ToneGenerator tone=new android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION,prefs.getInt("completion_sound_volume",55));tone.startTone(android.media.ToneGenerator.TONE_PROP_ACK,160);new Handler(Looper.getMainLooper()).postDelayed(tone::release,260);}catch(Exception ignored){}}
 
     private void showPraise() {
@@ -1906,7 +1910,7 @@ public class MainActivity extends Activity {
         timerStartButton.setOnClickListener(v->{if(!timerIsBreak&&timerRemainingMs>=selectedStudyMinutes*60000L-1000L)showStudyRitual();else startTimer();});
         timerPauseButton=button("Пауза",false);timerPauseButton.setTextSize(14);timerPauseButton.setEnabled(timerRunning);timerPauseButton.setOnClickListener(v->pauseTimer());
         Button reset=button("Сбросить",false);reset.setTextSize(14);reset.setOnClickListener(v->{
-            long elapsed=timerRunning&&!timerIsBreak?Math.max(0,SystemClock.elapsedRealtime()-timerSessionStarted):0;
+            long elapsed=timerRunning&&!timerIsBreak?Math.max(0,System.currentTimeMillis()-timerSessionStarted):0;
             timerHandler.removeCallbacks(timerTick);timerRunning=false;cancelTimerFinishAlarm();
             try{startService(new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_STOP).putExtra("elapsed_ms",elapsed).putExtra("break",timerIsBreak));}catch(Exception ignored){}
             getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -1916,10 +1920,10 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams main=new LinearLayout.LayoutParams(0,dp(52),1f);main.setMargins(dp(4),0,dp(4),0);controls.addView(timerStartButton,main);
         LinearLayout.LayoutParams side=new LinearLayout.LayoutParams(0,dp(52),0.72f);side.setMargins(dp(4),0,dp(4),0);controls.addView(timerPauseButton,side);controls.addView(reset,side);
         screen.addView(controls,lp(-1,dp(58),0,dp(12),0,0));
-        timerDisplay.setOnLongClickListener(v->{if(timerRunning)return true;new TimePickerDialog(this,(picker,hour,minute)->{selectedStudyMinutes=Math.max(1,Math.min(600,hour*60+minute));if(!timerIsBreak)timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();},selectedStudyMinutes/60,selectedStudyMinutes%60,true).show();return true;});
+        timerDisplay.setOnLongClickListener(v->{if(timerRunning)return true;new TimePickerDialog(this,(picker,hour,minute)->{selectedStudyMinutes=Math.max(1,Math.min(600,hour*60+minute));prefs.edit().putInt("selected_study_minutes",selectedStudyMinutes).apply();if(!timerIsBreak)timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();},selectedStudyMinutes/60,selectedStudyMinutes%60,true).show();return true;});
         root.addView(screen,lp(-1,-2,0,dp(6),0,dp(10)));
         updateTimerRingProgress(timerRemainingMs);
-        if(timerRunning){updateTimerDisplay();timerStartButton.setEnabled(false);timerPauseButton.setEnabled(true);if(timerTick==null){timerTick=new Runnable(){public void run(){updateTimerDisplay();long left=timerEndElapsed-SystemClock.elapsedRealtime();if(left<=0)finishTimerPhase();else timerHandler.postDelayed(this,250);}};timerHandler.post(timerTick);}}
+        if(timerRunning){updateTimerDisplay();timerStartButton.setEnabled(false);timerPauseButton.setEnabled(true);if(timerTick==null){timerTick=new Runnable(){public void run(){updateTimerDisplay();long left=timerEndElapsed-System.currentTimeMillis();if(left<=0)finishTimerPhase();else timerHandler.postDelayed(this,250);}};timerHandler.post(timerTick);}}
     }
 
     private String formatTimer(long ms) {
@@ -1929,11 +1933,11 @@ public class MainActivity extends Activity {
     private void startTimer() {
         if (timerRunning) return;
         if (timerRemainingMs <= 0) timerRemainingMs = (timerIsBreak ? selectedBreakMinutes : selectedStudyMinutes) * 60000L;
-        timerRunning = true; timerSessionStarted = SystemClock.elapsedRealtime(); timerEndElapsed = timerSessionStarted + timerRemainingMs; if(timerRing!=null)timerRing.setRunning(true);
+        timerRunning = true; timerSessionStarted = System.currentTimeMillis(); timerEndElapsed = timerSessionStarted + timerRemainingMs; if(timerRing!=null)timerRing.setRunning(true);
         if(!timerIsBreak)prefs.edit().putLong("focus_started_wall",System.currentTimeMillis()).putBoolean("focus_left_app",false).apply();
         try{Intent service=new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_START).putExtra("duration_ms",timerRemainingMs).putExtra("break",timerIsBreak);if(Build.VERSION.SDK_INT>=26)startForegroundService(service);else startService(service);}catch(Exception ignored){}
         getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        timerTick = new Runnable() { @Override public void run() { updateTimerDisplay(); long left = timerEndElapsed - SystemClock.elapsedRealtime(); if (left <= 0) finishTimerPhase(); else timerHandler.postDelayed(this, 250); } };
+        timerTick = new Runnable() { @Override public void run() { updateTimerDisplay(); long left = timerEndElapsed - System.currentTimeMillis(); if (left <= 0) finishTimerPhase(); else timerHandler.postDelayed(this, 250); } };
         if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}if(timerDisplay!=null){timerDisplay.setScaleX(1f);timerDisplay.setScaleY(1f);if(!prefs.getBoolean("reduce_motion",false)){timerPulseAnimator=android.animation.ValueAnimator.ofFloat(1f,1.045f);timerPulseAnimator.setDuration(1050);timerPulseAnimator.setRepeatMode(android.animation.ValueAnimator.REVERSE);timerPulseAnimator.setRepeatCount(android.animation.ValueAnimator.INFINITE);timerPulseAnimator.addUpdateListener(a->{if(timerDisplay!=null){float s=(float)a.getAnimatedValue();timerDisplay.setScaleX(s);timerDisplay.setScaleY(s);}});timerPulseAnimator.start();}}
         if (timerStartButton != null) timerStartButton.setEnabled(false);
         if (timerPauseButton != null) timerPauseButton.setEnabled(true);
@@ -1942,7 +1946,7 @@ public class MainActivity extends Activity {
 
     private void pauseTimer() {
         if (!timerRunning) return;
-        timerRemainingMs = Math.max(0, timerEndElapsed - SystemClock.elapsedRealtime());
+        timerRemainingMs = Math.max(0, timerEndElapsed - System.currentTimeMillis());
         timerRunning = false; timerHandler.removeCallbacks(timerTick); cancelTimerFinishAlarm(); try{Intent pause=new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_PAUSE).putExtra("elapsed_ms",Math.max(0,SystemClock.elapsedRealtime()-timerSessionStarted)).putExtra("break",timerIsBreak);startService(pause);}catch(Exception ignored){} getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}if(timerRing!=null)timerRing.setRunning(false);if (timerDisplay != null) { timerDisplay.setText(formatTimer(timerRemainingMs)); timerDisplay.animate().scaleX(1f).scaleY(1f).setDuration(220).start(); }
         if (timerStartButton != null) { timerStartButton.setEnabled(true); timerStartButton.setText("▶  Продолжить"); }
@@ -1952,7 +1956,7 @@ public class MainActivity extends Activity {
     private boolean isMaleProfile(){return prefs!=null && "male".equals(prefs.getString("profile_gender","female"));}
     private String g(String feminine,String masculine){return isMaleProfile()?masculine:feminine;}
     private void updateTimerDisplay() {
-        long left=Math.max(0,timerEndElapsed-SystemClock.elapsedRealtime());
+        long left=Math.max(0,timerEndElapsed-System.currentTimeMillis());
         if (timerDisplay != null) timerDisplay.setText(formatTimer(left));
         updateTimerRingProgress(left);
     }
@@ -1982,7 +1986,7 @@ public class MainActivity extends Activity {
         boolean focusFinished=!timerIsBreak;
         playTimerFinishSound();
         timerHandler.removeCallbacks(timerTick); timerRunning = false; cancelTimerFinishAlarm(); getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;} timerRemainingMs = 0;
-        if (!timerIsBreak) { timerIsBreak = true; timerRemainingMs = selectedBreakMinutes * 60000L; showAppMessage(g("Ты большая умничка! Время отдохнуть 🌸","Ты большой молодец! Время отдохнуть 🌸")); }
+        if (!timerIsBreak) { timerIsBreak = true; int completed=prefs.getInt("pomodoro_cycle_count",0)+1; int breakMinutes=(completed%4==0)?Math.max(15,prefs.getInt("pomodoro_long_break_minutes",15)):selectedBreakMinutes; timerRemainingMs = breakMinutes * 60000L; showAppMessage(g("Ты большая умничка! Время отдохнуть 🌸","Ты большой молодец! Время отдохнуть 🌸")); }
         else { timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; showAppMessage(g("Перерыв окончен. Ты готова продолжать! 💗","Перерыв окончен. Ты готов продолжать! 💗")); }
         if ("pomodoro".equals(currentScreen)) showPomodoro();
         if(focusFinished){prefs.edit().putBoolean("diary_prefill_timer_win",true).putBoolean("timer_finish_prompt_pending",false).apply();showTimerFinishPrompt();}
