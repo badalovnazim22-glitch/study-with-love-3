@@ -436,7 +436,15 @@ public class AiTutorActivity extends Activity {
     }
 
     private boolean restoreChat(Bundle state) {
-        if (state == null) return false;
+        if (state == null) {
+            SharedPreferences savedPrefs=getSharedPreferences(AI_PREFS,MODE_PRIVATE);
+            if(!savedPrefs.getBoolean("save_chat_history",false)) return false;
+            String stored=savedPrefs.getString("saved_chat_history","");
+            if(stored.isEmpty()) return false;
+            state=new Bundle();
+            state.putString("ai_chat_history",stored);
+            state.putString("ai_study_context",savedPrefs.getString("saved_study_context",""));
+        }
         studyContext = state.getString("ai_study_context", studyContext);
         offlineFallback = state.getString("ai_offline_fallback", offlineFallback);
         String saved = state.getString("ai_chat_history", "");
