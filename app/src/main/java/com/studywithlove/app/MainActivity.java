@@ -48,6 +48,7 @@ import java.util.TimeZone;
 
 public class MainActivity extends Activity {
     public static volatile boolean activityVisible=false;
+    private static volatile MainActivity foregroundActivity;
     private int BG = 0xFFFFF9F7, PINK = 0xFFC97891, PALE = 0xFFFCEEF2, DARK = 0xFF3F3439, MUTED = 0xFF75666D;
     private int progressMonthOffset = 0;
     private LinearLayout progressCalendarHost;
@@ -1913,8 +1914,8 @@ public class MainActivity extends Activity {
     // App usage is tracked separately; only an explicit study action records a study day.
     private void saveForegroundUsage() { appUsageStartedElapsed=0L; }
 
-    @Override protected void onResume() { super.onResume(); AppUpdater.resumePendingInstall(this); activityVisible=true; appUsageStartedElapsed = SystemClock.elapsedRealtime(); if (prefs != null) {updateAchievementDates();scheduleReminders(this);rescheduleFutureLetterReminders(this);WeeklyReportReceiver.schedule(this);StudyWidgetProvider.updateAll(this);if(prefs.getBoolean("timer_finish_prompt_pending",false)){prefs.edit().putBoolean("timer_finish_prompt_pending",false).apply();showTimerFinishPrompt();}} }
-    @Override protected void onPause() { activityVisible=false; saveForegroundUsage(); appUsageStartedElapsed = 0L; super.onPause(); }
+    @Override protected void onResume() { super.onResume(); foregroundActivity=this; AppUpdater.resumePendingInstall(this); activityVisible=true; appUsageStartedElapsed = SystemClock.elapsedRealtime(); if (prefs != null) {updateAchievementDates();scheduleReminders(this);rescheduleFutureLetterReminders(this);WeeklyReportReceiver.schedule(this);StudyWidgetProvider.updateAll(this);if(prefs.getBoolean("timer_finish_prompt_pending",false)){prefs.edit().putBoolean("timer_finish_prompt_pending",false).apply();showTimerFinishPrompt();}} }
+    @Override protected void onPause() { if(foregroundActivity==this)foregroundActivity=null; activityVisible=false; saveForegroundUsage(); appUsageStartedElapsed = 0L; super.onPause(); }
 
     private void showMessage() {
         currentScreen = "message";
@@ -2140,6 +2141,37 @@ public class MainActivity extends Activity {
         String lower = message.toLowerCase(new Locale("ru"));
         boolean warning = lower.contains("не удалось") || lower.contains("ошиб") || lower.contains("недоступ") || lower.contains("не распознан");
         showSavedBanner(warning ? "Обрати внимание" : "Study with Love", message);
+    }
+
+    public static boolean showForegroundReminder(String message) {
+        MainActivity activity=foregroundActivity;
+        if(activity==null||!activityVisible||activity.isFinishing())return false;
+        activity.runOnUiThread(()->activity.showBottomReminderBanner(message));
+        return true;
+    }
+    private void showBottomReminderBanner(String message) {
+        android.view.View decorView=getWindow().getDecorView();
+        if(!(decorView instanceof android.view.ViewGroup))return;
+        android.view.ViewGroup decor=(android.view.ViewGroup)decorView;
+        android.widget.FrameLayout overlay=new android.widget.FrameLayout(this);
+        LinearLayout banner=new LinearLayout(this);
+        banner.setOrientation(LinearLayout.HORIZONTAL);banner.setGravity(Gravity.CENTER_VERTICAL);
+        banner.setPadding(dp(16),dp(12),dp(18),dp(12));
+        banner.setBackground(shape(PALE,18,blendColors(PINK,BG,0.45f)));banner.setElevation(dp(10));
+        TextView icon=text("✉",23,PINK,true);icon.setGravity(Gravity.CENTER);
+        banner.addView(icon,lp(34,36,0,0,10,0));
+        LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);
+        addText(words,"Study with Love",14,DARK,true);
+        addText(words,message==null?"Твоё письмо себе уже можно открыть ✉":message,12,MUTED,false);
+        banner.addView(words,new LinearLayout.LayoutParams(0,-2,1f));
+        overlay.addView(banner,new android.widget.FrameLayout.LayoutParams(-1,-2));
+        android.widget.FrameLayout.LayoutParams params=new android.widget.FrameLayout.LayoutParams(
+                Math.min(getResources().getDisplayMetrics().widthPixels-dp(32),dp(420)),-2,
+                Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL);
+        params.setMargins(dp(16),0,dp(16),dp(112));decor.addView(overlay,params);
+        overlay.setAlpha(0f);overlay.setTranslationY(dp(18));
+        overlay.animate().alpha(1f).translationY(0).setDuration(240).start();
+        overlay.postDelayed(()->{if(overlay.getParent()!=null)overlay.animate().alpha(0f).translationY(dp(12)).setDuration(180).withEndAction(()->{if(overlay.getParent()!=null)decor.removeView(overlay);}).start();},4000);
     }
 
     private void showSavedBanner(String title, String subtitle) {
