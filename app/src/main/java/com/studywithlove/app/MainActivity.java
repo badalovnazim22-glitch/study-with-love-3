@@ -149,56 +149,20 @@ public class MainActivity extends Activity {
     }
     @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);setIntent(intent);handleQuickAction(intent);}
     private void launchAiTutor() {
-        Intent intent = new Intent(this, AiTutorActivity.class);
-        StringBuilder context = new StringBuilder();
-        if (selectedChapter != null && selectedTopic != null) {
-            context.append("Текущий урок: ").append(selectedChapter.replaceFirst("^[^ ]+\\s*", ""))
-                    .append(" — ").append(selectedTopic).append(". ");
-        }
-        if (prefs.getBoolean("exam_topic_filter_enabled", false)) {
-            Set<String> selected = new TreeSet<>(prefs.getStringSet("exam_topic_ids", new TreeSet<String>()));
-            List<String> names = new ArrayList<>();
-            for (Map.Entry<String, List<String>> entry : chapters.entrySet()) {
-                for (String topic : entry.getValue()) {
-                    if (selected.contains(examTopicKey(entry.getKey(), topic))) {
-                        names.add(topic);
-                        if (names.size() >= 18) break;
-                    }
-                }
-                if (names.size() >= 18) break;
-            }
-            if (names.isEmpty()) {
-                context.append("Фильтр тем экзамена включён, но темы пока не выбраны. Предложи выбрать темы в разделе экзаменационных целей. ");
-            } else {
-                context.append("Выбранные темы для подготовки к экзамену: ")
-                        .append(android.text.TextUtils.join(", ", names)).append(". ");
-            }
-        }
+        // Открываем ИИ независимо от дополнительных учебных данных.
+        // Контекст формируется уже после открытия экрана, чтобы ошибка
+        // в фильтрах или хранилище ошибок не закрывала всё приложение.
         try {
-            mistakeStore().migrateLegacy(prefs);
-            List<String> recentMistakes = mistakeStore().newestPayloads(4);
-            if (!recentMistakes.isEmpty()) {
-                context.append("Недавние учебные ошибки (помоги понять причину и потренировать похожие задания): ");
-                int added = 0;
-                for (String payload : recentMistakes) {
-                    if (added >= 4) break;
-                    try {
-                        org.json.JSONObject mistake = new org.json.JSONObject(payload);
-                        String topic = mistake.optString("topic", "");
-                        String kind = mistake.optString("kind", "");
-                        String prompt = mistake.optString("prompt", "");
-                        context.append("Тема: ").append(topic).append("; тип затруднения: ").append(kind);
-                        if (!prompt.isEmpty()) context.append("; пример задания: ").append(prompt.length() > 110 ? prompt.substring(0, 110) : prompt);
-                        context.append(". ");
-                        added++;
-                    } catch (Exception ignored) {}
-                }
-            }
-        } catch (Exception ignored) {}
-        if (context.length() > 0) {
-            intent.putExtra("study_context", context.toString());
+            Intent intent = new Intent(MainActivity.this, AiTutorActivity.class);
+            startActivity(intent);
+        } catch (Exception error) {
+            android.util.Log.e("MainActivity", "Не удалось открыть ИИ-помощника", error);
+            android.widget.Toast.makeText(
+                    MainActivity.this,
+                    "Не удалось открыть ИИ-помощника. Попробуй ещё раз.",
+                    android.widget.Toast.LENGTH_LONG
+            ).show();
         }
-        startActivity(intent);
     }
 
     private void showWelcome() { renderWelcomeStep(0, "", "neutral", "pink", "Математика", 15, 0); }
