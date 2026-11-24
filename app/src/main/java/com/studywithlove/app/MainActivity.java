@@ -614,7 +614,6 @@ public class MainActivity extends Activity {
             boolean selected=Math.abs(activeScale-scale)<0.01f;
             Button choice=button((selected?"✓  ":"")+textScaleNames[i],selected);
             choice.setMaxLines(1);
-            choice.setAutoSizeTextTypeWithDefaults(android.widget.TextView.AUTO_SIZE_TEXT_TYPE_UNIFORM);
             android.widget.GridLayout.LayoutParams scaleLp=new android.widget.GridLayout.LayoutParams();
             scaleLp.width=0;scaleLp.height=dp(48);
             scaleLp.columnSpec=android.widget.GridLayout.spec(i%2,1f);
