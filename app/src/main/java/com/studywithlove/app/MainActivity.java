@@ -631,7 +631,7 @@ public class MainActivity extends Activity {
         String[] fontFamilies={"sans-serif","sans-serif-rounded","serif","monospace","sans-serif-condensed","sans-serif-medium"};
         String activeFont=prefs.getString("app_font","sans");
         android.widget.GridLayout fontGrid=new android.widget.GridLayout(this);fontGrid.setColumnCount(2);
-        for(int i=0;i<fontKeys.length;i++){final String key=fontKeys[i],family=fontFamilies[i];Button choice=button((activeFont.equals(key)?"✓  ":"")+fontNames[i],activeFont.equals(key));choice.setTypeface(Typeface.create(family,Typeface.BOLD));if(activeFont.equals(key)){GradientDrawable selectedFontBg=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{adjustColor(PINK,1.12f),adjustColor(PINK,0.78f)});selectedFontBg.setCornerRadius(dp(14));choice.setBackground(selectedFontBg);}else choice.setBackground(shape(isDarkAppearance()?blendColors(PALE,BG,0.18f):0xCCFFFFFF,13,blendColors(PINK,BG,isDarkAppearance()?0.42f:0.68f)));android.widget.GridLayout.LayoutParams fp=new android.widget.GridLayout.LayoutParams();fp.width=0;fp.height=dp(44);fp.columnSpec=android.widget.GridLayout.spec(i%2,1f);fp.setMargins(dp(3),dp(3),dp(3),dp(3));fontGrid.addView(choice,fp);choice.setOnClickListener(v->{prefs.edit().putString("app_font",key).apply();showSettings();});}
+        for(int i=0;i<fontKeys.length;i++){final String key=fontKeys[i],family=fontFamilies[i];Button choice=button((activeFont.equals(key)?"✓  ":"")+fontNames[i],activeFont.equals(key));choice.setTypeface(Typeface.create(family,Typeface.BOLD));if(activeFont.equals(key)){GradientDrawable selectedFontBg=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{adjustColor(PINK,0.92f),adjustColor(PINK,0.78f)});selectedFontBg.setCornerRadius(dp(14));choice.setBackground(selectedFontBg);}else choice.setBackground(shape(isDarkAppearance()?blendColors(PALE,BG,0.18f):0xCCFFFFFF,13,blendColors(PINK,BG,isDarkAppearance()?0.42f:0.68f)));android.widget.GridLayout.LayoutParams fp=new android.widget.GridLayout.LayoutParams();fp.width=0;fp.height=dp(44);fp.columnSpec=android.widget.GridLayout.spec(i%2,1f);fp.setMargins(dp(3),dp(3),dp(3),dp(3));fontGrid.addView(choice,fp);choice.setOnClickListener(v->{prefs.edit().putString("app_font",key).apply();showSettings();});}
         fontGroup.addView(fontGrid,lp(-1,-2,0,4,0,0));appearance.addView(fontGroup,lp(-1,-2,0,4,0,6));
         LinearLayout fontSizeGroup=settingsGroup("РАЗМЕР ТЕКСТА");
         fontSizeGroup.setTag("appearance");
@@ -2972,7 +2972,7 @@ public class MainActivity extends Activity {
         CelebrationView(android.content.Context c){super(c);java.util.Random r=new java.util.Random();for(int i=0;i<x.length;i++){x[i]=r.nextFloat();y[i]=-.12f-r.nextFloat()*.7f;speed[i]=.55f+r.nextFloat()*.9f;size[i]=dp(3+r.nextInt(4));rotation[i]=r.nextFloat()*360f;}}
         @Override protected void onDraw(android.graphics.Canvas canvas){super.onDraw(canvas);float w=getWidth(),h=getHeight();for(int i=0;i<x.length;i++){float yy=(y[i]+progress*speed[i]*1.5f)*h;if(yy<0||yy>h)continue;canvas.save();canvas.rotate(rotation[i]+progress*360f,x[i]*w,yy);paint.setColor(colors[i%colors.length]);paint.setStyle(android.graphics.Paint.Style.FILL);canvas.drawOval(x[i]*w-size[i],yy-size[i]*1.5f,x[i]*w+size[i],yy+size[i]*1.5f,paint);canvas.restore();}}
     }
-    private TextView textFixed(String value,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(translate(value));t.setTextSize(size);t.setTextColor(color==0xFFC97891?PINK:color);t.setTypeface(Typeface.create(selectedFontFamily(),bold?Typeface.BOLD:Typeface.NORMAL));t.setGravity(Gravity.CENTER_VERTICAL);return t;}
+    private TextView textFixed(String value,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(translate(value));t.setTextSize(size);if(isThemeAccentColor(color))color=PINK;else if(isThemeTextColor(color))color=DARK;else if(isThemeMutedColor(color))color=MUTED;t.setTextColor(color);t.setTypeface(Typeface.create(selectedFontFamily(),bold?Typeface.BOLD:Typeface.NORMAL));t.setGravity(Gravity.CENTER_VERTICAL);return t;}
     private Button button(String label, boolean primary) {
         label=translate(label);
         Button b = new Button(this);
@@ -3005,7 +3005,7 @@ public class MainActivity extends Activity {
         android.graphics.drawable.Drawable bg;
         if(primary){
             GradientDrawable gradient=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                    new int[]{adjustColor(accent,1.12f),accentDeep});
+                    new int[]{adjustColor(accent,0.92f),accentDeep});
             gradient.setCornerRadius(dp(13));
             gradient.setStroke(dp(1),accentDeep);
             bg=gradient;
