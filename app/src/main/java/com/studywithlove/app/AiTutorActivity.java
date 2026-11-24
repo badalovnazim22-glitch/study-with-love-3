@@ -234,7 +234,18 @@ public class AiTutorActivity extends Activity {
         composer.addView(cancelButton, cancelLp);
         page.addView(composer, new LinearLayout.LayoutParams(-1, -2));
 
-        setContentView(page);
+        // Keep the chat comfortable on tablets without stretching controls
+        // across very wide screens; phones continue to use the full width.
+        android.widget.FrameLayout host = new android.widget.FrameLayout(this);
+        host.setBackgroundColor(BG);
+        int screenWidthDp = getResources().getConfiguration().screenWidthDp;
+        int contentWidthDp = Math.min(Math.max(1, screenWidthDp), 760);
+        android.widget.FrameLayout.LayoutParams pageParams =
+                new android.widget.FrameLayout.LayoutParams(
+                        dp(contentWidthDp), android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                        Gravity.CENTER);
+        host.addView(page, pageParams);
+        setContentView(host);
         if (android.os.Build.VERSION.SDK_INT >= 21) page.requestApplyInsets();
         page.post(this::updateSystemBars);
     }
