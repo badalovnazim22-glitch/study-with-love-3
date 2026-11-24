@@ -643,7 +643,7 @@ public class MainActivity extends Activity {
         LinearLayout scaleStrip=new LinearLayout(this);
         scaleStrip.setOrientation(LinearLayout.HORIZONTAL);
         scaleStrip.setPadding(dp(3),dp(3),dp(3),dp(3));
-        scaleStrip.setBackground(shape(isDarkAppearance()?0xFF292530:0xFFEAF1F7,12,isDarkAppearance()?0xFF49404B:0xFFD8E4ED));
+        scaleStrip.setBackground(shape(isDarkAppearance()?0xFF292530:PALE,12,blendColors(PINK,BG,isDarkAppearance()?0.42f:0.68f)));
         for(int i=0;i<textScales.length;i++){
             final float scale=textScales[i];
             boolean selected=Math.abs(activeScale-scale)<0.01f;
@@ -653,7 +653,7 @@ public class MainActivity extends Activity {
             choice.setSingleLine(true);
             choice.setIncludeFontPadding(false);
             choice.setPadding(dp(2),dp(9),dp(2),dp(9));
-            if(selected){GradientDrawable activeSegment=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{0xFF397DB5,0xFF245B91});activeSegment.setCornerRadius(dp(10));choice.setBackground(activeSegment);}else choice.setBackground(shape(isDarkAppearance()?0xFF292530:0x00FFFFFF,10,0));
+            if(selected){GradientDrawable activeSegment=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{adjustColor(PINK,1.12f),adjustColor(PINK,0.78f)});activeSegment.setCornerRadius(dp(10));activeSegment.setStroke(dp(1),adjustColor(PINK,0.78f));choice.setBackground(activeSegment);}else choice.setBackground(shape(isDarkAppearance()?0xFF292530:0x00FFFFFF,10,0));
             LinearLayout.LayoutParams scaleLp=new LinearLayout.LayoutParams(0,dp(42),1f);
             scaleLp.setMargins(dp(1),0,dp(1),0);
             scaleStrip.addView(choice,scaleLp);
@@ -2888,9 +2888,9 @@ public class MainActivity extends Activity {
             TextView t=(TextView)view;boolean bold=t.getTypeface()!=null&&t.getTypeface().isBold();
             t.setTypeface(Typeface.create(selectedFontFamily(),bold?Typeface.BOLD:Typeface.NORMAL));
             int c=t.getCurrentTextColor();
-            if(c==0xFFC97891||c==0xFFD96C91||c==0xFF397DB5||c==0xFF245B91)t.setTextColor(PINK);
-            else if(c==0xFF3F3439||c==0xFF3A3036||c==0xFF382F34||c==0xFF49382E||c==0xFF303844||c==0xFF34443D||c==0xFF393448||c==0xFF304656||c==0xFF513D34||c==0xFF4B2026)t.setTextColor(DARK);
-            else if(c==0xFF75666D||c==0xFF6F6684||c==0xFF796657||c==0xFF87919E||c==0xFF84958C||c==0xFF8E879E||c==0xFF8199A8||c==0xFFA88D80||c==0xFF9D777B)t.setTextColor(MUTED);
+            if(isThemeAccentColor(c))t.setTextColor(PINK);
+            else if(isThemeTextColor(c))t.setTextColor(DARK);
+            else if(isThemeMutedColor(c))t.setTextColor(MUTED);
         }
         if(view instanceof android.widget.ProgressBar&&Build.VERSION.SDK_INT>=21){
             android.widget.ProgressBar bar=(android.widget.ProgressBar)view;
@@ -2901,13 +2901,30 @@ public class MainActivity extends Activity {
         if(view instanceof CheckBox&&Build.VERSION.SDK_INT>=21)((CheckBox)view).setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));
         if(view instanceof android.view.ViewGroup)installThemeFontListener((android.view.ViewGroup)view);
     }
+    private boolean isThemeAccentColor(int c){
+        return c==0xFFC97891||c==0xFFD96C91||c==0xFF397DB5||c==0xFF245B91||
+                c==0xFF8979B8||c==0xFF659B86||c==0xFF5D91B5||c==0xFFD88968||
+                c==0xFFC49318||c==0xFF8B6046||c==0xFFD6B36A||c==0xFFB32635||
+                c==0xFF76502F||c==0xFFD9C19A||c==0xFFE39AB5;
+    }
+    private boolean isThemeTextColor(int c){
+        return c==0xFF3F3439||c==0xFF3A3036||c==0xFF382F34||c==0xFF49382E||
+                c==0xFF303844||c==0xFF34443D||c==0xFF393448||c==0xFF304656||
+                c==0xFF513D34||c==0xFF4B2026||c==0xFF3B281C||c==0xFF49340B;
+    }
+    private boolean isThemeMutedColor(int c){
+        return c==0xFF75666D||c==0xFF6F6684||c==0xFF796657||c==0xFF87919E||
+                c==0xFF84958C||c==0xFF8E879E||c==0xFF8199A8||c==0xFFA88D80||
+                c==0xFF9D777B||c==0xFF60786B||c==0xFF5E788A||c==0xFF856C60||
+                c==0xFF81595E||c==0xFF76604A||c==0xFF795B1E;
+    }
     private boolean isDarkAppearance(){String t=prefs==null?"pink":prefs.getString("app_theme","pink");return "night".equals(t)||"luxury".equals(t)||("system".equals(t)&&(getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES);}
     private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(17), dp(16), dp(17), dp(16)); boolean night = isDarkAppearance(); String theme=prefs==null?"pink":prefs.getString("app_theme","pink");int surface=night?("luxury".equals(theme)?0xFF30251F:0xFF25212B):0xFFFFFFFF;int border=night?("luxury".equals(theme)?0xFF78613D:0xFF403541):0xFFF3E9EC;android.graphics.drawable.Drawable bg=shape(surface,24,border);if(Build.VERSION.SDK_INT>=21)l.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x227D5264),bg,shape(0xFFFFFFFF,24,0)));else l.setBackground(bg);l.setElevation(dp(2)); return l; }
     private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, size, color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
     private TextView text(String value, int size, int color, boolean bold) {
-        if(color==0xFFC97891||color==0xFFD96C91)color=PINK;
-        else if(color==0xFF3F3439||color==0xFF3A3036||color==0xFF382F34||color==0xFF49382E||color==0xFF34443D||color==0xFF303844)color=DARK;
-        else if(color==0xFF75666D||color==0xFF6F6684||color==0xFF796657||color==0xFF60786B)color=MUTED;
+        if(isThemeAccentColor(color))color=PINK;
+        else if(isThemeTextColor(color))color=DARK;
+        else if(isThemeMutedColor(color))color=MUTED;
         value=translate(value); TextView t = new TextView(this); t.setText(value); float scale=prefs==null?1f:prefs.getFloat("app_text_scale",1f); t.setTextSize(Math.max(12, Math.round(size*scale))); t.setTextColor(color); t.setTypeface(Typeface.create(selectedFontFamily(),bold?Typeface.BOLD:Typeface.NORMAL)); t.setGravity(Gravity.CENTER_VERTICAL); return t; }
     private void applyPressFeedback(View view) {
         if(prefs!=null&&prefs.getBoolean("reduce_motion",false))return;
@@ -3118,8 +3135,8 @@ public class MainActivity extends Activity {
     private interface OnAction { void go(); }
     private GradientDrawable shape(int color, int radius, int stroke) {
         String theme = prefs == null ? "pink" : prefs.getString("app_theme", "pink");
-        if(color==0xFFC97891||color==0xFFD96C91)color=PINK;
-        if(stroke==0xFFC97891||stroke==0xFFD96C91)stroke=PINK;
+        if(isThemeAccentColor(color))color=PINK;
+        if(isThemeAccentColor(stroke))stroke=PINK;
         boolean white = color == 0xFFFFFFFF || color == 0xFFFFF9F7 || color == 0xFFFFFBFC || color == 0xFFFFF5F8 || color == 0xFFFFF4F7 || color == 0xFFFFF5F7 || color == 0xFFFFF8F6 || color == 0xFFF7F4F2 || color == 0xFFFFFCF7 || color == 0xFFFFFCFC || color == 0xFFFFF9EF;
         boolean soft = color == 0xFFFCEEF2 || color == 0xFFFFF0F4 || color == 0xFFFFF0F5 || color == 0xFFFFEEF3 || color == 0xFFFFF1F5 || color == 0xFFF8E8EE || color == 0xFFFFF4F7 || color == 0xFFFFF5F8 || color == 0xFFFFF5F7 || color == 0xFFFFF5F4;
         boolean pale = color == 0xFFF3F0FF || color == 0xFFF1F0FF || color == 0xFFEFF7F1 || color == 0xFFF5F2F1 || color == 0xFFF0E4E8 || color == 0xFFF1F0F2 || color == 0xFFF7F4F2 || color == 0xFFF7F4F5;
