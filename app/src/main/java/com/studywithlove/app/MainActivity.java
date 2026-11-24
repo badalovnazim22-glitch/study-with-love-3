@@ -1981,7 +1981,7 @@ public class MainActivity extends Activity {
     }
     private void updateTimerRingProgress(long remainingMs) {
         if(timerRing==null)return;
-        long total=Math.max(1L,(timerIsBreak?selectedBreakMinutes:selectedStudyMinutes)*60000L);
+        long total=Math.max(1L,(timerIsBreak?Math.max(1,prefs.getInt("pomodoro_current_break_minutes",selectedBreakMinutes)):selectedStudyMinutes)*60000L);
         timerRing.setProgress(1f-Math.max(0L,Math.min(total,remainingMs))/(float)total);
         timerRing.setRunning(timerRunning);
     }
@@ -2005,7 +2005,7 @@ public class MainActivity extends Activity {
         boolean focusFinished=!timerIsBreak;
         playTimerFinishSound(!timerIsBreak);
         timerHandler.removeCallbacks(timerTick); timerRunning = false; cancelTimerFinishAlarm(); getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;} timerRemainingMs = 0;
-        if (!timerIsBreak) { timerIsBreak = true; int completed=prefs.getInt("pomodoro_cycle_count",0);if(prefs.getLong("pomodoro_last_finish_wall",0L)!=timerEndElapsed)completed=(completed+1)%4;int breakMinutes=(completed==0)?Math.max(15,prefs.getInt("pomodoro_long_break_minutes",15)):selectedBreakMinutes; timerRemainingMs = breakMinutes * 60000L; showAppMessage(g("Ты большая умничка! Время отдохнуть 🌸","Ты большой молодец! Время отдохнуть 🌸")); }
+        if (!timerIsBreak) { timerIsBreak = true; int completed=prefs.getInt("pomodoro_cycle_count",0);if(prefs.getLong("pomodoro_last_finish_wall",0L)!=timerEndElapsed)completed=(completed+1)%4;int breakMinutes=(completed==0)?Math.max(15,prefs.getInt("pomodoro_long_break_minutes",15)):selectedBreakMinutes; timerRemainingMs = breakMinutes * 60000L;prefs.edit().putInt("pomodoro_current_break_minutes",breakMinutes).apply(); showAppMessage(g("Ты большая умничка! Время отдохнуть 🌸","Ты большой молодец! Время отдохнуть 🌸")); }
         else { timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; showAppMessage(g("Перерыв окончен. Ты готова продолжать! 💗","Перерыв окончен. Ты готов продолжать! 💗")); }
         if ("pomodoro".equals(currentScreen)) showPomodoro();
         if(focusFinished){prefs.edit().putBoolean("diary_prefill_timer_win",true).putBoolean("timer_finish_prompt_pending",false).apply();showTimerFinishPrompt();}
