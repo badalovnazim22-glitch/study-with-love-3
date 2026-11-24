@@ -573,7 +573,7 @@ public class MainActivity extends Activity {
         for(int i=0;i<keys.length;i++){final String key=keys[i];final int color=colors[i];final String label=names[i];LinearLayout option=new LinearLayout(this);option.setGravity(Gravity.CENTER_VERTICAL);option.setPadding(dp(8),dp(7),dp(5),dp(7));option.setBackground(shape(activeTheme.equals(key)?0xFFFFF0F4:0x00FFFFFF,15,activeTheme.equals(key)?PINK:0xFFEFE4E8));
             TextView swatch=text(activeTheme.equals(key)?"✓":"",12,0xFFFFFFFF,true);swatch.setGravity(Gravity.CENTER);swatch.setBackground(shape(color,30,activeTheme.equals(key)?PINK:0));option.addView(swatch,lp(28,28,0,0,7,0));TextView labelView=text(label,11,DARK,true);option.addView(labelView,new LinearLayout.LayoutParams(0,dp(30),1f));
             android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(48);gp.columnSpec=android.widget.GridLayout.spec(i%3,1f);gp.setMargins(dp(2),dp(3),dp(2),dp(3));palette.addView(option,gp);
-            option.setOnClickListener(v->{prefs.edit().putString("app_theme",key).apply();applySavedTheme();showSettings();});
+            option.setOnClickListener(v->{prefs.edit().putString("app_theme",key).remove("app_accent_color").apply();applySavedTheme();showSettings();});
         }
         appearance.addView(palette,lp(-1,-2,0,7,0,8));
         LinearLayout fontGroup=settingsGroup("ШРИФТ ПРИЛОЖЕНИЯ");
@@ -600,7 +600,7 @@ public class MainActivity extends Activity {
         }
         fontSizeGroup.addView(scaleRow,lp(-1,52,0,2,0,0));
         appearance.addView(fontSizeGroup,lp(-1,-2,0,4,0,6));
-        Button systemTheme=button("◐  Цвета и тёмная тема — как в системе","system".equals(activeTheme));systemTheme.setOnClickListener(v->{prefs.edit().putString("app_theme","system").apply();applySavedTheme();showSettings();});appearance.addView(systemTheme,lp(-1, 48,0,3,0,0));
+        Button systemTheme=button("◐  Цвета и тёмная тема — как в системе","system".equals(activeTheme));systemTheme.setOnClickListener(v->{prefs.edit().putString("app_theme","system").remove("app_accent_color").apply();applySavedTheme();showSettings();});appearance.addView(systemTheme,lp(-1, 48,0,3,0,0));
         Button choosePhoto=button("＋  Выбрать фото фона",false);choosePhoto.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT);pick.addCategory(Intent.CATEGORY_OPENABLE);pick.setType("image/*");pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,PICK_BACKGROUND);});
         appearance.addView(choosePhoto,lp(-1, 48,0,3,0,4));
         Button clearPhoto=button("Убрать фото фона",false);clearPhoto.setOnClickListener(v->{prefs.edit().remove("custom_background_uri").apply();showSettings();});appearance.addView(clearPhoto,lp(-1,48,0,0,0,0));
