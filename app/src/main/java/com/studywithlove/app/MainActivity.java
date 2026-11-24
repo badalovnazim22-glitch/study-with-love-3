@@ -69,6 +69,7 @@ public class MainActivity extends Activity {
     private final Handler timerHandler = new Handler(Looper.getMainLooper());
     private Runnable timerTick;
     private TextView timerDisplay, timerStatus, studyTimeValue, breakTimeValue;
+    private TimerRingView timerRing;
     private android.animation.ValueAnimator timerPulseAnimator;
     private android.animation.ObjectAnimator flowerBreatheAnimator;
     private final List<MiniQuestion> miniQuestions=new ArrayList<>();
@@ -77,6 +78,26 @@ public class MainActivity extends Activity {
     private int miniScore=0;
     private String miniTopic="";
     private boolean weaknessTrainingMode=false,miniResultSaved=false;
+    private static class TimerRingView extends View {
+        private final android.graphics.Paint paint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        private final android.graphics.RectF arc = new android.graphics.RectF();
+        private int trackColor, progressColor, fillColor;
+        private float progress = 0f;
+        TimerRingView(Context context, int fill, int track, int accent) { super(context); fillColor=fill; trackColor=track; progressColor=accent; }
+        void setProgress(float value) { progress=Math.max(0f,Math.min(1f,value)); invalidate(); }
+        @Override protected void onDraw(android.graphics.Canvas canvas) {
+            super.onDraw(canvas);
+            float cx=getWidth()/2f, cy=getHeight()/2f;
+            float stroke=Math.max(5f,getResources().getDisplayMetrics().density*7f);
+            float radius=Math.min(cx,cy)-stroke/2f-2f;
+            paint.setStyle(android.graphics.Paint.Style.FILL); paint.setColor(fillColor); canvas.drawCircle(cx,cy,radius,paint);
+            arc.set(cx-radius+stroke/2f,cy-radius+stroke/2f,cx+radius-stroke/2f,cy+radius-stroke/2f);
+            paint.setStyle(android.graphics.Paint.Style.STROKE); paint.setStrokeWidth(stroke); paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);
+            paint.setColor(trackColor); canvas.drawArc(arc,0,360,false,paint);
+            if(progress>0f){paint.setColor(progressColor);canvas.drawArc(arc,-90,360f*progress,false,paint);}
+            paint.setStyle(android.graphics.Paint.Style.FILL);
+        }
+    }
     private static class MiniQuestion { String prompt,explanation,type,answer,topic; String[] options; int correct; MiniQuestion(String p,String[] o,int c,String e){this(p,o,c,e,"choice",o!=null&&c>=0&&c<o.length?o[c]:"");} MiniQuestion(String p,String[] o,int c,String e,String t,String a){prompt=p;options=o;correct=c;explanation=e;type=t;answer=a;topic="";} }
     private Button timerStartButton, timerPauseButton;
     private EditText customMinutesInput;
@@ -1833,9 +1854,16 @@ public class MainActivity extends Activity {
         for(String subject:subjects){boolean chosen=selectedSubject.equals(subject);TextView chip=text(subject,11,chosen?0xFFFFFFFF:DARK,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(13),dp(8),dp(13),dp(8));chip.setBackground(shape(chosen?PINK:PALE,18,chosen?PINK:0));LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(-2,dp(36));cp.setMargins(0,0,dp(6),0);subjectRow.addView(chip,cp);chip.setOnClickListener(v->{prefs.edit().putString("timer_subject",subject).apply();showPomodoro();});}
         subjectScroll.addView(subjectRow);root.addView(subjectScroll,lp(-1,42,0,0,0,8));
         LinearLayout wrap=new LinearLayout(this);wrap.setGravity(Gravity.CENTER);wrap.setPadding(0,dp(6),0,dp(8));
-        timerDisplay=text(formatTimer(timerRemainingMs>0?timerRemainingMs:selectedStudyMinutes*60000L),42,DARK,true);timerDisplay.setGravity(Gravity.CENTER);
-        GradientDrawable face=new GradientDrawable();face.setShape(GradientDrawable.OVAL);face.setColor(PALE);face.setStroke(dp(5),PINK);timerDisplay.setBackground(face);timerDisplay.setElevation(dp(5));
-        wrap.addView(timerDisplay,lp(208,208,0,0,0,0));root.addView(wrap,lp(-1,224,0,0,0,2));
+        int ringFill=isDarkAppearance()?0xFF25212B:PALE;
+        timerRing=new TimerRingView(this,ringFill,isDarkAppearance()?0xFF49414E:0xFFD9DDE5,PINK);
+        FrameLayout timerFace=new FrameLayout(this);
+        timerFace.setBackground(shape(ringFill,120,0));
+        timerFace.setElevation(dp(2));
+        timerFace.addView(timerRing,new FrameLayout.LayoutParams(-1,-1));
+        timerDisplay=text(formatTimer(timerRemainingMs>0?timerRemainingMs:selectedStudyMinutes*60000L),42,DARK,true);timerDisplay.setGravity(Gravity.CENTER);timerDisplay.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        timerFace.addView(timerDisplay,new FrameLayout.LayoutParams(-1,-1));
+        wrap.addView(timerFace,lp(224,224,0,0,0,0));root.addView(wrap,lp(-1,232,0,0,0,2));
+        updateTimerRingProgress(timerRemainingMs>0?timerRemainingMs:(timerIsBreak?selectedBreakMinutes:selectedStudyMinutes)*60000L);
         timerStatus=text(timerIsBreak?"🌷  Время отдохнуть":"♡  Время для учёбы",15,PINK,true);timerStatus.setGravity(Gravity.CENTER);root.addView(timerStatus,lp(-1,30,0,0,0,4));
         TextView timerPlant=text(timerRunning?"🌱  Твой цветок растёт вместе с фокусом":"🌷  Начни занятие — и цветок начнёт расти",14,PINK,true);timerPlant.setGravity(Gravity.CENTER);root.addView(timerPlant,lp(-1,28,0,0,0,3));
         LinearLayout settings=card();addText(settings,"ВРЕМЯ УЧЁБЫ",11,PINK,true);
@@ -1903,7 +1931,14 @@ public class MainActivity extends Activity {
     private boolean isMaleProfile(){return prefs!=null && "male".equals(prefs.getString("profile_gender","female"));}
     private String g(String feminine,String masculine){return isMaleProfile()?masculine:feminine;}
     private void updateTimerDisplay() {
-        if (timerDisplay != null) timerDisplay.setText(formatTimer(Math.max(0, timerEndElapsed - SystemClock.elapsedRealtime())));
+        long left=Math.max(0,timerEndElapsed-SystemClock.elapsedRealtime());
+        if (timerDisplay != null) timerDisplay.setText(formatTimer(left));
+        updateTimerRingProgress(left);
+    }
+    private void updateTimerRingProgress(long remainingMs) {
+        if(timerRing==null)return;
+        long total=Math.max(1L,(timerIsBreak?selectedBreakMinutes:selectedStudyMinutes)*60000L);
+        timerRing.setProgress(1f-Math.max(0L,Math.min(total,remainingMs))/(float)total);
     }
 
     private void cancelTimerFinishAlarm() {
