@@ -487,6 +487,8 @@ public class MainActivity extends Activity {
         scroll.addView(contentFrame, new android.widget.ScrollView.LayoutParams(-1, -2));
         shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
         if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 78, 0, 0, 0, 0));
+        final View navigationBar=shell.getChildCount()>1?shell.getChildAt(1):null;
+        scroll.setOnScrollChangeListener((view,scrollX,scrollY,oldX,oldY)->{if(navigationBar==null)return;if(scrollY>oldY+dp(3)){navigationBar.animate().translationY(dp(84)).alpha(0f).setDuration(170).start();}else if(scrollY<oldY-dp(3)){navigationBar.animate().translationY(0f).alpha(1f).setDuration(190).start();}});
         setContentView(shell);
         if(currentScreen.startsWith("settings_") || "settings".equals(currentScreen)) {
             final int restoreY=pendingSettingsScrollY;
@@ -738,7 +740,7 @@ public class MainActivity extends Activity {
         progress.addView(modes,lp(-1,54,0,0,0,0));root.addView(progress,lp(-1,-2,0,0,0,4));
 
         LinearLayout weekly=settingsGroup("НЕДЕЛЬНАЯ ЦЕЛЬ");weekly.setTag("study");addText(weekly,"Сколько минут учёбы ты хочешь набрать за неделю?",12,MUTED,false);EditText weeklyInput=new EditText(this);weeklyInput.setSingleLine(true);weeklyInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);weeklyInput.setText(String.valueOf(prefs.getInt("weekly_goal_minutes",300)));weeklyInput.setHint("Например, 300");weeklyInput.setTextColor(DARK);weeklyInput.setBackground(shape(0xFFFFF9F7,14,0xFFEADDE2));weekly.addView(weeklyInput,lp(-1,48,0,6,0,7));Button saveWeekly=button("Сохранить цель недели",true);saveWeekly.setOnClickListener(v->{try{int value=Integer.parseInt(weeklyInput.getText().toString().trim());if(value<30||value>10080)throw new Exception();prefs.edit().putInt("weekly_goal_minutes",value).apply();showAppMessage("Недельная цель обновлена ♡");}catch(Exception e){weeklyInput.setError("Укажи от 30 до 10080 минут");}});weekly.addView(saveWeekly,lp(-1,43,0,0,0,0));root.addView(weekly,lp(-1,-2,0,0,0,4));
-        LinearLayout testOptions=settingsGroup("НАСТРОЙКИ ТЕСТОВ");testOptions.setTag("study");addSettingsToggle(testOptions,"Показывать правильный ответ сразу","show_correct_immediately",true,null);addText(testOptions,"Если выключить, все правильные ответы и объяснения появятся в конце теста.",11,MUTED,false);root.addView(testOptions,lp(-1,-2,0,0,0,4));
+        LinearLayout testOptions=settingsGroup("НАСТРОЙКИ ТЕСТОВ");testOptions.setTag("study");addSettingsToggle(testOptions,"Показывать правильный ответ сразу","show_correct_immediately",true,null);addText(testOptions,"Если выключить, все правильные ответы и объяснения появятся в конце теста.",11,MUTED,false);int reviewDays=prefs.getInt("weakness_review_interval_days",1);int[] reviewIntervals={1,3,7,14};int reviewIdx=0;for(int ri=0;ri<reviewIntervals.length;ri++)if(reviewIntervals[ri]==reviewDays)reviewIdx=ri;final int[] reviewSelected={reviewIdx};String[] reviewLabels={"1 день","3 дня","7 дней","14 дней"};Button reviewInterval=button("Интервал повторения ошибок · "+reviewLabels[reviewIdx],false);reviewInterval.setOnClickListener(v->{reviewSelected[0]=(reviewSelected[0]+1)%reviewIntervals.length;prefs.edit().putInt("weakness_review_interval_days",reviewIntervals[reviewSelected[0]]).apply();reviewInterval.setText("Интервал повторения ошибок · "+reviewLabels[reviewSelected[0]]);});testOptions.addView(reviewInterval,lp(-1,44,0,4,0,0));root.addView(testOptions,lp(-1,-2,0,0,0,4));
 
         LinearLayout reminders=settingsGroup("НАПОМИНАНИЯ");
         reminders.setTag("notifications_sound");
@@ -1610,13 +1612,13 @@ public class MainActivity extends Activity {
     private void startWeaknessTraining(){
         miniTopic="Мои слабые места";miniQuestions.clear();miniWrongQuestions.clear();miniDeferredFeedback.setLength(0);miniScore=0;weaknessTrainingMode=true;miniResultSaved=false;
         mistakeStore().migrateLegacy(prefs);
-        for(String payload:mistakeStore().newestPayloads(10)){try{org.json.JSONObject o=new org.json.JSONObject(payload);org.json.JSONArray a=o.optJSONArray("options");String[] opts=null;int correct=-1;if(a!=null){opts=new String[a.length()];for(int i=0;i<a.length();i++){opts[i]=a.getString(i);if(opts[i].equalsIgnoreCase(o.optString("answer")))correct=i;}}MiniQuestion restored=new MiniQuestion(o.optString("prompt"),opts,correct,o.optString("explanation"),o.optString("type","choice"),o.optString("answer"));restored.topic=o.optString("topic","");miniQuestions.add(restored);}catch(Exception ignored){}}
-        if(miniQuestions.isEmpty()){showWeaknessTrainer();return;}renderMiniTest(0,false);
+        long nextDue=Long.MAX_VALUE;for(String payload:mistakeStore().newestPayloads(10)){try{org.json.JSONObject o=new org.json.JSONObject(payload);long due=o.optLong("next_review_at",0L);if(due>System.currentTimeMillis()){nextDue=Math.min(nextDue,due);continue;}org.json.JSONArray a=o.optJSONArray("options");String[] opts=null;int correct=-1;if(a!=null){opts=new String[a.length()];for(int i=0;i<a.length();i++){opts[i]=a.getString(i);if(opts[i].equalsIgnoreCase(o.optString("answer")))correct=i;}}MiniQuestion restored=new MiniQuestion(o.optString("prompt"),opts,correct,o.optString("explanation"),o.optString("type","choice"),o.optString("answer"));restored.topic=o.optString("topic","");miniQuestions.add(restored);}catch(Exception ignored){}}
+        if(miniQuestions.isEmpty()){showWeaknessTrainer();if(nextDue!=Long.MAX_VALUE)showAppMessage("Следующее повторение запланировано на "+new SimpleDateFormat("dd.MM.yyyy",Locale.getDefault()).format(new Date(nextDue)));return;}renderMiniTest(0,false);
     }
     private String classifyMistake(MiniQuestion q,String userAnswer){String t=(q.topic+" "+q.prompt).toLowerCase(new Locale("ru"));if(t.contains("сокращ"))return "Сокращение";if(t.contains("знаменател"))return "Общий знаменатель";if(t.contains("округлен")||t.contains("десятич")||t.contains("запят"))return "Запятая или разряд";if(t.contains("вычит")||q.prompt.contains("−")||q.prompt.contains(" - "))return "Знак действия";if(t.contains("делен"))return "Деление";return "Вычисление";}
     private void recordMistake(MiniQuestion q,String userAnswer){
         try{
-            org.json.JSONObject o=new org.json.JSONObject();o.put("topic",q.topic==null||q.topic.isEmpty()?miniTopic:q.topic);o.put("kind",classifyMistake(q,userAnswer));o.put("type",q.type);o.put("prompt",q.prompt);o.put("answer",q.answer);o.put("user_answer",userAnswer);o.put("explanation",q.explanation);
+            org.json.JSONObject o=new org.json.JSONObject();o.put("topic",q.topic==null||q.topic.isEmpty()?miniTopic:q.topic);o.put("next_review_at",System.currentTimeMillis()+Math.max(1,prefs.getInt("weakness_review_interval_days",1))*86400000L);o.put("kind",classifyMistake(q,userAnswer));o.put("type",q.type);o.put("prompt",q.prompt);o.put("answer",q.answer);o.put("user_answer",userAnswer);o.put("explanation",q.explanation);
             org.json.JSONArray a=new org.json.JSONArray();if(q.options!=null)for(String option:q.options)a.put(option);o.put("options",a);
             String topic=q.topic==null||q.topic.isEmpty()?miniTopic:q.topic;mistakeStore().migrateLegacy(prefs);mistakeStore().save(topic,q.prompt,o.toString());
         }catch(Exception ignored){}
@@ -2004,7 +2006,7 @@ public class MainActivity extends Activity {
     private void showMessage() {
         currentScreen = "message";
         base("Послание для тебя 💌", "Маленькое напоминание с любовью:");
-        TextView message = text(messages[new Random().nextInt(messages.length)], 22, PINK, true);
+        String messageText=messages[new Random().nextInt(messages.length)];if(!prefs.getBoolean("mascot_enabled",true))messageText=messageText.replaceAll("[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]","");TextView message = text(messageText, 22, PINK, true);
         message.setGravity(Gravity.CENTER); message.setPadding(dp(12), dp(26), dp(12), dp(26));
         LinearLayout messageCard = card(); messageCard.setGravity(Gravity.CENTER); messageCard.addView(message, lp(-1, -2, 0, 0, 0, 0));
         root.addView(messageCard, lp(-1, -2, 0, 8, 0, 14));
