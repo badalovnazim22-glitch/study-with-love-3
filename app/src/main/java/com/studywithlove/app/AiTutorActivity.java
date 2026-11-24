@@ -48,6 +48,7 @@ public class AiTutorActivity extends Activity {
     private String language = "ru";
     private String studyContext = "";
     private String offlineFallback = "";
+    private boolean freshStudyContext = false;
     private final Handler main = new Handler(Looper.getMainLooper());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final List<JSONObject> history = new ArrayList<>();
@@ -73,6 +74,7 @@ public class AiTutorActivity extends Activity {
             loadAppearance();
             studyContext = getIntent().getStringExtra("study_context");
             if (studyContext == null) studyContext = "";
+            freshStudyContext = !studyContext.trim().isEmpty();
             offlineFallback = getIntent().getStringExtra("offline_fallback");
             if (offlineFallback == null) offlineFallback = "";
             getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
