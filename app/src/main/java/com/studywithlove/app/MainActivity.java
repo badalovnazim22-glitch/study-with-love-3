@@ -1824,9 +1824,9 @@ public class MainActivity extends Activity {
         LinearLayout wrap=new LinearLayout(this);wrap.setGravity(Gravity.CENTER);wrap.setPadding(0,dp(14),0,dp(18));
         timerDisplay=text(formatTimer(timerRemainingMs>0?timerRemainingMs:selectedStudyMinutes*60000L),42,DARK,true);timerDisplay.setGravity(Gravity.CENTER);
         GradientDrawable face=new GradientDrawable();face.setShape(GradientDrawable.OVAL);face.setColor(PALE);face.setStroke(dp(5),PINK);timerDisplay.setBackground(face);timerDisplay.setElevation(dp(5));
-        wrap.addView(timerDisplay,lp(208,208,0,0,0,0));root.addView(wrap,lp(-1,246,0,0,0,8));
-        timerStatus=text(timerIsBreak?"🌷  Время отдохнуть":"♡  Время для учёбы",15,PINK,true);timerStatus.setGravity(Gravity.CENTER);root.addView(timerStatus,lp(-1,32,0,0,0,12));
-        TextView timerPlant=text(timerRunning?"🌱  Твой цветок растёт вместе с фокусом":"🌷  Начни занятие — и цветок начнёт расти",14,PINK,true);timerPlant.setGravity(Gravity.CENTER);root.addView(timerPlant,lp(-1,34,0,0,0,8));
+        wrap.addView(timerDisplay,lp(208,208,0,0,0,0));root.addView(wrap,lp(-1,232,0,0,0,4));
+        timerStatus=text(timerIsBreak?"🌷  Время отдохнуть":"♡  Время для учёбы",15,PINK,true);timerStatus.setGravity(Gravity.CENTER);root.addView(timerStatus,lp(-1,30,0,0,0,4));
+        TextView timerPlant=text(timerRunning?"🌱  Твой цветок растёт вместе с фокусом":"🌷  Начни занятие — и цветок начнёт расти",14,PINK,true);timerPlant.setGravity(Gravity.CENTER);root.addView(timerPlant,lp(-1,32,0,0,0,6));
         LinearLayout settings=card();addText(settings,"ВРЕМЯ УЧЁБЫ",11,PINK,true);
         LinearLayout study=new LinearLayout(this);study.setGravity(Gravity.CENTER);Button minus=button("−",false),plus=button("+",false);minus.setContentDescription(translate("Уменьшить время учёбы"));plus.setContentDescription(translate("Увеличить время учёбы"));
         study.addView(minus,lp(48,48,3,0,6,0));studyTimeValue=text(selectedStudyMinutes+" минут",16,DARK,true);studyTimeValue.setGravity(Gravity.CENTER);study.addView(studyTimeValue,new LinearLayout.LayoutParams(0,dp(48),1f));study.addView(plus,lp(48,48,6,0,3,0));settings.addView(study,lp(-1,48,0,3,0,10));
