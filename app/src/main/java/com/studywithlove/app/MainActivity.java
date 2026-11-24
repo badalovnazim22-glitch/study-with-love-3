@@ -2019,6 +2019,26 @@ public class MainActivity extends Activity {
         try {SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd",Locale.US);f.setLenient(false);f.setTimeZone(AppTime.zone());Date target=f.parse(isoDate);Calendar a=Calendar.getInstance(AppTime.zone());a.set(Calendar.HOUR_OF_DAY,0);a.set(Calendar.MINUTE,0);a.set(Calendar.SECOND,0);a.set(Calendar.MILLISECOND,0);Calendar b=Calendar.getInstance(AppTime.zone());b.setTime(target);b.set(Calendar.HOUR_OF_DAY,0);b.set(Calendar.MINUTE,0);b.set(Calendar.SECOND,0);b.set(Calendar.MILLISECOND,0);return (b.getTimeInMillis()-a.getTimeInMillis())/86400000L;}catch(Exception e){return -1;}
     }
 
+    // Supports legacy timestamp IDs and semantic IDs such as quote-2026-11-24.
+    private long diaryTimestamp(String id) {
+        if (id == null) return 0L;
+        try {
+            return Long.parseLong(id);
+        } catch (NumberFormatException ignored) {
+            try {
+                java.util.regex.Matcher matcher = java.util.regex.Pattern
+                        .compile("(\\d{4}-\\d{2}-\\d{2})").matcher(id);
+                if (!matcher.find()) return 0L;
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                format.setLenient(false);
+                Date parsed = format.parse(matcher.group(1));
+                return parsed == null ? 0L : parsed.getTime();
+            } catch (Exception invalidDate) {
+                return 0L;
+            }
+        }
+    }
+
     private void showDiary() {
         currentScreen="diary";
         base("Дневник успехов ♡","Сохраняй моменты, которыми ты гордишься");
@@ -2062,7 +2082,7 @@ public class MainActivity extends Activity {
             String q=queryValue[0].trim().toLowerCase(new Locale("ru"));
             Set<String> ids=new TreeSet<>(prefs.getStringSet("diary_ids",new TreeSet<String>()));List<String> sorted=new ArrayList<>(ids);java.util.Collections.sort(sorted,java.util.Collections.reverseOrder());
             List<String> matches=new ArrayList<>();
-            for(String id:sorted){String value=prefs.getString("diary_"+id,"");if(value.isEmpty())continue;String tag=prefs.getString("diary_tag_"+id,"Учёба");String date=new SimpleDateFormat("d MMMM yyyy · HH:mm",new Locale("ru")).format(new Date(Long.parseLong(id)));String iso=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(new Date(Long.parseLong(id)));if(!activeFilter[0].equals("Все")&&!activeFilter[0].equals(tag))continue;if(!q.isEmpty()&&!value.toLowerCase(new Locale("ru")).contains(q)&&!date.toLowerCase(new Locale("ru")).contains(q)&&!iso.contains(q))continue;matches.add(id);}
+            for(String id:sorted){String value=prefs.getString("diary_"+id,"");if(value.isEmpty())continue;String tag=prefs.getString("diary_tag_"+id,"Учёба");String date=new SimpleDateFormat("d MMMM yyyy · HH:mm",new Locale("ru")).format(new Date(diaryTimestamp(id)));String iso=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(new Date(diaryTimestamp(id)));if(!activeFilter[0].equals("Все")&&!activeFilter[0].equals(tag))continue;if(!q.isEmpty()&&!value.toLowerCase(new Locale("ru")).contains(q)&&!date.toLowerCase(new Locale("ru")).contains(q)&&!iso.contains(q))continue;matches.add(id);}
             boolean filtering=!q.isEmpty()||!activeFilter[0].equals("Все");
             counter.setText(filtering?"Найдено: "+matches.size():"Всего: "+ids.size());
             if(filtering){TextView reset=text("Сбросить",12,PINK,true);reset.setGravity(Gravity.CENTER);reset.setPadding(dp(8),0,0,0);heading.addView(reset,lp(-2,48,5,0,0,0));reset.setOnClickListener(v->{queryValue[0]="";search.setText("");activeFilter[0]="Все";render[0].run();});}
@@ -2073,7 +2093,7 @@ public class MainActivity extends Activity {
             }
             String currentMonth="";
             Set<String> collapsed=new TreeSet<>(prefs.getStringSet("diary_collapsed_months",new TreeSet<String>()));
-            for(String id:matches){long stamp=Long.parseLong(id);Calendar cal=Calendar.getInstance();cal.setTimeInMillis(stamp);String monthKey=new SimpleDateFormat("yyyy-MM",Locale.US).format(new Date(stamp));
+            for(String id:matches){long stamp=diaryTimestamp(id);Calendar cal=Calendar.getInstance();cal.setTimeInMillis(stamp);String monthKey=new SimpleDateFormat("yyyy-MM",Locale.US).format(new Date(stamp));
                 if(!monthKey.equals(currentMonth)){currentMonth=monthKey;String monthTitle=new SimpleDateFormat("LLLL yyyy",new Locale("ru")).format(new Date(stamp));monthTitle=monthTitle.substring(0,1).toUpperCase(new Locale("ru"))+monthTitle.substring(1);LinearLayout monthHead=new LinearLayout(this);monthHead.setGravity(Gravity.CENTER_VERTICAL);TextView month=text(monthTitle,12,PINK,true);monthHead.addView(month,new LinearLayout.LayoutParams(0,dp(36),1f));TextView arrow=text(collapsed.contains(monthKey)?"＋":"−",17,MUTED,true);arrow.setGravity(Gravity.CENTER);monthHead.addView(arrow,lp(48,48,0,0,0,0));entries.addView(monthHead,lp(-1,38,0,5,0,2));monthHead.setOnClickListener(v->{Set<String> state=new TreeSet<>(prefs.getStringSet("diary_collapsed_months",new TreeSet<String>()));if(state.contains(monthKey))state.remove(monthKey);else state.add(monthKey);prefs.edit().putStringSet("diary_collapsed_months",state).apply();render[0].run();});}
                 if(collapsed.contains(monthKey))continue;
                 String value=prefs.getString("diary_"+id,""),tag=prefs.getString("diary_tag_"+id,"Учёба");
@@ -2140,7 +2160,7 @@ public class MainActivity extends Activity {
         for(String id:sorted){String value=prefs.getString("diary_"+id,"");if(value.isEmpty())continue;
             LinearLayout entry=new LinearLayout(this);entry.setOrientation(LinearLayout.VERTICAL);entry.setPadding(dp(2),dp(9),dp(2),dp(12));
             LinearLayout top=new LinearLayout(this);top.setGravity(Gravity.CENTER_VERTICAL);
-            TextView date=text("✿  "+new SimpleDateFormat("d MMMM yyyy · HH:mm",new Locale("ru")).format(new Date(Long.parseLong(id))),11,PINK,true);top.addView(date,new LinearLayout.LayoutParams(0,dp(34),1f));
+            TextView date=text("✿  "+new SimpleDateFormat("d MMMM yyyy · HH:mm",new Locale("ru")).format(new Date(diaryTimestamp(id))),11,PINK,true);top.addView(date,new LinearLayout.LayoutParams(0,dp(34),1f));
             TextView edit=text("✎",21,MUTED,true);edit.setGravity(Gravity.CENTER);edit.setContentDescription("Редактировать запись");top.addView(edit,lp(48,48,0,0,2,0));
             TextView del=text("⌫",20,MUTED,true);del.setGravity(Gravity.CENTER);del.setContentDescription("Удалить запись");top.addView(del,lp(48,48,0,0,0,0));
             entry.addView(top,lp(-1,36,0,0,0,3));
