@@ -697,6 +697,7 @@ public class MainActivity extends Activity {
         addSettingsToggle(appearanceExtras,"Автоматическая тёмная тема по расписанию","scheduled_dark_enabled",false,()->{applySavedTheme();updateSystemBarIcons();showSettings();});
         Button darkStart=button("Начало ночной темы · "+prefs.getString("scheduled_dark_start","21:00"),false),darkEnd=button("Конец ночной темы · "+prefs.getString("scheduled_dark_end","07:00"),false);darkStart.setOnClickListener(v->chooseClockPreference("scheduled_dark_start","Начало тёмной темы","21:00"));darkEnd.setOnClickListener(v->chooseClockPreference("scheduled_dark_end","Конец тёмной темы","07:00"));appearanceExtras.addView(darkStart,lp(-1,42,0,3,0,2));appearanceExtras.addView(darkEnd,lp(-1,42,0,2,0,5));
         addText(appearanceExtras,"СКРУГЛЕНИЕ УГЛОВ",11,PINK,true);LinearLayout corners=new LinearLayout(this);String corner=prefs.getString("corner_style","round");String[] cornerKeys={"sharp","normal","round"},cornerNames={"Острые","Обычные","Круглые"};for(int i=0;i<3;i++){final String key=cornerKeys[i];Button b=button(cornerNames[i],corner.equals(key));LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(42),1f);cp.setMargins(dp(2),dp(3),dp(2),dp(3));corners.addView(b,cp);b.setOnClickListener(v->{prefs.edit().putString("corner_style",key).apply();showSettings();});}appearanceExtras.addView(corners,lp(-1,46,0,2,0,7));
+        Button orderHome=button("↕  Изменить порядок блоков",false);orderHome.setOnClickListener(v->showHomeBlockOrderDialog());appearanceExtras.addView(orderHome,lp(-1,44,0,2,0,7));
         addText(appearanceExtras,"БЛОКИ ГЛАВНОГО ЭКРАНА",11,PINK,true);addSettingsToggle(appearanceExtras,"Настроение","home_show_mood",true,null);addSettingsToggle(appearanceExtras,"Статистика","home_show_stats",true,null);addSettingsToggle(appearanceExtras,"Недельная цель","home_show_weekly",true,null);addSettingsToggle(appearanceExtras,"Карточка ИИ","home_show_ai",true,null);addSettingsToggle(appearanceExtras,"Плитки эмоций","home_show_emotions",true,null);addSettingsToggle(appearanceExtras,"Напоминания","home_show_reminders",true,null);addText(appearanceExtras,"Изменения блоков применяются при следующем открытии главного экрана.",11,MUTED,false);root.addView(appearanceExtras,lp(-1,-2,0,0,0,4));
         LinearLayout appearanceActions=card();
         appearanceActions.setPadding(dp(12),dp(5),dp(12),dp(5));
@@ -729,6 +730,7 @@ public class MainActivity extends Activity {
         progress.addView(modes,lp(-1,54,0,0,0,0));root.addView(progress,lp(-1,-2,0,0,0,4));
 
         LinearLayout weekly=settingsGroup("НЕДЕЛЬНАЯ ЦЕЛЬ");weekly.setTag("study");addText(weekly,"Сколько минут учёбы ты хочешь набрать за неделю?",12,MUTED,false);EditText weeklyInput=new EditText(this);weeklyInput.setSingleLine(true);weeklyInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);weeklyInput.setText(String.valueOf(prefs.getInt("weekly_goal_minutes",300)));weeklyInput.setHint("Например, 300");weeklyInput.setTextColor(DARK);weeklyInput.setBackground(shape(0xFFFFF9F7,14,0xFFEADDE2));weekly.addView(weeklyInput,lp(-1,48,0,6,0,7));Button saveWeekly=button("Сохранить цель недели",true);saveWeekly.setOnClickListener(v->{try{int value=Integer.parseInt(weeklyInput.getText().toString().trim());if(value<30||value>10080)throw new Exception();prefs.edit().putInt("weekly_goal_minutes",value).apply();showAppMessage("Недельная цель обновлена ♡");}catch(Exception e){weeklyInput.setError("Укажи от 30 до 10080 минут");}});weekly.addView(saveWeekly,lp(-1,43,0,0,0,0));root.addView(weekly,lp(-1,-2,0,0,0,4));
+        LinearLayout testOptions=settingsGroup("НАСТРОЙКИ ТЕСТОВ");testOptions.setTag("study");addSettingsToggle(testOptions,"Показывать правильный ответ сразу","show_correct_immediately",true,null);addText(testOptions,"Если выключить, все правильные ответы и объяснения появятся в конце теста.",11,MUTED,false);root.addView(testOptions,lp(-1,-2,0,0,0,4));
 
         LinearLayout reminders=settingsGroup("НАПОМИНАНИЯ");
         reminders.setTag("notifications_sound");
@@ -1072,7 +1074,7 @@ public class MainActivity extends Activity {
         ritualTile(study2, "⌕", "Слабые места", "Работа над ошибками", this::showWeaknessTrainer);
         root.addView(study2, lp(-1, -2, 0, 0, 0, 13));
 
-        addText(root, "ЭМОЦИИ И МОТИВАЦИЯ", 11, PINK, true);
+        TextView emotionsTitle=text("ЭМОЦИИ И МОТИВАЦИЯ",11,PINK,true);emotionsTitle.setTag("home_emotions");root.addView(emotionsTitle,lp(-1,-2,0,0,0,0));
         LinearLayout feelings1 = new LinearLayout(this);
         feelings1.setOrientation(LinearLayout.HORIZONTAL);
         ritualTile(feelings1, "♡", "Дневник", "Маленькие победы", this::showDiary);
@@ -1112,10 +1114,18 @@ public class MainActivity extends Activity {
         TextView made = text("Сделано с любовью ♡", 12, MUTED, false);
         made.setGravity(Gravity.CENTER);
         root.addView(made, lp(-1, 43, 0, 8, 0, 0));
+        reorderHomeBlocks();
         applyHomeBlockVisibility();
         animateHomeCascade();
     }
 
+    private void reorderHomeBlocks(){
+        if(root==null)return;String[] defaults={"mood","stats","weekly","ai","emotions","reminders"};String saved=prefs.getString("home_block_order",String.join(",",defaults));List<String> order=new ArrayList<>();for(String key:saved.split(","))if(java.util.Arrays.asList(defaults).contains(key)&&!order.contains(key))order.add(key);for(String key:defaults)if(!order.contains(key))order.add(key);Map<String,List<View>> groups=new LinkedHashMap<>();for(String key:defaults)groups.put(key,new ArrayList<View>());int first=-1;for(int i=0;i<root.getChildCount();i++){Object tag=root.getChildAt(i).getTag();if(tag instanceof String&&((String)tag).startsWith("home_")){String key=((String)tag).substring(5);if(groups.containsKey(key)){if(first<0)first=i;groups.get(key).add(root.getChildAt(i));}}}if(first<0)return;for(List<View> group:groups.values())for(View v:group)root.removeView(v);int at=Math.min(first,root.getChildCount());for(String key:order)for(View v:groups.get(key))root.addView(v,at++);
+    }
+    private void showHomeBlockOrderDialog(){
+        final String[] keys={"mood","stats","weekly","ai","emotions","reminders"};final String[] names={"Настроение","Статистика","Недельная цель","Карточка ИИ","Плитки эмоций","Напоминания"};List<String> order=new ArrayList<>();for(String k:prefs.getString("home_block_order","mood,stats,weekly,ai,emotions,reminders").split(","))if(java.util.Arrays.asList(keys).contains(k)&&!order.contains(k))order.add(k);for(String k:keys)if(!order.contains(k))order.add(k);
+        LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(dp(12),dp(8),dp(12),dp(8));android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("Порядок главной страницы").setView(body).setNegativeButton("Закрыть",null).setPositiveButton("Сохранить",(d,w)->{prefs.edit().putString("home_block_order",android.text.TextUtils.join(",",order)).apply();showHome();}).create();Runnable[] render={null};render[0]=()->{body.removeAllViews();for(int i=0;i<order.size();i++){final int index=i;String key=order.get(i);int pos=java.util.Arrays.asList(keys).indexOf(key);LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);TextView label=text((i+1)+". "+names[pos],14,DARK,true);row.addView(label,new LinearLayout.LayoutParams(0,dp(44),1f));Button up=button("↑",false),down=button("↓",false);up.setEnabled(index>0);down.setEnabled(index<order.size()-1);row.addView(up,lp(42,40,2,0,2,0));row.addView(down,lp(42,40,2,0,0,0));up.setOnClickListener(v->{java.util.Collections.swap(order,index,index-1);render[0].run();});down.setOnClickListener(v->{java.util.Collections.swap(order,index,index+1);render[0].run();});body.addView(row,lp(-1,46,0,1,0,1));}};render[0].run();dialog.show();
+    }
     private void applyHomeBlockVisibility(){
         if(root==null)return;
         String[] keys={"home_mood","home_stats","home_weekly","home_ai","home_emotions","home_reminders"};
