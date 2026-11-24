@@ -20,6 +20,10 @@ public final class FocusTimerController {
         return prefs(context).getLong("timer_service_end_wall", 0L);
     }
 
+    public static long duration(Context context) { return prefs(context).getLong("timer_service_duration", 0L); }
+
+    public static boolean isBreak(Context context) { return prefs(context).getBoolean("timer_service_break", false); }
+
     public static long remaining(Context context) {
         return Math.max(0L, endTime(context) - System.currentTimeMillis());
     }
