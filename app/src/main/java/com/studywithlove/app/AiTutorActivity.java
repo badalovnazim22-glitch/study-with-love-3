@@ -444,6 +444,7 @@ public class AiTutorActivity extends Activity {
             state=new Bundle();
             state.putString("ai_chat_history",stored);
             state.putString("ai_study_context",savedPrefs.getString("saved_study_context",""));
+                offlineFallback=savedPrefs.getString("saved_offline_fallback","");
         }
         studyContext = state.getString("ai_study_context", studyContext);
         offlineFallback = state.getString("ai_offline_fallback", offlineFallback);
@@ -526,7 +527,7 @@ public class AiTutorActivity extends Activity {
         SharedPreferences p=getSharedPreferences(AI_PREFS,MODE_PRIVATE);
         if(!p.getBoolean("save_chat_history",false))return;
         JSONArray array=new JSONArray();for(JSONObject item:history)array.put(item);
-        p.edit().putString("saved_chat_history",array.toString()).putString("saved_study_context",studyContext==null?"":studyContext).apply();
+        p.edit().putString("saved_chat_history",array.toString()).putString("saved_study_context",studyContext==null?"":studyContext).putString("saved_offline_fallback",offlineFallback==null?"":offlineFallback).apply();
     }
 
     private TextView addBubble(String value, boolean user) {
@@ -580,7 +581,7 @@ public class AiTutorActivity extends Activity {
                 SharedPreferences settings=getSharedPreferences(AI_PREFS,MODE_PRIVATE);
                 boolean keep=saveHistory.isChecked();
                 SharedPreferences.Editor edit=settings.edit().putString(ENDPOINT_KEY,value).putBoolean("save_chat_history",keep);
-                if(!keep)edit.remove("saved_chat_history").remove("saved_study_context");
+                if(!keep)edit.remove("saved_chat_history").remove("saved_study_context").remove("saved_offline_fallback");
                 edit.apply();
                 if(keep)saveChatHistoryIfEnabled();
                 showStatusBanner(value.isEmpty() ? "Адрес не задан" : "Настройки ИИ сохранены");
