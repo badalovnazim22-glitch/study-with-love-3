@@ -1,6 +1,7 @@
 package com.studywithlove.app;
 
 import android.content.Intent;
+import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.service.quicksettings.Tile;
@@ -24,6 +25,7 @@ public class StudyTimerTileService extends TileService {
         }
         tile.updateTile();
     }
+    @SuppressLint("StartActivityAndCollapseDeprecated")
     @Override public void onClick(){
         super.onClick();
         try{
