@@ -18,7 +18,7 @@ public class FocusTimerService extends Service {
     @Override public void onCreate(){super.onCreate();nm=(NotificationManager)getSystemService(NOTIFICATION_SERVICE);if(Build.VERSION.SDK_INT>=26){nm.createNotificationChannel(new NotificationChannel(CHANNEL,"Таймер Study with Love",NotificationManager.IMPORTANCE_LOW));android.content.SharedPreferences p=getSharedPreferences(PREFS,MODE_PRIVATE);for(boolean vibrate:new boolean[]{true,false}){String finishId=FINISH_CHANNEL+(vibrate?"_v":"_silent");NotificationChannel finish=new NotificationChannel(finishId,"Окончание фокус-сессии",NotificationManager.IMPORTANCE_HIGH);finish.setSound(null,null);finish.enableVibration(vibrate);nm.createNotificationChannel(finish);}}}
     @Override public int onStartCommand(Intent intent,int flags,int startId){
         if(intent!=null&&ACTION_STOP.equals(intent.getAction())){if(!intent.getBooleanExtra("break",false))recordFocus(intent.getLongExtra("elapsed_ms",0),dateKey(System.currentTimeMillis()));clearSavedTimer();stopForeground(true);stopSelf();return START_NOT_STICKY;}
-        if(intent!=null&&ACTION_PAUSE.equals(intent.getAction())){if(!intent.getBooleanExtra("break",false))recordFocus(intent.getLongExtra("elapsed_ms",0),dateKey(System.currentTimeMillis()));clearSavedTimer();stopForeground(true);stopSelf();return START_NOT_STICKY;}
+        if(intent!=null&&ACTION_PAUSE.equals(intent.getAction())){if(!intent.getBooleanExtra("break",false)){long elapsed=Math.max(0,intent.getLongExtra("elapsed_ms",0));recordFocus(elapsed,dateKey(System.currentTimeMillis()));recordPause(elapsed);}clearSavedTimer();stopForeground(true);stopSelf();return START_NOT_STICKY;}
         if(intent==null){
             android.content.SharedPreferences p=getSharedPreferences("timer_runtime",MODE_PRIVATE);
             long wallEnd=p.getLong("timer_service_end_wall",0);
@@ -26,25 +26,27 @@ public class FocusTimerService extends Service {
             currentBreak=p.getBoolean("timer_service_break",false);
             segmentDuration=p.getLong("timer_service_duration",60000);
             long remaining=wallEnd-System.currentTimeMillis();
-            endAt=SystemClock.elapsedRealtime()+Math.max(0,remaining);
+            endAt=wallEnd;
         }else{
+            android.content.SharedPreferences runtime=getSharedPreferences("timer_runtime",MODE_PRIVATE);
+            long existingEnd=runtime.getLong("timer_service_end_wall",0L);
+            if(ACTION_START.equals(intent.getAction())&&existingEnd>System.currentTimeMillis())return START_STICKY;
             segmentDuration=Math.max(1000,intent.getLongExtra("duration_ms",60000));
             currentBreak=intent.getBooleanExtra("break",false);
-            endAt=SystemClock.elapsedRealtime()+segmentDuration;
-            getSharedPreferences("timer_runtime",MODE_PRIVATE).edit()
-                    .putLong("timer_service_end_wall",System.currentTimeMillis()+segmentDuration)
+            endAt=System.currentTimeMillis()+segmentDuration;
+            runtime.edit().putLong("timer_service_end_wall",endAt)
                     .putLong("timer_service_duration",segmentDuration)
                     .putBoolean("timer_service_break",currentBreak).apply();
         }
-        startForeground(920,build("Таймер работает","Осталось "+format(Math.max(0,endAt-SystemClock.elapsedRealtime())),false));
+        startForeground(920,build("Таймер работает","Осталось "+format(Math.max(0,endAt-System.currentTimeMillis())),false));
         if(tick!=null)handler.removeCallbacks(tick);
-        tick=new Runnable(){public void run(){long left=endAt-SystemClock.elapsedRealtime();if(left<=0){finish(currentBreak);return;}nm.notify(920,build("Таймер работает","Осталось "+format(left),false));handler.postDelayed(this,1000);}};
-        if(endAt<=SystemClock.elapsedRealtime())finish(currentBreak);else handler.post(tick);
+        tick=new Runnable(){public void run(){long left=endAt-System.currentTimeMillis();if(left<=0){finish(currentBreak);return;}nm.notify(920,build("Таймер работает","Осталось "+format(left),false));handler.postDelayed(this,1000);}};
+        if(endAt<=System.currentTimeMillis())finish(currentBreak);else handler.post(tick);
         return START_STICKY;
     }
     private void finish(boolean rest){
         handler.removeCallbacks(tick);
-        if(!rest){long finishWall=getSharedPreferences("timer_runtime",MODE_PRIVATE).getLong("timer_service_end_wall",System.currentTimeMillis());String finishDate=dateKey(finishWall);recordFocus(segmentDuration,finishDate);recordStudyDay(finishDate);android.content.SharedPreferences.Editor reward=getSharedPreferences(PREFS,MODE_PRIVATE).edit();reward.putInt("postcard_focus_count",getSharedPreferences(PREFS,MODE_PRIVATE).getInt("postcard_focus_count",0)+1).putInt("flower_petals",getSharedPreferences(PREFS,MODE_PRIVATE).getInt("flower_petals",0)+1).apply();StudyWidgetProvider.updateAll(this);if(!MainActivity.activityVisible)getSharedPreferences(PREFS,MODE_PRIVATE).edit().putBoolean("diary_prefill_timer_win",true).putBoolean("timer_finish_prompt_pending",true).apply();}
+        if(!rest){long finishWall=getSharedPreferences("timer_runtime",MODE_PRIVATE).getLong("timer_service_end_wall",System.currentTimeMillis());String finishDate=dateKey(finishWall);recordFocus(segmentDuration,finishDate);recordStudyDay(finishDate);android.content.SharedPreferences stats=getSharedPreferences(PREFS,MODE_PRIVATE);stats.edit().putInt("pomodoro_completed_sessions_"+finishDate,stats.getInt("pomodoro_completed_sessions_"+finishDate,0)+1).putInt("pomodoro_completed_total",stats.getInt("pomodoro_completed_total",0)+1).putInt("pomodoro_cycle_count",(stats.getInt("pomodoro_cycle_count",0)+1)%4).apply();android.content.SharedPreferences.Editor reward=getSharedPreferences(PREFS,MODE_PRIVATE).edit();reward.putInt("postcard_focus_count",getSharedPreferences(PREFS,MODE_PRIVATE).getInt("postcard_focus_count",0)+1).putInt("flower_petals",getSharedPreferences(PREFS,MODE_PRIVATE).getInt("flower_petals",0)+1).apply();StudyWidgetProvider.updateAll(this);if(!MainActivity.activityVisible)getSharedPreferences(PREFS,MODE_PRIVATE).edit().putBoolean("diary_prefill_timer_win",true).putBoolean("timer_finish_prompt_pending",true).apply();}
         clearSavedTimer();
         android.content.SharedPreferences settings=getSharedPreferences(PREFS,MODE_PRIVATE);if(settings.getBoolean("haptics_enabled",true)&&!MainActivity.activityVisible){try{android.os.Vibrator vibrator=(android.os.Vibrator)getSystemService(VIBRATOR_SERVICE);if(Build.VERSION.SDK_INT>=26)vibrator.vibrate(VibrationEffect.createWaveform(new long[]{0,350,180,550},-1));else vibrator.vibrate(new long[]{0,350,180,550},-1);}catch(Exception ignored){}}
         Uri sound=null;
@@ -54,9 +56,10 @@ public class FocusTimerService extends Service {
           .setAutoCancel(true).setVibrate(settings.getBoolean("haptics_enabled",true)?new long[]{0,350,180,550}:new long[]{0})
           .setContentIntent(PendingIntent.getActivity(this,921,new Intent(this,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE));
         if(settings.getBoolean("timer_notification_enabled",true)&&!MainActivity.activityVisible)nm.notify(921,b.build());
-        if(settings.getBoolean("timer_sound_enabled",true)&&!MainActivity.activityVisible){try{android.media.ToneGenerator tone=new android.media.ToneGenerator(android.media.AudioManager.STREAM_ALARM,settings.getInt("completion_sound_volume",55));tone.startTone(android.media.ToneGenerator.TONE_PROP_BEEP,650);new Handler(Looper.getMainLooper()).postDelayed(tone::release,850);}catch(Exception ignored){}}
+        if(settings.getBoolean("timer_sound_enabled",true)&&!MainActivity.activityVisible){LocalSoundPlayer.play(this,!rest,settings.getInt("completion_sound_volume",55));}
         stopForeground(true);stopSelf();
     }
+    private void recordPause(long elapsed){try{String date=dateKey(System.currentTimeMillis());android.content.SharedPreferences p=getSharedPreferences(PREFS,MODE_PRIVATE);p.edit().putInt("pomodoro_pause_count_"+date,p.getInt("pomodoro_pause_count_"+date,0)+1).putLong("pomodoro_pause_total_ms_"+date,p.getLong("pomodoro_pause_total_ms_"+date,0L)+elapsed).apply();}catch(Exception ignored){}}
     private void clearSavedTimer(){getSharedPreferences("timer_runtime",MODE_PRIVATE).edit().remove("timer_service_end_wall").remove("timer_service_duration").remove("timer_service_break").apply();}
     private String dateKey(long wall){java.text.SimpleDateFormat fmt=new java.text.SimpleDateFormat("yyyy-MM-dd",java.util.Locale.US);fmt.setTimeZone(AppTime.zone());return fmt.format(new java.util.Date(wall));}
     private void recordFocus(long ms,String date){try{android.content.SharedPreferences p=getSharedPreferences(PREFS,MODE_PRIVATE);long total=p.getLong("focus_remainder_ms_"+date,0)+Math.max(0,ms);int add=(int)(total/60000L);p.edit().putLong("focus_remainder_ms_"+date,total%60000L).putInt("focus_minutes_"+date,p.getInt("focus_minutes_"+date,0)+add).putInt("focus_total_minutes",p.getInt("focus_total_minutes",0)+add).apply();StudyWidgetProvider.updateAll(this);}catch(Exception ignored){}}
