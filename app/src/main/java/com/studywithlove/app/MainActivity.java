@@ -133,6 +133,7 @@ public class MainActivity extends Activity {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(0, this::handleBackNavigation);
         }
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+        if(prefs.getBoolean("hide_recent_preview",false))getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);
         applySavedTheme();
         getWindow().getDecorView().setBackgroundColor(BG);
         getWindow().setStatusBarColor(BG);
@@ -1715,6 +1716,7 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void playTimerFinishSound(){if(prefs==null||!prefs.getBoolean("timer_sound_enabled",true))return;try{android.media.ToneGenerator tone=new android.media.ToneGenerator(android.media.AudioManager.STREAM_ALARM,prefs.getInt("completion_sound_volume",55));tone.startTone(android.media.ToneGenerator.TONE_PROP_BEEP,650);new Handler(Looper.getMainLooper()).postDelayed(tone::release,850);}catch(Exception ignored){}}
     private void playTopicCompleteSound(){if(prefs==null||!prefs.getBoolean("topic_sound_enabled",true))return;try{android.media.ToneGenerator tone=new android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION,prefs.getInt("completion_sound_volume",55));tone.startTone(android.media.ToneGenerator.TONE_PROP_ACK,160);new Handler(Looper.getMainLooper()).postDelayed(tone::release,260);}catch(Exception ignored){}}
 
     private void showPraise() {
@@ -1965,6 +1967,7 @@ public class MainActivity extends Activity {
 
     private void finishTimerPhase() {
         boolean focusFinished=!timerIsBreak;
+        playTimerFinishSound();
         timerHandler.removeCallbacks(timerTick); timerRunning = false; cancelTimerFinishAlarm(); getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;} timerRemainingMs = 0;
         if (!timerIsBreak) { timerIsBreak = true; timerRemainingMs = selectedBreakMinutes * 60000L; showAppMessage(g("Ты большая умничка! Время отдохнуть 🌸","Ты большой молодец! Время отдохнуть 🌸")); }
         else { timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; showAppMessage(g("Перерыв окончен. Ты готова продолжать! 💗","Перерыв окончен. Ты готов продолжать! 💗")); }
