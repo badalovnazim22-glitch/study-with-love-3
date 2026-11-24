@@ -13,6 +13,7 @@ public class BootReceiver extends BroadcastReceiver {
         MainActivity.scheduleReminders(context);
         MainActivity.rescheduleFutureLetterReminders(context);
         WeeklyReportReceiver.schedule(context);
+        WeeklyBackupReceiver.schedule(context);
         StudyWidgetProvider.updateAll(context);
 
         SharedPreferences legacy = context.getSharedPreferences("study_progress", Context.MODE_PRIVATE);
