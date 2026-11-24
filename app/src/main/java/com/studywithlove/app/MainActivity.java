@@ -169,7 +169,8 @@ public class MainActivity extends Activity {
         }catch(Exception ignored){}
     }
     private void handleQuickAction(Intent intent){
-        if(intent==null)return;String action=intent.getAction();if("com.studywithlove.app.SHORTCUT_FOCUS".equals(action)){intent.setAction(null);showPomodoro();timerIsBreak=false;selectedStudyMinutes=25;timerRemainingMs=25*60000L;updateTimerDisplay();startTimer();}
+        if(intent==null)return;String action=intent.getAction();if("com.studywithlove.app.SHORTCUT_FOCUS".equals(action)){intent.setAction(null);showPomodoro();timerIsBreak=false;selectedStudyMinutes=Math.max(1,prefs.getInt("selected_study_minutes",25));timerRemainingMs=selectedStudyMinutes*60000L;updateTimerDisplay();startTimer();}
+        else if(intent.getBooleanExtra("open_pomodoro_from_tile",false)){intent.removeExtra("open_pomodoro_from_tile");showPomodoro();if(timerRunning)updateTimerDisplay();}
         else if("com.studywithlove.app.SHORTCUT_LETTER".equals(action)){intent.setAction(null);showFutureLetters();}
         else if("com.studywithlove.app.SHORTCUT_DIARY".equals(action)){intent.setAction(null);showDiary();}
     }
