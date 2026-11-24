@@ -135,6 +135,7 @@ public class MainActivity extends Activity {
         }
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
         selectedStudyMinutes=Math.max(1,Math.min(600,prefs.getInt("selected_study_minutes",25)));
+        selectedBreakMinutes=Math.max(1,Math.min(30,prefs.getInt("selected_break_minutes",5)));
         int openedReminder=getIntent()==null?-1:getIntent().getIntExtra("opened_reminder_id",-1);if(openedReminder>0)prefs.edit().putLong("reminder_opened_at_"+openedReminder,System.currentTimeMillis()).apply();
         if(prefs.getBoolean("hide_recent_preview",false))getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);
         applySavedTheme();
@@ -756,7 +757,7 @@ public class MainActivity extends Activity {
         LinearLayout focus=settingsGroup("РЕЖИМ ФОКУСА");
         focus.setTag("notifications_sound");
         addText(focus,"Временно отключает учебные напоминания.",12,MUTED,false);CheckBox focusToggle=new CheckBox(this);focusToggle.setText("Не отвлекать");focusToggle.setTextColor(DARK);focusToggle.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));focusToggle.setChecked(prefs.getBoolean("do_not_disturb",false));focus.addView(focusToggle,lp(-1, 48,0,0,0,0));focusToggle.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("do_not_disturb",on).apply();scheduleReminders(this);});root.addView(focus,lp(-1,-2,0,0,0,4));
-        LinearLayout feedbackSettings=settingsGroup("ЗВУК И ОТКЛИК");feedbackSettings.setTag("notifications_sound");addSettingsToggle(feedbackSettings,"Вибрация при действиях","haptics_enabled",true,null);addSettingsToggle(feedbackSettings,"Звук завершения темы","topic_sound_enabled",true,null);addSettingsToggle(feedbackSettings,"Звук окончания таймера","timer_sound_enabled",true,null);addSettingsToggle(feedbackSettings,"Уведомление об окончании таймера","timer_notification_enabled",true,null);addSettingsToggle(feedbackSettings,"Конфетти и праздничные эффекты","celebrations_enabled",true,null);
+        LinearLayout feedbackSettings=settingsGroup("ЗВУК И ОТКЛИК");feedbackSettings.setTag("notifications_sound");addSettingsToggle(feedbackSettings,"Вибрация при действиях","haptics_enabled",true,null);addSettingsToggle(feedbackSettings,"Звук завершения темы","topic_sound_enabled",true,null);addSettingsToggle(feedbackSettings,"Звук окончания Pomodoro","timer_sound_enabled",true,null);addSettingsToggle(feedbackSettings,"Звук правильного ответа","correct_answer_sound_enabled",true,null);addSettingsToggle(feedbackSettings,"Уведомление об окончании таймера","timer_notification_enabled",true,null);addSettingsToggle(feedbackSettings,"Конфетти и праздничные эффекты","celebrations_enabled",true,null);
         addText(feedbackSettings,"ГРОМКОСТЬ СИГНАЛОВ",11,PINK,true);android.widget.SeekBar soundVolume=new android.widget.SeekBar(this);soundVolume.setMax(100);soundVolume.setProgress(prefs.getInt("completion_sound_volume",55));if(Build.VERSION.SDK_INT>=21)soundVolume.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));feedbackSettings.addView(soundVolume,lp(-1,38,0,0,0,5));soundVolume.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener(){public void onProgressChanged(android.widget.SeekBar b,int value,boolean user){if(user)prefs.edit().putInt("completion_sound_volume",value).apply();}public void onStartTrackingTouch(android.widget.SeekBar b){}public void onStopTrackingTouch(android.widget.SeekBar b){}});
         addSettingsToggle(feedbackSettings,"Автовключение выбранной атмосферы при открытии","ambience_autostart",false,null);
         addText(feedbackSettings,"АВТООСТАНОВКА АТМОСФЕРЫ",11,PINK,true);int[] autoStops={0,15,30,60,120};String[] autoLabels={"Не останавливать","15 минут","30 минут","1 час","2 часа"};int currentStop=prefs.getInt("ambience_auto_stop",0),stopIndex=0;for(int i=0;i<autoStops.length;i++)if(autoStops[i]==currentStop)stopIndex=i;final int[] selectedStop={stopIndex};Button autoStop=button("Остановить через · "+autoLabels[stopIndex],false);autoStop.setOnClickListener(v->{selectedStop[0]=(selectedStop[0]+1)%autoStops.length;prefs.edit().putInt("ambience_auto_stop",autoStops[selectedStop[0]]).apply();autoStop.setText("Остановить через · "+autoLabels[selectedStop[0]]);});feedbackSettings.addView(autoStop,lp(-1,44,0,3,0,0));root.addView(feedbackSettings,lp(-1,-2,0,0,0,4));
@@ -1733,7 +1734,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void playTimerFinishSound(){if(prefs==null||!prefs.getBoolean("timer_sound_enabled",true))return;LocalSoundPlayer.play(this,true,prefs.getInt("completion_sound_volume",55));}
+    private void playTimerFinishSound(boolean focusFinished){if(prefs==null||!prefs.getBoolean("timer_sound_enabled",true))return;LocalSoundPlayer.play(this,focusFinished,prefs.getInt("completion_sound_volume",55));}
     private void playCorrectAnswerSound(){if(prefs!=null&&prefs.getBoolean("correct_answer_sound_enabled",true))LocalSoundPlayer.play(this,false,prefs.getInt("completion_sound_volume",55));}
     private void playTopicCompleteSound(){if(prefs==null||!prefs.getBoolean("topic_sound_enabled",true))return;try{android.media.ToneGenerator tone=new android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION,prefs.getInt("completion_sound_volume",55));tone.startTone(android.media.ToneGenerator.TONE_PROP_ACK,160);new Handler(Looper.getMainLooper()).postDelayed(tone::release,260);}catch(Exception ignored){}}
 
@@ -1905,7 +1906,22 @@ public class MainActivity extends Activity {
         timerDisplay=text(formatTimer(timerRemainingMs),52,fg,true);timerDisplay.setGravity(Gravity.CENTER);timerDisplay.setIncludeFontPadding(false);timerDisplay.setTypeface(android.graphics.Typeface.create("sans-serif",android.graphics.Typeface.BOLD));center.addView(timerDisplay,lp(-1,-2,0,0,0,dp(8)));
         TextView hint=text(timerRunning?"Ты в потоке":"Нажми, чтобы начать",13,muted,false);hint.setGravity(Gravity.CENTER);center.addView(hint,lp(-1,-2,0,0,0,0));
         dial.addView(center,new FrameLayout.LayoutParams(-1,-1));screen.addView(dial,new LinearLayout.LayoutParams(diameter,diameter));
-        timerStatus=text(timerIsBreak?"Отдых тоже часть успеха":"Один шаг за раз",14,muted,false);timerStatus.setGravity(Gravity.CENTER);timerStatus.setPadding(dp(12),dp(16),dp(12),dp(12));screen.addView(timerStatus,lp(-1,-2,0,0,0,dp(8)));
+        timerStatus=text(timerIsBreak?"Отдых тоже часть успеха":"Один шаг за раз",14,muted,false);timerStatus.setGravity(Gravity.CENTER);timerStatus.setPadding(dp(12),dp(16),dp(12),dp(12));screen.addView(timerStatus,lp(-1,-2,0,0,0,dp(4)));
+        TextView presetsTitle=text("ДЛИТЕЛЬНОСТЬ ФОКУСА",10,muted,true);presetsTitle.setGravity(Gravity.CENTER);screen.addView(presetsTitle,lp(-1,-2,0,dp(3),0,dp(3)));
+        LinearLayout focusPresets=new LinearLayout(this);focusPresets.setGravity(Gravity.CENTER);focusPresets.setOrientation(LinearLayout.HORIZONTAL);
+        for(int minutes:new int[]{15,25,30,45,60}){Button chip=button(minutes+"м",selectedStudyMinutes==minutes);chip.setTextSize(12);LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(38),1f);cp.setMargins(dp(2),0,dp(2),0);focusPresets.addView(chip,cp);chip.setOnClickListener(v->{if(timerRunning)return;selectedStudyMinutes=minutes;prefs.edit().putInt("selected_study_minutes",minutes).apply();if(!timerIsBreak)timerRemainingMs=minutes*60000L;showPomodoro();});}
+        screen.addView(focusPresets,lp(-1,dp(40),0,0,0,dp(4)));
+        TextView breakTitle=text("КОРОТКИЙ И ДЛИННЫЙ ПЕРЕРЫВ",10,muted,true);breakTitle.setGravity(Gravity.CENTER);screen.addView(breakTitle,lp(-1,-2,0,dp(3),0,dp(3)));
+        LinearLayout breakPresets=new LinearLayout(this);breakPresets.setGravity(Gravity.CENTER);breakPresets.setOrientation(LinearLayout.HORIZONTAL);
+        for(int minutes:new int[]{3,5,10}){Button chip=button("Короткий "+minutes,selectedBreakMinutes==minutes);chip.setTextSize(11);LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(38),1f);cp.setMargins(dp(2),0,dp(2),0);breakPresets.addView(chip,cp);chip.setOnClickListener(v->{if(timerRunning)return;selectedBreakMinutes=minutes;prefs.edit().putInt("selected_break_minutes",minutes).apply();showPomodoro();});}
+        screen.addView(breakPresets,lp(-1,dp(40),0,0,0,dp(2)));
+        LinearLayout longBreakPresets=new LinearLayout(this);longBreakPresets.setGravity(Gravity.CENTER);longBreakPresets.setOrientation(LinearLayout.HORIZONTAL);
+        int longBreak=Math.max(15,prefs.getInt("pomodoro_long_break_minutes",15));
+        for(int minutes:new int[]{15,20,30}){Button chip=button("Длинный "+minutes,longBreak==minutes);chip.setTextSize(11);LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(38),1f);cp.setMargins(dp(2),0,dp(2),0);longBreakPresets.addView(chip,cp);chip.setOnClickListener(v->{if(timerRunning)return;prefs.edit().putInt("pomodoro_long_break_minutes",minutes).apply();showPomodoro();});}
+        screen.addView(longBreakPresets,lp(-1,dp(40),0,0,0,dp(7)));
+        int todaySessions=prefs.getInt("pomodoro_completed_sessions_"+todayKey(),0),weekSessions=0;Calendar weekCursor=Calendar.getInstance(AppTime.zone());SimpleDateFormat weekFmt=new SimpleDateFormat("yyyy-MM-dd",Locale.US);weekFmt.setTimeZone(AppTime.zone());for(int day=0;day<7;day++){weekSessions+=prefs.getInt("pomodoro_completed_sessions_"+weekFmt.format(weekCursor.getTime()),0);weekCursor.add(Calendar.DAY_OF_YEAR,-1);}
+        int pauseCount=prefs.getInt("pomodoro_pause_count_"+todayKey(),0);long pauseTotal=prefs.getLong("pomodoro_pause_total_ms_"+todayKey(),0L);String averagePause=pauseCount==0?"—":String.format(Locale.getDefault(),"%.1f мин",(pauseTotal/60000.0)/pauseCount);
+        TextView stats=text("Сегодня: "+todaySessions+" полных сессий   ·   7 дней: "+weekSessions+"\nСреднее время до паузы сегодня: "+averagePause,11,muted,false);stats.setGravity(Gravity.CENTER);stats.setPadding(dp(4),dp(5),dp(4),dp(5));screen.addView(stats,lp(-1,-2,0,0,0,dp(3)));
         LinearLayout controls=new LinearLayout(this);controls.setGravity(Gravity.CENTER);controls.setOrientation(LinearLayout.HORIZONTAL);
         timerStartButton=button(timerRunning?"Продолжается":"Начать фокус",true);timerStartButton.setEnabled(!timerRunning);timerStartButton.setTextSize(14);
         timerStartButton.setOnClickListener(v->{if(!timerIsBreak&&timerRemainingMs>=selectedStudyMinutes*60000L-1000L)showStudyRitual();else startTimer();});
@@ -1985,7 +2001,7 @@ public class MainActivity extends Activity {
 
     private void finishTimerPhase() {
         boolean focusFinished=!timerIsBreak;
-        playTimerFinishSound();
+        playTimerFinishSound(!timerIsBreak);
         timerHandler.removeCallbacks(timerTick); timerRunning = false; cancelTimerFinishAlarm(); getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;} timerRemainingMs = 0;
         if (!timerIsBreak) { timerIsBreak = true; int completed=prefs.getInt("pomodoro_cycle_count",0)+1; int breakMinutes=(completed%4==0)?Math.max(15,prefs.getInt("pomodoro_long_break_minutes",15)):selectedBreakMinutes; timerRemainingMs = breakMinutes * 60000L; showAppMessage(g("Ты большая умничка! Время отдохнуть 🌸","Ты большой молодец! Время отдохнуть 🌸")); }
         else { timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; showAppMessage(g("Перерыв окончен. Ты готова продолжать! 💗","Перерыв окончен. Ты готов продолжать! 💗")); }
