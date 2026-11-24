@@ -68,6 +68,8 @@ public class MainActivity extends Activity {
     private ProgressBar topicProgressBar;
     private Button[] progressButtons = new Button[4];
     private final Handler timerHandler = new Handler(Looper.getMainLooper());
+    private final Handler settingsHandler = new Handler(Looper.getMainLooper());
+    private Runnable scheduledThemeTick, ambienceAutoStopTick;
     private Runnable timerTick;
     private TextView timerDisplay, timerStatus, studyTimeValue, breakTimeValue;
     private TimerRingView timerRing;
@@ -776,8 +778,10 @@ public class MainActivity extends Activity {
         }
     }
 
+    private int parseClockMinutes(String value,int fallback){try{String[] p=value.split(":");return Math.max(0,Math.min(1439,Integer.parseInt(p[0])*60+Integer.parseInt(p[1])));}catch(Exception e){return fallback;}}
     private void applySavedTheme() {
         String theme = prefs == null ? "pink" : prefs.getString("app_theme", "pink");
+        if(prefs!=null && prefs.getBoolean("scheduled_dark_enabled",false)){Calendar now=Calendar.getInstance(AppTime.zone());int current=now.get(Calendar.HOUR_OF_DAY)*60+now.get(Calendar.MINUTE);int start=parseClockMinutes(prefs.getString("scheduled_dark_start","21:00"),1260),end=parseClockMinutes(prefs.getString("scheduled_dark_end","07:00"),420);if(start<=end?(current>=start&&current<end):(current>=start||current<end))theme="night";}
         if ("system".equals(theme)) {
             boolean darkMode=(getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES;
             if(Build.VERSION.SDK_INT>=31){try{int accent=getResources().getIdentifier("system_accent1_600","color","android"),bg=getResources().getIdentifier(darkMode?"system_neutral1_900":"system_neutral1_10","color","android"),surface=getResources().getIdentifier(darkMode?"system_neutral1_800":"system_neutral1_50","color","android"),fg=getResources().getIdentifier(darkMode?"system_neutral1_50":"system_neutral1_900","color","android");PINK=getResources().getColor(accent,getTheme());BG=getResources().getColor(bg,getTheme());PALE=getResources().getColor(surface,getTheme());DARK=getResources().getColor(fg,getTheme());MUTED=darkMode?0xFFBDB5C1:0xFF827A83;}catch(Exception e){BG=darkMode?0xFF17151D:0xFFFFF9F7;PINK=0xFFC97891;PALE=darkMode?0xFF302735:0xFFFCEEF2;DARK=darkMode?0xFFF4EAF0:0xFF3F3439;MUTED=darkMode?0xFFC8BDC8:0xFF75666D;}}
@@ -1684,7 +1688,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void playTopicCompleteSound(){try{android.media.ToneGenerator tone=new android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION,55);tone.startTone(android.media.ToneGenerator.TONE_PROP_ACK,135);new Handler(Looper.getMainLooper()).postDelayed(tone::release,220);}catch(Exception ignored){}}
+    private void playTopicCompleteSound(){if(prefs==null||!prefs.getBoolean("topic_sound_enabled",true))return;try{android.media.ToneGenerator tone=new android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION,prefs.getInt("completion_sound_volume",55));tone.startTone(android.media.ToneGenerator.TONE_PROP_ACK,160);new Handler(Looper.getMainLooper()).postDelayed(tone::release,260);}catch(Exception ignored){}}
 
     private void showPraise() {
         showAppMessage(g("Умничка! ❤️", "Молодец! ❤️"));
@@ -1946,8 +1950,8 @@ public class MainActivity extends Activity {
     // App usage is tracked separately; only an explicit study action records a study day.
     private void saveForegroundUsage() { appUsageStartedElapsed=0L; }
 
-    @Override protected void onResume() { super.onResume(); foregroundActivity=this; AppUpdater.resumePendingInstall(this); activityVisible=true; appUsageStartedElapsed = SystemClock.elapsedRealtime(); if (prefs != null) {updateAchievementDates();scheduleReminders(this);rescheduleFutureLetterReminders(this);WeeklyReportReceiver.schedule(this);StudyWidgetProvider.updateAll(this);if(prefs.getBoolean("timer_finish_prompt_pending",false)){prefs.edit().putBoolean("timer_finish_prompt_pending",false).apply();showTimerFinishPrompt();}} }
-    @Override protected void onPause() { if(foregroundActivity==this)foregroundActivity=null; activityVisible=false; saveForegroundUsage(); appUsageStartedElapsed = 0L; super.onPause(); }
+    @Override protected void onResume() { super.onResume(); foregroundActivity=this; AppUpdater.resumePendingInstall(this); activityVisible=true; appUsageStartedElapsed=SystemClock.elapsedRealtime(); if(prefs!=null){boolean wasDark=isDarkAppearance();applySavedTheme();updateSystemBarIcons();if(wasDark!=isDarkAppearance())showScreenByKey(currentScreen);if(scheduledThemeTick!=null)settingsHandler.removeCallbacks(scheduledThemeTick);scheduledThemeTick=new Runnable(){public void run(){if(isFinishing())return;boolean before=isDarkAppearance();applySavedTheme();if(before!=isDarkAppearance()){updateSystemBarIcons();showScreenByKey(currentScreen);}settingsHandler.postDelayed(this,60000L);}};settingsHandler.postDelayed(scheduledThemeTick,60000L);updateAchievementDates();scheduleReminders(this);rescheduleFutureLetterReminders(this);WeeklyReportReceiver.schedule(this);StudyWidgetProvider.updateAll(this);if(prefs.getBoolean("timer_finish_prompt_pending",false)){prefs.edit().putBoolean("timer_finish_prompt_pending",false).apply();showTimerFinishPrompt();}} }
+    @Override protected void onPause() { if(scheduledThemeTick!=null)settingsHandler.removeCallbacks(scheduledThemeTick);if(foregroundActivity==this)foregroundActivity=null;activityVisible=false;saveForegroundUsage();appUsageStartedElapsed=0L;super.onPause(); }
 
     private void showMessage() {
         currentScreen = "message";
@@ -2633,12 +2637,12 @@ public class MainActivity extends Activity {
         try{
             android.media.MediaPlayer player=new android.media.MediaPlayer();ambiencePlayer=player;
             float volume=prefs.getInt("ambience_volume",35)/100f;player.setVolume(volume,volume);player.setLooping(true);if(Build.VERSION.SDK_INT>=21)player.setAudioAttributes(new android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_MEDIA).setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC).build());
-            player.setOnPreparedListener(mp->{if(ambiencePlayer==mp){ambienceLoading=false;mp.start();ambiencePlaying=true;}});
+            player.setOnPreparedListener(mp->{if(ambiencePlayer==mp){ambienceLoading=false;mp.start();ambiencePlaying=true;int auto=prefs.getInt("ambience_auto_stop",0);if(auto>0){if(ambienceAutoStopTick!=null)settingsHandler.removeCallbacks(ambienceAutoStopTick);ambienceAutoStopTick=()->{if(ambiencePlaying){stopAmbience();if("atmosphere".equals(currentScreen))showAtmosphere();showAppMessage("Звук атмосферы автоматически остановлен");}};settingsHandler.postDelayed(ambienceAutoStopTick,auto*60000L);}}});
             player.setOnErrorListener((mp,what,extra)->{if(ambiencePlayer==mp)stopAmbience();runOnUiThread(()->showAppMessage("Не удалось загрузить звук. Проверь интернет."));return true;});
             java.util.Map<String,String> headers=new java.util.HashMap<>();headers.put("User-Agent","StudyWithLove/4.1 (Android; ambience player)");player.setDataSource(this,android.net.Uri.parse(url),headers);player.prepareAsync();
         }catch(Exception e){stopAmbience();showAppMessage("Не удалось загрузить звук атмосферы");}
     }
-    private void stopAmbience(){ambiencePlaying=false;ambienceLoading=false;android.media.MediaPlayer player=ambiencePlayer;ambiencePlayer=null;if(player!=null){try{if(player.isPlaying())player.stop();}catch(Exception ignored){}try{player.release();}catch(Exception ignored){}}if(ambienceAudioManager!=null){try{if(Build.VERSION.SDK_INT>=26&&ambienceFocusRequest!=null)ambienceAudioManager.abandonAudioFocusRequest((android.media.AudioFocusRequest)ambienceFocusRequest);else ambienceAudioManager.abandonAudioFocus(ambienceFocusListener);}catch(Exception ignored){}}}
+    private void stopAmbience(){if(ambienceAutoStopTick!=null){settingsHandler.removeCallbacks(ambienceAutoStopTick);ambienceAutoStopTick=null;}ambiencePlaying=false;ambienceLoading=false;android.media.MediaPlayer player=ambiencePlayer;ambiencePlayer=null;if(player!=null){try{if(player.isPlaying())player.stop();}catch(Exception ignored){}try{player.release();}catch(Exception ignored){}}if(ambienceAudioManager!=null){try{if(Build.VERSION.SDK_INT>=26&&ambienceFocusRequest!=null)ambienceAudioManager.abandonAudioFocusRequest((android.media.AudioFocusRequest)ambienceFocusRequest);else ambienceAudioManager.abandonAudioFocus(ambienceFocusListener);}catch(Exception ignored){}}}
     @Override protected void onDestroy(){if(flowerBreatheAnimator!=null){flowerBreatheAnimator.cancel();flowerBreatheAnimator=null;}if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}stopAmbience();super.onDestroy();}
 
     private void showAtmosphere() {
@@ -3013,10 +3017,10 @@ public class MainActivity extends Activity {
         for(int i=0;i<root.getChildCount();i++){View child=root.getChildAt(i);child.setAlpha(0f);child.setTranslationY(dp(12));child.animate().alpha(1f).translationY(0f).setStartDelay(i*40L).setDuration(300).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();}
     }
     private void haptic(View view, boolean success) {
-        if(view!=null)view.performHapticFeedback(success?android.view.HapticFeedbackConstants.CONFIRM:android.view.HapticFeedbackConstants.REJECT);
+        if(view!=null && prefs!=null && prefs.getBoolean("haptics_enabled",true)) view.performHapticFeedback(success?android.view.HapticFeedbackConstants.CONFIRM:android.view.HapticFeedbackConstants.REJECT);
     }
     private void celebrate() {
-        if(root==null||prefs.getBoolean("reduce_motion",false))return;
+        if(root==null||prefs.getBoolean("reduce_motion",false)||!prefs.getBoolean("celebrations_enabled",true))return;
         final CelebrationView fx=new CelebrationView(this);
         root.getOverlay().add(fx);fx.layout(0,0,root.getWidth(),root.getHeight());
         android.animation.ValueAnimator animator=android.animation.ValueAnimator.ofFloat(0f,1f);
@@ -3211,6 +3215,7 @@ public class MainActivity extends Activity {
 
     private interface OnAction { void go(); }
     private GradientDrawable shape(int color, int radius, int stroke) {
+        if(prefs!=null){String corner=prefs.getString("corner_style","round");if("sharp".equals(corner))radius=Math.min(radius,8);else if("normal".equals(corner))radius=Math.max(10,Math.min(radius,16));else radius=Math.max(radius,24);}
         String theme = prefs == null ? "pink" : prefs.getString("app_theme", "pink");
         if(isThemeAccentColor(color))color=PINK;
         if(isThemeAccentColor(stroke))stroke=PINK;
