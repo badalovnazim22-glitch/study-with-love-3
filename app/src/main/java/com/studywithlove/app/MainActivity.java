@@ -652,12 +652,12 @@ public class MainActivity extends Activity {
         appearance.addView(fontSizeGroup,lp(-1,-2,0,4,0,6));
         LinearLayout appearanceActions=card();
         appearanceActions.setPadding(dp(12),dp(5),dp(12),dp(5));
-        Button systemTheme=button("◐  Цвета и тёмная тема — как в системе   ›","system".equals(activeTheme));systemTheme.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);systemTheme.setBackground(shape(isDarkAppearance()?0xFF25212B:0xFFFFFFFF,12,0));systemTheme.setOnClickListener(v->{prefs.edit().putString("app_theme","system").remove("app_accent_color").apply();applySavedTheme();showSettings();});appearanceActions.addView(systemTheme,lp(-1,42,0,2,0,2));
+        Button systemTheme=button("Цвета и тёмная тема — как в системе   ›","system".equals(activeTheme));systemTheme.setCompoundDrawablesRelative(settingsIcon(0),null,null,null);systemTheme.setCompoundDrawablePadding(dp(10));systemTheme.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);systemTheme.setBackground(shape(isDarkAppearance()?0xFF25212B:0xFFFFFFFF,12,0));systemTheme.setOnClickListener(v->{prefs.edit().putString("app_theme","system").remove("app_accent_color").apply();applySavedTheme();showSettings();});appearanceActions.addView(systemTheme,lp(-1,42,0,2,0,2));
         View actionDivider=new View(this);actionDivider.setBackgroundColor(isDarkAppearance()?0xFF49404B:0xFFECE5E9);appearanceActions.addView(actionDivider,lp(-1,1,0,3,0,3));
-        Button choosePhoto=button("▧  Выбрать фото фона   ›",false);choosePhoto.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);choosePhoto.setBackground(shape(isDarkAppearance()?0xFF25212B:0xFFFFFFFF,12,0));choosePhoto.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT);pick.addCategory(Intent.CATEGORY_OPENABLE);pick.setType("image/*");pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,PICK_BACKGROUND);});
+        Button choosePhoto=button("Выбрать фото фона   ›",false);choosePhoto.setCompoundDrawablesRelative(settingsIcon(1),null,null,null);choosePhoto.setCompoundDrawablePadding(dp(10));choosePhoto.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);choosePhoto.setBackground(shape(isDarkAppearance()?0xFF25212B:0xFFFFFFFF,12,0));choosePhoto.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT);pick.addCategory(Intent.CATEGORY_OPENABLE);pick.setType("image/*");pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,PICK_BACKGROUND);});
         appearanceActions.addView(choosePhoto,lp(-1,42,0,2,0,2));
         View actionDivider2=new View(this);actionDivider2.setBackgroundColor(isDarkAppearance()?0xFF49404B:0xFFECE5E9);appearanceActions.addView(actionDivider2,lp(-1,1,0,3,0,3));
-        Button clearPhoto=button("⌫  Убрать фото фона   ›",false);clearPhoto.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);clearPhoto.setBackground(shape(isDarkAppearance()?0xFF25212B:0xFFFFFFFF,12,0));clearPhoto.setOnClickListener(v->{prefs.edit().remove("custom_background_uri").apply();showSettings();});appearanceActions.addView(clearPhoto,lp(-1,42,0,2,0,2));
+        Button clearPhoto=button("Убрать фото фона   ›",false);clearPhoto.setCompoundDrawablesRelative(settingsIcon(2),null,null,null);clearPhoto.setCompoundDrawablePadding(dp(10));clearPhoto.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);clearPhoto.setBackground(shape(isDarkAppearance()?0xFF25212B:0xFFFFFFFF,12,0));clearPhoto.setOnClickListener(v->{prefs.edit().remove("custom_background_uri").apply();showSettings();});appearanceActions.addView(clearPhoto,lp(-1,42,0,2,0,2));
         appearance.addView(appearanceActions,lp(-1,-2,0,5,0,0));
         root.addView(appearance,lp(-1,-2,0,0,0,4));
 
@@ -2962,6 +2962,47 @@ public class MainActivity extends Activity {
         applyPressFeedback(b);
         return b;
     }
+    private android.graphics.drawable.Drawable settingsIcon(int type) {
+        final int color=isDarkAppearance()?0xFFB8CDE0:0xFF3979A8;
+        return new android.graphics.drawable.Drawable() {
+            private final android.graphics.Paint paint=new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+            @Override public void draw(android.graphics.Canvas canvas) {
+                android.graphics.Rect b=getBounds();
+                canvas.save();
+                canvas.translate(b.left,b.top);
+                float sx=b.width()/24f, sy=b.height()/24f;
+                canvas.scale(sx,sy);
+                paint.setColor(color);paint.setStyle(android.graphics.Paint.Style.STROKE);
+                paint.setStrokeWidth(1.8f);paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);
+                paint.setStrokeJoin(android.graphics.Paint.Join.ROUND);
+                android.graphics.Path path=new android.graphics.Path();
+                if(type==0){
+                    path.moveTo(12,3.2f);path.cubicTo(6.8f,3.2f,3,7.1f,3,12);
+                    path.cubicTo(3,17.2f,6.8f,21,12,21);
+                    path.cubicTo(14.1f,21,15.2f,19.4f,14.1f,17.8f);
+                    path.cubicTo(13.1f,16.3f,14.2f,14.8f,16,14.8f);
+                    path.lineTo(18.1f,14.8f);path.cubicTo(20,14.8f,21,13.5f,21,11.7f);
+                    path.cubicTo(21,6.8f,17,3.2f,12,3.2f);canvas.drawPath(path,paint);
+                    paint.setStyle(android.graphics.Paint.Style.FILL);
+                    canvas.drawCircle(8,9,1.15f,paint);canvas.drawCircle(12,7.2f,1.15f,paint);
+                    canvas.drawCircle(16,9,1.15f,paint);
+                }else if(type==1){
+                    path.moveTo(3,5);path.lineTo(21,5);path.lineTo(21,19);path.lineTo(3,19);path.close();
+                    canvas.drawPath(path,paint);path.reset();path.moveTo(7,15);path.lineTo(10,11.5f);path.lineTo(13,14);path.lineTo(15,12);path.lineTo(18,15);canvas.drawPath(path,paint);
+                    path.reset();path.moveTo(17,2);path.lineTo(17,8);path.moveTo(14,5);path.lineTo(20,5);canvas.drawPath(path,paint);
+                }else{
+                    path.moveTo(4,6);path.lineTo(20,6);path.moveTo(9,6);path.lineTo(9,3.5f);path.lineTo(15,3.5f);path.lineTo(15,6);
+                    path.moveTo(6.5f,6);path.lineTo(7.5f,20);path.lineTo(16.5f,20);path.lineTo(17.5f,6);
+                    path.moveTo(10,9);path.lineTo(10.5f,17);path.moveTo(14,9);path.lineTo(13.5f,17);canvas.drawPath(path,paint);
+                }
+                canvas.restore();
+            }
+            @Override public void setAlpha(int alpha) {}
+            @Override public void setColorFilter(android.graphics.ColorFilter filter) {}
+            @Override public int getOpacity(){return android.graphics.PixelFormat.TRANSLUCENT;}
+        };
+    }
+
     private String translate(String value){
         String lang=prefs==null?"ru":prefs.getString("app_language","ru");if("ru".equals(lang)||value==null)return value;
         String[][] pairs={
