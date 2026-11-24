@@ -20,6 +20,7 @@ public class ReminderReceiver extends BroadcastReceiver {
         boolean retry=intent.getBooleanExtra("repeat_retry",false);
         long scheduledAt=intent.getLongExtra("scheduled_at",System.currentTimeMillis());
         if(retry&&prefs.getLong("reminder_opened_at_"+notificationId,0L)>=scheduledAt)return;
+        if(studyReminder&&!retry){if(MainActivity.activityVisible)prefs.edit().putLong("reminder_opened_at_"+notificationId,System.currentTimeMillis()).apply();else prefs.edit().putInt("pending_reminder_id",notificationId).putLong("pending_reminder_at",scheduledAt).apply();}
         if(studyReminder&&!retry){
             int repeat=prefs.getInt("reminder_repeat_minutes",0);
             if(repeat>0){Intent again=new Intent(context,ReminderReceiver.class).setAction("study_reminder_retry_"+notificationId).putExtra("id",notificationId).putExtra("message",message).putExtra("repeat_retry",true).putExtra("scheduled_at",scheduledAt);PendingIntent retryPi=PendingIntent.getBroadcast(context,notificationId+200000,again,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);AlarmManager alarms=(AlarmManager)context.getSystemService(Context.ALARM_SERVICE);long at=System.currentTimeMillis()+repeat*60000L;if(Build.VERSION.SDK_INT>=23)alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,at,retryPi);else alarms.set(AlarmManager.RTC_WAKEUP,at,retryPi);}
