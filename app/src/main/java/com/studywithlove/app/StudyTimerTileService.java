@@ -9,20 +9,26 @@ import android.service.quicksettings.TileService;
 
 @android.annotation.TargetApi(24)
 public class StudyTimerTileService extends TileService {
+    private final android.os.Handler tileHandler=new android.os.Handler(android.os.Looper.getMainLooper());
+    private Runnable tileTicker;
     private long remaining(){return FocusTimerController.remaining(this);}
     @Override public void onStartListening(){
         super.onStartListening();
-        Tile tile=getQsTile();
-        if(tile==null)return;
+        updateTileLabel();
+        if(tileTicker!=null)tileHandler.removeCallbacks(tileTicker);
+        tileTicker=new Runnable(){@Override public void run(){updateTileLabel();if(remaining()>0)tileHandler.postDelayed(this,1000L);}};
+        tileHandler.postDelayed(tileTicker,1000L);
+    }
+    @Override public void onStopListening(){
+        if(tileTicker!=null)tileHandler.removeCallbacks(tileTicker);
+        tileTicker=null;
+        super.onStopListening();
+    }
+    private void updateTileLabel(){
+        Tile tile=getQsTile();if(tile==null)return;
         long left=remaining();
-        if(left>0){
-            tile.setLabel("Фокус · "+format(left));
-            tile.setState(Tile.STATE_ACTIVE);
-        }else{
-            int minutes=Math.max(1,getSharedPreferences("study_progress",MODE_PRIVATE).getInt("selected_study_minutes",25));
-            tile.setLabel("Фокус · "+minutes+" мин");
-            tile.setState(Tile.STATE_INACTIVE);
-        }
+        if(left>0){tile.setLabel("Фокус · "+format(left));tile.setState(Tile.STATE_ACTIVE);}
+        else{int minutes=Math.max(1,getSharedPreferences("study_progress",MODE_PRIVATE).getInt("selected_study_minutes",25));tile.setLabel("Фокус · "+minutes+" мин");tile.setState(Tile.STATE_INACTIVE);}
         tile.updateTile();
     }
     @SuppressLint("StartActivityAndCollapseDeprecated")
