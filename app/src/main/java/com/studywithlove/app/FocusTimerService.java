@@ -53,7 +53,7 @@ public class FocusTimerService extends Service {
           .setContentText(rest?"Можно возвращаться к занятиям":"Отличная работа! Запиши маленькую победу в дневник.")
           .setAutoCancel(true).setVibrate(settings.getBoolean("haptics_enabled",true)?new long[]{0,350,180,550}:new long[]{0})
           .setContentIntent(PendingIntent.getActivity(this,921,new Intent(this,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE));
-        if(!MainActivity.activityVisible)nm.notify(921,b.build());
+        if(settings.getBoolean("timer_notification_enabled",true)&&!MainActivity.activityVisible)nm.notify(921,b.build());
         if(settings.getBoolean("timer_sound_enabled",true)&&!MainActivity.activityVisible){try{android.media.ToneGenerator tone=new android.media.ToneGenerator(android.media.AudioManager.STREAM_ALARM,settings.getInt("completion_sound_volume",55));tone.startTone(android.media.ToneGenerator.TONE_PROP_BEEP,650);new Handler(Looper.getMainLooper()).postDelayed(tone::release,850);}catch(Exception ignored){}}
         stopForeground(true);stopSelf();
     }
