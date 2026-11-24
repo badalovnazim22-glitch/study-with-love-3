@@ -8,8 +8,7 @@ import android.service.quicksettings.TileService;
 
 @android.annotation.TargetApi(24)
 public class StudyTimerTileService extends TileService {
-    private SharedPreferences runtime(){return getSharedPreferences("timer_runtime",MODE_PRIVATE);}
-    private long remaining(){return Math.max(0L,runtime().getLong("timer_service_end_wall",0L)-System.currentTimeMillis());}
+    private long remaining(){return FocusTimerController.remaining(this);}
     @Override public void onStartListening(){
         super.onStartListening();
         Tile tile=getQsTile();
