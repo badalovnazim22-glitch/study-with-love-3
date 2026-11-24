@@ -521,13 +521,14 @@ public class MainActivity extends Activity {
     }
 
     private View bottomNavigation() {
-        LinearLayout bar=new LinearLayout(this);bar.setOrientation(LinearLayout.HORIZONTAL);bar.setGravity(Gravity.CENTER);bar.setPadding(dp(5),dp(7),dp(5),dp(7));bar.setBackground(shape(0xFFFFFFFF,0,0));
+        LinearLayout bar=new LinearLayout(this);bar.setOrientation(LinearLayout.HORIZONTAL);bar.setGravity(Gravity.CENTER);bar.setPadding(dp(5),dp(5),dp(5),dp(5));
+        GradientDrawable navBg=new GradientDrawable();navBg.setColor(isDarkAppearance()?0xFF201D25:0xFFFDFEFF);navBg.setCornerRadius(0);navBg.setStroke(dp(1),isDarkAppearance()?0xFF39333F:0xFFE8EEF3);bar.setBackground(navBg);
         String[] icons={"⌂","▦","▤","▣","♡","◷"};String[] labels={"Главная","Уроки","Прогресс","Экзамен","Дневник","Таймер"};
         String active=currentScreen.equals("home")?"home":(currentScreen.equals("chapters")||currentScreen.equals("math_chapters")||currentScreen.equals("topics")||currentScreen.equals("topic"))?"math":currentScreen.equals("progress")||currentScreen.equals("flower")||currentScreen.equals("achievements")||currentScreen.equals("stats")?"progress":currentScreen.equals("exam")?"exam":currentScreen.equals("diary")||currentScreen.equals("letters")?"diary":currentScreen.equals("pomodoro")?"timer":"";
         String[] keys={"home","math","progress","exam","diary","timer"};
-        for(int i=0;i<keys.length;i++){final String key=keys[i];boolean selected=key.equals(active);LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.VERTICAL);item.setGravity(Gravity.CENTER);item.setPadding(dp(1),dp(4),dp(1),dp(3));item.setBackground(selected?shape(PALE,14,0):shape(0x00FFFFFF,14,0));
-            TextView icon=textFixed(icons[i],22,selected?PINK:MUTED,true);icon.setGravity(Gravity.CENTER);icon.setIncludeFontPadding(false);item.addView(icon,lp(-1,29,0,0,0,2));
-            TextView label=textFixed(labels[i],10,selected?PINK:MUTED,selected);label.setGravity(Gravity.CENTER);label.setMaxLines(1);label.setSingleLine(true);label.setIncludeFontPadding(false);item.addView(label,lp(-1,19,0,0,0,0));
+        for(int i=0;i<keys.length;i++){final String key=keys[i];boolean selected=key.equals(active);LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.VERTICAL);item.setGravity(Gravity.CENTER);item.setPadding(dp(1),dp(3),dp(1),dp(2));item.setBackground(selected?shape(isDarkAppearance()?0xFF34303D:0xFFEAF2F9,12,0):shape(0x00FFFFFF,12,0));
+            TextView icon=textFixed(icons[i],21,selected?0xFF28699F:MUTED,true);icon.setGravity(Gravity.CENTER);icon.setIncludeFontPadding(false);item.addView(icon,lp(-1,29,0,0,0,2));
+            TextView label=textFixed(labels[i],9,selected?0xFF28699F:MUTED,selected);label.setGravity(Gravity.CENTER);label.setMaxLines(1);label.setSingleLine(true);label.setIncludeFontPadding(false);item.addView(label,lp(-1,19,0,0,0,0));
             LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-1,1f);p.setMargins(dp(1),0,dp(1),0);bar.addView(item,p);
             item.setOnClickListener(v->{if(key.equals("home"))showHome();else if(key.equals("math"))showChapters();else if(key.equals("progress"))showProgress();else if(key.equals("exam"))showExam();else if(key.equals("diary"))showDiary();else if(key.equals("timer"))showPomodoro();});
         }return bar;
@@ -619,7 +620,7 @@ public class MainActivity extends Activity {
         String[] fontFamilies={"sans-serif","sans-serif-rounded","serif","monospace","sans-serif-condensed","sans-serif-medium"};
         String activeFont=prefs.getString("app_font","sans");
         android.widget.GridLayout fontGrid=new android.widget.GridLayout(this);fontGrid.setColumnCount(2);
-        for(int i=0;i<fontKeys.length;i++){final String key=fontKeys[i],family=fontFamilies[i];Button choice=button((activeFont.equals(key)?"✓  ":"")+fontNames[i],activeFont.equals(key));choice.setTypeface(Typeface.create(family,Typeface.BOLD));choice.setBackground(shape(activeFont.equals(key)?PINK:PALE,14,activeFont.equals(key)?PINK:0xFFF2DDE4));android.widget.GridLayout.LayoutParams fp=new android.widget.GridLayout.LayoutParams();fp.width=0;fp.height=dp(44);fp.columnSpec=android.widget.GridLayout.spec(i%2,1f);fp.setMargins(dp(3),dp(3),dp(3),dp(3));fontGrid.addView(choice,fp);choice.setOnClickListener(v->{prefs.edit().putString("app_font",key).apply();showSettings();});}
+        for(int i=0;i<fontKeys.length;i++){final String key=fontKeys[i],family=fontFamilies[i];Button choice=button((activeFont.equals(key)?"✓  ":"")+fontNames[i],activeFont.equals(key));choice.setTypeface(Typeface.create(family,Typeface.BOLD));if(activeFont.equals(key)){GradientDrawable selectedFontBg=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{0xFF397DB5,0xFF245B91});selectedFontBg.setCornerRadius(dp(14));choice.setBackground(selectedFontBg);}else choice.setBackground(shape(isDarkAppearance()?0x66332E39:0xCCFFFFFF,14,isDarkAppearance()?0x665B5260:0x6699B4C8));android.widget.GridLayout.LayoutParams fp=new android.widget.GridLayout.LayoutParams();fp.width=0;fp.height=dp(44);fp.columnSpec=android.widget.GridLayout.spec(i%2,1f);fp.setMargins(dp(3),dp(3),dp(3),dp(3));fontGrid.addView(choice,fp);choice.setOnClickListener(v->{prefs.edit().putString("app_font",key).apply();showSettings();});}
         fontGroup.addView(fontGrid,lp(-1,-2,0,4,0,0));appearance.addView(fontGroup,lp(-1,-2,0,4,0,6));
         LinearLayout fontSizeGroup=settingsGroup("РАЗМЕР ТЕКСТА");
         fontSizeGroup.setTag("appearance");
@@ -631,7 +632,7 @@ public class MainActivity extends Activity {
         LinearLayout scaleStrip=new LinearLayout(this);
         scaleStrip.setOrientation(LinearLayout.HORIZONTAL);
         scaleStrip.setPadding(dp(3),dp(3),dp(3),dp(3));
-        scaleStrip.setBackground(shape(PALE,14,0xFFF2DDE4));
+        scaleStrip.setBackground(shape(isDarkAppearance()?0xFF292530:0xFFEAF1F7,12,isDarkAppearance()?0xFF49404B:0xFFD8E4ED));
         for(int i=0;i<textScales.length;i++){
             final float scale=textScales[i];
             boolean selected=Math.abs(activeScale-scale)<0.01f;
@@ -641,7 +642,7 @@ public class MainActivity extends Activity {
             choice.setSingleLine(true);
             choice.setIncludeFontPadding(false);
             choice.setPadding(dp(2),dp(9),dp(2),dp(9));
-            choice.setBackground(selected?shape(PINK,11,PINK):shape(PALE,11,0));
+            if(selected){GradientDrawable activeSegment=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{0xFF397DB5,0xFF245B91});activeSegment.setCornerRadius(dp(10));choice.setBackground(activeSegment);}else choice.setBackground(shape(isDarkAppearance()?0xFF292530:0x00FFFFFF,10,0));
             LinearLayout.LayoutParams scaleLp=new LinearLayout.LayoutParams(0,dp(42),1f);
             scaleLp.setMargins(dp(1),0,dp(1),0);
             scaleStrip.addView(choice,scaleLp);
@@ -2937,13 +2938,26 @@ public class MainActivity extends Activity {
                     Math.round(minSize), Math.round(maxSize), 1,
                     android.util.TypedValue.COMPLEX_UNIT_SP);
         }
-        b.setElevation(primary ? dp(2) : 0);
+        b.setElevation(primary ? dp(3) : 0);
         b.setTextColor(primary ? 0xFFFFFFFF : PINK);
-        android.graphics.drawable.Drawable bg=shape(primary ? PINK : PALE, 22, primary ? PINK : 0xFFF2DDE4);
+        android.graphics.drawable.Drawable bg;
+        if(primary){
+            GradientDrawable gradient=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                    new int[]{0xFF397DB5,0xFF245B91});
+            gradient.setCornerRadius(dp(14));
+            gradient.setStroke(dp(1),0xFF245B91);
+            bg=gradient;
+        }else{
+            GradientDrawable inactive=new GradientDrawable();
+            inactive.setColor(isDarkAppearance()?0x66332E39:0xCCFFFFFF);
+            inactive.setCornerRadius(dp(14));
+            inactive.setStroke(dp(1),isDarkAppearance()?0x665B5260:0x6699B4C8);
+            bg=inactive;
+        }
         if(Build.VERSION.SDK_INT>=21){
-            GradientDrawable mask=shape(0xFFFFFFFF,22,0);
+            GradientDrawable mask=shape(0xFFFFFFFF,14,0);
             b.setBackground(new android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(0x337D5264),bg,mask));
+                    android.content.res.ColorStateList.valueOf(0x337D9FC0),bg,mask));
         } else b.setBackground(bg);
         applyPressFeedback(b);
         return b;
