@@ -463,7 +463,7 @@ public class MainActivity extends Activity {
         activeScrollView = scroll;
         scroll.setFillViewport(true); scroll.setClipToPadding(false);
         root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(20), dp(26), dp(20), dp(26)); root.setBackgroundColor(BG);
+        root.setPadding(dp(15), dp(12), dp(15), dp(18)); root.setBackgroundColor(BG);
         installThemeFontListener(root);
         String customBg=prefs.getString("custom_background_uri","");
         if(!customBg.isEmpty()){try{if(!customBg.equals(cachedBackgroundUri)||cachedBackgroundBitmap==null){java.io.InputStream in=getContentResolver().openInputStream(android.net.Uri.parse(customBg));if(in!=null){android.graphics.Bitmap decoded=android.graphics.BitmapFactory.decodeStream(in);in.close();cachedBackgroundBitmap=decoded;cachedBackgroundUri=customBg;}}if(cachedBackgroundBitmap!=null){Drawable photo=new android.graphics.drawable.BitmapDrawable(getResources(),cachedBackgroundBitmap);photo.setAlpha(42);root.setBackground(photo);}}catch(Exception ignored){}}
@@ -519,6 +519,19 @@ public class MainActivity extends Activity {
         brand.setLetterSpacing(0.10f);
         brandRow.addView(brand, new LinearLayout.LayoutParams(0, dp(24), 1f));
         if (currentScreen.equals("home")) {
+            if (todayKey().equals(prefs.getString("daily_mood_date", ""))) {
+                String moodValue = prefs.getString("daily_mood", "");
+                String[] moodFaces = {"😴", "😌", "🙂", "😊", "⚡"};
+                try {
+                    int moodIndex = Integer.parseInt(moodValue);
+                    if (moodIndex >= 0 && moodIndex < moodFaces.length) {
+                        TextView moodBadge = text(moodFaces[moodIndex], 19, DARK, false);
+                        moodBadge.setGravity(Gravity.CENTER);
+                        moodBadge.setContentDescription("Настроение сегодня");
+                        brandRow.addView(moodBadge, lp(38, 42, 2, 0, 4, 0));
+                    }
+                } catch (Exception ignored) {}
+            }
             TextView settings = text("⚙", 17, PINK, false); settings.setGravity(Gravity.CENTER);
             settings.setBackground(shape(PALE, 16, "night".equals(prefs.getString("app_theme","pink"))?0xFF65566A:0xFFF1DDE4));
             settings.setContentDescription("Открыть настройки");
@@ -569,15 +582,16 @@ public class MainActivity extends Activity {
         if (!currentScreen.startsWith("settings_")) currentScreen="settings";
         String activeSection = currentScreen.startsWith("settings_") ? currentScreen.substring("settings_".length()) : "menu";
         boolean sectionPage = !"menu".equals(activeSection);
-        String sectionTitle = "appearance".equals(activeSection) ? "Внешний вид" : "reminders".equals(activeSection) ? "Напоминания" : "goals".equals(activeSection) ? "Цели" : "data".equals(activeSection) ? "Данные" : "О приложении";
+        String sectionTitle = "appearance".equals(activeSection) ? "Внешний вид" : "study".equals(activeSection) ? "Учёба" : "notifications_sound".equals(activeSection) ? "Уведомления и звук" : "profile_ai".equals(activeSection) ? "Профиль и ИИ" : "data_security".equals(activeSection) ? "Данные и безопасность" : "О приложении";
         base(sectionPage ? sectionTitle : "Настройки ⚙", sectionPage ? "Настрой приложение под себя" : "Всё нужное — в одном месте");
         LinearLayout sectionMenu = new LinearLayout(this);
         sectionMenu.setOrientation(LinearLayout.VERTICAL);
         String[][] sections = {
             {"appearance","🎨","Внешний вид"},
-            {"reminders","🔔","Напоминания"},
-            {"goals","🎯","Цели"},
-            {"data","🗂","Данные"},
+            {"study","📚","Учёба"},
+            {"notifications_sound","🔔","Уведомления и звук"},
+            {"profile_ai","👤","Профиль и ИИ"},
+            {"data_security","🛡","Данные и безопасность"},
             {"about","ⓘ","О приложении"}
         };
         for (String[] section : sections) {
@@ -589,7 +603,7 @@ public class MainActivity extends Activity {
         if (!sectionPage) root.addView(sectionMenu, lp(-1, -2, 0, 0, 0, 12));
 
         LinearLayout profile=settingsGroup("ПРОФИЛЬ");
-        profile.setTag("appearance");
+        profile.setTag("profile_ai");
         EditText name=new EditText(this);name.setSingleLine(true);name.setTextSize(16);name.setTextColor(DARK);
         name.setHint(translate("Как к тебе обращаться?"));name.setText(prefs.getString("display_name",""));
         name.setPadding(dp(14),dp(8),dp(14),dp(8));name.setBackground(shape(0xFFFFF9F7,15,0xFFEADDE2));
@@ -703,7 +717,7 @@ public class MainActivity extends Activity {
         LinearLayout weekly=settingsGroup("НЕДЕЛЬНАЯ ЦЕЛЬ");weekly.setTag("goals");addText(weekly,"Сколько минут учёбы ты хочешь набрать за неделю?",12,MUTED,false);EditText weeklyInput=new EditText(this);weeklyInput.setSingleLine(true);weeklyInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);weeklyInput.setText(String.valueOf(prefs.getInt("weekly_goal_minutes",300)));weeklyInput.setHint("Например, 300");weeklyInput.setTextColor(DARK);weeklyInput.setBackground(shape(0xFFFFF9F7,14,0xFFEADDE2));weekly.addView(weeklyInput,lp(-1,48,0,6,0,7));Button saveWeekly=button("Сохранить цель недели",true);saveWeekly.setOnClickListener(v->{try{int value=Integer.parseInt(weeklyInput.getText().toString().trim());if(value<30||value>10080)throw new Exception();prefs.edit().putInt("weekly_goal_minutes",value).apply();showAppMessage("Недельная цель обновлена ♡");}catch(Exception e){weeklyInput.setError("Укажи от 30 до 10080 минут");}});weekly.addView(saveWeekly,lp(-1,43,0,0,0,0));root.addView(weekly,lp(-1,-2,0,0,0,4));
 
         LinearLayout reminders=settingsGroup("НАПОМИНАНИЯ");
-        reminders.setTag("reminders");
+        reminders.setTag("notifications_sound");
         CheckBox enabled=new CheckBox(this);enabled.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));enabled.setText(translate("Включить напоминания о занятиях"));enabled.setTextSize(14);enabled.setTextColor(DARK);enabled.setChecked(prefs.getBoolean("notifications_enabled",true));reminders.addView(enabled,lp(-1,48,0,0,0,4));
         enabled.setOnCheckedChangeListener((buttonView,checked)->{prefs.edit().putBoolean("notifications_enabled",checked).apply();scheduleReminders(this);if(checked&&Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},20);});
         CheckBox quietToggle=new CheckBox(this);quietToggle.setText("Тихие часы для уведомлений");quietToggle.setTextColor(DARK);quietToggle.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));quietToggle.setChecked(prefs.getBoolean("quiet_hours_enabled",false));reminders.addView(quietToggle,lp(-1, 48,0,4,0,0));quietToggle.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("quiet_hours_enabled",on).apply();scheduleReminders(this);});
@@ -711,11 +725,11 @@ public class MainActivity extends Activity {
         Button reminderSettings=button("Настроить дни и время",false);reminderSettings.setOnClickListener(v->showReminderSettings());reminders.addView(reminderSettings,lp(-1, 48,0,0,0,0));root.addView(reminders,lp(-1,-2,0,0,0,4));
 
         LinearLayout focus=settingsGroup("РЕЖИМ ФОКУСА");
-        focus.setTag("reminders");
+        focus.setTag("notifications_sound");
         addText(focus,"Временно отключает учебные напоминания.",12,MUTED,false);CheckBox focusToggle=new CheckBox(this);focusToggle.setText("Не отвлекать");focusToggle.setTextColor(DARK);focusToggle.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));focusToggle.setChecked(prefs.getBoolean("do_not_disturb",false));focus.addView(focusToggle,lp(-1, 48,0,0,0,0));focusToggle.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("do_not_disturb",on).apply();scheduleReminders(this);});root.addView(focus,lp(-1,-2,0,0,0,4));
 
         LinearLayout backup=settingsGroup("РЕЗЕРВНАЯ КОПИЯ");
-        backup.setTag("data");
+        backup.setTag("data_security");
         addText(backup,"Сохрани уроки, цели, дневник и прогресс в один файл.",12,MUTED,false);
         Button export=button("Экспортировать копию",true);export.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");i.putExtra(Intent.EXTRA_TITLE,"study_with_love_backup.json");startActivityForResult(i,BACKUP_EXPORT);});backup.addView(export,lp(-1, 48,0,7,0,5));
         Button restore=button("Восстановить из копии",false);restore.setTextColor(0xFFB32635);restore.setOnClickListener(v->new android.app.AlertDialog.Builder(this).setTitle("Восстановить данные?")
@@ -813,7 +827,7 @@ public class MainActivity extends Activity {
         String[] hints = {"Предлагаю короткую сессию на 5 минут.", "Можно спокойно повторить знакомую тему.", "Выбери одну небольшую задачу.", "Хороший момент для новой темы.", "Попробуй сложную задачу или длинную сессию."};
         String today = todayKey();
         String selected = prefs.getString("daily_mood_date", "").equals(today) ? prefs.getString("daily_mood", "") : "";
-        if (!selected.isEmpty()) { try { hint.setText(hints[Integer.parseInt(selected)]); } catch (Exception ignored) { } }
+        if (!selected.isEmpty()) return;
         LinearLayout choices = new LinearLayout(this);
         choices.setOrientation(LinearLayout.HORIZONTAL);
         for (int i = 0; i < faces.length; i++) {
@@ -927,17 +941,11 @@ public class MainActivity extends Activity {
 
         // Compact motivational progress card on the home screen.
         LinearLayout continueCard = card();
-        continueCard.setPadding(dp(16), dp(14), dp(16), dp(14));
+        continueCard.setPadding(dp(13), dp(12), dp(13), dp(12));
         continueCard.setBackground(shape(0xFFF8E8EE, 24, 0));
         addText(continueCard, "ТВОЙ ПРОГРЕСС", 13, PINK, true);
         addText(continueCard, "Ты справляешься.\\nПродолжай в своём темпе.", 24, DARK, true);
-        addText(continueCard, "Каждое занятие — это забота о себе будущей.", 13, MUTED, false);
         addText(continueCard, "✧  Ты отлично справляешься! ❤️", 15, PINK, true);
-        int hour = Calendar.getInstance(AppTime.zone()).get(Calendar.HOUR_OF_DAY);
-        String greeting = hour < 12 ? "🐰 Доброе утро! Начнём день с маленькой победы?"
-                : hour < 18 ? "🐰 Хорошего дня! Сделаем ещё один маленький шаг?"
-                : "🐰 Добрый вечер! Даже маленькое занятие — уже победа.";
-        addText(continueCard, greeting, 14, DARK, true);
         LinearLayout overallHead = new LinearLayout(this);
         overallHead.setGravity(Gravity.CENTER_VERTICAL);
         overallHead.addView(text("Учебный план", 16, DARK, true),
@@ -982,7 +990,7 @@ public class MainActivity extends Activity {
         int weeklyGoal = prefs.getInt("weekly_goal_minutes", 300);
         int weeklyDone = weeklyMinutesLast7Days();
         LinearLayout weeklyCard = card();
-        weeklyCard.setPadding(dp(16), dp(14), dp(16), dp(14));
+        weeklyCard.setPadding(dp(13), dp(12), dp(13), dp(12));
         addText(weeklyCard, "🎯  ЦЕЛЬ НЕДЕЛИ", 11, PINK, true);
         addText(weeklyCard, weeklyDone + " из " + weeklyGoal + " минут", 19, DARK, true);
         addProgressLine(weeklyCard, "Твой недельный результат",
