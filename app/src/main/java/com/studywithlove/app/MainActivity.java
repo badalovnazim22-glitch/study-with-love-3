@@ -419,6 +419,25 @@ public class MainActivity extends Activity {
         p.edit().putStringSet("scheduled_alarm_keys", newKeys).apply();
     }
 
+    private void compactButtons(View view) {
+        if (view instanceof Button) {
+            android.view.ViewGroup.LayoutParams params = view.getLayoutParams();
+            int compactHeight = dp(44);
+            if (params != null && params.height > compactHeight) {
+                params.height = compactHeight;
+                view.setLayoutParams(params);
+            }
+            view.setMinimumHeight(compactHeight);
+            return;
+        }
+        if (view instanceof android.view.ViewGroup) {
+            android.view.ViewGroup group = (android.view.ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                compactButtons(group.getChildAt(i));
+            }
+        }
+    }
+
     private void base(String title, String subtitle) {
         final boolean backNavigation=navigatingBack;
         if (!"flower".equals(currentScreen) && flowerBreatheAnimator!=null) { flowerBreatheAnimator.cancel(); flowerBreatheAnimator=null; }
@@ -448,6 +467,9 @@ public class MainActivity extends Activity {
         shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
         if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 78, 0, 0, 0, 0));
         setContentView(shell);
+        // Унифицируем высоту обычных кнопок во всех разделах приложения.
+        // Не затрагиваем поля ввода, нижнюю навигацию и специальные элементы.
+        compactButtons(shell);
         if (Build.VERSION.SDK_INT >= 21) {
             shell.setOnApplyWindowInsetsListener((view, insets) -> {
                 int top,bottom;
@@ -2885,14 +2907,14 @@ public class MainActivity extends Activity {
         Button b = new Button(this);
         float scale=prefs==null?1f:prefs.getFloat("app_text_scale",1f);
         b.setText(label);
-        b.setTextSize(14f*scale);
+        b.setTextSize(13.5f*scale);
         b.setTypeface(Typeface.create(selectedFontFamily(), Typeface.BOLD));
         b.setAllCaps(false);
         b.setLetterSpacing(0.005f);
         b.setMinWidth(0);
         b.setMinimumWidth(0);
-        b.setMinHeight(dp(48));
-        b.setPadding(dp(10), dp(7), dp(10), dp(7));
+        b.setMinHeight(dp(42));
+        b.setPadding(dp(8), dp(5), dp(8), dp(5));
         b.setGravity(Gravity.CENTER);
         b.setIncludeFontPadding(false);
         b.setMaxLines(2);
