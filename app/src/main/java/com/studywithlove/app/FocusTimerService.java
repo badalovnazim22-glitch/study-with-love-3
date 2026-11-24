@@ -21,22 +21,17 @@ public class FocusTimerService extends Service {
         if(intent!=null&&ACTION_PAUSE.equals(intent.getAction())){if(!intent.getBooleanExtra("break",false)){long elapsed=Math.max(0,intent.getLongExtra("elapsed_ms",0));recordFocus(elapsed,dateKey(System.currentTimeMillis()));recordPause(elapsed);}clearSavedTimer();stopForeground(true);stopSelf();return START_NOT_STICKY;}
         if(intent==null){
             android.content.SharedPreferences p=getSharedPreferences("timer_runtime",MODE_PRIVATE);
-            long wallEnd=p.getLong("timer_service_end_wall",0);
+            long wallEnd=FocusTimerController.endTime(this);
             if(wallEnd<=0){stopSelf();return START_NOT_STICKY;}
             currentBreak=p.getBoolean("timer_service_break",false);
             segmentDuration=p.getLong("timer_service_duration",60000);
             long remaining=wallEnd-System.currentTimeMillis();
             endAt=wallEnd;
         }else{
-            android.content.SharedPreferences runtime=getSharedPreferences("timer_runtime",MODE_PRIVATE);
-            long existingEnd=runtime.getLong("timer_service_end_wall",0L);
-            if(ACTION_START.equals(intent.getAction())&&existingEnd>System.currentTimeMillis())return START_STICKY;
             segmentDuration=Math.max(1000,intent.getLongExtra("duration_ms",60000));
             currentBreak=intent.getBooleanExtra("break",false);
-            endAt=System.currentTimeMillis()+segmentDuration;
-            runtime.edit().putLong("timer_service_end_wall",endAt)
-                    .putLong("timer_service_duration",segmentDuration)
-                    .putBoolean("timer_service_break",currentBreak).apply();
+            endAt=FocusTimerController.startSegment(this,segmentDuration,currentBreak);
+            if(endAt<=0L)return START_STICKY;
         }
         startForeground(920,build("Таймер работает","Осталось "+format(Math.max(0,endAt-System.currentTimeMillis())),false));
         if(tick!=null)handler.removeCallbacks(tick);
@@ -60,7 +55,7 @@ public class FocusTimerService extends Service {
         stopForeground(true);stopSelf();
     }
     private void recordPause(long elapsed){try{String date=dateKey(System.currentTimeMillis());android.content.SharedPreferences p=getSharedPreferences(PREFS,MODE_PRIVATE);p.edit().putInt("pomodoro_pause_count_"+date,p.getInt("pomodoro_pause_count_"+date,0)+1).putLong("pomodoro_pause_total_ms_"+date,p.getLong("pomodoro_pause_total_ms_"+date,0L)+elapsed).apply();}catch(Exception ignored){}}
-    private void clearSavedTimer(){getSharedPreferences("timer_runtime",MODE_PRIVATE).edit().remove("timer_service_end_wall").remove("timer_service_duration").remove("timer_service_break").apply();}
+    private void clearSavedTimer(){FocusTimerController.clear(this);}
     private String dateKey(long wall){java.text.SimpleDateFormat fmt=new java.text.SimpleDateFormat("yyyy-MM-dd",java.util.Locale.US);fmt.setTimeZone(AppTime.zone());return fmt.format(new java.util.Date(wall));}
     private void recordFocus(long ms,String date){try{android.content.SharedPreferences p=getSharedPreferences(PREFS,MODE_PRIVATE);long total=p.getLong("focus_remainder_ms_"+date,0)+Math.max(0,ms);int add=(int)(total/60000L);p.edit().putLong("focus_remainder_ms_"+date,total%60000L).putInt("focus_minutes_"+date,p.getInt("focus_minutes_"+date,0)+add).putInt("focus_total_minutes",p.getInt("focus_total_minutes",0)+add).apply();StudyWidgetProvider.updateAll(this);}catch(Exception ignored){}}
     private void recordStudyDay(String date){
