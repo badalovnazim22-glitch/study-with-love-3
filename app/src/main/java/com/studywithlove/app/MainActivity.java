@@ -2977,7 +2977,7 @@ public class MainActivity extends Activity {
                 Math.round(Color.blue(foreground)*(1-w)+Color.blue(background)*w));
     }
     private android.graphics.drawable.Drawable settingsIcon(int type) {
-        final int color=isDarkAppearance()?0xFFB8CDE0:0xFF3979A8;
+        final int color=PINK;
         return new android.graphics.drawable.Drawable() {
             private final android.graphics.Paint paint=new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
             @Override public void draw(android.graphics.Canvas canvas) {
