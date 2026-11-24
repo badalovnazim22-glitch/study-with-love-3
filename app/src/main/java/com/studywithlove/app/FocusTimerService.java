@@ -28,10 +28,18 @@ public class FocusTimerService extends Service {
             long remaining=wallEnd-System.currentTimeMillis();
             endAt=wallEnd;
         }else{
-            segmentDuration=Math.max(1000,intent.getLongExtra("duration_ms",60000));
-            currentBreak=intent.getBooleanExtra("break",false);
-            endAt=FocusTimerController.startSegment(this,segmentDuration,currentBreak);
-            if(endAt<=0L)return START_STICKY;
+            long existingEnd=FocusTimerController.endTime(this);
+            if(existingEnd>System.currentTimeMillis()){
+                endAt=existingEnd;
+                segmentDuration=FocusTimerController.duration(this);
+                currentBreak=FocusTimerController.isBreak(this);
+            }else{
+                segmentDuration=Math.max(1000,intent.getLongExtra("duration_ms",60000));
+                currentBreak=intent.getBooleanExtra("break",false);
+                endAt=FocusTimerController.startSegment(this,segmentDuration,currentBreak);
+                if(endAt<=0L){endAt=FocusTimerController.endTime(this);segmentDuration=FocusTimerController.duration(this);currentBreak=FocusTimerController.isBreak(this);}
+                if(endAt<=0L)return START_NOT_STICKY;
+            }
         }
         startForeground(920,build("Таймер работает","Осталось "+format(Math.max(0,endAt-System.currentTimeMillis())),false));
         if(tick!=null)handler.removeCallbacks(tick);
