@@ -143,7 +143,7 @@ public class MainActivity extends Activity {
         getWindow().setStatusBarColor(BG);
         getWindow().setNavigationBarColor(BG);
         updateSystemBarIcons();
-        SharedPreferences timerPrefs=getSharedPreferences("timer_runtime",MODE_PRIVATE);if(!timerPrefs.contains("timer_service_end_wall")&&prefs.contains("timer_service_end_wall")){SharedPreferences.Editor migrate=timerPrefs.edit();migrate.putLong("timer_service_end_wall",prefs.getLong("timer_service_end_wall",0)).putLong("timer_service_duration",prefs.getLong("timer_service_duration",60000)).putBoolean("timer_service_break",prefs.getBoolean("timer_service_break",false)).apply();prefs.edit().remove("timer_service_end_wall").remove("timer_service_duration").remove("timer_service_break").apply();}long restoredEnd=timerPrefs.getLong("timer_service_end_wall",0);if(restoredEnd>System.currentTimeMillis()){timerRunning=true;timerIsBreak=timerPrefs.getBoolean("timer_service_break",false);timerRemainingMs=restoredEnd-System.currentTimeMillis();timerEndElapsed=restoredEnd;long duration=timerPrefs.getLong("timer_service_duration",timerRemainingMs);timerSessionStarted=System.currentTimeMillis()-Math.max(0,duration-timerRemainingMs);}
+        SharedPreferences timerPrefs=getSharedPreferences("timer_runtime",MODE_PRIVATE);if(!timerPrefs.contains("timer_service_end_wall")&&prefs.contains("timer_service_end_wall")){SharedPreferences.Editor migrate=timerPrefs.edit();migrate.putLong("timer_service_end_wall",prefs.getLong("timer_service_end_wall",0)).putLong("timer_service_duration",prefs.getLong("timer_service_duration",60000)).putBoolean("timer_service_break",prefs.getBoolean("timer_service_break",false)).apply();prefs.edit().remove("timer_service_end_wall").remove("timer_service_duration").remove("timer_service_break").apply();}long restoredEnd=timerPrefs.getLong("timer_service_end_wall",0);if(restoredEnd>System.currentTimeMillis()){timerRunning=true;timerIsBreak=timerPrefs.getBoolean("timer_service_break",false);timerRemainingMs=FocusTimerController.remaining(this);timerEndElapsed=FocusTimerController.endTime(this);long duration=timerPrefs.getLong("timer_service_duration",timerRemainingMs);timerSessionStarted=System.currentTimeMillis()-Math.max(0,duration-timerRemainingMs);}
         getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG);
         Set<String> visits = new TreeSet<>(prefs.getStringSet("visit_days", new TreeSet<String>())); visits.add(todayKey()); prefs.edit().putStringSet("visit_days", visits).apply();
         // Migrate the last recorded study date from older app versions into the calendar history.
@@ -1940,7 +1940,7 @@ public class MainActivity extends Activity {
         timerDisplay.setOnLongClickListener(v->{if(timerRunning)return true;new TimePickerDialog(this,(picker,hour,minute)->{selectedStudyMinutes=Math.max(1,Math.min(600,hour*60+minute));prefs.edit().putInt("selected_study_minutes",selectedStudyMinutes).apply();if(!timerIsBreak)timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();},selectedStudyMinutes/60,selectedStudyMinutes%60,true).show();return true;});
         root.addView(screen,lp(-1,-2,0,dp(6),0,dp(10)));
         updateTimerRingProgress(timerRemainingMs);
-        if(timerRunning){updateTimerDisplay();timerStartButton.setEnabled(false);timerPauseButton.setEnabled(true);if(timerTick==null){timerTick=new Runnable(){public void run(){updateTimerDisplay();long left=timerEndElapsed-System.currentTimeMillis();if(left<=0)finishTimerPhase();else timerHandler.postDelayed(this,250);}};timerHandler.post(timerTick);}}
+        if(timerRunning){updateTimerDisplay();timerStartButton.setEnabled(false);timerPauseButton.setEnabled(true);if(timerTick==null){timerTick=new Runnable(){public void run(){updateTimerDisplay();long left=FocusTimerController.remainingUntil(timerEndElapsed);if(left<=0)finishTimerPhase();else timerHandler.postDelayed(this,250);}};timerHandler.post(timerTick);}}
     }
 
     private String formatTimer(long ms) {
@@ -1950,11 +1950,11 @@ public class MainActivity extends Activity {
     private void startTimer() {
         if (timerRunning) return;
         if (timerRemainingMs <= 0) timerRemainingMs = (timerIsBreak ? selectedBreakMinutes : selectedStudyMinutes) * 60000L;
-        timerRunning = true; timerSessionStarted = System.currentTimeMillis(); timerEndElapsed = timerSessionStarted + timerRemainingMs; if(timerRing!=null)timerRing.setRunning(true);
+        timerRunning = true; timerSessionStarted = System.currentTimeMillis(); timerEndElapsed = System.currentTimeMillis() + timerRemainingMs; if(timerRing!=null)timerRing.setRunning(true);
         if(!timerIsBreak)prefs.edit().putLong("focus_started_wall",System.currentTimeMillis()).putBoolean("focus_left_app",false).apply();
         try{Intent service=new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_START).putExtra("duration_ms",timerRemainingMs).putExtra("break",timerIsBreak);if(Build.VERSION.SDK_INT>=26)startForegroundService(service);else startService(service);}catch(Exception ignored){}
         getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        timerTick = new Runnable() { @Override public void run() { updateTimerDisplay(); long left = timerEndElapsed - System.currentTimeMillis(); if (left <= 0) finishTimerPhase(); else timerHandler.postDelayed(this, 250); } };
+        timerTick = new Runnable() { @Override public void run() { updateTimerDisplay(); long left = FocusTimerController.remainingUntil(timerEndElapsed); if (left <= 0) finishTimerPhase(); else timerHandler.postDelayed(this, 250); } };
         if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}if(timerDisplay!=null){timerDisplay.setScaleX(1f);timerDisplay.setScaleY(1f);if(!prefs.getBoolean("reduce_motion",false)){timerPulseAnimator=android.animation.ValueAnimator.ofFloat(1f,1.045f);timerPulseAnimator.setDuration(1050);timerPulseAnimator.setRepeatMode(android.animation.ValueAnimator.REVERSE);timerPulseAnimator.setRepeatCount(android.animation.ValueAnimator.INFINITE);timerPulseAnimator.addUpdateListener(a->{if(timerDisplay!=null){float s=(float)a.getAnimatedValue();timerDisplay.setScaleX(s);timerDisplay.setScaleY(s);}});timerPulseAnimator.start();}}
         if (timerStartButton != null) timerStartButton.setEnabled(false);
         if (timerPauseButton != null) timerPauseButton.setEnabled(true);
@@ -1963,7 +1963,7 @@ public class MainActivity extends Activity {
 
     private void pauseTimer() {
         if (!timerRunning) return;
-        timerRemainingMs = Math.max(0, timerEndElapsed - System.currentTimeMillis());
+        timerRemainingMs = FocusTimerController.remainingUntil(timerEndElapsed);
         timerRunning = false; timerHandler.removeCallbacks(timerTick); cancelTimerFinishAlarm(); try{Intent pause=new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_PAUSE).putExtra("elapsed_ms",Math.max(0,SystemClock.elapsedRealtime()-timerSessionStarted)).putExtra("break",timerIsBreak);startService(pause);}catch(Exception ignored){} getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}if(timerRing!=null)timerRing.setRunning(false);if (timerDisplay != null) { timerDisplay.setText(formatTimer(timerRemainingMs)); timerDisplay.animate().scaleX(1f).scaleY(1f).setDuration(220).start(); }
         if (timerStartButton != null) { timerStartButton.setEnabled(true); timerStartButton.setText("▶  Продолжить"); }
@@ -1973,7 +1973,7 @@ public class MainActivity extends Activity {
     private boolean isMaleProfile(){return prefs!=null && "male".equals(prefs.getString("profile_gender","female"));}
     private String g(String feminine,String masculine){return isMaleProfile()?masculine:feminine;}
     private void updateTimerDisplay() {
-        long left=Math.max(0,timerEndElapsed-System.currentTimeMillis());
+        long left=FocusTimerController.remainingUntil(timerEndElapsed);
         if (timerDisplay != null) timerDisplay.setText(formatTimer(left));
         updateTimerRingProgress(left);
     }
@@ -2003,7 +2003,7 @@ public class MainActivity extends Activity {
         boolean focusFinished=!timerIsBreak;
         playTimerFinishSound(!timerIsBreak);
         timerHandler.removeCallbacks(timerTick); timerRunning = false; cancelTimerFinishAlarm(); getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;} timerRemainingMs = 0;
-        if (!timerIsBreak) { timerIsBreak = true; int completed=prefs.getInt("pomodoro_cycle_count",0)+1; int breakMinutes=(completed%4==0)?Math.max(15,prefs.getInt("pomodoro_long_break_minutes",15)):selectedBreakMinutes; timerRemainingMs = breakMinutes * 60000L; showAppMessage(g("Ты большая умничка! Время отдохнуть 🌸","Ты большой молодец! Время отдохнуть 🌸")); }
+        if (!timerIsBreak) { timerIsBreak = true; int completed=prefs.getInt("pomodoro_cycle_count",0);if(prefs.getLong("pomodoro_last_finish_wall",0L)!=timerEndElapsed)completed=(completed+1)%4;int breakMinutes=(completed==0)?Math.max(15,prefs.getInt("pomodoro_long_break_minutes",15)):selectedBreakMinutes; timerRemainingMs = breakMinutes * 60000L; showAppMessage(g("Ты большая умничка! Время отдохнуть 🌸","Ты большой молодец! Время отдохнуть 🌸")); }
         else { timerIsBreak = false; timerRemainingMs = selectedStudyMinutes * 60000L; showAppMessage(g("Перерыв окончен. Ты готова продолжать! 💗","Перерыв окончен. Ты готов продолжать! 💗")); }
         if ("pomodoro".equals(currentScreen)) showPomodoro();
         if(focusFinished){prefs.edit().putBoolean("diary_prefill_timer_win",true).putBoolean("timer_finish_prompt_pending",false).apply();showTimerFinishPrompt();}
