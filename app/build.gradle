@@ -18,8 +18,8 @@ android {
         applicationId 'com.studywithlove.app'
         minSdk 23
         targetSdk 35
-        versionCode 59
-        versionName '4.50'
+        versionCode 60
+        versionName '4.51'
     }
 
     signingConfigs {
