@@ -185,9 +185,9 @@ public class AiTutorActivity extends Activity {
         for (String prompt : prompts) {
             TextView chip = label(prompt, 13, PINK, true);
             chip.setGravity(Gravity.CENTER);
-            chip.setPadding(dp(10), dp(9), dp(10), dp(9));
+            chip.setPadding(dp(9), dp(6), dp(9), dp(6));
             chip.setBackground(round(PALE, 18, PALE));
-            chip.setMinHeight(dp(48));
+            chip.setMinHeight(dp(40));
             LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(-2, -2);
             cp.setMargins(dp(2), 0, dp(6), dp(8));
             suggestions.addView(chip, cp);
@@ -225,7 +225,7 @@ public class AiTutorActivity extends Activity {
         sendButton.setAllCaps(false);
         sendButton.setPadding(0, 0, 0, 0);
         sendButton.setBackground(round(PINK, 20, PINK));
-        composer.addView(sendButton, new LinearLayout.LayoutParams(dp(48), dp(48)));
+        composer.addView(sendButton, new LinearLayout.LayoutParams(dp(44), dp(44)));
         sendButton.setOnClickListener(v -> {
             if (!retryQuestion.isEmpty() && input.getText().toString().trim().isEmpty()) {
                 input.setText(retryQuestion);
@@ -242,7 +242,7 @@ public class AiTutorActivity extends Activity {
         cancelButton.setBackground(round(BG, 18, BG));
         cancelButton.setVisibility(View.GONE);
         cancelButton.setOnClickListener(v -> cancelActiveRequest());
-        LinearLayout.LayoutParams cancelLp = new LinearLayout.LayoutParams(dp(48), dp(48));
+        LinearLayout.LayoutParams cancelLp = new LinearLayout.LayoutParams(dp(44), dp(44));
         cancelLp.leftMargin = dp(4);
         composer.addView(cancelButton, cancelLp);
         page.addView(composer, new LinearLayout.LayoutParams(-1, -2));
