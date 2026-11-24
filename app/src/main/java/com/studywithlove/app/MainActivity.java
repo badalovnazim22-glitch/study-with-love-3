@@ -619,7 +619,7 @@ public class MainActivity extends Activity {
         android.widget.GridLayout palette=new android.widget.GridLayout(this);palette.setColumnCount(paletteColumns);
         String activeTheme=prefs.getString("app_theme","pink");
         for(int i=0;i<keys.length;i++){final String key=keys[i];final int color=colors[i];final String label=names[i];LinearLayout option=new LinearLayout(this);option.setGravity(Gravity.CENTER_VERTICAL);option.setPadding(dp(8),dp(7),dp(5),dp(7));option.setBackground(shape(activeTheme.equals(key)?blendColors(PALE,BG,0.18f):0x00FFFFFF,13,activeTheme.equals(key)?PINK:blendColors(PALE,BG,0.15f)));
-            TextView swatch=text(activeTheme.equals(key)?"✓":"",12,0xFFFFFFFF,true);swatch.setGravity(Gravity.CENTER);GradientDrawable swatchBg=new GradientDrawable();swatchBg.setColor(color);swatchBg.setCornerRadius(dp(30));if(activeTheme.equals(key))swatchBg.setStroke(dp(2),PINK);swatch.setBackground(swatchBg);option.addView(swatch,lp(28,28,0,0,7,0));TextView labelView=text(label,11,DARK,true);option.addView(labelView,new LinearLayout.LayoutParams(0,dp(30),1f));
+            TextView swatch=text(activeTheme.equals(key)?"✓":"",12,onAccentTextColor(color),true);swatch.setGravity(Gravity.CENTER);GradientDrawable swatchBg=new GradientDrawable();swatchBg.setColor(color);swatchBg.setCornerRadius(dp(30));if(activeTheme.equals(key))swatchBg.setStroke(dp(2),PINK);swatch.setBackground(swatchBg);option.addView(swatch,lp(28,28,0,0,7,0));TextView labelView=text(label,11,DARK,true);option.addView(labelView,new LinearLayout.LayoutParams(0,dp(30),1f));
             android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(48);gp.columnSpec=android.widget.GridLayout.spec(i%paletteColumns,1f);gp.setMargins(dp(2),dp(3),dp(2),dp(3));palette.addView(option,gp);
             option.setOnClickListener(v->{prefs.edit().putString("app_theme",key).remove("app_accent_color").apply();applySavedTheme();showSettings();});
         }
@@ -3001,7 +3001,7 @@ public class MainActivity extends Activity {
         int accentDeep=adjustColor(accent,0.78f);
         int outline=blendColors(accent,BG,isDarkAppearance()?0.38f:0.62f);
         b.setElevation(primary ? dp(2) : 0);
-        b.setTextColor(primary ? 0xFFFFFFFF : (isDarkAppearance()?DARK:accentDeep));
+        b.setTextColor(primary ? onAccentTextColor() : (isDarkAppearance()?DARK:accentDeep));
         android.graphics.drawable.Drawable bg;
         if(primary){
             GradientDrawable gradient=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
@@ -3023,6 +3023,23 @@ public class MainActivity extends Activity {
         } else b.setBackground(bg);
         applyPressFeedback(b);
         return b;
+    }
+    private int onAccentTextColor(){return onAccentTextColor(PINK);}
+    private int onAccentTextColor(int background){
+        double white=contrastRatio(background,0xFFFFFFFF);
+        double dark=contrastRatio(background,0xFF17151D);
+        return white>=dark?0xFFFFFFFF:0xFF17151D;
+    }
+    private double contrastRatio(int first,int second){
+        double a=relativeLuminance(first),b=relativeLuminance(second);
+        return (Math.max(a,b)+0.05)/(Math.min(a,b)+0.05);
+    }
+    private double relativeLuminance(int color){
+        double r=Color.red(color)/255.0,g=Color.green(color)/255.0,b=Color.blue(color)/255.0;
+        r=r<=0.04045?r/12.92:Math.pow((r+0.055)/1.055,2.4);
+        g=g<=0.04045?g/12.92:Math.pow((g+0.055)/1.055,2.4);
+        b=b<=0.04045?b/12.92:Math.pow((b+0.055)/1.055,2.4);
+        return 0.2126*r+0.7152*g+0.0722*b;
     }
     private int adjustColor(int color,float factor){
         return Color.rgb(Math.min(255,Math.round(Color.red(color)*factor)),
