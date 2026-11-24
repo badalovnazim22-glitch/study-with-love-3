@@ -434,7 +434,17 @@ public class MainActivity extends Activity {
         installThemeFontListener(root);
         String customBg=prefs.getString("custom_background_uri","");
         if(!customBg.isEmpty()){try{if(!customBg.equals(cachedBackgroundUri)||cachedBackgroundBitmap==null){java.io.InputStream in=getContentResolver().openInputStream(android.net.Uri.parse(customBg));if(in!=null){android.graphics.Bitmap decoded=android.graphics.BitmapFactory.decodeStream(in);in.close();cachedBackgroundBitmap=decoded;cachedBackgroundUri=customBg;}}if(cachedBackgroundBitmap!=null){Drawable photo=new android.graphics.drawable.BitmapDrawable(getResources(),cachedBackgroundBitmap);photo.setAlpha(42);root.setBackground(photo);}}catch(Exception ignored){}}
-        scroll.addView(root);
+        // Keep a consistent reading width on tablets while using the full
+        // available width on phones. All dimensions remain density-independent.
+        android.widget.FrameLayout contentFrame = new android.widget.FrameLayout(this);
+        int screenWidthDp = getResources().getConfiguration().screenWidthDp;
+        int contentWidthDp = Math.min(screenWidthDp, 600);
+        android.widget.FrameLayout.LayoutParams contentParams =
+                new android.widget.FrameLayout.LayoutParams(
+                        dp(contentWidthDp), android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+                        Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        contentFrame.addView(root, contentParams);
+        scroll.addView(contentFrame, new android.widget.ScrollView.LayoutParams(-1, -2));
         shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
         if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 78, 0, 0, 0, 0));
         setContentView(shell);
@@ -568,11 +578,12 @@ public class MainActivity extends Activity {
         Button previewButton = button("Продолжить", true);
         preview.addView(previewButton, lp(-1, 42, 0, 5, 0, 0));
         appearance.addView(preview, lp(-1, -2, 0, 7, 0, 8));
-        android.widget.GridLayout palette=new android.widget.GridLayout(this);palette.setColumnCount(3);
+        int paletteColumns = getResources().getConfiguration().screenWidthDp < 380 ? 2 : 3;
+        android.widget.GridLayout palette=new android.widget.GridLayout(this);palette.setColumnCount(paletteColumns);
         String activeTheme=prefs.getString("app_theme","pink");
         for(int i=0;i<keys.length;i++){final String key=keys[i];final int color=colors[i];final String label=names[i];LinearLayout option=new LinearLayout(this);option.setGravity(Gravity.CENTER_VERTICAL);option.setPadding(dp(8),dp(7),dp(5),dp(7));option.setBackground(shape(activeTheme.equals(key)?0xFFFFF0F4:0x00FFFFFF,15,activeTheme.equals(key)?PINK:0xFFEFE4E8));
             TextView swatch=text(activeTheme.equals(key)?"✓":"",12,0xFFFFFFFF,true);swatch.setGravity(Gravity.CENTER);swatch.setBackground(shape(color,30,activeTheme.equals(key)?PINK:0));option.addView(swatch,lp(28,28,0,0,7,0));TextView labelView=text(label,11,DARK,true);option.addView(labelView,new LinearLayout.LayoutParams(0,dp(30),1f));
-            android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(48);gp.columnSpec=android.widget.GridLayout.spec(i%3,1f);gp.setMargins(dp(2),dp(3),dp(2),dp(3));palette.addView(option,gp);
+            android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(48);gp.columnSpec=android.widget.GridLayout.spec(i%paletteColumns,1f);gp.setMargins(dp(2),dp(3),dp(2),dp(3));palette.addView(option,gp);
             option.setOnClickListener(v->{prefs.edit().putString("app_theme",key).remove("app_accent_color").apply();applySavedTheme();showSettings();});
         }
         appearance.addView(palette,lp(-1,-2,0,7,0,8));
@@ -2857,7 +2868,41 @@ public class MainActivity extends Activity {
         @Override protected void onDraw(android.graphics.Canvas canvas){super.onDraw(canvas);float w=getWidth(),h=getHeight();for(int i=0;i<x.length;i++){float yy=(y[i]+progress*speed[i]*1.5f)*h;if(yy<0||yy>h)continue;canvas.save();canvas.rotate(rotation[i]+progress*360f,x[i]*w,yy);paint.setColor(colors[i%colors.length]);paint.setStyle(android.graphics.Paint.Style.FILL);canvas.drawOval(x[i]*w-size[i],yy-size[i]*1.5f,x[i]*w+size[i],yy+size[i]*1.5f,paint);canvas.restore();}}
     }
     private TextView textFixed(String value,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(translate(value));t.setTextSize(size);t.setTextColor(color==0xFFC97891?PINK:color);t.setTypeface(Typeface.create(selectedFontFamily(),bold?Typeface.BOLD:Typeface.NORMAL));t.setGravity(Gravity.CENTER_VERTICAL);return t;}
-    private Button button(String label, boolean primary) { label=translate(label); Button b = new Button(this); b.setText(label); float scale=prefs==null?1f:prefs.getFloat("app_text_scale",1f); b.setTextSize(14f*scale); b.setTypeface(Typeface.create(selectedFontFamily(), Typeface.BOLD)); b.setAllCaps(false); b.setLetterSpacing(0.01f); b.setMinHeight(dp(48)); b.setPadding(dp(14), dp(8), dp(14), dp(8)); b.setElevation(primary ? dp(2) : 0); b.setTextColor(primary ? 0xFFFFFFFF : PINK); android.graphics.drawable.Drawable bg=shape(primary ? PINK : PALE, 22, primary ? PINK : 0xFFF2DDE4); if(Build.VERSION.SDK_INT>=21){GradientDrawable mask=shape(0xFFFFFFFF,22,0);b.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x337D5264),bg,mask));}else b.setBackground(bg);applyPressFeedback(b);return b; }
+    private Button button(String label, boolean primary) {
+        label=translate(label);
+        Button b = new Button(this);
+        float scale=prefs==null?1f:prefs.getFloat("app_text_scale",1f);
+        b.setText(label);
+        b.setTextSize(14f*scale);
+        b.setTypeface(Typeface.create(selectedFontFamily(), Typeface.BOLD));
+        b.setAllCaps(false);
+        b.setLetterSpacing(0.005f);
+        b.setMinWidth(0);
+        b.setMinimumWidth(0);
+        b.setMinHeight(dp(48));
+        b.setPadding(dp(10), dp(7), dp(10), dp(7));
+        b.setGravity(Gravity.CENTER);
+        b.setIncludeFontPadding(false);
+        b.setMaxLines(2);
+        b.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        if (Build.VERSION.SDK_INT >= 26) {
+            float minSize = Math.max(10f, 10.5f*scale);
+            float maxSize = Math.max(minSize, 14f*scale);
+            b.setAutoSizeTextTypeUniformWithConfiguration(
+                    Math.round(minSize), Math.round(maxSize), 1,
+                    android.util.TypedValue.COMPLEX_UNIT_SP);
+        }
+        b.setElevation(primary ? dp(2) : 0);
+        b.setTextColor(primary ? 0xFFFFFFFF : PINK);
+        android.graphics.drawable.Drawable bg=shape(primary ? PINK : PALE, 22, primary ? PINK : 0xFFF2DDE4);
+        if(Build.VERSION.SDK_INT>=21){
+            GradientDrawable mask=shape(0xFFFFFFFF,22,0);
+            b.setBackground(new android.graphics.drawable.RippleDrawable(
+                    android.content.res.ColorStateList.valueOf(0x337D5264),bg,mask));
+        } else b.setBackground(bg);
+        applyPressFeedback(b);
+        return b;
+    }
     private String translate(String value){
         String lang=prefs==null?"ru":prefs.getString("app_language","ru");if("ru".equals(lang)||value==null)return value;
         String[][] pairs={
