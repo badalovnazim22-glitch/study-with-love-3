@@ -1832,16 +1832,12 @@ public class MainActivity extends Activity {
         HorizontalScrollView subjectScroll=new HorizontalScrollView(this);subjectScroll.setHorizontalScrollBarEnabled(false);LinearLayout subjectRow=new LinearLayout(this);subjectRow.setOrientation(LinearLayout.HORIZONTAL);
         for(String subject:subjects){boolean chosen=selectedSubject.equals(subject);TextView chip=text(subject,11,chosen?0xFFFFFFFF:DARK,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(13),dp(8),dp(13),dp(8));chip.setBackground(shape(chosen?PINK:PALE,18,chosen?PINK:0));LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(-2,dp(36));cp.setMargins(0,0,dp(6),0);subjectRow.addView(chip,cp);chip.setOnClickListener(v->{prefs.edit().putString("timer_subject",subject).apply();showPomodoro();});}
         subjectScroll.addView(subjectRow);root.addView(subjectScroll,lp(-1,42,0,0,0,8));
-        LinearLayout quickLinks=new LinearLayout(this);quickLinks.setOrientation(LinearLayout.HORIZONTAL);
-        String[] quickLabels={"Статистика","Достижения","Фокус-режим"};Runnable[] quickActions={this::showDetailedStats,this::showAchievements,this::showFocusMode};
-        for(int qi=0;qi<quickLabels.length;qi++){final int index=qi;Button q=button(quickLabels[qi],false);q.setTextSize(10);q.setMinHeight(0);q.setPadding(dp(4),dp(3),dp(4),dp(3));LinearLayout.LayoutParams qlp=new LinearLayout.LayoutParams(0,dp(38),1f);qlp.setMargins(dp(2),0,dp(2),0);quickLinks.addView(q,qlp);q.setOnClickListener(v->quickActions[index].run());}
-        root.addView(quickLinks,lp(-1,40,0,0,0,6));
-        LinearLayout wrap=new LinearLayout(this);wrap.setGravity(Gravity.CENTER);wrap.setPadding(0,dp(14),0,dp(18));
+        LinearLayout wrap=new LinearLayout(this);wrap.setGravity(Gravity.CENTER);wrap.setPadding(0,dp(6),0,dp(8));
         timerDisplay=text(formatTimer(timerRemainingMs>0?timerRemainingMs:selectedStudyMinutes*60000L),42,DARK,true);timerDisplay.setGravity(Gravity.CENTER);
         GradientDrawable face=new GradientDrawable();face.setShape(GradientDrawable.OVAL);face.setColor(PALE);face.setStroke(dp(5),PINK);timerDisplay.setBackground(face);timerDisplay.setElevation(dp(5));
-        wrap.addView(timerDisplay,lp(208,208,0,0,0,0));root.addView(wrap,lp(-1,232,0,0,0,4));
+        wrap.addView(timerDisplay,lp(208,208,0,0,0,0));root.addView(wrap,lp(-1,224,0,0,0,2));
         timerStatus=text(timerIsBreak?"🌷  Время отдохнуть":"♡  Время для учёбы",15,PINK,true);timerStatus.setGravity(Gravity.CENTER);root.addView(timerStatus,lp(-1,30,0,0,0,4));
-        TextView timerPlant=text(timerRunning?"🌱  Твой цветок растёт вместе с фокусом":"🌷  Начни занятие — и цветок начнёт расти",14,PINK,true);timerPlant.setGravity(Gravity.CENTER);root.addView(timerPlant,lp(-1,32,0,0,0,6));
+        TextView timerPlant=text(timerRunning?"🌱  Твой цветок растёт вместе с фокусом":"🌷  Начни занятие — и цветок начнёт расти",14,PINK,true);timerPlant.setGravity(Gravity.CENTER);root.addView(timerPlant,lp(-1,28,0,0,0,3));
         LinearLayout settings=card();addText(settings,"ВРЕМЯ УЧЁБЫ",11,PINK,true);
         LinearLayout study=new LinearLayout(this);study.setGravity(Gravity.CENTER);Button minus=button("−",false),plus=button("+",false);minus.setContentDescription(translate("Уменьшить время учёбы"));plus.setContentDescription(translate("Увеличить время учёбы"));
         study.addView(minus,lp(48,48,3,0,6,0));studyTimeValue=text(selectedStudyMinutes+" минут",16,DARK,true);studyTimeValue.setGravity(Gravity.CENTER);study.addView(studyTimeValue,new LinearLayout.LayoutParams(0,dp(48),1f));study.addView(plus,lp(48,48,6,0,3,0));settings.addView(study,lp(-1,48,0,3,0,10));
