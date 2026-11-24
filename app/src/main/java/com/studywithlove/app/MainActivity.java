@@ -53,6 +53,8 @@ public class MainActivity extends Activity {
     private int progressMonthOffset = 0;
     private LinearLayout progressCalendarHost;
     private LinearLayout root;
+    private ScrollView activeScrollView;
+    private int pendingSettingsScrollY=0;
     private String currentScreen = "home";
     private String renderedScreen = "";
     private final List<String> screenHistory = new ArrayList<>();
@@ -448,6 +450,7 @@ public class MainActivity extends Activity {
         shell.setOrientation(LinearLayout.VERTICAL);
         shell.setBackgroundColor(BG);
         ScrollView scroll = new ScrollView(this);
+        activeScrollView = scroll;
         scroll.setFillViewport(true); scroll.setClipToPadding(false);
         root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(20), dp(26), dp(20), dp(26)); root.setBackgroundColor(BG);
@@ -468,6 +471,11 @@ public class MainActivity extends Activity {
         shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
         if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 78, 0, 0, 0, 0));
         setContentView(shell);
+        if(currentScreen.startsWith("settings_") || "settings".equals(currentScreen)) {
+            final int restoreY=pendingSettingsScrollY;
+            scroll.post(()->scroll.scrollTo(0,restoreY));
+            pendingSettingsScrollY=0;
+        }
         // Унифицируем высоту обычных кнопок во всех разделах приложения.
         // Не затрагиваем поля ввода, нижнюю навигацию и специальные элементы.
         compactButtons(shell);
@@ -547,6 +555,7 @@ public class MainActivity extends Activity {
     }
 
     private void showSettings() {
+        if ((currentScreen.startsWith("settings_") || "settings".equals(currentScreen)) && activeScrollView != null) pendingSettingsScrollY=activeScrollView.getScrollY();
         if (!currentScreen.startsWith("settings_")) currentScreen="settings";
         String activeSection = currentScreen.startsWith("settings_") ? currentScreen.substring("settings_".length()) : "menu";
         boolean sectionPage = !"menu".equals(activeSection);
