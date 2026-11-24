@@ -793,6 +793,7 @@ public class MainActivity extends Activity {
     }
 
     private int parseClockMinutes(String value,int fallback){try{String[] p=value.split(":");return Math.max(0,Math.min(1439,Integer.parseInt(p[0])*60+Integer.parseInt(p[1])));}catch(Exception e){return fallback;}}
+    private void chooseClockPreference(String key,String title,String fallback){String value=prefs.getString(key,fallback);int hour=21,minute=0;try{String[] p=value.split(":");hour=Integer.parseInt(p[0]);minute=Integer.parseInt(p[1]);}catch(Exception ignored){}new TimePickerDialog(this,(view,h,m)->{prefs.edit().putString(key,String.format(Locale.US,"%02d:%02d",h,m)).apply();applySavedTheme();updateSystemBarIcons();showSettings();},hour,minute,true).show();}
     private void applySavedTheme() {
         String theme = prefs == null ? "pink" : prefs.getString("app_theme", "pink");
         if(prefs!=null && prefs.getBoolean("scheduled_dark_enabled",false)){Calendar now=Calendar.getInstance(AppTime.zone());int current=now.get(Calendar.HOUR_OF_DAY)*60+now.get(Calendar.MINUTE);int start=parseClockMinutes(prefs.getString("scheduled_dark_start","21:00"),1260),end=parseClockMinutes(prefs.getString("scheduled_dark_end","07:00"),420);if(start<=end?(current>=start&&current<end):(current>=start||current<end))theme="night";}
