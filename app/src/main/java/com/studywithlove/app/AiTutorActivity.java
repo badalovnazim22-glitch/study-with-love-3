@@ -224,7 +224,12 @@ public class AiTutorActivity extends Activity {
         sendButton.setTextColor(Color.WHITE);
         sendButton.setAllCaps(false);
         sendButton.setPadding(0, 0, 0, 0);
-        sendButton.setBackground(round(PINK, 20, PINK));
+        GradientDrawable sendGradient=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{adjustColor(PINK,1.10f),adjustColor(PINK,0.78f)});
+        sendGradient.setCornerRadius(dp(14));
+        sendGradient.setStroke(dp(1),adjustColor(PINK,0.78f));
+        sendButton.setBackground(sendGradient);
+        sendButton.setElevation(dp(2));
         composer.addView(sendButton, new LinearLayout.LayoutParams(dp(44), dp(44)));
         sendButton.setOnClickListener(v -> {
             if (!retryQuestion.isEmpty() && input.getText().toString().trim().isEmpty()) {
@@ -652,6 +657,12 @@ public class AiTutorActivity extends Activity {
         d.setCornerRadius(dp(radius));
         if (stroke != 0) d.setStroke(dp(1), stroke);
         return d;
+    }
+
+    private int adjustColor(int color,float factor) {
+        return Color.rgb(Math.min(255,Math.round(Color.red(color)*factor)),
+                Math.min(255,Math.round(Color.green(color)*factor)),
+                Math.min(255,Math.round(Color.blue(color)*factor)));
     }
 
     private int dp(float value) {
