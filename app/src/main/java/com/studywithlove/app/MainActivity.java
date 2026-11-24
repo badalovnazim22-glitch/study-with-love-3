@@ -231,21 +231,20 @@ public class MainActivity extends Activity {
             TextView error = text("Пожалуйста, введи имя или ник.",12,0xFFE05A70,false);
             error.setVisibility(View.GONE); page.addView(error,lp(-1,-2,0,0,0,4));
             page.addView(new android.widget.Space(this),new LinearLayout.LayoutParams(1,0,1f));
-            Button next = button("Дальше",true); page.addView(next,lp(-1,52,0,12,0,7));
-            Button skip = button("Пропустить",false); page.addView(skip,lp(-1,46,0,0,0,0));
-            next.setOnClickListener(v -> {
+            TextView skip=text("Пропустить",14,MUTED,true);skip.setGravity(Gravity.CENTER);skip.setPadding(0,dp(12),0,dp(8));page.addView(skip,lp(-1,42,0,4,0,0));
+            Runnable continueName=()->{
                 String value=input.getText().toString().trim();
                 if(value.isEmpty()){input.setBackground(shape(PALE,16,0xFFE05A70));error.setVisibility(View.VISIBLE);input.requestFocus();return;}
                 ((android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(input.getWindowToken(),0);
-                bloom.cancel(); renderWelcomeStep(1,value,address,theme,focus,minutes,slide);
-            });
+                bloom.cancel();renderWelcomeStep(1,value,address,theme,focus,minutes,slide);
+            };
             skip.setOnClickListener(v->{bloom.cancel();renderWelcomeStep(1,"Друг",address,theme,focus,minutes,slide);});
             input.addTextChangedListener(new android.text.TextWatcher(){
                 public void beforeTextChanged(CharSequence s,int st,int c,int a){}
                 public void onTextChanged(CharSequence s,int st,int before,int count){flower.setScaleX(1f+Math.min(.22f,s.length()*.012f));flower.setScaleY(1f+Math.min(.22f,s.length()*.012f));if(!s.toString().trim().isEmpty()){error.setVisibility(View.GONE);input.setBackground(shape(PALE,16,PINK));}}
                 public void afterTextChanged(android.text.Editable e){}
             });
-            input.setOnEditorActionListener((v,action,event)->{next.performClick();return true;});
+            input.setOnEditorActionListener((v,action,event)->{continueName.run();return true;});
             input.requestFocus();
             getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE|android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         } else if (step == 1) {
@@ -257,11 +256,10 @@ public class MainActivity extends Activity {
                 final String value=values[i];
                 Button choice=button((address.equals(value)?"✓  ":"")+labels[i],address.equals(value));
                 page.addView(choice,lp(-1,54,0,12,0,3));
-                choice.setOnClickListener(v->{v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);renderWelcomeStep(1,name,value,theme,focus,minutes,slide);});
+                choice.setOnClickListener(v->{v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);renderWelcomeStep(2,name,value,theme,focus,minutes,slide);});
             }
             page.addView(new android.widget.Space(this),new LinearLayout.LayoutParams(1,0,1f));
-            Button next=button("Дальше",true);page.addView(next,lp(-1,52,0,8,0,6));next.setOnClickListener(v->renderWelcomeStep(2,name,address,theme,focus,minutes,slide));
-            Button skip=button("Пропустить",false);page.addView(skip,lp(-1,46,0,0,0,0));skip.setOnClickListener(v->renderWelcomeStep(2,name,"neutral",theme,focus,minutes,slide));
+            TextView skip=text("Пропустить",14,MUTED,true);skip.setGravity(Gravity.CENTER);skip.setPadding(0,dp(12),0,dp(8));page.addView(skip,lp(-1,42,0,8,0,0));skip.setOnClickListener(v->renderWelcomeStep(2,name,"neutral",theme,focus,minutes,slide));
         } else if (step == 2) {
             addText(page,"Выбери аватарку",25,DARK,true);
             addText(page,"Её можно будет поменять позже.",14,MUTED,false);
@@ -273,12 +271,11 @@ public class MainActivity extends Activity {
                 android.widget.GridLayout.LayoutParams ap=new android.widget.GridLayout.LayoutParams();
                 ap.width=0;ap.height=dp(76);ap.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);
                 ap.setMargins(dp(5),dp(6),dp(5),dp(6));avatarGrid.addView(av,ap);
-                av.setOnClickListener(v->{v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);prefs.edit().putString("onboarding_avatar",avatar).apply();renderWelcomeStep(2,name,address,theme,focus,minutes,slide);});
+                av.setOnClickListener(v->{v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);prefs.edit().putString("onboarding_avatar",avatar).apply();renderWelcomeStep(3,name,address,theme,focus,minutes,slide);});
             }
             page.addView(avatarGrid,lp(-1,-2,0,22,0,0));
             page.addView(new android.widget.Space(this),new LinearLayout.LayoutParams(1,0,1f));
-            Button next=button("Дальше",true);page.addView(next,lp(-1,52,0,8,0,6));next.setOnClickListener(v->renderWelcomeStep(3,name,address,theme,focus,minutes,slide));
-            Button skip=button("Пропустить",false);page.addView(skip,lp(-1,46,0,0,0,0));skip.setOnClickListener(v->renderWelcomeStep(3,name,address,theme,focus,minutes,slide));
+            TextView skip=text("Пропустить",14,MUTED,true);skip.setGravity(Gravity.CENTER);skip.setPadding(0,dp(12),0,dp(8));page.addView(skip,lp(-1,42,0,8,0,0));skip.setOnClickListener(v->renderWelcomeStep(3,name,address,theme,focus,minutes,slide));
         } else if (step == 3) {
             addText(page,"Выбери тему приложения",25,DARK,true);
             addText(page,"Можно выбрать светлое или тёмное оформление.",14,MUTED,false);
@@ -286,11 +283,10 @@ public class MainActivity extends Activity {
             for(String[] c:choices){
                 Button option=button((theme.equals(c[0])?"✓  ":"")+c[1],theme.equals(c[0]));
                 page.addView(option,lp(-1,64,0,14,0,4));
-                option.setOnClickListener(v->{v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);renderWelcomeStep(3,name,address,c[0],focus,minutes,slide);});
+                option.setOnClickListener(v->{v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);renderWelcomeStep(4,name,address,c[0],focus,minutes,slide);});
             }
             page.addView(new android.widget.Space(this),new LinearLayout.LayoutParams(1,0,1f));
-            Button next=button("Дальше",true);page.addView(next,lp(-1,52,0,8,0,6));next.setOnClickListener(v->renderWelcomeStep(4,name,address,theme,focus,minutes,slide));
-            Button skip=button("Пропустить",false);page.addView(skip,lp(-1,46,0,0,0,0));skip.setOnClickListener(v->renderWelcomeStep(4,name,address,theme,focus,minutes,slide));
+            TextView skip=text("Пропустить",14,MUTED,true);skip.setGravity(Gravity.CENTER);skip.setPadding(0,dp(12),0,dp(8));page.addView(skip,lp(-1,42,0,8,0,0));skip.setOnClickListener(v->renderWelcomeStep(4,name,address,theme,focus,minutes,slide));
         } else if (step == 4) {
             addText(page,"Выбери цвет акцента",25,DARK,true);
             addText(page,"Он сразу применяется к кнопкам и деталям.",14,MUTED,false);
@@ -309,12 +305,11 @@ public class MainActivity extends Activity {
                 android.widget.GridLayout.LayoutParams p=new android.widget.GridLayout.LayoutParams();p.width=0;p.height=dp(52);
                 p.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);p.setMargins(dp(4),dp(4),dp(4),dp(4));
                 palette.addView(swatch,p);
-                swatch.setOnClickListener(v->{v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);renderWelcomeStep(4,name,address,theme,focus,minutes,index);});
+                swatch.setOnClickListener(v->{v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);renderWelcomeStep(5,name,address,theme,focus,minutes,index);});
             }
             page.addView(palette,lp(-1,-2,0,0,0,10));
             page.addView(new android.widget.Space(this),new LinearLayout.LayoutParams(1,0,1f));
-            Button next=button("Готово",true);page.addView(next,lp(-1,52,0,8,0,6));next.setOnClickListener(v->renderWelcomeStep(5,name,address,theme,focus,minutes,slide));
-            Button skip=button("Пропустить",false);page.addView(skip,lp(-1,46,0,0,0,0));skip.setOnClickListener(v->renderWelcomeStep(5,name,address,theme,focus,minutes,slide));
+            TextView skip=text("Пропустить",14,MUTED,true);skip.setGravity(Gravity.CENTER);skip.setPadding(0,dp(12),0,dp(8));page.addView(skip,lp(-1,42,0,8,0,0));skip.setOnClickListener(v->renderWelcomeStep(5,name,address,theme,focus,minutes,slide));
         } else {
             int[] accents={0xFFC97891,0xFF8979B8,0xFF659B86,0xFF5D91B5,0xFFD88968,0xFFC49318};
             int chosen=accents[Math.max(0,Math.min(accents.length-1,slide))];
@@ -335,7 +330,7 @@ public class MainActivity extends Activity {
             addText(page,"Первый маленький успех — сделай 1 минуту фокуса.",14,MUTED,false);
             page.addView(new android.widget.Space(this),new LinearLayout.LayoutParams(1,0,1f));
             Button begin=button("Начать 1 минуту фокуса",true);page.addView(begin,lp(-1,52,0,18,0,6));begin.setOnClickListener(v->{selectedStudyMinutes=1;timerRemainingMs=60000L;showPomodoro();});
-            Button later=button("Пропустить",false);page.addView(later,lp(-1,46,0,0,0,0));later.setOnClickListener(v->showHome());
+            TextView later=text("Пропустить",14,MUTED,true);later.setGravity(Gravity.CENTER);later.setPadding(0,dp(12),0,dp(8));page.addView(later,lp(-1,42,0,4,0,0));later.setOnClickListener(v->showHome());
         }
     }
 
