@@ -619,7 +619,7 @@ public class MainActivity extends Activity {
         String[] fontFamilies={"sans-serif","sans-serif-rounded","serif","monospace","sans-serif-condensed","sans-serif-medium"};
         String activeFont=prefs.getString("app_font","sans");
         android.widget.GridLayout fontGrid=new android.widget.GridLayout(this);fontGrid.setColumnCount(2);
-        for(int i=0;i<fontKeys.length;i++){final String key=fontKeys[i],family=fontFamilies[i];Button choice=button((activeFont.equals(key)?"✓  ":"")+fontNames[i],activeFont.equals(key));choice.setTypeface(Typeface.create(family,Typeface.BOLD));android.widget.GridLayout.LayoutParams fp=new android.widget.GridLayout.LayoutParams();fp.width=0;fp.height=dp(44);fp.columnSpec=android.widget.GridLayout.spec(i%2,1f);fp.setMargins(dp(3),dp(3),dp(3),dp(3));fp.height=dp(48);fontGrid.addView(choice,fp);choice.setOnClickListener(v->{prefs.edit().putString("app_font",key).apply();showSettings();});}
+        for(int i=0;i<fontKeys.length;i++){final String key=fontKeys[i],family=fontFamilies[i];Button choice=button((activeFont.equals(key)?"✓  ":"")+fontNames[i],activeFont.equals(key));choice.setTypeface(Typeface.create(family,Typeface.BOLD));choice.setBackground(shape(activeFont.equals(key)?PINK:PALE,14,activeFont.equals(key)?PINK:0xFFF2DDE4));android.widget.GridLayout.LayoutParams fp=new android.widget.GridLayout.LayoutParams();fp.width=0;fp.height=dp(44);fp.columnSpec=android.widget.GridLayout.spec(i%2,1f);fp.setMargins(dp(3),dp(3),dp(3),dp(3));fontGrid.addView(choice,fp);choice.setOnClickListener(v->{prefs.edit().putString("app_font",key).apply();showSettings();});}
         fontGroup.addView(fontGrid,lp(-1,-2,0,4,0,0));appearance.addView(fontGroup,lp(-1,-2,0,4,0,6));
         LinearLayout fontSizeGroup=settingsGroup("РАЗМЕР ТЕКСТА");
         fontSizeGroup.setTag("appearance");
@@ -627,35 +627,46 @@ public class MainActivity extends Activity {
         float[] textScales={0.9f,1.0f,1.15f,1.3f};
         String[] textScaleNames={"Маленький","Обычный","Крупный","Очень крупный"};
         float activeScale=prefs.getFloat("app_text_scale",1.0f);
-        // Две колонки вместо четырёх узких кнопок: надписи больше не ломаются
-        // посреди слова на небольших экранах.
-        android.widget.GridLayout scaleGrid=new android.widget.GridLayout(this);
-        scaleGrid.setColumnCount(2);
+        // Единый сегментированный переключатель: четыре значения в общей плашке.
+        LinearLayout scaleStrip=new LinearLayout(this);
+        scaleStrip.setOrientation(LinearLayout.HORIZONTAL);
+        scaleStrip.setPadding(dp(3),dp(3),dp(3),dp(3));
+        scaleStrip.setBackground(shape(PALE,14,0xFFF2DDE4));
         for(int i=0;i<textScales.length;i++){
             final float scale=textScales[i];
             boolean selected=Math.abs(activeScale-scale)<0.01f;
-            Button choice=button((selected?"✓  ":"")+textScaleNames[i],selected);
+            TextView choice=text((selected?"✓ ":"")+textScaleNames[i],11,selected?0xFFFFFFFF:PINK,true);
+            choice.setGravity(Gravity.CENTER);
             choice.setMaxLines(1);
-            android.widget.GridLayout.LayoutParams scaleLp=new android.widget.GridLayout.LayoutParams();
-            scaleLp.width=0;scaleLp.height=dp(48);
-            scaleLp.columnSpec=android.widget.GridLayout.spec(i%2,1f);
-            scaleLp.setMargins(dp(3),dp(4),dp(3),dp(3));
-            scaleGrid.addView(choice,scaleLp);
+            choice.setSingleLine(true);
+            choice.setIncludeFontPadding(false);
+            choice.setPadding(dp(2),dp(9),dp(2),dp(9));
+            choice.setBackground(selected?shape(PINK,11,PINK):shape(PALE,11,0));
+            LinearLayout.LayoutParams scaleLp=new LinearLayout.LayoutParams(0,dp(42),1f);
+            scaleLp.setMargins(dp(1),0,dp(1),0);
+            scaleStrip.addView(choice,scaleLp);
             choice.setOnClickListener(v->{prefs.edit().putFloat("app_text_scale",scale).apply();showSettings();});
         }
-        fontSizeGroup.addView(scaleGrid,lp(-1,-2,0,2,0,0));
+        fontSizeGroup.addView(scaleStrip,lp(-1,-2,0,5,0,0));
         appearance.addView(fontSizeGroup,lp(-1,-2,0,4,0,6));
-        Button systemTheme=button("◐  Цвета и тёмная тема — как в системе","system".equals(activeTheme));systemTheme.setOnClickListener(v->{prefs.edit().putString("app_theme","system").remove("app_accent_color").apply();applySavedTheme();showSettings();});appearance.addView(systemTheme,lp(-1, 48,0,3,0,0));
-        Button choosePhoto=button("＋  Выбрать фото фона",false);choosePhoto.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT);pick.addCategory(Intent.CATEGORY_OPENABLE);pick.setType("image/*");pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,PICK_BACKGROUND);});
-        appearance.addView(choosePhoto,lp(-1, 48,0,3,0,4));
-        Button clearPhoto=button("Убрать фото фона",false);clearPhoto.setOnClickListener(v->{prefs.edit().remove("custom_background_uri").apply();showSettings();});appearance.addView(clearPhoto,lp(-1,48,0,0,0,0));
+        LinearLayout appearanceActions=card();
+        appearanceActions.setPadding(dp(12),dp(5),dp(12),dp(5));
+        Button systemTheme=button("◐  Цвета и тёмная тема — как в системе   ›","system".equals(activeTheme));systemTheme.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);systemTheme.setBackground(shape(isDarkAppearance()?0xFF25212B:0xFFFFFFFF,12,0));systemTheme.setOnClickListener(v->{prefs.edit().putString("app_theme","system").remove("app_accent_color").apply();applySavedTheme();showSettings();});appearanceActions.addView(systemTheme,lp(-1,42,0,2,0,2));
+        View actionDivider=new View(this);actionDivider.setBackgroundColor(isDarkAppearance()?0xFF49404B:0xFFECE5E9);appearanceActions.addView(actionDivider,lp(-1,1,0,3,0,3));
+        Button choosePhoto=button("▧  Выбрать фото фона   ›",false);choosePhoto.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);choosePhoto.setBackground(shape(isDarkAppearance()?0xFF25212B:0xFFFFFFFF,12,0));choosePhoto.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT);pick.addCategory(Intent.CATEGORY_OPENABLE);pick.setType("image/*");pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,PICK_BACKGROUND);});
+        appearanceActions.addView(choosePhoto,lp(-1,42,0,2,0,2));
+        View actionDivider2=new View(this);actionDivider2.setBackgroundColor(isDarkAppearance()?0xFF49404B:0xFFECE5E9);appearanceActions.addView(actionDivider2,lp(-1,1,0,3,0,3));
+        Button clearPhoto=button("⌫  Убрать фото фона   ›",false);clearPhoto.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);clearPhoto.setBackground(shape(isDarkAppearance()?0xFF25212B:0xFFFFFFFF,12,0));clearPhoto.setOnClickListener(v->{prefs.edit().remove("custom_background_uri").apply();showSettings();});appearanceActions.addView(clearPhoto,lp(-1,42,0,2,0,2));
+        appearance.addView(appearanceActions,lp(-1,-2,0,5,0,0));
         root.addView(appearance,lp(-1,-2,0,0,0,4));
 
         LinearLayout language=settingsGroup("ЯЗЫК ПРИЛОЖЕНИЯ");
         language.setTag("appearance");
         addText(language,"После выбора язык применяется ко всем экранам приложения.",12,MUTED,false);
         String[] languageNames={"Русский","English","Azərbaycan dili"};String[] languageKeys={"ru","en","az"};String selectedLanguage=prefs.getString("app_language","ru");
-        for(int i=0;i<languageKeys.length;i++){final String key=languageKeys[i];Button choice=button((selectedLanguage.equals(key)?"✓  ":"")+languageNames[i],selectedLanguage.equals(key));language.addView(choice,lp(-1,48,0,5,0,0));choice.setOnClickListener(v->{prefs.edit().putString("app_language",key).apply();showSettings();});}
+        LinearLayout languageCard=card();languageCard.setPadding(dp(12),dp(4),dp(12),dp(4));
+        for(int i=0;i<languageKeys.length;i++){final String key=languageKeys[i];boolean selected=selectedLanguage.equals(key);Button choice=button((selected?"✓  ":"")+"   "+languageNames[i]+"   "+(selected?"":"›"),selected);choice.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);choice.setBackground(shape(isDarkAppearance()?(selected?0xFF342E39:0xFF25212B):(selected?PALE:0xFFFFFFFF),12,0));languageCard.addView(choice,lp(-1,42,0,2,0,2));choice.setOnClickListener(v->{prefs.edit().putString("app_language",key).apply();showSettings();});if(i<languageKeys.length-1){View d=new View(this);d.setBackgroundColor(isDarkAppearance()?0xFF49404B:0xFFECE5E9);languageCard.addView(d,lp(-1,1,0,3,0,3));}}
+        language.addView(languageCard,lp(-1,-2,0,5,0,0));
         root.addView(language,lp(-1,-2,0,0,0,4));
 
         LinearLayout progress=settingsGroup("ОТОБРАЖЕНИЕ ПРОГРЕССА");
