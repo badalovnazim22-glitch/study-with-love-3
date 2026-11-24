@@ -80,24 +80,16 @@ public class MainActivity extends Activity {
     private String miniTopic="";
     private boolean weaknessTrainingMode=false,miniResultSaved=false;
     private static class TimerRingView extends View {
-        private final android.graphics.Paint paint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
-        private final android.graphics.RectF arc = new android.graphics.RectF();
-        private int trackColor, progressColor, fillColor;
-        private float progress = 0f;
-        TimerRingView(Context context, int fill, int track, int accent) { super(context); fillColor=fill; trackColor=track; progressColor=accent; }
-        void setProgress(float value) { progress=Math.max(0f,Math.min(1f,value)); invalidate(); }
-        @Override protected void onDraw(android.graphics.Canvas canvas) {
-            super.onDraw(canvas);
-            float cx=getWidth()/2f, cy=getHeight()/2f;
-            float stroke=Math.max(5f,getResources().getDisplayMetrics().density*7f);
-            float radius=Math.min(cx,cy)-stroke/2f-2f;
-            paint.setStyle(android.graphics.Paint.Style.FILL); paint.setColor(fillColor); canvas.drawCircle(cx,cy,radius,paint);
-            arc.set(cx-radius+stroke/2f,cy-radius+stroke/2f,cx+radius-stroke/2f,cy+radius-stroke/2f);
-            paint.setStyle(android.graphics.Paint.Style.STROKE); paint.setStrokeWidth(stroke); paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);
-            paint.setColor(trackColor); canvas.drawArc(arc,0,360,false,paint);
-            if(progress>0f){paint.setColor(progressColor);canvas.drawArc(arc,-90,360f*progress,false,paint);}
-            paint.setStyle(android.graphics.Paint.Style.FILL);
-        }
+        private final android.graphics.Paint paint=new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        private final android.graphics.RectF arc=new android.graphics.RectF();
+        private int trackColor,progressColor,fillColor;
+        private float progress=0f,pulse=1f;
+        private android.animation.ValueAnimator progressAnimator,pulseAnimator;
+        TimerRingView(Context c,int fill,int track,int accent){super(c);fillColor=fill;trackColor=track;progressColor=accent;setLayerType(View.LAYER_TYPE_SOFTWARE,null);}
+        void setProgress(float value){float target=Math.max(0f,Math.min(1f,value));if(progressAnimator!=null)progressAnimator.cancel();progressAnimator=android.animation.ValueAnimator.ofFloat(progress,target);progressAnimator.setDuration(280);progressAnimator.setInterpolator(new android.view.animation.DecelerateInterpolator());progressAnimator.addUpdateListener(a->{progress=(float)a.getAnimatedValue();invalidate();});progressAnimator.start();}
+        void setRunning(boolean running){if(pulseAnimator!=null){pulseAnimator.cancel();pulseAnimator=null;}if(!running){pulse=1f;invalidate();return;}pulseAnimator=android.animation.ValueAnimator.ofFloat(1f,1.018f);pulseAnimator.setDuration(1350);pulseAnimator.setRepeatMode(android.animation.ValueAnimator.REVERSE);pulseAnimator.setRepeatCount(android.animation.ValueAnimator.INFINITE);pulseAnimator.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());pulseAnimator.addUpdateListener(a->{pulse=(float)a.getAnimatedValue();invalidate();});pulseAnimator.start();}
+        @Override protected void onDraw(android.graphics.Canvas c){super.onDraw(c);float cx=getWidth()/2f,cy=getHeight()/2f,d=getResources().getDisplayMetrics().density,stroke=11f*d,r=Math.min(cx,cy)-stroke*1.25f;if(r<=0)return;c.save();c.scale(pulse,pulse,cx,cy);paint.setStyle(android.graphics.Paint.Style.FILL);paint.setColor(fillColor);paint.clearShadowLayer();c.drawCircle(cx,cy,r-stroke*.55f,paint);arc.set(cx-r,cy-r,cx+r,cy+r);paint.setStyle(android.graphics.Paint.Style.STROKE);paint.setStrokeWidth(stroke);paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);paint.setColor(trackColor);c.drawArc(arc,0,360,false,paint);if(progress>.0005f){paint.setColor(progressColor);paint.setShadowLayer(12f*d,0,0,progressColor);c.drawArc(arc,-90,Math.min(359.8f,360f*progress),false,paint);paint.clearShadowLayer();float angle=(float)Math.toRadians(-90+360f*progress),x=cx+(float)Math.cos(angle)*r,y=cy+(float)Math.sin(angle)*r;paint.setStyle(android.graphics.Paint.Style.FILL);paint.setColor(0xFFFFFFFF);c.drawCircle(x,y,stroke*.34f,paint);paint.setColor(progressColor);c.drawCircle(x,y,stroke*.22f,paint);}c.restore();paint.setStyle(android.graphics.Paint.Style.FILL);}
+        @Override protected void onDetachedFromWindow(){if(progressAnimator!=null)progressAnimator.cancel();if(pulseAnimator!=null)pulseAnimator.cancel();super.onDetachedFromWindow();}
     }
     private static class MiniQuestion { String prompt,explanation,type,answer,topic; String[] options; int correct; MiniQuestion(String p,String[] o,int c,String e){this(p,o,c,e,"choice",o!=null&&c>=0&&c<o.length?o[c]:"");} MiniQuestion(String p,String[] o,int c,String e,String t,String a){prompt=p;options=o;correct=c;explanation=e;type=t;answer=a;topic="";} }
     private Button timerStartButton, timerPauseButton;
@@ -1842,64 +1834,43 @@ public class MainActivity extends Activity {
     private int totalStudyMinutes() { return prefs.getInt("focus_total_minutes",0); }
 
     private void showPomodoro() {
-        currentScreen="pomodoro";base("Таймер фокуса","Один шаг за раз — и ты ближе к своей цели");
-        int todayMinutes=prefs.getInt("focus_minutes_"+todayKey(),0),dailyGoal=prefs.getInt("daily_goal_minutes",120);
-        LinearLayout daily=card();daily.setPadding(dp(14),dp(11),dp(14),dp(11));addText(daily,"ЦЕЛЬ НА СЕГОДНЯ",10,PINK,true);
-        LinearLayout dailyRow=new LinearLayout(this);dailyRow.setGravity(Gravity.CENTER_VERTICAL);TextView dailyValue=text((todayMinutes/60)+" ч "+(todayMinutes%60)+" мин",19,DARK,true);dailyRow.addView(dailyValue,new LinearLayout.LayoutParams(0,-2,1f));TextView dailyGoalLabel=text("из "+dailyGoal+" мин  ✎",11,MUTED,true);dailyRow.addView(dailyGoalLabel);daily.addView(dailyRow,lp(-1,32,0,2,0,2));
-        ProgressBar dailyBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);dailyBar.setMax(Math.max(1,dailyGoal));dailyBar.setProgress(Math.min(todayMinutes,dailyGoal));if(Build.VERSION.SDK_INT>=21){dailyBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));dailyBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(PALE));}daily.addView(dailyBar,lp(-1,6,0,4,0,2));
-        dailyGoalLabel.setOnClickListener(v->{EditText input=new EditText(this);input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);input.setText(String.valueOf(dailyGoal));new android.app.AlertDialog.Builder(this).setTitle("Цель на день").setMessage("Сколько минут хочешь заниматься?").setView(input).setNegativeButton("Отмена",null).setPositiveButton("Сохранить",(d,w)->{try{int value=Integer.parseInt(input.getText().toString().trim());if(value<15||value>1440)throw new Exception();prefs.edit().putInt("daily_goal_minutes",value).apply();showPomodoro();}catch(Exception e){showAppMessage("Укажи от 15 до 1440 минут");}}).show();});
-        root.addView(daily,lp(-1,-2,0,0,0,8));
-        addText(root,"ПРЕДМЕТ",10,PINK,true);
-        String[] subjects={"Все","Математика","Физика","Химия","Языки","Другое"};String selectedSubject=prefs.getString("timer_subject","Все");
-        HorizontalScrollView subjectScroll=new HorizontalScrollView(this);subjectScroll.setHorizontalScrollBarEnabled(false);LinearLayout subjectRow=new LinearLayout(this);subjectRow.setOrientation(LinearLayout.HORIZONTAL);
-        for(String subject:subjects){boolean chosen=selectedSubject.equals(subject);TextView chip=text(subject,11,chosen?0xFFFFFFFF:DARK,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(13),dp(8),dp(13),dp(8));chip.setBackground(shape(chosen?PINK:PALE,18,chosen?PINK:0));LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(-2,dp(36));cp.setMargins(0,0,dp(6),0);subjectRow.addView(chip,cp);chip.setOnClickListener(v->{prefs.edit().putString("timer_subject",subject).apply();showPomodoro();});}
-        subjectScroll.addView(subjectRow);root.addView(subjectScroll,lp(-1,42,0,0,0,8));
-        LinearLayout wrap=new LinearLayout(this);wrap.setGravity(Gravity.CENTER);wrap.setPadding(0,dp(6),0,dp(8));
-        int ringFill=isDarkAppearance()?0xFF25212B:PALE;
-        timerRing=new TimerRingView(this,ringFill,isDarkAppearance()?0xFF49414E:0xFFD9DDE5,PINK);
-        FrameLayout timerFace=new FrameLayout(this);
-        timerFace.setBackground(shape(ringFill,120,0));
-        timerFace.setElevation(dp(2));
-        timerFace.addView(timerRing,new FrameLayout.LayoutParams(-1,-1));
-        timerDisplay=text(formatTimer(timerRemainingMs>0?timerRemainingMs:selectedStudyMinutes*60000L),42,DARK,true);timerDisplay.setGravity(Gravity.CENTER);timerDisplay.setBackgroundColor(android.graphics.Color.TRANSPARENT);
-        timerFace.addView(timerDisplay,new FrameLayout.LayoutParams(-1,-1));
-        wrap.addView(timerFace,lp(224,224,0,0,0,0));root.addView(wrap,lp(-1,232,0,0,0,2));
-        updateTimerRingProgress(timerRemainingMs>0?timerRemainingMs:(timerIsBreak?selectedBreakMinutes:selectedStudyMinutes)*60000L);
-        timerStatus=text(timerIsBreak?"🌷  Время отдохнуть":"♡  Время для учёбы",15,PINK,true);timerStatus.setGravity(Gravity.CENTER);root.addView(timerStatus,lp(-1,30,0,0,0,4));
-        TextView timerPlant=text(timerRunning?"🌱  Твой цветок растёт вместе с фокусом":"🌷  Начни занятие — и цветок начнёт расти",14,PINK,true);timerPlant.setGravity(Gravity.CENTER);root.addView(timerPlant,lp(-1,28,0,0,0,3));
-        LinearLayout settings=card();addText(settings,"ВРЕМЯ УЧЁБЫ",11,PINK,true);
-        LinearLayout study=new LinearLayout(this);study.setGravity(Gravity.CENTER);Button minus=button("−",false),plus=button("+",false);minus.setContentDescription(translate("Уменьшить время учёбы"));plus.setContentDescription(translate("Увеличить время учёбы"));
-        study.addView(minus,lp(48,48,3,0,6,0));studyTimeValue=text(selectedStudyMinutes+" минут",16,DARK,true);studyTimeValue.setGravity(Gravity.CENTER);study.addView(studyTimeValue,new LinearLayout.LayoutParams(0,dp(48),1f));study.addView(plus,lp(48,48,6,0,3,0));settings.addView(study,lp(-1,48,0,3,0,10));
-        minus.setOnClickListener(v->{if(!timerRunning){selectedStudyMinutes=Math.max(1,selectedStudyMinutes-5);if(!timerIsBreak)timerRemainingMs=selectedStudyMinutes*60000L;studyTimeValue.setText(selectedStudyMinutes+" минут");timerDisplay.setText(formatTimer(timerRemainingMs>0?timerRemainingMs:selectedStudyMinutes*60000L));}});
-        plus.setOnClickListener(v->{if(!timerRunning){selectedStudyMinutes=Math.min(600,selectedStudyMinutes+5);if(!timerIsBreak)timerRemainingMs=selectedStudyMinutes*60000L;studyTimeValue.setText(selectedStudyMinutes+" минут");timerDisplay.setText(formatTimer(timerRemainingMs>0?timerRemainingMs:selectedStudyMinutes*60000L));}});
-        studyTimeValue.setOnClickListener(v->{if(!timerRunning)new TimePickerDialog(this,(p,h,m)->{selectedStudyMinutes=Math.min(600,Math.max(1,h*60+m));if(!timerIsBreak)timerRemainingMs=selectedStudyMinutes*60000L;studyTimeValue.setText(selectedStudyMinutes+" минут");timerDisplay.setText(formatTimer(timerRemainingMs>0?timerRemainingMs:selectedStudyMinutes*60000L));},selectedStudyMinutes/60,selectedStudyMinutes%60,true).show();});
-        addText(settings,"ВРЕМЯ ПЕРЕРЫВА",11,PINK,true);LinearLayout breaksRow=new LinearLayout(this);breaksRow.setGravity(Gravity.CENTER);
-        Button breakMinus=button("−",false),breakPlus=button("+",false);breakMinus.setContentDescription(translate("Уменьшить время перерыва"));breakPlus.setContentDescription(translate("Увеличить время перерыва"));breakTimeValue=text(selectedBreakMinutes+" минут",16,DARK,true);breakTimeValue.setGravity(Gravity.CENTER);breaksRow.addView(breakMinus,lp(48,48,3,0,6,0));breaksRow.addView(breakTimeValue,new LinearLayout.LayoutParams(0,dp(48),1f));breaksRow.addView(breakPlus,lp(48,48,6,0,3,0));breakMinus.setOnClickListener(v->{if(!timerRunning){selectedBreakMinutes=Math.max(1,selectedBreakMinutes-1);if(timerIsBreak)timerRemainingMs=selectedBreakMinutes*60000L;breakTimeValue.setText(selectedBreakMinutes+" минут");if(timerIsBreak)timerDisplay.setText(formatTimer(timerRemainingMs));}});breakPlus.setOnClickListener(v->{if(!timerRunning){selectedBreakMinutes=Math.min(600,selectedBreakMinutes+1);if(timerIsBreak)timerRemainingMs=selectedBreakMinutes*60000L;breakTimeValue.setText(selectedBreakMinutes+" минут");if(timerIsBreak)timerDisplay.setText(formatTimer(timerRemainingMs));}});breakTimeValue.setOnClickListener(v->{if(!timerRunning)new TimePickerDialog(this,(p,h,m)->{selectedBreakMinutes=Math.max(1,h*60+m);if(timerIsBreak)timerRemainingMs=selectedBreakMinutes*60000L;breakTimeValue.setText(selectedBreakMinutes+" минут");if(timerIsBreak)timerDisplay.setText(formatTimer(timerRemainingMs));},selectedBreakMinutes/60,selectedBreakMinutes%60,true).show();});
-        settings.addView(breaksRow,lp(-1,48,0,3,0,0));root.addView(settings,lp(-1,-2,0,0,0,14));
-        LinearLayout timerControls = new LinearLayout(this); timerControls.setOrientation(LinearLayout.HORIZONTAL); timerControls.setGravity(Gravity.CENTER);
-        timerStartButton=button(timerRunning?"Идёт":"▶  Начать",true);timerStartButton.setEnabled(!timerRunning);timerStartButton.setOnClickListener(v->{if(!timerIsBreak&&timerRemainingMs>0&&timerRemainingMs>=selectedStudyMinutes*60000L-1000L)showStudyRitual();else startTimer();});
-        timerPauseButton=button("Ⅱ  Пауза",false);timerPauseButton.setEnabled(timerRunning);timerPauseButton.setOnClickListener(v->pauseTimer());
-        Button reset=button("↺  Сброс",false);reset.setOnClickListener(v->{long elapsed=timerRunning&&!timerIsBreak?Math.max(0,SystemClock.elapsedRealtime()-timerSessionStarted):0;timerHandler.removeCallbacks(timerTick);timerRunning=false;cancelTimerFinishAlarm();try{startService(new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_STOP).putExtra("elapsed_ms",elapsed).putExtra("break",timerIsBreak));}catch(Exception ignored){}getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}if(timerDisplay!=null)timerDisplay.animate().cancel();timerIsBreak=false;timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();});
-        Button[] controls={timerStartButton,timerPauseButton,reset};
-        for(Button control:controls){
-            LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(48),1f); cp.setMargins(dp(3),0,dp(3),0);
-            control.setPadding(dp(3),dp(4),dp(3),dp(4)); control.setTextSize(12); control.setMinHeight(0);
-            int normal=control==timerStartButton?PINK:PALE, pressed=control==timerStartButton?0xFF9F526B:0xFFD9C5CC;
-            android.graphics.drawable.StateListDrawable states=new android.graphics.drawable.StateListDrawable();
-            states.addState(new int[]{android.R.attr.state_pressed},shape(pressed,14,pressed));
-            states.addState(new int[]{android.R.attr.state_enabled},shape(normal,14,control==timerStartButton?PINK:0));
-            states.addState(new int[]{},shape(0xFFE7E1E4,14,0));
-            control.setBackground(states);
-            control.setOnTouchListener((view,event)->{
-                if(event.getAction()==android.view.MotionEvent.ACTION_DOWN)view.animate().scaleX(0.94f).scaleY(0.94f).alpha(0.82f).setDuration(75).start();
-                else if(event.getAction()==android.view.MotionEvent.ACTION_UP||event.getAction()==android.view.MotionEvent.ACTION_CANCEL)view.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(130).start();
-                return false;
-            });
-            timerControls.addView(control,cp);
-        }
-        root.addView(timerControls,lp(-1,52,0,0,0,0));
+        currentScreen="pomodoro";
+        base("Фокус","Время для себя и своих целей");
+        int bg=isDarkAppearance()?0xFF201B25:0xFFFFF8FA;
+        int track=isDarkAppearance()?0xFF49404D:0xFFF0DDE5;
+        int fg=isDarkAppearance()?0xFFFFF5FA:0xFF302630;
+        int muted=isDarkAppearance()?0xFFBBAFBA:0xFF927F8A;
         if(timerRemainingMs<=0)timerRemainingMs=(timerIsBreak?selectedBreakMinutes:selectedStudyMinutes)*60000L;
-        if(timerRunning){updateTimerDisplay();timerStartButton.setEnabled(false);timerPauseButton.setEnabled(true);if(timerTick==null){timerTick=new Runnable(){public void run(){updateTimerDisplay();long left=timerEndElapsed-SystemClock.elapsedRealtime();if(left<=0)finishTimerPhase();else timerHandler.postDelayed(this,250);}};timerHandler.post(timerTick);}}
+        int diameter=Math.min(dp(326),Math.max(dp(250),getResources().getDisplayMetrics().widthPixels-dp(56)));
+        LinearLayout screen=new LinearLayout(this);screen.setOrientation(LinearLayout.VERTICAL);screen.setGravity(Gravity.CENTER_HORIZONTAL);screen.setPadding(0,dp(4),0,dp(10));
+        FrameLayout dial=new FrameLayout(this);dial.setBackground(shape(bg,28,0));dial.setElevation(dp(2));
+        timerRing=new TimerRingView(this,bg,track,PINK);
+        dial.addView(timerRing,new FrameLayout.LayoutParams(-1,-1));
+        LinearLayout center=new LinearLayout(this);center.setOrientation(LinearLayout.VERTICAL);center.setGravity(Gravity.CENTER);
+        TextView phase=text(timerIsBreak?"ПЕРЕРЫВ":"ВРЕМЯ ФОКУСА",11,muted,true);phase.setLetterSpacing(0.16f);phase.setGravity(Gravity.CENTER);center.addView(phase,lp(-1,-2,0,0,0,dp(10)));
+        timerDisplay=text(formatTimer(timerRemainingMs),52,fg,true);timerDisplay.setGravity(Gravity.CENTER);timerDisplay.setIncludeFontPadding(false);timerDisplay.setTypeface(android.graphics.Typeface.create("sans-serif",android.graphics.Typeface.BOLD));center.addView(timerDisplay,lp(-1,-2,0,0,0,dp(8)));
+        TextView hint=text(timerRunning?"Ты в потоке":"Нажми, чтобы начать",13,muted,false);hint.setGravity(Gravity.CENTER);center.addView(hint,lp(-1,-2,0,0,0,0));
+        dial.addView(center,new FrameLayout.LayoutParams(-1,-1));screen.addView(dial,new LinearLayout.LayoutParams(diameter,diameter));
+        timerStatus=text(timerIsBreak?"Отдых тоже часть успеха":"Один шаг за раз",14,muted,false);timerStatus.setGravity(Gravity.CENTER);timerStatus.setPadding(dp(12),dp(16),dp(12),dp(12));screen.addView(timerStatus,lp(-1,-2,0,0,0,dp(8)));
+        LinearLayout controls=new LinearLayout(this);controls.setGravity(Gravity.CENTER);controls.setOrientation(LinearLayout.HORIZONTAL);
+        timerStartButton=button(timerRunning?"Продолжается":"Начать фокус",true);timerStartButton.setEnabled(!timerRunning);timerStartButton.setTextSize(14);
+        timerStartButton.setOnClickListener(v->{if(!timerIsBreak&&timerRemainingMs>=selectedStudyMinutes*60000L-1000L)showStudyRitual();else startTimer();});
+        timerPauseButton=button("Пауза",false);timerPauseButton.setTextSize(14);timerPauseButton.setEnabled(timerRunning);timerPauseButton.setOnClickListener(v->pauseTimer());
+        Button reset=button("Сбросить",false);reset.setTextSize(14);reset.setOnClickListener(v->{
+            long elapsed=timerRunning&&!timerIsBreak?Math.max(0,SystemClock.elapsedRealtime()-timerSessionStarted):0;
+            timerHandler.removeCallbacks(timerTick);timerRunning=false;cancelTimerFinishAlarm();
+            try{startService(new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_STOP).putExtra("elapsed_ms",elapsed).putExtra("break",timerIsBreak));}catch(Exception ignored){}
+            getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}
+            if(timerDisplay!=null)timerDisplay.animate().cancel();timerIsBreak=false;timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();
+        });
+        LinearLayout.LayoutParams main=new LinearLayout.LayoutParams(0,dp(52),1f);main.setMargins(dp(4),0,dp(4),0);controls.addView(timerStartButton,main);
+        LinearLayout.LayoutParams side=new LinearLayout.LayoutParams(0,dp(52),0.72f);side.setMargins(dp(4),0,dp(4),0);controls.addView(timerPauseButton,side);controls.addView(reset,side);
+        screen.addView(controls,lp(-1,dp(58),0,dp(12),0,0));
+        timerDisplay.setOnLongClickListener(v->{if(timerRunning)return true;new TimePickerDialog(this,(picker,hour,minute)->{selectedStudyMinutes=Math.max(1,Math.min(600,hour*60+minute));if(!timerIsBreak)timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();},selectedStudyMinutes/60,selectedStudyMinutes%60,true).show();return true;});
+        root.addView(screen,lp(-1,-2,0,dp(6),0,dp(10)));
+        updateTimerRingProgress(timerRemainingMs);
+        if(timerRunning){updateTimerDisplay();timerStartButton.setEnabled(false);timerPauseButton.setEnabled(true);if(timerTick==null){timerTick=new Runnable(){public void run(){updateTimerDisplay();long left=timerEndElapsed-SystemClock.elapsedRealtime();if(left<=0)finishTimerPhase();else timerHandler.postDelayed(this,100);}};timerHandler.post(timerTick);}}
     }
 
     private String formatTimer(long ms) {
@@ -1940,6 +1911,7 @@ public class MainActivity extends Activity {
         if(timerRing==null)return;
         long total=Math.max(1L,(timerIsBreak?selectedBreakMinutes:selectedStudyMinutes)*60000L);
         timerRing.setProgress(1f-Math.max(0L,Math.min(total,remainingMs))/(float)total);
+        timerRing.setRunning(timerRunning);
     }
 
     private void cancelTimerFinishAlarm() {
