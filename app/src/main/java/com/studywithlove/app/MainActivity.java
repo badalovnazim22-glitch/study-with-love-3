@@ -1820,7 +1820,22 @@ public class MainActivity extends Activity {
     private int totalStudyMinutes() { return prefs.getInt("focus_total_minutes",0); }
 
     private void showPomodoro() {
-        currentScreen="pomodoro";base("Таймер фокуса","Настрой время и занимайся в своём ритме");
+        currentScreen="pomodoro";base("Таймер фокуса","Один шаг за раз — и ты ближе к своей цели");
+        int todayMinutes=prefs.getInt("focus_minutes_"+todayKey(),0),dailyGoal=prefs.getInt("daily_goal_minutes",120);
+        LinearLayout daily=card();daily.setPadding(dp(14),dp(11),dp(14),dp(11));addText(daily,"ЦЕЛЬ НА СЕГОДНЯ",10,PINK,true);
+        LinearLayout dailyRow=new LinearLayout(this);dailyRow.setGravity(Gravity.CENTER_VERTICAL);TextView dailyValue=text((todayMinutes/60)+" ч "+(todayMinutes%60)+" мин",19,DARK,true);dailyRow.addView(dailyValue,new LinearLayout.LayoutParams(0,-2,1f));TextView dailyGoalLabel=text("из "+dailyGoal+" мин  ✎",11,MUTED,true);dailyRow.addView(dailyGoalLabel);daily.addView(dailyRow,lp(-1,32,0,2,0,2));
+        ProgressBar dailyBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);dailyBar.setMax(Math.max(1,dailyGoal));dailyBar.setProgress(Math.min(todayMinutes,dailyGoal));if(Build.VERSION.SDK_INT>=21){dailyBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));dailyBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(PALE));}daily.addView(dailyBar,lp(-1,6,0,4,0,2));
+        dailyGoalLabel.setOnClickListener(v->{EditText input=new EditText(this);input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);input.setText(String.valueOf(dailyGoal));new android.app.AlertDialog.Builder(this).setTitle("Цель на день").setMessage("Сколько минут хочешь заниматься?").setView(input).setNegativeButton("Отмена",null).setPositiveButton("Сохранить",(d,w)->{try{int value=Integer.parseInt(input.getText().toString().trim());if(value<15||value>1440)throw new Exception();prefs.edit().putInt("daily_goal_minutes",value).apply();showPomodoro();}catch(Exception e){showAppMessage("Укажи от 15 до 1440 минут");}}).show();});
+        root.addView(daily,lp(-1,-2,0,0,0,8));
+        addText(root,"ПРЕДМЕТ",10,PINK,true);
+        String[] subjects={"Все","Математика","Физика","Химия","Языки","Другое"};String selectedSubject=prefs.getString("timer_subject","Все");
+        HorizontalScrollView subjectScroll=new HorizontalScrollView(this);subjectScroll.setHorizontalScrollBarEnabled(false);LinearLayout subjectRow=new LinearLayout(this);subjectRow.setOrientation(LinearLayout.HORIZONTAL);
+        for(String subject:subjects){boolean chosen=selectedSubject.equals(subject);TextView chip=text(subject,11,chosen?0xFFFFFFFF:DARK,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(13),dp(8),dp(13),dp(8));chip.setBackground(shape(chosen?PINK:PALE,18,chosen?PINK:0));LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(-2,dp(36));cp.setMargins(0,0,dp(6),0);subjectRow.addView(chip,cp);chip.setOnClickListener(v->{prefs.edit().putString("timer_subject",subject).apply();showPomodoro();});}
+        subjectScroll.addView(subjectRow);root.addView(subjectScroll,lp(-1,42,0,0,0,8));
+        LinearLayout quickLinks=new LinearLayout(this);quickLinks.setOrientation(LinearLayout.HORIZONTAL);
+        String[] quickLabels={"Статистика","Достижения","Фокус-режим"};Runnable[] quickActions={this::showDetailedStats,this::showAchievements,this::showFocusMode};
+        for(int qi=0;qi<quickLabels.length;qi++){final int index=qi;Button q=button(quickLabels[qi],false);q.setTextSize(10);q.setMinHeight(0);q.setPadding(dp(4),dp(3),dp(4),dp(3));LinearLayout.LayoutParams qlp=new LinearLayout.LayoutParams(0,dp(38),1f);qlp.setMargins(dp(2),0,dp(2),0);quickLinks.addView(q,qlp);q.setOnClickListener(v->quickActions[index].run());}
+        root.addView(quickLinks,lp(-1,40,0,0,0,6));
         LinearLayout wrap=new LinearLayout(this);wrap.setGravity(Gravity.CENTER);wrap.setPadding(0,dp(14),0,dp(18));
         timerDisplay=text(formatTimer(timerRemainingMs>0?timerRemainingMs:selectedStudyMinutes*60000L),42,DARK,true);timerDisplay.setGravity(Gravity.CENTER);
         GradientDrawable face=new GradientDrawable();face.setShape(GradientDrawable.OVAL);face.setColor(PALE);face.setStroke(dp(5),PINK);timerDisplay.setBackground(face);timerDisplay.setElevation(dp(5));
@@ -2361,6 +2376,13 @@ public class MainActivity extends Activity {
         String[][] a={{"🌱","Первые шаги","Первый день занятий",String.valueOf(days>=1),"1"},{"🌷","Неделя стараний","7 дней занятий",String.valueOf(days>=7),"7"},{"🌸","Две недели","14 дней занятий",String.valueOf(days>=14),"14"},{"💐","Месяц успеха","30 дней занятий",String.valueOf(days>=30),"30"},{"🏵️","Два месяца","60 дней занятий",String.valueOf(days>=60),"60"},{"🌻","Сто дней","100 дней занятий",String.valueOf(days>=100),"100"},{"📚","Маленький математик","Завершена первая тема",String.valueOf(completed>=1),"1"},{"🧮","Счёт — это просто","Завершено 5 тем",String.valueOf(completed>=5),"5"},{"🎓","Знаток математики","Завершено 10 тем",String.valueOf(completed>=10),"10"},{"🏆","Мастер знаний","Завершены все 41 темы",String.valueOf(completed>=41),"41"},{"⏳","Первый час","60 минут занятий",String.valueOf(minutes>=60),"60"},{"⌛","10 часов учёбы","600 минут занятий",String.valueOf(minutes>=600),"600"},{"🚀","Настойчивость","25 учебных занятий",String.valueOf(sessions>=25),"25"},{"💎","Пятьдесят побед","50 тем или занятий",String.valueOf(completed+sessions>=50),"50"},{"💗","Возвращаюсь к цели","Занятия в 3 разных дня",String.valueOf(days>=3),"3"},{"✨","Ритм учёбы","Занятия в 5 разных дней",String.valueOf(days>=5),"5"}};
         int unlocked=0;for(String[] x:a)if(Boolean.parseBoolean(x[3]))unlocked++;
         
+        int xp=totalStudyMinutes()*10,level=xp/1000+1,levelProgress=xp%1000;
+        LinearLayout levelCard=card();levelCard.setPadding(dp(15),dp(14),dp(15),dp(14));addText(levelCard,"✦  ТВОЙ УРОВЕНЬ",10,PINK,true);
+        LinearLayout levelRow=new LinearLayout(this);levelRow.setGravity(Gravity.CENTER_VERTICAL);
+        TextView levelNumber=text(String.valueOf(level),34,PINK,true);levelNumber.setGravity(Gravity.CENTER);levelNumber.setBackground(shape(PALE,50,blendColors(PINK,BG,0.35f)));levelRow.addView(levelNumber,lp(64,64,0,0,12,0));
+        LinearLayout levelWords=new LinearLayout(this);levelWords.setOrientation(LinearLayout.VERTICAL);addText(levelWords,levelName(level),17,DARK,true);addText(levelWords,xp+" XP · до следующего уровня "+(1000-levelProgress)+" XP",11,MUTED,false);levelRow.addView(levelWords,new LinearLayout.LayoutParams(0,-2,1f));levelCard.addView(levelRow,lp(-1,-2,0,6,0,5));
+        ProgressBar xpBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);xpBar.setMax(1000);xpBar.setProgress(levelProgress);if(Build.VERSION.SDK_INT>=21){xpBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));xpBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(PALE));}levelCard.addView(xpBar,lp(-1,7,0,3,0,0));
+        addText(levelCard,"За каждую минуту фокус-занятия начисляется 10 XP",10,MUTED,false);root.addView(levelCard,lp(-1,-2,0,0,0,10));
         addText(root,unlocked+" / "+a.length+" открыто",15,DARK,true);
         ProgressBar overall=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);overall.setMax(a.length);overall.setProgress(unlocked);overall.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));overall.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFE9D4DE));root.addView(overall,lp(-1,10,0,7,0,9));
         int nextIndex=-1;for(int i=0;i<a.length;i++)if(!Boolean.parseBoolean(a[i][3])){nextIndex=i;break;}
@@ -2555,12 +2577,42 @@ public class MainActivity extends Activity {
         TextView totalTime=text("Всего времени: 0 мин",14,MUTED,false);summary.addView(totalTime);animateNumber(totalTime,totalStudyMinutes()," мин всего");addText(summary,"Завершённых занятий: "+(prefs.getBoolean("exam_topic_filter_enabled",false)?completed:prefs.getInt("done_count",0)),14,MUTED,false);root.addView(summary,lp(-1,-2,0,0,0,12));
         int tests=0,correctAnswers=0,totalAnswers=0;List<String> testKeys=new ArrayList<>();for(String key:prefs.getAll().keySet())if(key.startsWith("test_result_"))testKeys.add(key);java.util.Collections.sort(testKeys,java.util.Collections.reverseOrder());for(String key:testKeys){try{org.json.JSONObject o=new org.json.JSONObject(prefs.getString(key,"{}"));tests++;correctAnswers+=o.optInt("score",0);totalAnswers+=o.optInt("total",0);}catch(Exception ignored){}}
         LinearLayout testStats=card();addText(testStats,"📝  РЕЗУЛЬТАТЫ МИНИ-ТЕСТОВ",11,PINK,true);addText(testStats,"Пройдено: "+tests+" · Верных ответов: "+correctAnswers+" из "+totalAnswers,14,DARK,true);addProgressLine(testStats,"Точность ответов",totalAnswers==0?0:correctAnswers*100/totalAnswers);for(int i=0;i<Math.min(3,testKeys.size());i++){try{org.json.JSONObject o=new org.json.JSONObject(prefs.getString(testKeys.get(i),"{}"));addText(testStats,o.optString("topic","Тест")+" · "+o.optInt("score",0)+"/"+o.optInt("total",0),11,MUTED,false);}catch(Exception ignored){}}root.addView(testStats,lp(-1,-2,0,0,0,12));
+        renderStudyHeatmapCalendar();
         Calendar c=Calendar.getInstance(AppTime.zone());LinearLayout week=card();addText(week,"ПОСЛЕДНИЕ 7 ДНЕЙ",12,PINK,true);
         for(int i=6;i>=0;i--){Calendar day=(Calendar)c.clone();day.add(Calendar.DAY_OF_YEAR,-i);String date=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(day.getTime());int mins=prefs.getInt("focus_minutes_"+date,0);addProgressLine(week,new SimpleDateFormat("EEE, d MMM",new Locale("ru")).format(day.getTime())+" · "+mins+" мин",Math.min(100,mins*2));}
         root.addView(week,lp(-1,-2,0,0,0,12));
         int goal=prefs.getInt("weekly_goal_minutes",300),doneMinutes=weeklyMinutesLast7Days();LinearLayout target=card();addText(target,"🎯  НЕДЕЛЬНАЯ ЦЕЛЬ",11,PINK,true);addText(target,doneMinutes+" из "+goal+" минут",20,DARK,true);addProgressLine(target,"Выполнение цели",goal<=0?0:Math.min(100,doneMinutes*100/goal));root.addView(target,lp(-1,-2,0,0,0,10));Button image=button("🖼  Итоги недели картинкой",true);image.setOnClickListener(v->exportWeeklySummaryImage());root.addView(image,lp(-1,48,0,0,0,7));Button pdf=button("📄  Создать PDF-отчёт",false);pdf.setOnClickListener(v->exportProgressPdf());root.addView(pdf,lp(-1,48,0,0,0,7));backHome();
     }
 
+    private String levelName(int level){if(level<3)return "Начинающий";if(level<6)return "Ученик";if(level<10)return "Знаток";if(level<15)return "Мастер";return "Легенда знаний";}
+    private void renderStudyHeatmapCalendar(){
+        Calendar now=Calendar.getInstance(AppTime.zone());LinearLayout box=card();addText(box,"КАЛЕНДАРЬ АКТИВНОСТИ",11,PINK,true);
+        LinearLayout header=new LinearLayout(this);header.setGravity(Gravity.CENTER_VERTICAL);
+        TextView monthName=text(new SimpleDateFormat("LLLL yyyy",new Locale("ru")).format(now.getTime()),15,DARK,true);header.addView(monthName,new LinearLayout.LayoutParams(0,-2,1f));
+        TextView active=text(prefs.getStringSet("study_days",new TreeSet<String>()).size()+" дней всего",10,MUTED,false);header.addView(active);box.addView(header,lp(-1,30,0,2,0,4));
+        String[] weekdays={"ПН","ВТ","СР","ЧТ","ПТ","СБ","ВС"};android.widget.GridLayout grid=new android.widget.GridLayout(this);grid.setColumnCount(7);
+        for(String day:weekdays){TextView label=text(day,9,MUTED,true);label.setGravity(Gravity.CENTER);android.widget.GridLayout.LayoutParams p=new android.widget.GridLayout.LayoutParams();p.width=0;p.height=dp(22);p.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);grid.addView(label,p);}
+        Calendar first=(Calendar)now.clone();first.set(Calendar.DAY_OF_MONTH,1);int offset=(first.get(Calendar.DAY_OF_WEEK)+5)%7,count=now.getActualMaximum(Calendar.DAY_OF_MONTH);
+        for(int i=0;i<offset;i++){View blank=new View(this);android.widget.GridLayout.LayoutParams p=new android.widget.GridLayout.LayoutParams();p.width=0;p.height=dp(29);p.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);grid.addView(blank,p);}
+        Set<String> days=prefs.getStringSet("study_days",new TreeSet<String>());
+        for(int day=1;day<=count;day++){Calendar date=(Calendar)first.clone();date.set(Calendar.DAY_OF_MONTH,day);String key=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(date.getTime());int mins=prefs.getInt("focus_minutes_"+key,0);boolean studied=days.contains(key)||mins>0;
+            TextView cell=text(String.valueOf(day),10,studied?0xFFFFFFFF:MUTED,true);cell.setGravity(Gravity.CENTER);cell.setBackground(shape(studied?PINK:PALE,8,0));android.widget.GridLayout.LayoutParams p=new android.widget.GridLayout.LayoutParams();p.width=0;p.height=dp(29);p.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);p.setMargins(dp(2),dp(2),dp(2),dp(2));grid.addView(cell,p);cell.setOnClickListener(v->showAppMessage(new SimpleDateFormat("d MMMM",new Locale("ru")).format(date.getTime())+": "+mins+" мин учёбы"));}
+        box.addView(grid,lp(-1,-2,0,3,0,0));root.addView(box,lp(-1,-2,0,0,0,10));
+    }
+    private void showFocusMode(){
+        currentScreen="focus_mode";base("Режим концентрации","Подготовь спокойное место и начни короткий фокус-сеанс");
+        LinearLayout hero=card();hero.setGravity(Gravity.CENTER);hero.setPadding(dp(18),dp(22),dp(18),dp(22));
+        TextView icon=text("◉",48,PINK,true);icon.setGravity(Gravity.CENTER);hero.addView(icon,lp(-1,66,0,0,0,5));
+        addText(hero,"ТВОЁ ВРЕМЯ ДЛЯ СЕБЯ",11,PINK,true);addText(hero,"Один экран. Одна задача. Один шаг.",18,DARK,true);
+        addText(hero,"Включи таймер, убери лишние вкладки и выбери одну понятную цель на занятие.",12,MUTED,false);root.addView(hero,lp(-1,-2,0,0,0,10));
+        String[] tips={"Отключи лишние уведомления на время занятия","Положи телефон экраном вниз, если он отвлекает","Открой только материалы по выбранному предмету","После занятия сделай короткий перерыв"};
+        LinearLayout tipsCard=card();addText(tipsCard,"НЕБОЛЬШАЯ ПОДГОТОВКА",11,PINK,true);
+        for(int i=0;i<tips.length;i++){LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);TextView num=text((i+1)+".",14,PINK,true);row.addView(num,lp(28,34,0,0,5,0));TextView label=text(tips[i],12,DARK,false);row.addView(label,new LinearLayout.LayoutParams(0,-2,1f));tipsCard.addView(row,lp(-1,-2,0,4,0,4));}
+        root.addView(tipsCard,lp(-1,-2,0,0,0,10));
+        addText(root,"Автоматическая блокировка других приложений пока не включена: для неё нужны отдельные системные разрешения. Этот режим не ограничивает доступ к телефону.",10,MUTED,false);
+        Button start=button("▶  Начать 25 минут фокуса",true);start.setOnClickListener(v->{selectedStudyMinutes=25;timerIsBreak=false;timerRemainingMs=25*60000L;showPomodoro();showStudyRitual();});root.addView(start,lp(-1,48,0,8,0,8));
+        Button stats=button("Открыть календарь и статистику",false);stats.setOnClickListener(v->showDetailedStats());root.addView(stats,lp(-1,44,0,0,0,4));backHome();
+    }
     private void startAmbience() {
         stopAmbience();
         String mode=prefs.getString("study_atmosphere","🌧️  Дождь за окном");
@@ -2633,6 +2685,7 @@ public class MainActivity extends Activity {
             case "settings_appearance": case "settings_reminders": case "settings_goals": case "settings_data": case "settings_about": currentScreen=key; showSettings(); break;
             case "progress": showProgress(); break;
             case "pomodoro": showPomodoro(); break;
+            case "focus_mode": showFocusMode(); break;
             case "exam": showExam(); break;
             case "diary": showDiary(); break;
             case "flower": showFlower(); break;
