@@ -607,7 +607,7 @@ public class MainActivity extends Activity {
         int paletteColumns = getResources().getConfiguration().screenWidthDp < 380 ? 2 : 3;
         android.widget.GridLayout palette=new android.widget.GridLayout(this);palette.setColumnCount(paletteColumns);
         String activeTheme=prefs.getString("app_theme","pink");
-        for(int i=0;i<keys.length;i++){final String key=keys[i];final int color=colors[i];final String label=names[i];LinearLayout option=new LinearLayout(this);option.setGravity(Gravity.CENTER_VERTICAL);option.setPadding(dp(8),dp(7),dp(5),dp(7));option.setBackground(shape(activeTheme.equals(key)?0xFFFFF0F4:0x00FFFFFF,15,activeTheme.equals(key)?PINK:0xFFEFE4E8));
+        for(int i=0;i<keys.length;i++){final String key=keys[i];final int color=colors[i];final String label=names[i];LinearLayout option=new LinearLayout(this);option.setGravity(Gravity.CENTER_VERTICAL);option.setPadding(dp(8),dp(7),dp(5),dp(7));option.setBackground(shape(activeTheme.equals(key)?blendColors(PALE,BG,0.18f):0x00FFFFFF,13,activeTheme.equals(key)?PINK:blendColors(PALE,BG,0.15f)));
             TextView swatch=text(activeTheme.equals(key)?"✓":"",12,0xFFFFFFFF,true);swatch.setGravity(Gravity.CENTER);swatch.setBackground(shape(color,30,activeTheme.equals(key)?PINK:0));option.addView(swatch,lp(28,28,0,0,7,0));TextView labelView=text(label,11,DARK,true);option.addView(labelView,new LinearLayout.LayoutParams(0,dp(30),1f));
             android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(48);gp.columnSpec=android.widget.GridLayout.spec(i%paletteColumns,1f);gp.setMargins(dp(2),dp(3),dp(2),dp(3));palette.addView(option,gp);
             option.setOnClickListener(v->{prefs.edit().putString("app_theme",key).remove("app_accent_color").apply();applySavedTheme();showSettings();});
@@ -620,7 +620,7 @@ public class MainActivity extends Activity {
         String[] fontFamilies={"sans-serif","sans-serif-rounded","serif","monospace","sans-serif-condensed","sans-serif-medium"};
         String activeFont=prefs.getString("app_font","sans");
         android.widget.GridLayout fontGrid=new android.widget.GridLayout(this);fontGrid.setColumnCount(2);
-        for(int i=0;i<fontKeys.length;i++){final String key=fontKeys[i],family=fontFamilies[i];Button choice=button((activeFont.equals(key)?"✓  ":"")+fontNames[i],activeFont.equals(key));choice.setTypeface(Typeface.create(family,Typeface.BOLD));if(activeFont.equals(key)){GradientDrawable selectedFontBg=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{0xFF397DB5,0xFF245B91});selectedFontBg.setCornerRadius(dp(14));choice.setBackground(selectedFontBg);}else choice.setBackground(shape(isDarkAppearance()?0x66332E39:0xCCFFFFFF,14,isDarkAppearance()?0x665B5260:0x6699B4C8));android.widget.GridLayout.LayoutParams fp=new android.widget.GridLayout.LayoutParams();fp.width=0;fp.height=dp(44);fp.columnSpec=android.widget.GridLayout.spec(i%2,1f);fp.setMargins(dp(3),dp(3),dp(3),dp(3));fontGrid.addView(choice,fp);choice.setOnClickListener(v->{prefs.edit().putString("app_font",key).apply();showSettings();});}
+        for(int i=0;i<fontKeys.length;i++){final String key=fontKeys[i],family=fontFamilies[i];Button choice=button((activeFont.equals(key)?"✓  ":"")+fontNames[i],activeFont.equals(key));choice.setTypeface(Typeface.create(family,Typeface.BOLD));if(activeFont.equals(key)){GradientDrawable selectedFontBg=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{adjustColor(PINK,1.12f),adjustColor(PINK,0.78f)});selectedFontBg.setCornerRadius(dp(14));choice.setBackground(selectedFontBg);}else choice.setBackground(shape(isDarkAppearance()?blendColors(PALE,BG,0.18f):0xCCFFFFFF,13,blendColors(PINK,BG,isDarkAppearance()?0.42f:0.68f)));android.widget.GridLayout.LayoutParams fp=new android.widget.GridLayout.LayoutParams();fp.width=0;fp.height=dp(44);fp.columnSpec=android.widget.GridLayout.spec(i%2,1f);fp.setMargins(dp(3),dp(3),dp(3),dp(3));fontGrid.addView(choice,fp);choice.setOnClickListener(v->{prefs.edit().putString("app_font",key).apply();showSettings();});}
         fontGroup.addView(fontGrid,lp(-1,-2,0,4,0,0));appearance.addView(fontGroup,lp(-1,-2,0,4,0,6));
         LinearLayout fontSizeGroup=settingsGroup("РАЗМЕР ТЕКСТА");
         fontSizeGroup.setTag("appearance");
@@ -2846,9 +2846,9 @@ public class MainActivity extends Activity {
             TextView t=(TextView)view;boolean bold=t.getTypeface()!=null&&t.getTypeface().isBold();
             t.setTypeface(Typeface.create(selectedFontFamily(),bold?Typeface.BOLD:Typeface.NORMAL));
             int c=t.getCurrentTextColor();
-            if(c==0xFFC97891||c==0xFFD96C91)t.setTextColor(PINK);
-            else if(c==0xFF3F3439||c==0xFF3A3036||c==0xFF382F34||c==0xFF49382E)t.setTextColor(DARK);
-            else if(c==0xFF75666D||c==0xFF6F6684||c==0xFF796657)t.setTextColor(MUTED);
+            if(c==0xFFC97891||c==0xFFD96C91||c==0xFF397DB5||c==0xFF245B91)t.setTextColor(PINK);
+            else if(c==0xFF3F3439||c==0xFF3A3036||c==0xFF382F34||c==0xFF49382E||c==0xFF303844||c==0xFF34443D||c==0xFF393448||c==0xFF304656||c==0xFF513D34||c==0xFF4B2026)t.setTextColor(DARK);
+            else if(c==0xFF75666D||c==0xFF6F6684||c==0xFF796657||c==0xFF87919E||c==0xFF84958C||c==0xFF8E879E||c==0xFF8199A8||c==0xFFA88D80||c==0xFF9D777B)t.setTextColor(MUTED);
         }
         if(view instanceof android.widget.ProgressBar&&Build.VERSION.SDK_INT>=21){
             android.widget.ProgressBar bar=(android.widget.ProgressBar)view;
@@ -2938,20 +2938,23 @@ public class MainActivity extends Activity {
                     Math.round(minSize), Math.round(maxSize), 1,
                     android.util.TypedValue.COMPLEX_UNIT_SP);
         }
-        b.setElevation(primary ? dp(3) : 0);
-        b.setTextColor(primary ? 0xFFFFFFFF : PINK);
+        int accent=PINK;
+        int accentDeep=adjustColor(accent,0.78f);
+        int outline=blendColors(accent,BG,isDarkAppearance()?0.38f:0.62f);
+        b.setElevation(primary ? dp(2) : 0);
+        b.setTextColor(primary ? 0xFFFFFFFF : (isDarkAppearance()?DARK:accentDeep));
         android.graphics.drawable.Drawable bg;
         if(primary){
             GradientDrawable gradient=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                    new int[]{0xFF397DB5,0xFF245B91});
-            gradient.setCornerRadius(dp(14));
-            gradient.setStroke(dp(1),0xFF245B91);
+                    new int[]{adjustColor(accent,1.12f),accentDeep});
+            gradient.setCornerRadius(dp(13));
+            gradient.setStroke(dp(1),accentDeep);
             bg=gradient;
         }else{
             GradientDrawable inactive=new GradientDrawable();
-            inactive.setColor(isDarkAppearance()?0x66332E39:0xCCFFFFFF);
-            inactive.setCornerRadius(dp(14));
-            inactive.setStroke(dp(1),isDarkAppearance()?0x665B5260:0x6699B4C8);
+            inactive.setColor(isDarkAppearance()?blendColors(PALE,BG,0.22f):0xBFFFFFFF);
+            inactive.setCornerRadius(dp(13));
+            inactive.setStroke(dp(1),outline);
             bg=inactive;
         }
         if(Build.VERSION.SDK_INT>=21){
@@ -2961,6 +2964,17 @@ public class MainActivity extends Activity {
         } else b.setBackground(bg);
         applyPressFeedback(b);
         return b;
+    }
+    private int adjustColor(int color,float factor){
+        return Color.rgb(Math.min(255,Math.round(Color.red(color)*factor)),
+                Math.min(255,Math.round(Color.green(color)*factor)),
+                Math.min(255,Math.round(Color.blue(color)*factor)));
+    }
+    private int blendColors(int foreground,int background,float backgroundWeight){
+        float w=Math.max(0f,Math.min(1f,backgroundWeight));
+        return Color.rgb(Math.round(Color.red(foreground)*(1-w)+Color.red(background)*w),
+                Math.round(Color.green(foreground)*(1-w)+Color.green(background)*w),
+                Math.round(Color.blue(foreground)*(1-w)+Color.blue(background)*w));
     }
     private android.graphics.drawable.Drawable settingsIcon(int type) {
         final int color=isDarkAppearance()?0xFFB8CDE0:0xFF3979A8;
