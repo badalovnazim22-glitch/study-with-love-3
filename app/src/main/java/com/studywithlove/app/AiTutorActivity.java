@@ -47,6 +47,7 @@ public class AiTutorActivity extends Activity {
     private String fontFamily = "sans-serif";
     private String language = "ru";
     private String studyContext = "";
+    private String offlineFallback = "";
     private final Handler main = new Handler(Looper.getMainLooper());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final List<JSONObject> history = new ArrayList<>();
@@ -72,6 +73,8 @@ public class AiTutorActivity extends Activity {
             loadAppearance();
             studyContext = getIntent().getStringExtra("study_context");
             if (studyContext == null) studyContext = "";
+            offlineFallback = getIntent().getStringExtra("offline_fallback");
+            if (offlineFallback == null) offlineFallback = "";
             getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
             getWindow().setStatusBarColor(BG);
             getWindow().setNavigationBarColor(BG);
@@ -386,6 +389,11 @@ public class AiTutorActivity extends Activity {
                     pendingQuestion = "";
                     addHistory("model", finalAnswer);
                     addBubble(finalAnswer, false);
+                } else if (!offlineFallback.isEmpty() && !hasNetworkConnection()) {
+                    retryQuestion = "";
+                    pendingQuestion = "";
+                    addHistory("model", offlineFallback);
+                    addBubble(offlineFallback, false);
                 } else {
                     // Не оставляем в контексте сообщение без ответа.
                     if (!history.isEmpty()) {
@@ -430,6 +438,7 @@ public class AiTutorActivity extends Activity {
     private boolean restoreChat(Bundle state) {
         if (state == null) return false;
         studyContext = state.getString("ai_study_context", studyContext);
+        offlineFallback = state.getString("ai_offline_fallback", offlineFallback);
         String saved = state.getString("ai_chat_history", "");
         if (saved.isEmpty()) return false;
         try {
@@ -462,6 +471,7 @@ public class AiTutorActivity extends Activity {
         for (JSONObject item : history) array.put(item);
         outState.putString("ai_chat_history", array.toString());
         outState.putString("ai_study_context", studyContext);
+        outState.putString("ai_offline_fallback", offlineFallback);
     }
 
     @Override public void onConfigurationChanged(android.content.res.Configuration newConfig) {
@@ -500,7 +510,15 @@ public class AiTutorActivity extends Activity {
             item.put("role", role);
             item.put("content", content);
             history.add(item);
+            saveChatHistoryIfEnabled();
         } catch (Exception ignored) {}
+    }
+
+    private void saveChatHistoryIfEnabled(){
+        SharedPreferences p=getSharedPreferences(AI_PREFS,MODE_PRIVATE);
+        if(!p.getBoolean("save_chat_history",false))return;
+        JSONArray array=new JSONArray();for(JSONObject item:history)array.put(item);
+        p.edit().putString("saved_chat_history",array.toString()).putString("saved_study_context",studyContext==null?"":studyContext).apply();
     }
 
     private TextView addBubble(String value, boolean user) {
@@ -531,10 +549,19 @@ public class AiTutorActivity extends Activity {
         field.setTextColor(DARK);
         field.setHint("https://имя.аккаунт.workers.dev/chat");
         field.setText(endpoint());
+        android.widget.LinearLayout settingsBox=new android.widget.LinearLayout(this);
+        settingsBox.setOrientation(android.widget.LinearLayout.VERTICAL);
+        settingsBox.setPadding(dp(8),dp(4),dp(8),0);
+        settingsBox.addView(field,new android.widget.LinearLayout.LayoutParams(-1,-2));
+        android.widget.CheckBox saveHistory=new android.widget.CheckBox(this);
+        saveHistory.setText(tr("Сохранять историю диалога на устройстве","Save chat history on this device","Söhbət tarixçəsini cihazda saxla"));
+        saveHistory.setTextColor(DARK);
+        saveHistory.setChecked(getSharedPreferences(AI_PREFS,MODE_PRIVATE).getBoolean("save_chat_history",false));
+        settingsBox.addView(saveHistory,new android.widget.LinearLayout.LayoutParams(-1,-2));
         new AlertDialog.Builder(this)
             .setTitle(tr("Подключение ИИ", "AI connection", "Süni intellekt bağlantısı"))
             .setMessage(tr("Вставь адрес сервера ИИ. Не вводи сюда пароли или секретные API-ключи.", "Enter the AI server address. Do not enter passwords or secret API keys here.", "Süni intellekt serverinin ünvanını daxil et. Buraya parol və ya gizli API açarı yazma."))
-            .setView(field)
+            .setView(settingsBox)
             .setNegativeButton(tr("Позже", "Later", "Sonra"), null)
             .setPositiveButton(tr("Сохранить", "Save", "Yadda saxla"), (dialog, which) -> {
                 String value = field.getText().toString().trim();
@@ -542,13 +569,31 @@ public class AiTutorActivity extends Activity {
                     showStatusBanner("Нужен HTTPS-адрес сервера, заканчивающийся на /chat");
                     return;
                 }
-                getSharedPreferences(AI_PREFS, MODE_PRIVATE).edit().putString(ENDPOINT_KEY, value).apply();
-                showStatusBanner(value.isEmpty() ? "Адрес не задан" : "Адрес сервера сохранён");
+                SharedPreferences settings=getSharedPreferences(AI_PREFS,MODE_PRIVATE);
+                boolean keep=saveHistory.isChecked();
+                SharedPreferences.Editor edit=settings.edit().putString(ENDPOINT_KEY,value).putBoolean("save_chat_history",keep);
+                if(!keep)edit.remove("saved_chat_history").remove("saved_study_context");
+                edit.apply();
+                if(keep)saveChatHistoryIfEnabled();
+                showStatusBanner(value.isEmpty() ? "Адрес не задан" : "Настройки ИИ сохранены");
             }).show();
     }
 
     private String endpoint() {
         return getSharedPreferences(AI_PREFS, MODE_PRIVATE).getString(ENDPOINT_KEY, "https://study-with-love-ai.xnemorenight.workers.dev/chat").trim();
+    }
+
+    private boolean hasNetworkConnection(){
+        try{
+            android.net.ConnectivityManager cm=(android.net.ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);
+            if(cm==null)return false;
+            if(android.os.Build.VERSION.SDK_INT>=23){
+                android.net.Network n=cm.getActiveNetwork();
+                android.net.NetworkCapabilities c=n==null?null:cm.getNetworkCapabilities(n);
+                return c!=null&&(c.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)||c.hasTransport(android.net.NetworkCapabilities.TRANSPORT_CELLULAR)||c.hasTransport(android.net.NetworkCapabilities.TRANSPORT_ETHERNET));
+            }
+            android.net.NetworkInfo info=cm.getActiveNetworkInfo();return info!=null&&info.isConnected();
+        }catch(Exception ignored){return false;}
     }
 
     private String readAll(InputStream stream) throws Exception {
