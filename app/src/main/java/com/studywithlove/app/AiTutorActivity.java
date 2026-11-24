@@ -281,6 +281,14 @@ public class AiTutorActivity extends Activity {
             input.setError("Максимум 6000 символов");
             return;
         }
+        if (!hasNetworkConnection() && !offlineFallback.isEmpty()) {
+            input.setText("");
+            addHistory("user",question);
+            addBubble(question,true);
+            addHistory("model",offlineFallback);
+            addBubble(offlineFallback,false);
+            return;
+        }
         if (endpoint().isEmpty()) {
             showEndpointDialog();
             return;
@@ -601,7 +609,7 @@ public class AiTutorActivity extends Activity {
             if(android.os.Build.VERSION.SDK_INT>=23){
                 android.net.Network n=cm.getActiveNetwork();
                 android.net.NetworkCapabilities c=n==null?null:cm.getNetworkCapabilities(n);
-                return c!=null&&(c.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)||c.hasTransport(android.net.NetworkCapabilities.TRANSPORT_CELLULAR)||c.hasTransport(android.net.NetworkCapabilities.TRANSPORT_ETHERNET));
+                return c!=null&&c.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED);
             }
             android.net.NetworkInfo info=cm.getActiveNetworkInfo();return info!=null&&info.isConnected();
         }catch(Exception ignored){return false;}
