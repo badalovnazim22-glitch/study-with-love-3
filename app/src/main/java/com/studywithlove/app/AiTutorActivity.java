@@ -221,7 +221,7 @@ public class AiTutorActivity extends Activity {
         sendButton.setContentDescription(tr("Отправить сообщение", "Send message", "Mesajı göndər"));
         sendButton.setTextSize(18);
         sendButton.setTypeface(android.graphics.Typeface.create(fontFamily, android.graphics.Typeface.BOLD));
-        sendButton.setTextColor(Color.WHITE);
+        sendButton.setTextColor(onAccentTextColor());
         sendButton.setAllCaps(false);
         sendButton.setPadding(0, 0, 0, 0);
         GradientDrawable sendGradient=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
@@ -663,6 +663,23 @@ public class AiTutorActivity extends Activity {
         return Color.rgb(Math.min(255,Math.round(Color.red(color)*factor)),
                 Math.min(255,Math.round(Color.green(color)*factor)),
                 Math.min(255,Math.round(Color.blue(color)*factor)));
+    }
+
+    private int onAccentTextColor() {
+        double white=contrastRatio(PINK,Color.WHITE);
+        double dark=contrastRatio(PINK,0xFF17151D);
+        return white>=dark?Color.WHITE:0xFF17151D;
+    }
+    private double contrastRatio(int a,int b) {
+        double x=relativeLuminance(a),y=relativeLuminance(b);
+        return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05);
+    }
+    private double relativeLuminance(int color) {
+        double r=Color.red(color)/255.0,g=Color.green(color)/255.0,b=Color.blue(color)/255.0;
+        r=r<=0.04045?r/12.92:Math.pow((r+0.055)/1.055,2.4);
+        g=g<=0.04045?g/12.92:Math.pow((g+0.055)/1.055,2.4);
+        b=b<=0.04045?b/12.92:Math.pow((b+0.055)/1.055,2.4);
+        return 0.2126*r+0.7152*g+0.0722*b;
     }
 
     private int dp(float value) {
