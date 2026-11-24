@@ -458,11 +458,14 @@ public class MainActivity extends Activity {
             });
             shell.requestApplyInsets();
         }
-        scroll.setAlpha(0f); scroll.setTranslationY(dp(backNavigation?-12:14));
+        scroll.setAlpha(0f); scroll.setTranslationY(dp(backNavigation?-8:8));
         scroll.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         if (!prefs.getBoolean("reduce_motion", false)) {
-            scroll.animate().alpha(1f).translationY(0f).setDuration(190)
+            scroll.animate().alpha(1f).translationY(0f).setStartDelay(12).setDuration(280)
                 .setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
+            View nav=shell.getChildCount()>1?shell.getChildAt(1):null;
+            if(nav!=null){nav.setAlpha(0f);nav.animate().alpha(1f).setStartDelay(35).setDuration(240)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator()).start();}
         } else { scroll.setAlpha(1f); scroll.setTranslationY(0f); }
         if (currentScreen.equals("home")) {
         LinearLayout brandRow = new LinearLayout(this);
@@ -602,14 +605,24 @@ public class MainActivity extends Activity {
         float[] textScales={0.9f,1.0f,1.15f,1.3f};
         String[] textScaleNames={"Маленький","Обычный","Крупный","Очень крупный"};
         float activeScale=prefs.getFloat("app_text_scale",1.0f);
-        LinearLayout scaleRow=new LinearLayout(this);scaleRow.setOrientation(LinearLayout.HORIZONTAL);
+        // Две колонки вместо четырёх узких кнопок: надписи больше не ломаются
+        // посреди слова на небольших экранах.
+        android.widget.GridLayout scaleGrid=new android.widget.GridLayout(this);
+        scaleGrid.setColumnCount(2);
         for(int i=0;i<textScales.length;i++){
             final float scale=textScales[i];
-            Button choice=button((Math.abs(activeScale-scale)<0.01f?"✓  ":"")+textScaleNames[i],Math.abs(activeScale-scale)<0.01f);
-            LinearLayout.LayoutParams scaleLp=new LinearLayout.LayoutParams(0,dp(48),1f);scaleLp.setMargins(dp(2),dp(4),dp(2),0);scaleRow.addView(choice,scaleLp);
+            boolean selected=Math.abs(activeScale-scale)<0.01f;
+            Button choice=button((selected?"✓  ":"")+textScaleNames[i],selected);
+            choice.setMaxLines(1);
+            choice.setAutoSizeTextTypeWithDefaults(android.widget.TextView.AUTO_SIZE_TEXT_TYPE_UNIFORM);
+            android.widget.GridLayout.LayoutParams scaleLp=new android.widget.GridLayout.LayoutParams();
+            scaleLp.width=0;scaleLp.height=dp(48);
+            scaleLp.columnSpec=android.widget.GridLayout.spec(i%2,1f);
+            scaleLp.setMargins(dp(3),dp(4),dp(3),dp(3));
+            scaleGrid.addView(choice,scaleLp);
             choice.setOnClickListener(v->{prefs.edit().putFloat("app_text_scale",scale).apply();showSettings();});
         }
-        fontSizeGroup.addView(scaleRow,lp(-1,52,0,2,0,0));
+        fontSizeGroup.addView(scaleGrid,lp(-1,-2,0,2,0,0));
         appearance.addView(fontSizeGroup,lp(-1,-2,0,4,0,6));
         Button systemTheme=button("◐  Цвета и тёмная тема — как в системе","system".equals(activeTheme));systemTheme.setOnClickListener(v->{prefs.edit().putString("app_theme","system").remove("app_accent_color").apply();applySavedTheme();showSettings();});appearance.addView(systemTheme,lp(-1, 48,0,3,0,0));
         Button choosePhoto=button("＋  Выбрать фото фона",false);choosePhoto.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT);pick.addCategory(Intent.CATEGORY_OPENABLE);pick.setType("image/*");pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,PICK_BACKGROUND);});
