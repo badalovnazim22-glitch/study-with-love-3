@@ -78,6 +78,7 @@ public class MainActivity extends Activity {
     private final List<MiniQuestion> miniQuestions=new ArrayList<>();
     private final List<MiniQuestion> miniWrongQuestions=new ArrayList<>();
     private final Map<String,List<MiniQuestion>> questionBank=new HashMap<>();
+    private final StringBuilder miniDeferredFeedback=new StringBuilder();
     private int miniScore=0;
     private String miniTopic="";
     private boolean weaknessTrainingMode=false,miniResultSaved=false;
@@ -617,6 +618,9 @@ public class MainActivity extends Activity {
         female.setOnClickListener(v->{prefs.edit().putString("profile_gender","female").apply();showSettings();});
         male.setOnClickListener(v->{prefs.edit().putString("profile_gender","male").apply();showSettings();});
         profile.addView(genderRow,lp(-1,48,0,4,0,8));
+        addText(profile,"ОБРАЩЕНИЕ",11,PINK,true);
+        String addressStyle=prefs.getString("address_style","you");LinearLayout addressRow=new LinearLayout(this);Button informal=button("На ты",!"formal".equals(addressStyle)),formal=button("На вы","formal".equals(addressStyle));addressRow.addView(informal,new LinearLayout.LayoutParams(0,dp(44),1f));addressRow.addView(formal,new LinearLayout.LayoutParams(0,dp(44),1f));informal.setOnClickListener(v->{prefs.edit().putString("address_style","you").apply();showSettings();});formal.setOnClickListener(v->{prefs.edit().putString("address_style","formal").apply();showSettings();});profile.addView(addressRow,lp(-1,44,0,4,0,8));
+        addSettingsToggle(profile,"Показывать талисман и эмодзи","mascot_enabled",true,null);
         Button saveName=button("Сохранить имя",true);saveName.setOnClickListener(v->{String value=name.getText().toString().trim();if(value.isEmpty()){name.setError("Введи имя");return;}prefs.edit().putString("display_name",value).apply();showAppMessage("Имя сохранено ♡");});
         profile.addView(saveName,lp(-1,48,0,0,0,0));root.addView(profile,lp(-1,-2,0,0,0,4));
         
@@ -895,6 +899,7 @@ public class MainActivity extends Activity {
                 : (currentStreak() > 0 ? "🔥 Серия: " + currentStreak() + " " + dayWord(currentStreak()) : "Начни новую серию сегодня") + " · Осталось " + remaining + " мин. до цели дня";
         base(greetingTitle, homeSubtitle);
         addDailyMoodCard(root);
+        if(root.getChildCount()>0)root.getChildAt(root.getChildCount()-1).setTag("home_mood");
 
         int totalTopics = 0, completedTopics = 0;
         for (Map.Entry<String, List<String>> entry : chapters.entrySet()) {
@@ -988,7 +993,7 @@ public class MainActivity extends Activity {
             if (statIndex > 0) statLp.setMargins(dp(6), 0, 0, 0);
             homeStats.addView(statCard, statLp);
         }
-        root.addView(homeStats, lp(-1, -2, 0, 0, 0, 12));
+        root.addView(homeStats, lp(-1, -2, 0, 0, 0, 12));homeStats.setTag("home_stats");
 
         // Weekly goal with a Monday-to-Sunday activity strip on the home screen.
         int weeklyGoal = prefs.getInt("weekly_goal_minutes", 300);
@@ -1029,7 +1034,7 @@ public class MainActivity extends Activity {
             weekDay.add(Calendar.DAY_OF_YEAR, 1);
         }
         weeklyCard.addView(daysRow, lp(-1, 59, 0, 9, 0, 0));
-        root.addView(weeklyCard, lp(-1, -2, 0, 0, 0, 13));
+        root.addView(weeklyCard, lp(-1, -2, 0, 0, 0, 13));weeklyCard.setTag("home_weekly");
 
         LinearLayout aiCard = card();
         aiCard.setOrientation(LinearLayout.HORIZONTAL);
@@ -1046,7 +1051,7 @@ public class MainActivity extends Activity {
         aiCard.addView(aiWords, new LinearLayout.LayoutParams(0, -2, 1f));
         aiCard.addView(text("›", 27, PINK, true));
         aiCard.setOnClickListener(v -> launchAiTutor());
-        root.addView(aiCard, lp(-1, -2, 0, 0, 0, 14));
+        root.addView(aiCard, lp(-1, -2, 0, 0, 0, 14));aiCard.setTag("home_ai");
 
         LinearLayout study2 = new LinearLayout(this);
         study2.setOrientation(LinearLayout.HORIZONTAL);
@@ -1059,12 +1064,12 @@ public class MainActivity extends Activity {
         feelings1.setOrientation(LinearLayout.HORIZONTAL);
         ritualTile(feelings1, "♡", "Дневник", "Маленькие победы", this::showDiary);
         ritualTile(feelings1, "✉", "Письмо себе", "В будущее", this::showFutureLetters);
-        root.addView(feelings1, lp(-1, -2, 0, 7, 0, 8));
+        root.addView(feelings1, lp(-1, -2, 0, 7, 0, 8));feelings1.setTag("home_emotions");
         LinearLayout feelings2 = new LinearLayout(this);
         feelings2.setOrientation(LinearLayout.HORIZONTAL);
         ritualTile(feelings2, "✿", "Цветочек", "Растёт с тобой", this::showFlower);
         ritualTile(feelings2, "♫", "Атмосфера", "Звуки для учёбы", this::showAtmosphere);
-        root.addView(feelings2, lp(-1, -2, 0, 0, 0, 13));
+        root.addView(feelings2, lp(-1, -2, 0, 0, 0, 13));feelings2.setTag("home_emotions");
 
         addText(root, "ТВОЙ ПРОГРЕСС", 11, PINK, true);
         LinearLayout progressRow = new LinearLayout(this);
@@ -1089,12 +1094,20 @@ public class MainActivity extends Activity {
         reminder.addView(reminderWords, new LinearLayout.LayoutParams(0, -2, 1f));
         reminder.addView(text("›", 27, PINK, true), lp(28, 38, 4, 0, 0, 0));
         reminder.setOnClickListener(v -> showReminderSettings());
-        root.addView(reminder, lp(-1, -2, 0, 0, 0, 4));
+        root.addView(reminder, lp(-1, -2, 0, 0, 0, 4));reminder.setTag("home_reminders");
 
         TextView made = text("Сделано с любовью ♡", 12, MUTED, false);
         made.setGravity(Gravity.CENTER);
         root.addView(made, lp(-1, 43, 0, 8, 0, 0));
+        applyHomeBlockVisibility();
         animateHomeCascade();
+    }
+
+    private void applyHomeBlockVisibility(){
+        if(root==null)return;
+        String[] keys={"home_mood","home_stats","home_weekly","home_ai","home_emotions","home_reminders"};
+        String[] prefsKeys={"home_show_mood","home_show_stats","home_show_weekly","home_show_ai","home_show_emotions","home_show_reminders"};
+        for(int i=0;i<keys.length;i++)for(int j=0;j<root.getChildCount();j++){View child=root.getChildAt(j);if(keys[i].equals(child.getTag()))child.setVisibility(prefs.getBoolean(prefsKeys[i],true)?View.VISIBLE:View.GONE);}
     }
 
     // Endless arithmetic challenge. Best scores and unlocked awards are stored locally.
@@ -1555,7 +1568,7 @@ public class MainActivity extends Activity {
         root.addView(section,lp(-1,-2,0,0,0,12));
     }
     private void startMiniTest(String topic){
-        miniTopic=topic;miniQuestions.clear();miniWrongQuestions.clear();miniScore=0;weaknessTrainingMode=false;miniResultSaved=false;
+        miniTopic=topic;miniQuestions.clear();miniWrongQuestions.clear();miniDeferredFeedback.setLength(0);miniScore=0;weaknessTrainingMode=false;miniResultSaved=false;
         List<MiniQuestion> bank=questionBank.get(topic);
         if(bank!=null&&!bank.isEmpty()){
             List<MiniQuestion> shuffled=new ArrayList<>(bank);java.util.Collections.shuffle(shuffled,quizRandom);
@@ -1564,7 +1577,7 @@ public class MainActivity extends Activity {
         renderMiniTest(0,false);
     }
     private void startWeaknessTraining(){
-        miniTopic="Мои слабые места";miniQuestions.clear();miniWrongQuestions.clear();miniScore=0;weaknessTrainingMode=true;miniResultSaved=false;
+        miniTopic="Мои слабые места";miniQuestions.clear();miniWrongQuestions.clear();miniDeferredFeedback.setLength(0);miniScore=0;weaknessTrainingMode=true;miniResultSaved=false;
         mistakeStore().migrateLegacy(prefs);
         for(String payload:mistakeStore().newestPayloads(10)){try{org.json.JSONObject o=new org.json.JSONObject(payload);org.json.JSONArray a=o.optJSONArray("options");String[] opts=null;int correct=-1;if(a!=null){opts=new String[a.length()];for(int i=0;i<a.length();i++){opts[i]=a.getString(i);if(opts[i].equalsIgnoreCase(o.optString("answer")))correct=i;}}MiniQuestion restored=new MiniQuestion(o.optString("prompt"),opts,correct,o.optString("explanation"),o.optString("type","choice"),o.optString("answer"));restored.topic=o.optString("topic","");miniQuestions.add(restored);}catch(Exception ignored){}}
         if(miniQuestions.isEmpty()){showWeaknessTrainer();return;}renderMiniTest(0,false);
@@ -1585,7 +1598,9 @@ public class MainActivity extends Activity {
         boolean correct=normalizeAnswer(userAnswer).equals(normalizeAnswer(q.answer));
         if(correct){miniScore++;clearMistake(q);haptic(source,true);}else{miniWrongQuestions.add(q);recordMistake(q,userAnswer);haptic(source,false);if(source!=null)source.animate().translationX(dp(8)).setDuration(45).withEndAction(()->source.animate().translationX(-dp(8)).setDuration(45).withEndAction(()->source.animate().translationX(0).setDuration(45).start()).start()).start();}
         if(source instanceof Button){Button chosen=(Button)source;chosen.setBackground(shape(correct?0xFFE4F4E8:0xFFFFE8E8,22,correct?0xFF75B987:0xFFE58A8A));chosen.setTextColor(correct?0xFF287A43:0xFFB64242);new Handler(android.os.Looper.getMainLooper()).postDelayed(()->{if(!isFinishing()){chosen.setBackground(shape(0xFFFFFFFF,22,0xFFEADDE2));chosen.setTextColor(DARK);}},1050);}
-        TextView feedback=text((correct?"✓  Верно! ":"✦  Правильный ответ: "+q.answer+"\\n")+q.explanation,13,correct?0xFF287A43:0xFF9B4A58,true);feedback.setPadding(dp(12),dp(10),dp(12),dp(10));feedback.setBackground(shape(correct?0xFFF0F8F1:0xFFFFF2F2,14,0));root.addView(feedback,lp(-1,-2,0,7,0,4));
+        boolean immediate=prefs.getBoolean("show_correct_immediately",true);
+        if(!correct&&!immediate){if(miniDeferredFeedback.length()>0)miniDeferredFeedback.append("\\n\\n");miniDeferredFeedback.append("• ").append(q.prompt).append("\\nПравильный ответ: ").append(q.answer).append("\\n").append(q.explanation);}
+        TextView feedback=text(correct?"✓  Верно! "+q.explanation:immediate?("✦  Правильный ответ: "+q.answer+"\\n"+q.explanation):"Ответ сохранён. Разбор появится в конце теста.",13,correct?0xFF287A43:0xFF9B4A58,true);feedback.setPadding(dp(12),dp(10),dp(12),dp(10));feedback.setBackground(shape(correct?0xFFF0F8F1:0xFFFFF2F2,14,0));root.addView(feedback,lp(-1,-2,0,7,0,4));
         if(!correct){
             Button explainAi=button("✧  Объясни с ИИ",false);
             explainAi.setContentDescription("Попросить ИИ объяснить ошибку в задании");
@@ -1632,7 +1647,7 @@ public class MainActivity extends Activity {
     private void saveMiniTestResult(){try{org.json.JSONObject o=new org.json.JSONObject();o.put("topic",miniTopic);o.put("score",miniScore);o.put("total",miniQuestions.size());o.put("wrong",miniWrongQuestions.size());o.put("date",todayKey());String key="test_result_"+System.currentTimeMillis();prefs.edit().putString(key,o.toString()).apply();List<String> keys=new ArrayList<>();for(String k:prefs.getAll().keySet())if(k.startsWith("test_result_"))keys.add(k);java.util.Collections.sort(keys);for(int i=0;i<keys.size()-100;i++)prefs.edit().remove(keys.get(i)).apply();}catch(Exception ignored){}}
     private void showMiniTestResult(boolean wrongOnly){
         currentScreen="mini_test_result";base(weaknessTrainingMode?"Результат тренажёра":"Результат мини-теста","Ошибки — это подсказка, что повторить");if(!miniResultSaved){saveMiniTestResult();miniResultSaved=true;}
-        int total=miniQuestions.size();LinearLayout resultCard=card();resultCard.setGravity(Gravity.CENTER);addText(resultCard,"ТВОЙ РЕЗУЛЬТАТ",11,PINK,true);TextView score=text(miniScore+" / "+total,38,DARK,true);score.setGravity(Gravity.CENTER);resultCard.addView(score,lp(-1,60,0,6,0,4));addText(resultCard,miniWrongQuestions.isEmpty()?"Все ответы верные — отлично!":"Ошибок: "+miniWrongQuestions.size()+". Они сохранены в журнале.",13,MUTED,false);root.addView(resultCard,lp(-1,-2,0,0,0,14));
+        int total=miniQuestions.size();if(miniDeferredFeedback.length()>0){LinearLayout review=card();addText(review,"РАЗБОР ОТВЕТОВ",12,PINK,true);addText(review,miniDeferredFeedback.toString(),13,DARK,false);root.addView(review,lp(-1,-2,0,0,0,12));}LinearLayout resultCard=card();resultCard.setGravity(Gravity.CENTER);addText(resultCard,"ТВОЙ РЕЗУЛЬТАТ",11,PINK,true);TextView score=text(miniScore+" / "+total,38,DARK,true);score.setGravity(Gravity.CENTER);resultCard.addView(score,lp(-1,60,0,6,0,4));addText(resultCard,miniWrongQuestions.isEmpty()?"Все ответы верные — отлично!":"Ошибок: "+miniWrongQuestions.size()+". Они сохранены в журнале.",13,MUTED,false);root.addView(resultCard,lp(-1,-2,0,0,0,14));
         if(miniWrongQuestions.isEmpty()&&!pendingReviewKey.isEmpty()){prefs.edit().putBoolean(pendingReviewKey,true).apply();pendingReviewKey="";}
         if(!miniWrongQuestions.isEmpty()){Button repeat=button("↻  Повторить ошибки",true);repeat.setOnClickListener(v->{miniQuestions.clear();miniQuestions.addAll(miniWrongQuestions);miniWrongQuestions.clear();miniScore=0;miniResultSaved=false;renderMiniTest(0,false);});root.addView(repeat,lp(-1,50,0,0,0,8));}
         Button again=button(weaknessTrainingMode?"Пройти тренажёр ещё раз":"Пройти тест заново",false);again.setOnClickListener(v->{if(weaknessTrainingMode)startWeaknessTraining();else startMiniTest(miniTopic);});root.addView(again,lp(-1,48,0,0,0,8));backHome();
