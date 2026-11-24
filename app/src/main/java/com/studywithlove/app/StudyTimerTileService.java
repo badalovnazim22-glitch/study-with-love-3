@@ -39,6 +39,7 @@ public class StudyTimerTileService extends TileService {
             if(left<=0){
                 SharedPreferences prefs=getSharedPreferences("study_progress",MODE_PRIVATE);
                 int minutes=Math.max(1,Math.min(600,prefs.getInt("selected_study_minutes",25)));
+                FocusTimerController.startSegment(this,minutes*60000L,false);
                 Intent service=new Intent(this,FocusTimerService.class).setAction(FocusTimerService.ACTION_START)
                         .putExtra("duration_ms",minutes*60000L).putExtra("break",false);
                 if(Build.VERSION.SDK_INT>=26)startForegroundService(service);else startService(service);
