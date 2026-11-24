@@ -66,46 +66,58 @@ public class AiTutorActivity extends Activity {
 
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
-        loadAppearance();
-        studyContext = getIntent().getStringExtra("study_context");
-        if (studyContext == null) studyContext = "";
-        getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-        getWindow().setStatusBarColor(BG);
-        getWindow().setNavigationBarColor(BG);
-        if (android.os.Build.VERSION.SDK_INT >= 30) {
-            try {
-                getWindow().setDecorFitsSystemWindows(true);
-            } catch (Exception ignored) {}
-        }
-        updateSystemBars();
         try {
+            // Вся инициализация находится под одной защитой: ошибка темы или Window
+            // тоже не должна приводить к немедленному закрытию приложения.
+            loadAppearance();
+            studyContext = getIntent().getStringExtra("study_context");
+            if (studyContext == null) studyContext = "";
+            getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+            getWindow().setStatusBarColor(BG);
+            getWindow().setNavigationBarColor(BG);
+            if (android.os.Build.VERSION.SDK_INT >= 30) {
+                getWindow().setDecorFitsSystemWindows(true);
+            }
+            updateSystemBars();
             buildUi();
             boolean restored = restoreChat(state);
             if (!restored) addBubble(tr("Привет! Я ИИ-помощник. Могу объяснить математическую тему, разобрать задачу по шагам или составить тренировку.\n\nНе отправляй сюда пароли, адреса и другие личные данные. История этого чата не сохраняется после закрытия экрана.", "Hi! I’m the AI tutor. I can explain a math topic, work through a problem step by step, or create a practice quiz.\n\nDon’t send passwords, addresses, or other personal information. This chat history is not saved after you close the screen.", "Salam! Mən Study with Love süni intellekt köməkçisiyəm. Riyaziyyat mövzusunu izah edə, məsələni addım-addım həll edə və ya məşq testi hazırlaya bilərəm.\n\nŞifrələri, ünvanları və digər şəxsi məlumatları göndərmə. Ekranı bağladıqdan sonra bu söhbətin tarixçəsi saxlanılmır."), false);
         } catch (Exception error) {
             android.util.Log.e("AiTutorActivity", "Не удалось открыть экран ИИ", error);
-            showStartupError(error);
+            try {
+                showStartupError(error);
+            } catch (Exception fallbackError) {
+                android.util.Log.e("AiTutorActivity", "Не удалось показать экран ошибки", fallbackError);
+                finish();
+            }
         }
-
     }
 
     private void showStartupError(Exception error) {
+        // Минимальный экран без пользовательских шрифтов и сложной разметки.
         LinearLayout page = new LinearLayout(this);
         page.setOrientation(LinearLayout.VERTICAL);
-        page.setPadding(dp(20), dp(24), dp(20), dp(20));
-        page.setBackgroundColor(BG);
-        TextView title = label("Не удалось открыть ИИ-помощника", 19, DARK, true);
+        int pad = (int) (20 * getResources().getDisplayMetrics().density + 0.5f);
+        page.setPadding(pad, pad, pad, pad);
+        page.setBackgroundColor(Color.WHITE);
+        TextView title = new TextView(this);
+        title.setText("Не удалось открыть ИИ-помощника");
+        title.setTextSize(19);
+        title.setTextColor(Color.BLACK);
         page.addView(title, new LinearLayout.LayoutParams(-1, -2));
         String detail = error.getMessage();
         if (detail == null || detail.trim().isEmpty()) detail = error.getClass().getSimpleName();
-        TextView message = label("Ошибка запуска: " + detail, 14, MUTED, false);
-        message.setPadding(0, dp(12), 0, dp(18));
+        TextView message = new TextView(this);
+        message.setText("Ошибка запуска: " + detail);
+        message.setTextSize(14);
+        message.setTextColor(Color.DKGRAY);
+        message.setPadding(0, pad, 0, pad);
         page.addView(message, new LinearLayout.LayoutParams(-1, -2));
         Button back = new Button(this);
         back.setText("Вернуться назад");
         back.setAllCaps(false);
         back.setOnClickListener(v -> finish());
-        page.addView(back, new LinearLayout.LayoutParams(-1, dp(48)));
+        page.addView(back, new LinearLayout.LayoutParams(-1, -2));
         setContentView(page);
     }
 
