@@ -48,10 +48,19 @@ public final class FocusTimerController {
     }
 
     public static void clear(Context context) {
+        synchronized (LOCK) { clearLocked(prefs(context)); }
+    }
+
+    public static void clearIfMatches(Context context, long expectedEnd) {
         synchronized (LOCK) {
-            prefs(context).edit().remove("timer_service_end_wall")
-                    .remove("timer_service_duration").remove("timer_service_break").apply();
+            SharedPreferences p=prefs(context);
+            if(expectedEnd<=0L || p.getLong("timer_service_end_wall",0L)==expectedEnd) clearLocked(p);
         }
+    }
+
+    private static void clearLocked(SharedPreferences p) {
+        p.edit().remove("timer_service_end_wall").remove("timer_service_duration")
+                .remove("timer_service_break").apply();
     }
 
     public static long remainingUntil(long endWallTime) {
