@@ -15,7 +15,7 @@ public class FocusTimerService extends Service {
     private Runnable tick;
     private NotificationManager nm;
     private static final String PREFS="study_progress";
-    @Override public void onCreate(){super.onCreate();nm=(NotificationManager)getSystemService(NOTIFICATION_SERVICE);if(Build.VERSION.SDK_INT>=26){nm.createNotificationChannel(new NotificationChannel(CHANNEL,"Таймер Study with Love",NotificationManager.IMPORTANCE_LOW));android.content.SharedPreferences p=getSharedPreferences(PREFS,MODE_PRIVATE);boolean vibrate=p.getBoolean("haptics_enabled",true);String finishId=FINISH_CHANNEL+(vibrate?"_v":"_silent");NotificationChannel finish=new NotificationChannel(finishId,"Окончание фокус-сессии",NotificationManager.IMPORTANCE_HIGH);finish.setSound(null,null);finish.enableVibration(vibrate);nm.createNotificationChannel(finish);}}
+    @Override public void onCreate(){super.onCreate();nm=(NotificationManager)getSystemService(NOTIFICATION_SERVICE);if(Build.VERSION.SDK_INT>=26){nm.createNotificationChannel(new NotificationChannel(CHANNEL,"Таймер Study with Love",NotificationManager.IMPORTANCE_LOW));android.content.SharedPreferences p=getSharedPreferences(PREFS,MODE_PRIVATE);boolean vibrate=p.getBoolean("haptics_enabled",true);for(boolean vibrate:new boolean[]{true,false}){String finishId=FINISH_CHANNEL+(vibrate?"_v":"_silent");NotificationChannel finish=new NotificationChannel(finishId,"Окончание фокус-сессии",NotificationManager.IMPORTANCE_HIGH);finish.setSound(null,null);finish.enableVibration(vibrate);nm.createNotificationChannel(finish);}}}
     @Override public int onStartCommand(Intent intent,int flags,int startId){
         if(intent!=null&&ACTION_STOP.equals(intent.getAction())){if(!intent.getBooleanExtra("break",false))recordFocus(intent.getLongExtra("elapsed_ms",0),dateKey(System.currentTimeMillis()));clearSavedTimer();stopForeground(true);stopSelf();return START_NOT_STICKY;}
         if(intent!=null&&ACTION_PAUSE.equals(intent.getAction())){if(!intent.getBooleanExtra("break",false))recordFocus(intent.getLongExtra("elapsed_ms",0),dateKey(System.currentTimeMillis()));clearSavedTimer();stopForeground(true);stopSelf();return START_NOT_STICKY;}
@@ -48,13 +48,13 @@ public class FocusTimerService extends Service {
         clearSavedTimer();
         android.content.SharedPreferences settings=getSharedPreferences(PREFS,MODE_PRIVATE);if(settings.getBoolean("haptics_enabled",true)&&!MainActivity.activityVisible){try{android.os.Vibrator vibrator=(android.os.Vibrator)getSystemService(VIBRATOR_SERVICE);if(Build.VERSION.SDK_INT>=26)vibrator.vibrate(VibrationEffect.createWaveform(new long[]{0,350,180,550},-1));else vibrator.vibrate(new long[]{0,350,180,550},-1);}catch(Exception ignored){}}
         Uri sound=null;
-        Notification.Builder b=Build.VERSION.SDK_INT>=26?new Notification.Builder(this,FINISH_CHANNEL):new Notification.Builder(this);
+        String finishChannel=FINISH_CHANNEL+(settings.getBoolean("haptics_enabled",true)?"_v":"_silent");Notification.Builder b=Build.VERSION.SDK_INT>=26?new Notification.Builder(this,finishChannel):new Notification.Builder(this);
         b.setSmallIcon(R.drawable.ic_notification).setContentTitle(rest?"Перерыв окончен":"Фокус-сессия завершена")
           .setContentText(rest?"Можно возвращаться к занятиям":"Отличная работа! Запиши маленькую победу в дневник.")
           .setAutoCancel(true).setVibrate(settings.getBoolean("haptics_enabled",true)?new long[]{0,350,180,550}:new long[]{0})
           .setContentIntent(PendingIntent.getActivity(this,921,new Intent(this,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE));
         if(!MainActivity.activityVisible)nm.notify(921,b.build());
-        if(settings.getBoolean("timer_sound_enabled",true)){try{android.media.ToneGenerator tone=new android.media.ToneGenerator(android.media.AudioManager.STREAM_ALARM,settings.getInt("completion_sound_volume",55));tone.startTone(android.media.ToneGenerator.TONE_PROP_BEEP,650);new Handler(Looper.getMainLooper()).postDelayed(tone::release,850);}catch(Exception ignored){}}
+        if(settings.getBoolean("timer_sound_enabled",true)&&!MainActivity.activityVisible){try{android.media.ToneGenerator tone=new android.media.ToneGenerator(android.media.AudioManager.STREAM_ALARM,settings.getInt("completion_sound_volume",55));tone.startTone(android.media.ToneGenerator.TONE_PROP_BEEP,650);new Handler(Looper.getMainLooper()).postDelayed(tone::release,850);}catch(Exception ignored){}}
         stopForeground(true);stopSelf();
     }
     private void clearSavedTimer(){getSharedPreferences("timer_runtime",MODE_PRIVATE).edit().remove("timer_service_end_wall").remove("timer_service_duration").remove("timer_service_break").apply();}
