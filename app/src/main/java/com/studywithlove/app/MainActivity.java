@@ -2620,7 +2620,7 @@ public class MainActivity extends Activity {
         TextView magnify=text("⌕",23,PINK,true);magnify.setGravity(Gravity.CENTER);searchWrap.addView(magnify,lp(27,42,0,0,5,0));
         EditText search=new EditText(this);search.setSingleLine(true);search.setTextSize(13);search.setTextColor(DARK);search.setHintTextColor(MUTED);search.setHint("Поиск по победам...");search.setPadding(0,0,0,0);search.setBackgroundColor(0x00000000);searchWrap.addView(search,new LinearLayout.LayoutParams(0,dp(48),1f));
         TextView clear=text("×",22,MUTED,true);clear.setContentDescription(translate("Очистить поиск"));clear.setGravity(Gravity.CENTER);clear.setVisibility(View.GONE);searchWrap.addView(clear,lp(40,48,0,0,0,0));
-        TextView closeDiarySearch=text("×",25,PINK,true);closeDiarySearch.setGravity(Gravity.CENTER);closeDiarySearch.setContentDescription("Закрыть поиск");searchWrap.addView(closeDiarySearch,lp(38,48,0,0,0,0));root.addView(searchWrap,lp(-1, 48,0,0,0,7));
+        TextView closeSearchButton=text("×",25,PINK,true);closeSearchButton.setGravity(Gravity.CENTER);closeSearchButton.setContentDescription("Закрыть поиск");searchWrap.addView(closeSearchButton,lp(38,48,0,0,0,0));root.addView(searchWrap,lp(-1, 48,0,0,0,7));
         searchWrap.setVisibility(View.GONE);searchWrap.setAlpha(0f);searchWrap.setTranslationY(-dp(7));
         LinearLayout filterRow=new LinearLayout(this);filterRow.setGravity(Gravity.CENTER_VERTICAL);
         HorizontalScrollView filterScroll=new HorizontalScrollView(this);filterScroll.setHorizontalScrollBarEnabled(false);filterScroll.addView(filterRow);root.addView(filterScroll,lp(-1, 38,0,0,0,4));
@@ -2688,7 +2688,7 @@ public class MainActivity extends Activity {
             search.requestFocus();
             search.post(()->{android.view.inputmethod.InputMethodManager imm=(android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);if(imm!=null)imm.showSoftInput(search,android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);});
         });
-        closeDiarySearch.setOnClickListener(v->closeDiarySearch.run());
+        closeSearchButton.setOnClickListener(v->closeDiarySearch.run());
         search.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int st,int c,int a){}public void onTextChanged(CharSequence s,int st,int before,int count){queryValue[0]=s.toString();clear.setVisibility(s.length()>0?View.VISIBLE:View.GONE);render[0].run();}public void afterTextChanged(android.text.Editable e){}});
         clear.setOnClickListener(v->search.setText(""));
         save.setOnClickListener(v->{String value=note.getText().toString().trim();if(value.isEmpty()){note.setError("Напиши хотя бы пару слов");return;}Set<String> ids=new TreeSet<>(prefs.getStringSet("diary_ids",new TreeSet<String>()));String id=editingId[0]==null?String.valueOf(System.currentTimeMillis()):editingId[0];ids.add(id);prefs.edit().putString("diary_"+id,value).putString("diary_tag_"+id,selectedTag[0]).putStringSet("diary_ids",ids).apply();editingId[0]=null;note.setText("");save.setText("✦  Сохранить победу");render[0].run();showSavedBanner("Запись сохранена","Твоя маленькая победа осталась в дневнике ♡");});
