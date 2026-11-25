@@ -1035,7 +1035,21 @@ public class MainActivity extends Activity {
         // Настройки: единый плоский стиль без теней у карточек, плиток и вложенных элементов.
         removeSettingsShadows(root);
 
+        // Увеличиваем читаемость текста во всех подразделах настроек.
+        enlargeSettingsText(root);
         backHome();
+    }
+
+    private void enlargeSettingsText(View view) {
+        if(view instanceof TextView){
+            TextView label=(TextView)view;
+            float size=label.getTextSize()/getResources().getDisplayMetrics().scaledDensity;
+            label.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP,Math.min(38f,Math.max(12f,size+1.5f)));
+        }
+        if(view instanceof android.view.ViewGroup){
+            android.view.ViewGroup group=(android.view.ViewGroup)view;
+            for(int i=0;i<group.getChildCount();i++)enlargeSettingsText(group.getChildAt(i));
+        }
     }
 
     private void removeSettingsShadows(View view) {
@@ -2037,7 +2051,12 @@ public class MainActivity extends Activity {
         for(String key:prefs.getAll().keySet())if(key.startsWith("mistake_")){keys.add(key);try{org.json.JSONObject o=new org.json.JSONObject(prefs.getString(key,"{}"));String topic=o.optString("topic","Другая тема"),kind=o.optString("kind","Вычисление");byTopic.put(topic,byTopic.containsKey(topic)?byTopic.get(topic)+1:1);Map<String,Integer> group=kinds.get(topic);if(group==null){group=new TreeMap<>();kinds.put(topic,group);}group.put(kind,group.containsKey(kind)?group.get(kind)+1:1);}catch(Exception ignored){}}
         LinearLayout summary=card();summary.setBackgroundColor(android.graphics.Color.TRANSPARENT);summary.setElevation(0f);addText(summary,"ЗАПИСЕЙ В ЖУРНАЛЕ",11,PINK,true);addText(summary,String.valueOf(keys.size()),34,DARK,true);addText(summary,"Сохраняются неверные ответы и тип затруднения.",12,MUTED,false);root.addView(summary,lp(-1,-2,0,0,0,12));
         if(keys.isEmpty()) {
-            addEmptyState(root, "🌷", "Пока всё получается!", "Здесь появятся темы, которые стоит повторить. Начни с любого урока.", "Перейти к урокам", () -> showChapters());
+            LinearLayout calmEmpty=new LinearLayout(this);calmEmpty.setOrientation(LinearLayout.VERTICAL);calmEmpty.setGravity(Gravity.CENTER_HORIZONTAL);calmEmpty.setPadding(dp(12),dp(16),dp(12),dp(16));calmEmpty.setBackgroundColor(android.graphics.Color.TRANSPARENT);calmEmpty.setElevation(0f);
+            TextView calmFlower=text("🌷",44,PINK,true);calmFlower.setGravity(Gravity.CENTER);calmEmpty.addView(calmFlower,lp(-1,62,0,0,0,8));
+            TextView calmTitle=text("Пока всё получается!",18,DARK,true);calmTitle.setGravity(Gravity.CENTER);calmEmpty.addView(calmTitle,lp(-1,-2,0,0,0,7));
+            TextView calmDescription=text("Здесь появятся темы, которые стоит повторить. Начни с любого урока.",14,MUTED,false);calmDescription.setGravity(Gravity.CENTER);calmEmpty.addView(calmDescription,lp(-1,-2,0,0,0,12));
+            Button startLessons=button("Перейти к урокам",true);startLessons.setOnClickListener(v->showChapters());calmEmpty.addView(startLessons,lp(-1,48,0,0,0,0));
+            root.addView(calmEmpty,lp(-1,-2,0,0,0,10));
         } else for(Map.Entry<String,Integer> e:byTopic.entrySet()){LinearLayout item=card();item.setBackgroundColor(android.graphics.Color.TRANSPARENT);item.setElevation(0f);addText(item,e.getKey(),14,DARK,true);addText(item,e.getValue()+" ошибок в журнале",12,MUTED,false);Map<String,Integer> group=kinds.get(e.getKey());if(group!=null){StringBuilder types=new StringBuilder("Типы: ");for(Map.Entry<String,Integer> kind:group.entrySet()){if(types.length()>6)types.append(" · ");types.append(kind.getKey()).append(" (").append(kind.getValue()).append(")");}addText(item,types.toString(),11,PINK,false);}root.addView(item,lp(-1,-2,0,0,0,6));}
         if(!keys.isEmpty()) {
             Button train=button("🧠  Тренировать мои ошибки",true);
@@ -2600,7 +2619,9 @@ public class MainActivity extends Activity {
         LinearLayout searchWrap=new LinearLayout(this);searchWrap.setVisibility(View.GONE);searchWrap.setGravity(Gravity.CENTER_VERTICAL);searchWrap.setPadding(dp(11),0,dp(8),0);searchWrap.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));
         TextView magnify=text("⌕",23,PINK,true);magnify.setGravity(Gravity.CENTER);searchWrap.addView(magnify,lp(27,42,0,0,5,0));
         EditText search=new EditText(this);search.setSingleLine(true);search.setTextSize(13);search.setTextColor(DARK);search.setHintTextColor(MUTED);search.setHint("Поиск по победам...");search.setPadding(0,0,0,0);search.setBackgroundColor(0x00000000);searchWrap.addView(search,new LinearLayout.LayoutParams(0,dp(48),1f));
-        TextView clear=text("×",22,MUTED,true);clear.setContentDescription(translate("Очистить поиск"));clear.setGravity(Gravity.CENTER);clear.setVisibility(View.GONE);searchWrap.addView(clear,lp(48,48,0,0,0,0));root.addView(searchWrap,lp(-1, 44,0,0,0,7));
+        TextView clear=text("×",22,MUTED,true);clear.setContentDescription(translate("Очистить поиск"));clear.setGravity(Gravity.CENTER);clear.setVisibility(View.GONE);searchWrap.addView(clear,lp(40,48,0,0,0,0));
+        TextView closeDiarySearch=text("×",25,PINK,true);closeDiarySearch.setGravity(Gravity.CENTER);closeDiarySearch.setContentDescription("Закрыть поиск");searchWrap.addView(closeDiarySearch,lp(38,48,0,0,0,0));root.addView(searchWrap,lp(-1, 48,0,0,0,7));
+        searchWrap.setAlpha(0f);searchWrap.setTranslationY(-dp(7));
         LinearLayout filterRow=new LinearLayout(this);filterRow.setGravity(Gravity.CENTER_VERTICAL);
         HorizontalScrollView filterScroll=new HorizontalScrollView(this);filterScroll.setHorizontalScrollBarEnabled(false);filterScroll.addView(filterRow);root.addView(filterScroll,lp(-1, 38,0,0,0,4));
         LinearLayout entries=new LinearLayout(this);entries.setOrientation(LinearLayout.VERTICAL);root.addView(entries,lp(-1,-2,0,0,0,0));
@@ -2645,15 +2666,29 @@ public class MainActivity extends Activity {
                 View line=new View(this);line.setBackgroundColor(0xFFEFE5E8);entry.addView(line,lp(-1,1,0,5,0,0));entries.addView(entry,lp(-1,-2,0,0,0,5));
             }
         };
-        diaryTopSearch.setOnClickListener(v->{searchWrap.setVisibility(View.VISIBLE);searchToggle.setText("×");searchToggle.setContentDescription("Закрыть поиск");search.requestFocus();((android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).showSoftInput(search,android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);});
-        searchToggle.setOnClickListener(v->{
-            boolean opening=searchWrap.getVisibility()!=View.VISIBLE;
-            searchWrap.setVisibility(opening?View.VISIBLE:View.GONE);
-            searchToggle.setText(opening?"×":"⌕");
-            searchToggle.setContentDescription(opening?"Закрыть поиск":"Поиск по победам");
-            if(opening){search.requestFocus();((android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).showSoftInput(search,android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);}
-            else {search.setText("");((android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(search.getWindowToken(),0);}
+        searchToggle.setVisibility(View.GONE);
+        Runnable closeDiarySearch=()->{
+            if(searchWrap.getParent()!=root)return;
+            android.view.inputmethod.InputMethodManager imm=(android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+            if(imm!=null)imm.hideSoftInputFromWindow(search.getWindowToken(),0);
+            search.setText("");
+            searchWrap.animate().alpha(0f).translationY(-dp(7)).setDuration(150).withEndAction(()->{
+                root.removeView(searchWrap);
+                root.addView(diaryTitleRow,0);
+                searchWrap.setAlpha(0f);searchWrap.setTranslationY(-dp(7));
+                searchToggle.setText("⌕");searchToggle.setContentDescription("Поиск по победам");
+            }).start();
+        };
+        diaryTopSearch.setOnClickListener(v->{
+            if(searchWrap.getParent()==root){closeDiarySearch.run();return;}
+            root.removeView(diaryTitleRow);root.removeView(searchWrap);
+            searchWrap.setVisibility(View.VISIBLE);searchWrap.setAlpha(0f);searchWrap.setTranslationY(-dp(7));
+            root.addView(searchWrap,0);
+            searchWrap.animate().alpha(1f).translationY(0f).setDuration(210).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
+            search.requestFocus();
+            search.post(()->{android.view.inputmethod.InputMethodManager imm=(android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);if(imm!=null)imm.showSoftInput(search,android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);});
         });
+        closeDiarySearch.setOnClickListener(v->closeDiarySearch.run());
         search.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int st,int c,int a){}public void onTextChanged(CharSequence s,int st,int before,int count){queryValue[0]=s.toString();clear.setVisibility(s.length()>0?View.VISIBLE:View.GONE);render[0].run();}public void afterTextChanged(android.text.Editable e){}});
         clear.setOnClickListener(v->search.setText(""));
         save.setOnClickListener(v->{String value=note.getText().toString().trim();if(value.isEmpty()){note.setError("Напиши хотя бы пару слов");return;}Set<String> ids=new TreeSet<>(prefs.getStringSet("diary_ids",new TreeSet<String>()));String id=editingId[0]==null?String.valueOf(System.currentTimeMillis()):editingId[0];ids.add(id);prefs.edit().putString("diary_"+id,value).putString("diary_tag_"+id,selectedTag[0]).putStringSet("diary_ids",ids).apply();editingId[0]=null;note.setText("");save.setText("✦  Сохранить победу");render[0].run();showSavedBanner("Запись сохранена","Твоя маленькая победа осталась в дневнике ♡");});
