@@ -903,6 +903,9 @@ public class MainActivity extends Activity {
         try { installedVersion=getPackageManager().getPackageInfo(getPackageName(),0).versionName; } catch(Exception ignored) {}
         
         
+        TextView versionLabel=text("Версия приложения  ·  "+installedVersion,13,MUTED,false);
+        versionLabel.setGravity(Gravity.CENTER_VERTICAL);
+        updates.addView(versionLabel,lp(-1,34,0,5,0,2));
         Button checkUpdates=button("Проверить обновления",true);
         checkUpdates.setOnClickListener(v->AppUpdater.checkAndOffer(this));
         updates.addView(checkUpdates,lp(-1,48,0,7,0,0));
@@ -2265,12 +2268,17 @@ public class MainActivity extends Activity {
         countdown.addView(heroDays);countdown.addView(heroCaption);heroRow.addView(countdown,lp(88,-2,8,0,0,0));
         hero.addView(heroRow,lp(-1,-2,0,5,0,0));root.addView(hero,lp(-1,-2,0,0,0,14));
         final String[] editing={null};
-        LinearLayout form=card();addText(form,"НАЗВАНИЕ ЦЕЛИ",12,PINK,true);
+        LinearLayout form=card();form.setBackgroundColor(android.graphics.Color.TRANSPARENT);addText(form,"НАЗВАНИЕ ЦЕЛИ",12,PINK,true);
         EditText title=new EditText(this);title.setSingleLine(true);title.setTextSize(16);title.setTextColor(DARK);title.setHint("Например, экзамен по математике");title.setPadding(dp(13),dp(8),dp(13),dp(8));title.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));form.addView(title,lp(-1,50,0,7,0,12));
         addText(form,"ДАТА",12,PINK,true);
         EditText date=new EditText(this);date.setSingleLine(true);date.setFocusable(false);date.setClickable(true);date.setTextSize(15);date.setTextColor(DARK);date.setHint("Выбери дату");date.setPadding(dp(13),dp(8),dp(13),dp(8));date.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));form.addView(date,lp(-1,50,0,7,0,12));
         date.setOnClickListener(v->{Calendar now=Calendar.getInstance(AppTime.zone());Calendar min=(Calendar)now.clone();min.set(Calendar.HOUR_OF_DAY,0);min.set(Calendar.MINUTE,0);min.set(Calendar.SECOND,0);min.set(Calendar.MILLISECOND,0);android.app.DatePickerDialog dialog=new android.app.DatePickerDialog(this,(p,y,m,d)->date.setText(String.format(Locale.US,"%04d-%02d-%02d",y,m+1,d)),now.get(Calendar.YEAR),now.get(Calendar.MONTH),now.get(Calendar.DAY_OF_MONTH));dialog.getDatePicker().setMinDate(min.getTimeInMillis());dialog.show();});
         Button save=button("＋  Добавить цель",true);form.addView(save,lp(-1,50,0,4,0,0));root.addView(form,lp(-1,-2,0,0,0,14));
+        Button topicsButton=button("📚  Темы для экзамена   ›",false);
+        topicsButton.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);
+        topicsButton.setBackground(shape(0x00FFFFFF,16,blendColors(PINK,BG,0.55f)));
+        topicsButton.setOnClickListener(v->showExamTopics());
+        root.addView(topicsButton,lp(-1,50,0,0,0,12));
         LinearLayout goals=new LinearLayout(this);goals.setOrientation(LinearLayout.VERTICAL);root.addView(goals,lp(-1,-2,0,0,0,0));
         final Runnable[] render={null};
         render[0]=()->{
@@ -2288,11 +2296,11 @@ public class MainActivity extends Activity {
                 heroCaption.setText(remain==0?"СЕГОДНЯ":"ДНЕЙ ОСТАЛОСЬ");
                 prefs.edit().putString("exam_main_goal_id",selectedMain).apply();
             }else{heroName.setText("Главная цель пока не выбрана");heroDate.setText("Добавь цель и отметь её главной");heroDays.setText("—");heroCaption.setText("ДНЕЙ");}
-            if(order.isEmpty()){LinearLayout empty=card();empty.setGravity(Gravity.CENTER);addText(empty,"Пока нет целей",15,DARK,true);addText(empty,"Добавь первую дату экзамена или важную цель.",13,MUTED,false);goals.addView(empty,lp(-1,-2,0,0,0,10));}
+            if(order.isEmpty()){LinearLayout empty=card();empty.setBackgroundColor(android.graphics.Color.TRANSPARENT);empty.setGravity(Gravity.CENTER);addText(empty,"Пока нет целей",15,DARK,true);addText(empty,"Добавь первую дату экзамена или важную цель.",13,MUTED,false);goals.addView(empty,lp(-1,-2,0,0,0,10));}
             for(String id:order){
                 String goalTitle=prefs.getString("exam_goal_title_"+id,""),goalDate=prefs.getString("exam_goal_date_"+id,"");if(goalTitle.isEmpty()||goalDate.isEmpty())continue;
                 long remain=daysUntil(goalDate);boolean isMain=id.equals(selectedMain);
-                LinearLayout item=card();item.setOrientation(LinearLayout.VERTICAL);
+                LinearLayout item=card();item.setBackgroundColor(android.graphics.Color.TRANSPARENT);item.setOrientation(LinearLayout.VERTICAL);
                 LinearLayout top=new LinearLayout(this);top.setGravity(Gravity.CENTER_VERTICAL);
                 LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);
                 addText(words,isMain?"ГЛАВНАЯ ЦЕЛЬ":"ТВОЯ ЦЕЛЬ",11,isMain?PINK:MUTED,true);addText(words,goalTitle,17,DARK,true);addText(words,"Экзамен: "+goalDate,12,MUTED,false);addText(words,"Добавлена: "+prefs.getString("exam_goal_created_"+id,"—"),11,MUTED,false);
@@ -2311,6 +2319,13 @@ public class MainActivity extends Activity {
         };
         save.setOnClickListener(v->{String n=title.getText().toString().trim(),d=date.getText().toString().trim();if(n.isEmpty()){title.setError("Введи название цели");return;}if(d.isEmpty()){showSavedBanner("Выбери дату","Укажи день экзамена ♡");return;}if(daysUntil(d)<0){showSavedBanner("Неверная дата","Выбери сегодняшнюю или будущую дату");return;}boolean isNew=editing[0]==null;String id=isNew?String.valueOf(System.currentTimeMillis()):editing[0];Set<String> ids=new TreeSet<>(prefs.getStringSet("exam_goal_ids",new TreeSet<String>()));ids.add(id);SharedPreferences.Editor e=prefs.edit().putString("exam_goal_title_"+id,n).putString("exam_goal_date_"+id,d).putStringSet("exam_goal_ids",ids);if(isNew)e.putString("exam_goal_created_"+id,todayKey());if(prefs.getString("exam_main_goal_id","").isEmpty())e.putString("exam_main_goal_id",id);e.apply();StudyWidgetProvider.updateAll(this);editing[0]=null;title.setText("");date.setText("");save.setText("＋  Добавить цель");render[0].run();showSavedBanner("Цель сохранена","Она появилась в твоём списке ♡");});
         render[0].run();
+    }
+    private void showExamTopics(){
+        currentScreen="exam_topics";
+        base("Темы для экзамена","Выбери темы, которые входят в твой экзамен");
+        Button back=button("←  Назад к экзамену",false);
+        back.setOnClickListener(v->showExam());
+        root.addView(back,lp(-1,46,0,0,0,10));
         addExamTopicSelector();
     }
     private String examTopicKey(String chapter,String topic){return topicStorageSuffix(chapter,topic);}
