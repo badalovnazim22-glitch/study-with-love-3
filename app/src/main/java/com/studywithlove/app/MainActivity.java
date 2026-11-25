@@ -751,8 +751,8 @@ public class MainActivity extends Activity {
         private final boolean checked;
         private final int accent;
         SettingsCheckDrawable(boolean checked,int accent){this.checked=checked;this.accent=accent;}
-        @Override public int getIntrinsicWidth(){return dp(26);}
-        @Override public int getIntrinsicHeight(){return dp(26);}
+        @Override public int getIntrinsicWidth(){return dp(20);}
+        @Override public int getIntrinsicHeight(){return dp(20);}
         @Override public void draw(android.graphics.Canvas canvas){
             android.graphics.Rect b=getBounds();float side=Math.min(b.width(),b.height());float cx=b.exactCenterX(),cy=b.exactCenterY(),r=side*0.39f;
             paint.setStyle(android.graphics.Paint.Style.FILL);paint.setColor(checked?accent:0x00FFFFFF);canvas.drawCircle(cx,cy,r,paint);
@@ -772,12 +772,13 @@ public class MainActivity extends Activity {
         if(Build.VERSION.SDK_INT>=21)box.setButtonTintList(null);
         box.setButtonDrawable(states);
         box.setTag("round_checkbox");
-        box.setCompoundDrawablePadding(dp(11));
-        box.setMinHeight(dp(48));
+        box.setCompoundDrawablePadding(dp(8));
+        box.setMinHeight(dp(40));
         box.setGravity(Gravity.CENTER_VERTICAL);
         box.setIncludeFontPadding(false);
-        box.setPadding(dp(2),dp(4),dp(8),dp(4));
+        box.setPadding(0,dp(2),dp(4),dp(2));
         box.setButtonDrawable(states);
+        box.setOnTouchListener((v,event)->{if(event.getAction()==android.view.MotionEvent.ACTION_DOWN){v.animate().cancel();v.animate().scaleX(0.985f).scaleY(0.985f).setDuration(75).start();}else if(event.getAction()==android.view.MotionEvent.ACTION_UP||event.getAction()==android.view.MotionEvent.ACTION_CANCEL){v.animate().cancel();v.animate().scaleX(1f).scaleY(1f).setDuration(180).setInterpolator(new android.view.animation.OvershootInterpolator(1.15f)).start();}return false;});
         if(Build.VERSION.SDK_INT>=21){
             android.graphics.drawable.GradientDrawable rippleMask=new android.graphics.drawable.GradientDrawable();
             rippleMask.setColor(0xFFFFFFFF);rippleMask.setCornerRadius(dp(13));
@@ -788,7 +789,7 @@ public class MainActivity extends Activity {
     private CheckBox addSettingsToggle(LinearLayout host,String label,String key,boolean defaultValue,Runnable afterChange){
         CheckBox box=new CheckBox(this);
         box.setText(translate(label));
-        box.setTextSize(16);
+        box.setTextSize(15);
         box.setTextColor(DARK);
         box.setMinHeight(dp(36));
         box.setGravity(Gravity.CENTER_VERTICAL);
@@ -797,7 +798,7 @@ public class MainActivity extends Activity {
         styleRoundCheckBox(box);
         box.setChecked(prefs.getBoolean(key,defaultValue));
         // Плотная строка переключателя без лишних вертикальных отступов.
-        host.addView(box,lp(-1,50,0,0,0,0));
+        host.addView(box,lp(-1,42,0,0,0,0));
         box.setOnCheckedChangeListener((button,checked)->{prefs.edit().putBoolean(key,checked).apply();if(afterChange!=null)afterChange.run();});
         return box;
     }
@@ -967,7 +968,7 @@ public class MainActivity extends Activity {
 
         LinearLayout focus=settingsGroup("РЕЖИМ ФОКУСА");
         focus.setTag("notifications_sound");
-        CheckBox focusToggle=new CheckBox(this);focusToggle.setText("Не отвлекать");focusToggle.setTextColor(DARK);styleRoundCheckBox(focusToggle);focusToggle.setChecked(prefs.getBoolean("do_not_disturb",false));focus.addView(focusToggle,lp(-1, 48,0,0,0,0));focusToggle.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("do_not_disturb",on).apply();scheduleReminders(this);});root.addView(focus,lp(-1,-2,0,0,0,4));
+        CheckBox focusToggle=new CheckBox(this);focusToggle.setText("Не отвлекать");focusToggle.setTextColor(DARK);styleRoundCheckBox(focusToggle);focusToggle.setChecked(prefs.getBoolean("do_not_disturb",false));focus.addView(focusToggle,lp(-1, 42,0,0,0,0));focusToggle.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("do_not_disturb",on).apply();scheduleReminders(this);});root.addView(focus,lp(-1,-2,0,0,0,4));
         LinearLayout feedbackSettings=settingsGroup("ЗВУК И ОТКЛИК");feedbackSettings.setTag("notifications_sound");addSettingsToggle(feedbackSettings,"Вибрация при действиях","haptics_enabled",true,null);addSettingsToggle(feedbackSettings,"Звук завершения темы","topic_sound_enabled",true,null);addSettingsToggle(feedbackSettings,"Звук окончания Pomodoro","timer_sound_enabled",true,null);addSettingsToggle(feedbackSettings,"Звук правильного ответа","correct_answer_sound_enabled",true,null);addSettingsToggle(feedbackSettings,"Уведомление об окончании таймера","timer_notification_enabled",true,null);addSettingsToggle(feedbackSettings,"Конфетти и праздничные эффекты","celebrations_enabled",true,null);
         addText(feedbackSettings,"ГРОМКОСТЬ СИГНАЛОВ",11,PINK,true);android.widget.SeekBar soundVolume=new android.widget.SeekBar(this);soundVolume.setMax(100);soundVolume.setProgress(prefs.getInt("completion_sound_volume",55));if(Build.VERSION.SDK_INT>=21)soundVolume.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));feedbackSettings.addView(soundVolume,lp(-1,38,0,0,0,5));soundVolume.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener(){public void onProgressChanged(android.widget.SeekBar b,int value,boolean user){if(user)prefs.edit().putInt("completion_sound_volume",value).apply();}public void onStartTrackingTouch(android.widget.SeekBar b){}public void onStopTrackingTouch(android.widget.SeekBar b){}});
         addSettingsToggle(feedbackSettings,"Автовключение выбранной атмосферы при открытии","ambience_autostart",false,null);
@@ -991,7 +992,7 @@ public class MainActivity extends Activity {
         reduceMotion.setTextSize(14); reduceMotion.setTextColor(DARK);
         styleRoundCheckBox(reduceMotion);
         reduceMotion.setChecked(prefs.getBoolean("reduce_motion", false));
-        updates.addView(reduceMotion, lp(-1, 48, 0, 2, 0, 5));
+        updates.addView(reduceMotion, lp(-1, 42, 0, 1, 0, 3));
         reduceMotion.setOnCheckedChangeListener((v, checked) -> prefs.edit().putBoolean("reduce_motion", checked).apply());
         String installedVersion="—";
         try { installedVersion=getPackageManager().getPackageInfo(getPackageName(),0).versionName; } catch(Exception ignored) {}
