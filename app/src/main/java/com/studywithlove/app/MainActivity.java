@@ -1143,10 +1143,10 @@ public class MainActivity extends Activity {
             TextView face = text(faces[i], 22, DARK, false);
             face.setGravity(Gravity.CENTER);
             option.addView(face, lp(-1, 32, 0, 0, 0, 1));
-            TextView label = text(names[i], 9, active ? PINK : MUTED, active);
+            TextView label = text(names[i], 10, active ? PINK : MUTED, active);
             label.setGravity(Gravity.CENTER);
             label.setMaxLines(1);
-            option.addView(label, lp(-1, 18, 0, 0, 0, 0));
+            option.addView(label, lp(-1, 20, 0, 0, 0, 0));
             option.setContentDescription(names[i] + ". " + hints[i]);
             option.setFocusable(true);
             choices.addView(option, new LinearLayout.LayoutParams(0, dp(56), 1f));
@@ -1165,7 +1165,7 @@ public class MainActivity extends Activity {
                 showAppMessage("Настроение сохранено в дневнике ♡");
             });
         }
-        moodCard.addView(choices, lp(-1, 56, 0, 0, 0, 0));
+        moodCard.addView(choices, lp(-1, 58, 0, 0, 0, 0));
         host.addView(moodCard, lp(-1, -2, 0, 0, 0, 12));
     }
 
@@ -2279,13 +2279,13 @@ public class MainActivity extends Activity {
         TextView hint=text(timerRunning?"Ты в потоке":"Нажми, чтобы начать",13,muted,false);hint.setGravity(Gravity.CENTER);center.addView(hint,lp(-1,-2,0,0,0,0));
         dial.addView(center,new FrameLayout.LayoutParams(-1,-1));screen.addView(dial,new LinearLayout.LayoutParams(diameter,diameter));
         timerStatus=text(timerIsBreak?"Отдых тоже часть успеха":"Один шаг за раз",14,muted,false);timerStatus.setGravity(Gravity.CENTER);timerStatus.setPadding(dp(12),dp(16),dp(12),dp(12));screen.addView(timerStatus,lp(-1,-2,0,0,0,dp(4)));
-        TextView presetsTitle=text("ДЛИТЕЛЬНОСТЬ ФОКУСА",10,muted,true);presetsTitle.setGravity(Gravity.CENTER);screen.addView(presetsTitle,lp(-1,-2,0,dp(3),0,dp(3)));
+        TextView presetsTitle=text("ДЛИТЕЛЬНОСТЬ ФОКУСА",11,muted,true);presetsTitle.setGravity(Gravity.CENTER);screen.addView(presetsTitle,lp(-1,-2,0,dp(3),0,dp(3)));
         LinearLayout focusPresets=new LinearLayout(this);focusPresets.setGravity(Gravity.CENTER);focusPresets.setOrientation(LinearLayout.HORIZONTAL);
         for(int minutes:new int[]{15,25,30,45,60}){Button chip=button(minutes+"м",selectedStudyMinutes==minutes);chip.setTextSize(12);LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(38),1f);cp.setMargins(dp(2),0,dp(2),0);focusPresets.addView(chip,cp);chip.setOnClickListener(v->{if(timerRunning)return;selectedStudyMinutes=minutes;prefs.edit().putInt("selected_study_minutes",minutes).apply();if(!timerIsBreak)timerRemainingMs=minutes*60000L;showPomodoro();});}
         screen.addView(focusPresets,lp(-1,dp(40),0,0,0,dp(4)));
-        TextView breakTitle=text("КОРОТКИЙ И ДЛИННЫЙ ПЕРЕРЫВ",10,muted,true);breakTitle.setGravity(Gravity.CENTER);screen.addView(breakTitle,lp(-1,-2,0,dp(3),0,dp(3)));
+        TextView breakTitle=text("КОРОТКИЙ И ДЛИННЫЙ ПЕРЕРЫВ",11,muted,true);breakTitle.setGravity(Gravity.CENTER);screen.addView(breakTitle,lp(-1,-2,0,dp(3),0,dp(3)));
         LinearLayout breakPresets=new LinearLayout(this);breakPresets.setGravity(Gravity.CENTER);breakPresets.setOrientation(LinearLayout.HORIZONTAL);
-        for(int minutes:new int[]{3,5,10}){Button chip=button("Короткий "+minutes,selectedBreakMinutes==minutes);chip.setTextSize(11);LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(38),1f);cp.setMargins(dp(2),0,dp(2),0);breakPresets.addView(chip,cp);chip.setOnClickListener(v->{if(timerRunning)return;selectedBreakMinutes=minutes;prefs.edit().putInt("selected_break_minutes",minutes).apply();showPomodoro();});}
+        for(int minutes:new int[]{3,5,10}){Button chip=button("Короткий "+minutes,selectedBreakMinutes==minutes);chip.setTextSize(12);LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(40),1f);cp.setMargins(dp(2),0,dp(2),0);breakPresets.addView(chip,cp);chip.setOnClickListener(v->{if(timerRunning)return;selectedBreakMinutes=minutes;prefs.edit().putInt("selected_break_minutes",minutes).apply();showPomodoro();});}
         screen.addView(breakPresets,lp(-1,dp(40),0,0,0,dp(2)));
         LinearLayout longBreakPresets=new LinearLayout(this);longBreakPresets.setGravity(Gravity.CENTER);longBreakPresets.setOrientation(LinearLayout.HORIZONTAL);
         int longBreak=Math.max(15,prefs.getInt("pomodoro_long_break_minutes",15));
@@ -2933,11 +2933,11 @@ public class MainActivity extends Activity {
         for(int ai=0;ai<a.length;ai++){String[] x=a[ai];boolean open=Boolean.parseBoolean(x[3]);int target=Integer.parseInt(x[4]);int current=achievementCurrent(ai,days,minutes,completed,sessions);
             LinearLayout tile=new LinearLayout(this);tile.setOrientation(LinearLayout.VERTICAL);tile.setGravity(Gravity.CENTER);tile.setPadding(dp(7),dp(7),dp(7),dp(7));tile.setBackground(shape(open?0xFFFFF0F5:0xFFF7F5F5,16,open?PINK:0xFFE4DDE0));
             android.widget.FrameLayout emblem=new android.widget.FrameLayout(this);emblem.setClipChildren(false);emblem.setClipToPadding(false);TextView icon=text(x[0],25,open?PINK:0xFF8F8790,true);icon.setGravity(Gravity.CENTER);android.widget.FrameLayout.LayoutParams iconLp=new android.widget.FrameLayout.LayoutParams(dp(44),dp(44),Gravity.CENTER);emblem.addView(icon,iconLp);if(!open){TextView lock=text("🔒",10,MUTED,true);lock.setGravity(Gravity.CENTER);android.widget.FrameLayout.LayoutParams lockLp=new android.widget.FrameLayout.LayoutParams(dp(18),dp(18),Gravity.TOP|Gravity.END);emblem.addView(lock,lockLp);}tile.addView(emblem,lp(-1,48,0,0,0,3));
-            TextView name=text(x[1],10,open?DARK:0xFF514A50,true);name.setGravity(Gravity.CENTER);name.setMaxLines(2);name.setMinHeight(dp(29));tile.addView(name,lp(-1,-2,0,0,0,2));
+            TextView name=text(x[1],11,open?DARK:0xFF514A50,true);name.setGravity(Gravity.CENTER);name.setMaxLines(2);name.setMinHeight(dp(29));tile.addView(name,lp(-1,-2,0,0,0,2));
             String progress=target>=100?String.format(Locale.US,"%.0f%%",Math.min(100,current*100f/target)):Math.min(current,target)+"/"+target;
-            TextView state=text(open?"Открыто ✓":progress,10,open?PINK:0xFF625A61,true);state.setGravity(Gravity.CENTER);tile.addView(state,lp(-1,18,0,0,0,2));
+            TextView state=text(open?"Открыто ✓":progress,11,open?PINK:0xFF625A61,true);state.setGravity(Gravity.CENTER);tile.addView(state,lp(-1,18,0,0,0,2));
             if(!open){ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setIndeterminate(false);bar.setMax(Math.max(1,target));bar.setProgressDrawable(roundedAchievementProgress(0xFFECE1E5,PINK));bar.setProgress(0);bar.setLayerType(View.LAYER_TYPE_SOFTWARE,null);LinearLayout.LayoutParams barLp=lp(-1,8,0,6,0,0);barLp.leftMargin=dp(8);barLp.rightMargin=dp(8);tile.addView(bar,barLp);final int tileProgress=Math.max(0,Math.min(current,target));bar.post(()->{bar.setMax(Math.max(1,target));bar.setProgress(0);android.animation.ObjectAnimator progressAnimator=android.animation.ObjectAnimator.ofInt(bar,"progress",tileProgress);progressAnimator.setDuration(700);progressAnimator.setInterpolator(new android.view.animation.DecelerateInterpolator());progressAnimator.start();});}
-            android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(116);gp.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);gp.setMargins(dp(4),dp(4),dp(4),dp(4));grid.addView(tile,gp);
+            android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(120);gp.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);gp.setMargins(dp(4),dp(4),dp(4),dp(4));grid.addView(tile,gp);
             tile.setOnClickListener(v->animateLessonTap(tile,()->showAchievementDetail(x[0],x[1],x[2],open,current,target)));
         }
         root.addView(grid,lp(-1,-2,0,8,0,8));backHome();
