@@ -652,16 +652,16 @@ public class MainActivity extends Activity {
                 :shape(0x00FFFFFF,18,0));
             NavigationIconView icon=new NavigationIconView(this,i,selected?PINK:MUTED);
             android.widget.FrameLayout.LayoutParams iconParams=
-                new android.widget.FrameLayout.LayoutParams(dp(20),dp(20),Gravity.CENTER);
+                new android.widget.FrameLayout.LayoutParams(dp(21),dp(21),Gravity.CENTER);
             iconSlot.addView(icon,iconParams);
-            item.addView(iconSlot,new LinearLayout.LayoutParams(dp(36),dp(20)));
+            item.addView(iconSlot,new LinearLayout.LayoutParams(dp(36),dp(25)));
 
             TextView label=textFixed(labels[i],9,selected?PINK:MUTED,selected);
             label.setGravity(Gravity.CENTER);
             label.setMaxLines(1);
             label.setSingleLine(true);
             label.setIncludeFontPadding(false);
-            item.addView(label,lp(-1,dp(12),0,dp(1),0,0));
+            item.addView(label,lp(-1,dp(14),0,dp(2),0,0));
 
             LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-2,1f);
             p.setMargins(dp(1),0,dp(1),0);
@@ -1091,7 +1091,7 @@ public class MainActivity extends Activity {
         continueCard.setBackground(shape(0xFFF8E8EE, 24, 0));
         TextView progressCaption=text("ТВОЙ ПРОГРЕСС",13,PINK,true);
         continueCard.addView(progressCaption,lp(-1,-2,0,0,0,2));
-        TextView encouragement=text("Ты справляешься.\\nПродолжай в своём темпе.",22,DARK,true);
+        TextView encouragement=text("Ты справляешься.\nПродолжай в своём темпе.",22,DARK,true);
         continueCard.addView(encouragement,lp(-1,-2,0,0,0,2));
         TextView praise=text("✧  Ты отлично справляешься! ❤️",14,PINK,true);
         continueCard.addView(praise,lp(-1,-2,0,0,0,4));
@@ -1143,7 +1143,7 @@ public class MainActivity extends Activity {
         LinearLayout weeklyCard = card();
         weeklyCard.setPadding(dp(10), dp(7), dp(10), dp(7));
         addText(weeklyCard, "🎯  ЦЕЛЬ НЕДЕЛИ", 10, PINK, true);
-        addText(weeklyCard, weeklyDone + " из " + weeklyGoal + " минут", 15, DARK, true);
+        addText(weeklyCard, weeklyDone + " из " + weeklyGoal + " минут", 13, DARK, true);
         addProgressLine(weeklyCard, "Твой недельный результат",
                 weeklyGoal <= 0 ? 0 : Math.min(100, weeklyDone * 100 / weeklyGoal));
         LinearLayout daysRow = new LinearLayout(this);
@@ -1162,7 +1162,7 @@ public class MainActivity extends Activity {
             LinearLayout dayCell = new LinearLayout(this);
             dayCell.setOrientation(LinearLayout.VERTICAL);
             dayCell.setGravity(Gravity.CENTER);
-            TextView dayName = text(weekLabels[dayIndex], 10, isToday ? PINK : MUTED, true);
+            TextView dayName = text(weekLabels[dayIndex], 9, isToday ? PINK : MUTED, true);
             dayName.setGravity(Gravity.CENTER);
             dayCell.addView(dayName, lp(-1, 14, 0, 0, 0, 2));
             if (isToday) dayCell.setBackground(shape(PALE, 12, PINK));
@@ -1174,10 +1174,10 @@ public class MainActivity extends Activity {
                     9, MUTED, false);
             minutesLabel.setGravity(Gravity.CENTER);
             dayCell.addView(minutesLabel, lp(-1, 12, 0, 0, 0, 0));
-            daysRow.addView(dayCell, new LinearLayout.LayoutParams(0, dp(45), 1f));
+            daysRow.addView(dayCell, new LinearLayout.LayoutParams(0, dp(40), 1f));
             weekDay.add(Calendar.DAY_OF_YEAR, 1);
         }
-        weeklyCard.addView(daysRow, lp(-1, 45, 0, 4, 0, 0));
+        weeklyCard.addView(daysRow, lp(-1, 40, 0, 3, 0, 0));
         root.addView(weeklyCard, lp(-1, -2, 0, 0, 0, 8));weeklyCard.setTag("home_weekly");
 
         LinearLayout aiCard = card();
@@ -1218,16 +1218,16 @@ public class MainActivity extends Activity {
         LinearLayout reminder = card();
         reminder.setOrientation(LinearLayout.HORIZONTAL);
         reminder.setGravity(Gravity.CENTER_VERTICAL);
-        reminder.setPadding(dp(12), dp(8), dp(10), dp(8));
+        reminder.setPadding(dp(9), dp(5), dp(8), dp(5));
         reminder.setBackground(shape(PALE, 18, PINK));
         LinearLayout reminderWords = new LinearLayout(this);
         reminderWords.setOrientation(LinearLayout.VERTICAL);
-        addText(reminderWords, "НАПОМИНАНИЯ", 11, PINK, true);
-        addText(reminderWords, reminderSummary(), 12, DARK, false);
+        addText(reminderWords, "НАПОМИНАНИЯ", 10, PINK, true);
+        addText(reminderWords, reminderSummary(), 11, DARK, false);
         reminder.addView(reminderWords, new LinearLayout.LayoutParams(0, -2, 1f));
-        reminder.addView(text("›", 27, PINK, true), lp(28, 38, 4, 0, 0, 0));
+        reminder.addView(text("›", 22, PINK, true), lp(24, 30, 3, 0, 0, 0));
         reminder.setOnClickListener(v -> showReminderSettings());
-        root.addView(reminder, lp(-1, dp(44), 0, 2, 0, 1));reminder.setTag("home_reminders");
+        root.addView(reminder, lp(-1, dp(36), 0, 2, 0, 1));reminder.setTag("home_reminders");
 
         TextView made = text("Сделано с любовью ♡", 11, DARK, false);
         made.setGravity(Gravity.CENTER);
