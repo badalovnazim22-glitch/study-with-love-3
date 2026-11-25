@@ -39,11 +39,11 @@ import java.util.concurrent.Future;
 public class AiTutorActivity extends Activity {
     private static final String AI_PREFS = "study_ai_settings";
     private static final String ENDPOINT_KEY = "backend_url";
-    private int BG = Color.rgb(255, 249, 247);
-    private int PINK = Color.rgb(201, 120, 145);
-    private int DARK = Color.rgb(63, 52, 57);
-    private int MUTED = Color.rgb(145, 132, 139);
-    private int PALE = 0xFFFCEEF2;
+    private int BG = 0xFFF8F7FC;
+    private int PINK = 0xFF8070A8;
+    private int DARK = 0xFF292638;
+    private int MUTED = 0xFF858096;
+    private int PALE = 0xFFF0EDFA;
     private String fontFamily = "sans-serif";
     private String language = "ru";
     private String studyContext = "";
@@ -636,8 +636,9 @@ public class AiTutorActivity extends Activity {
         else if ("condensed".equals(font)) fontFamily = "sans-serif-condensed";
         else if ("medium".equals(font)) fontFamily = "sans-serif-medium";
         else fontFamily = "sans-serif";
-        if ("night".equals(theme)) { BG=0xFF17151D; PINK=0xFFE39AB5; PALE=0xFF302735; DARK=0xFFF4EAF0; MUTED=0xFFB6A8B2; }
-        else if ("lavender".equals(theme)) { BG=0xFFF8F6FF; PINK=0xFF8979B8; PALE=0xFFF0ECFA; DARK=0xFF393448; MUTED=0xFF8E879E; }
+        if ("pink".equals(theme) || "lavender".equals(theme) || theme == null) { BG=0xFFF8F7FC; PINK=0xFF8070A8; PALE=0xFFF0EDFA; DARK=0xFF292638; MUTED=0xFF858096; }
+        else if ("night".equals(theme)) { BG=0xFF17151D; PINK=0xFFE39AB5; PALE=0xFF302735; DARK=0xFFF4EAF0; MUTED=0xFFB6A8B2; }
+        
         else if ("mint".equals(theme)) { BG=0xFFF5FAF7; PINK=0xFF659B86; PALE=0xFFEAF5EF; DARK=0xFF34443D; MUTED=0xFF84958C; }
         else if ("white".equals(theme)) { BG=0xFFF7F8FA; PINK=0xFF65758B; PALE=0xFFE9EDF2; DARK=0xFF303844; MUTED=0xFF87919E; }
         else if ("brown".equals(theme)) { BG=0xFFF7F1EA; PINK=0xFF8B6046; PALE=0xFFEDE0D2; DARK=0xFF49382E; MUTED=0xFF9B8778; }
