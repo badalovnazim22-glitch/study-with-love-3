@@ -1478,24 +1478,16 @@ public class MainActivity extends Activity {
         LinearLayout lessonTop=new LinearLayout(this);
         lessonTop.setGravity(Gravity.CENTER_VERTICAL);
         TextView pageTitle=text("Уроки",25,DARK,true);
-        pageTitle.setGravity(Gravity.CENTER_VERTICAL);
-        pageTitle.setSingleLine(true);
-        pageTitle.setIncludeFontPadding(false);
+        pageTitle.setGravity(Gravity.CENTER_VERTICAL);pageTitle.setSingleLine(true);pageTitle.setIncludeFontPadding(false);
         lessonTop.addView(pageTitle,new LinearLayout.LayoutParams(0,dp(44),1f));
-        LinearLayout lessonActions=new LinearLayout(this);
-        lessonActions.setGravity(Gravity.CENTER_VERTICAL|Gravity.RIGHT);
-        TextView search=text("⌕",27,PINK,true);
-        search.setGravity(Gravity.CENTER);
-        search.setBackgroundColor(android.graphics.Color.TRANSPARENT);
-        search.setContentDescription(translate("Поиск уроков и тем"));
-        lessonActions.addView(search,lp(40,44,0,0,5,0));
-        TextView orderButton=text("⋮",24,DARK,true);
-        orderButton.setGravity(Gravity.CENTER);
-        orderButton.setBackgroundColor(android.graphics.Color.TRANSPARENT);
-        orderButton.setContentDescription(translate("Сортировка предметов"));
-        lessonActions.addView(orderButton,lp(38,44,0,0,0,0));
-        lessonTop.addView(lessonActions,lp(-2,44,0,0,0,0));
-        root.addView(lessonTop,lp(-1,48,0,0,0,2));
+        LinearLayout lessonActions=new LinearLayout(this);lessonActions.setGravity(Gravity.CENTER_VERTICAL|Gravity.RIGHT);
+        TextView weaknessAction=text("🧠",19,PINK,true);weaknessAction.setGravity(Gravity.CENTER);weaknessAction.setBackgroundColor(android.graphics.Color.TRANSPARENT);weaknessAction.setContentDescription("Мои слабые места");
+        lessonActions.addView(weaknessAction,lp(38,44,0,0,3,0));weaknessAction.setOnClickListener(v->showWeaknessTrainer());
+        TextView search=text("⌕",27,PINK,true);search.setGravity(Gravity.CENTER);search.setBackgroundColor(android.graphics.Color.TRANSPARENT);search.setContentDescription(translate("Поиск уроков и тем"));
+        lessonActions.addView(search,lp(38,44,0,0,3,0));
+        TextView orderButton=text("⋮",24,DARK,true);orderButton.setGravity(Gravity.CENTER);orderButton.setBackgroundColor(android.graphics.Color.TRANSPARENT);orderButton.setContentDescription(translate("Сортировка предметов"));
+        lessonActions.addView(orderButton,lp(34,44,0,0,0,0));lessonTop.addView(lessonActions,lp(-2,44,0,0,0,0));
+        root.addView(lessonTop,lp(-1,46,0,0,0,1));
 
         LinearLayout inlineSearch=new LinearLayout(this);
         inlineSearch.setGravity(Gravity.CENTER_VERTICAL);
@@ -1522,19 +1514,17 @@ public class MainActivity extends Activity {
         TextView orderLabel=text("МОИ ПРЕДМЕТЫ",12,PINK,true);
         orderLabel.setGravity(Gravity.CENTER_VERTICAL);
         root.addView(orderLabel,lp(-1,27,0,0,0,5));
+        inlineSearch.setAlpha(0f);inlineSearch.setTranslationY(-dp(8));
         search.setOnClickListener(v->{
-            if(inlineSearch.getVisibility()!=View.VISIBLE){
-                inlineSearch.setVisibility(View.VISIBLE);
-                inlineQuery.requestFocus();
-                inlineQuery.post(()->{
-                    android.view.inputmethod.InputMethodManager imm=(android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
-                    if(imm!=null)imm.showSoftInput(inlineQuery,android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
-                });
+            boolean opening=inlineSearch.getVisibility()!=View.VISIBLE;
+            if(opening){
+                pageTitle.animate().alpha(0f).setDuration(150).withEndAction(()->pageTitle.setVisibility(View.GONE)).start();
+                inlineSearch.setVisibility(View.VISIBLE);inlineSearch.setAlpha(0f);inlineSearch.setTranslationY(-dp(8));
+                inlineSearch.animate().alpha(1f).translationY(0f).setDuration(230).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
+                inlineQuery.requestFocus();inlineQuery.post(()->{android.view.inputmethod.InputMethodManager imm=(android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);if(imm!=null)imm.showSoftInput(inlineQuery,android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);});
             }else{
-                inlineSearch.setVisibility(View.GONE);
-                inlineQuery.setText("");
-                android.view.inputmethod.InputMethodManager imm=(android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
-                if(imm!=null)imm.hideSoftInputFromWindow(inlineQuery.getWindowToken(),0);
+                android.view.inputmethod.InputMethodManager imm=(android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);if(imm!=null)imm.hideSoftInputFromWindow(inlineQuery.getWindowToken(),0);
+                inlineSearch.animate().alpha(0f).translationY(-dp(8)).setDuration(170).withEndAction(()->{inlineSearch.setVisibility(View.GONE);inlineSearch.setAlpha(1f);inlineSearch.setTranslationY(0f);inlineQuery.setText("");pageTitle.setAlpha(0f);pageTitle.setVisibility(View.VISIBLE);pageTitle.animate().alpha(1f).setDuration(190).start();}).start();
             }
         });
         inlineQuery.addTextChangedListener(new android.text.TextWatcher(){
@@ -1551,7 +1541,6 @@ public class MainActivity extends Activity {
             public void afterTextChanged(android.text.Editable e){}
         });
         orderButton.setOnClickListener(v->{android.widget.PopupMenu menu=new android.widget.PopupMenu(this,orderButton);menu.getMenu().add(0,1,0,"По умолчанию");menu.getMenu().add(0,2,1,"По названию А—Я");menu.getMenu().add(0,3,2,"Сначала новые");menu.getMenu().add(0,4,3,"По прогрессу");menu.setOnMenuItemClickListener(mi->{prefs.edit().putString("lesson_sort",mi.getItemId()==2?"alpha":mi.getItemId()==3?"new":mi.getItemId()==4?"progress":"default").apply();showChapters();return true;});menu.show();});
-        LinearLayout weak=new LinearLayout(this);weak.setGravity(Gravity.CENTER);weak.setPadding(dp(4),dp(2),dp(4),dp(2));weak.setBackgroundColor(android.graphics.Color.TRANSPARENT);TextView weakText=text("🧠  Мои слабые места · "+countMistakes(),13,DARK,true);weak.addView(weakText);weak.setOnClickListener(v->showWeaknessTrainer());root.addView(weak,lp(-1,34,0,0,0,7));
         List<String> mathTopics=chapters.get("1️⃣ Натуральные числа и действия с ними");int total=0,done=0;for(List<String> topics:chapters.values()){total+=topics.size();done+=countCompleted(topics);}
         int mathTotal=0,mathDone=0;for(Map.Entry<String,List<String>> e:chapters.entrySet())if(!e.getKey().startsWith("CUSTOM:")){mathTotal+=e.getValue().size();mathDone+=countCompleted(e.getValue());}
         LinearLayout math=card();math.setOrientation(LinearLayout.VERTICAL);math.setPadding(dp(15),dp(13),dp(15),dp(12));math.setOnClickListener(v->showMathChapters());
@@ -1560,8 +1549,8 @@ public class MainActivity extends Activity {
         Set<String> ids=prefs.getStringSet("custom_lesson_ids",new TreeSet<String>());List<String> lessonOrder=new ArrayList<>(ids);String sort=prefs.getString("lesson_sort","default");if("alpha".equals(sort))java.util.Collections.sort(lessonOrder,(a,b)->prefs.getString("custom_lesson_name_"+a,"").compareToIgnoreCase(prefs.getString("custom_lesson_name_"+b,"")));else if("new".equals(sort))java.util.Collections.sort(lessonOrder,java.util.Collections.reverseOrder());else if("progress".equals(sort))java.util.Collections.sort(lessonOrder,(a,b)->{String na=prefs.getString("custom_lesson_name_"+a,""),nb=prefs.getString("custom_lesson_name_"+b,"");List<String> ta=chapters.get("CUSTOM:"+a+":"+na),tb=chapters.get("CUSTOM:"+b+":"+nb);int ca=ta==null?0:countCompleted(ta),cb=tb==null?0:countCompleted(tb);int sa=ta==null?0:ta.size(),sb=tb==null?0:tb.size();double pa=sa==0?0:(double)ca/sa,pb=sb==0?0:(double)cb/sb;return Double.compare(pb,pa);});
         for(String id:lessonOrder){String name=prefs.getString("custom_lesson_name_"+id,"Мой урок");List<String> topics=chapters.get("CUSTOM:"+id+":"+name);if(topics==null)topics=new ArrayList<>();int c=countCompleted("CUSTOM:"+id+":"+name,topics),n=topics.size();LinearLayout item=card();item.setOrientation(LinearLayout.VERTICAL);item.setPadding(dp(14),dp(11),dp(14),dp(11));LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);TextView emoji=text(prefs.getString("custom_lesson_emoji_"+id,"📚"),25,PINK,true);row.addView(emoji,lp(40,40,0,0,9,0));LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,name,15,DARK,true);addText(words,c+" из "+n+" тем пройдено",11,MUTED,false);row.addView(words,new LinearLayout.LayoutParams(0,-2,1f));TextView go=text("›",24,PINK,false);row.addView(go);item.addView(row);ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(Math.max(1,n));bar.setProgress(c);bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));item.addView(bar,lp(-1,5,0,7,0,0));item.setOnClickListener(v->{selectedChapter="CUSTOM:"+id+":"+name;showTopics(selectedChapter);});item.setOnLongClickListener(v->{confirmDeleteCustomLesson(id,name);return true;});root.addView(item,lp(-1,-2,0,0,0,7));}
         TextView add=text("＋  Добавить свой урок",14,PINK,true);add.setGravity(Gravity.CENTER);add.setBackgroundColor(android.graphics.Color.TRANSPARENT);add.setPadding(dp(8),dp(5),dp(8),dp(5));add.setOnClickListener(v->addCustomLesson());root.addView(add,lp(-1,42,0,3,0,9));
-        LinearLayout stats=card();stats.setPadding(dp(14),dp(12),dp(14),dp(12));addText(stats,"ТВОЙ УЧЕБНЫЙ РИТМ",11,PINK,true);addText(stats,done+" из "+total+" тем завершено",17,DARK,true);addText(stats,"Продолжай в своём темпе — каждый пройденный раздел приближает к цели ♡",11,MUTED,false);ProgressBar allBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);allBar.setMax(Math.max(1,total));allBar.setProgress(done);allBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));stats.addView(allBar,lp(-1,6,0,7,0,0));root.addView(stats,lp(-1,-2,0,0,0,10));
-        String recent=prefs.getString("recent_topic","");String recentChapter=prefs.getString("recent_chapter","");if(!recent.isEmpty()&&!recentChapter.isEmpty()&&chapters.containsKey(recentChapter)){Button last=button("↗  Продолжить: "+recent,false);last.setOnClickListener(v->{selectedChapter=recentChapter;selectedTopic=recent;showTopic(recent);});root.addView(last,lp(-1,48,0,0,0,4));}
+        String recent=prefs.getString("recent_topic","");String recentChapter=prefs.getString("recent_chapter","");if(!recent.isEmpty()&&!recentChapter.isEmpty()&&chapters.containsKey(recentChapter)){Button last=button("↗  Продолжить: "+recent,false);last.setOnClickListener(v->{selectedChapter=recentChapter;selectedTopic=recent;showTopic(recent);});root.addView(last,lp(-1,46,0,0,0,3));}
+        LinearLayout stats=new LinearLayout(this);stats.setOrientation(LinearLayout.VERTICAL);stats.setPadding(dp(2),dp(7),dp(2),dp(4));stats.setBackgroundColor(android.graphics.Color.TRANSPARENT);addText(stats,"ТВОЙ УЧЕБНЫЙ РИТМ",10,PINK,true);addText(stats,done+" из "+total+" тем завершено",15,DARK,true);addText(stats,"Продолжай в своём темпе — каждый пройденный раздел приближает к цели ♡",10,MUTED,false);ProgressBar allBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);allBar.setMax(Math.max(1,total));allBar.setProgress(done);allBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));allBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));stats.addView(allBar,lp(-1,5,0,5,0,0));root.addView(stats,lp(-1,-2,0,5,0,2));
     }
 
     private void showMathChapters() {
@@ -1580,22 +1569,24 @@ public class MainActivity extends Activity {
         Runnable refreshBasic=()->{for(int i=0;i<basicViews.length;i++){boolean on=chosenEmoji[0].equals(basicEmojis[i]);basicViews[i].setBackground(shape(on?0xFFFFE3EC:PALE,13,on?PINK:0));}};
         for(int i=0;i<basicEmojis.length;i++){final String emoji=basicEmojis[i];TextView option=text(emoji,24,DARK,false);option.setGravity(Gravity.CENTER);basicViews[i]=option;LinearLayout.LayoutParams ep=new LinearLayout.LayoutParams(0,dp(48),1f);ep.setMargins(dp(2),0,dp(2),0);emojiRow.addView(option,ep);option.setOnClickListener(v->{chosenEmoji[0]=emoji;refreshBasic.run();});}
         TextView more=text("＋",25,PINK,true);more.setGravity(Gravity.CENTER);more.setContentDescription(translate("Добавить эмодзи к теме"));more.setBackground(shape(0xFFFFF0F4,13,0xFFF2DDE4));emojiRow.addView(more,lp(48,48,3,0,0,0));more.setOnClickListener(v->{android.widget.GridLayout grid=new android.widget.GridLayout(this);grid.setColumnCount(5);for(String emoji:emojis){TextView option=text(emoji,23,DARK,false);option.setGravity(Gravity.CENTER);option.setBackground(shape(chosenEmoji[0].equals(emoji)?0xFFFFE3EC:PALE,12,chosenEmoji[0].equals(emoji)?PINK:0));android.widget.GridLayout.LayoutParams ep=new android.widget.GridLayout.LayoutParams();ep.width=dp(48);ep.height=dp(44);ep.setMargins(dp(2),dp(2),dp(2),dp(2));grid.addView(option,ep);option.setOnClickListener(q->{chosenEmoji[0]=emoji;refreshBasic.run();showAppMessage("Эмодзи выбрано");((android.app.Dialog)grid.getTag()).dismiss();});}android.widget.ScrollView scroll=new android.widget.ScrollView(this);scroll.setPadding(dp(12),dp(8),dp(12),dp(8));scroll.addView(grid);android.app.AlertDialog picker=new android.app.AlertDialog.Builder(this).setTitle("Выбери эмодзи").setView(scroll).setNegativeButton("Закрыть",null).create();grid.setTag(picker);picker.show();});
-        dialogBody.addView(emojiRow,lp(-1,52,0,0,0,10));EditText input = new EditText(this); input.setSingleLine(true); input.setTextSize(16);input.setPadding(dp(14),dp(8),dp(14),dp(8));input.setTextColor(DARK);input.setHint("Как назовём урок?");input.setBackground(shape(0xFFFFF9F7,15,0xFFEADDE2));dialogBody.addView(input,lp(-1,52,0,0,0,0));
-        new android.app.AlertDialog.Builder(this).setTitle("♡  Добавить свой урок").setView(dialogBody)
+        dialogBody.addView(emojiRow,lp(-1,52,0,0,0,10));EditText input = new EditText(this); input.setSingleLine(true); input.setTextSize(16);input.setPadding(dp(14),dp(8),dp(14),dp(8));input.setTextColor(DARK);input.setHint("Как назовём урок?");input.setBackground(shape(PALE,15,0));input.setHintTextColor(MUTED);dialogBody.addView(input,lp(-1,52,0,0,0,0));
+        android.app.AlertDialog addDialog=new android.app.AlertDialog.Builder(this).setTitle("♡  Добавить свой урок").setView(dialogBody)
             .setNegativeButton("Отмена", null).setPositiveButton("Создать урок", (d,w) -> {
                 String name=input.getText().toString().trim(); if(name.isEmpty()){showAppMessage("Введи название урока");return;}
                 String id=String.valueOf(System.currentTimeMillis()); Set<String> ids=new TreeSet<>(prefs.getStringSet("custom_lesson_ids",new TreeSet<String>()));ids.add(id);
                 prefs.edit().putStringSet("custom_lesson_ids",ids).putString("custom_lesson_name_"+id,name).putString("custom_lesson_emoji_"+id,chosenEmoji[0]).putStringSet("custom_lesson_topics_"+id,new TreeSet<String>()).apply();
                 selectedChapter="CUSTOM:"+id+":"+name;chapters.put(selectedChapter,new ArrayList<String>());showTopics(selectedChapter);
-            }).show();
+            }).create();
+        addDialog.setOnShowListener(v->{if(addDialog.getWindow()!=null)addDialog.getWindow().setBackgroundDrawable(shape(BG,22,0));addDialog.getButton(-1).setTextColor(PINK);addDialog.getButton(-2).setTextColor(MUTED);});
+        addDialog.show();
     }
     private String topicContentKey(String lessonId,String topic){return "custom_topic_content_"+lessonId+"_"+android.util.Base64.encodeToString(topic.getBytes(java.nio.charset.StandardCharsets.UTF_8),android.util.Base64.URL_SAFE|android.util.Base64.NO_WRAP);}
     private void openCustomTopicDialog(String chapter,String oldName,String oldContent){
         String[] parts=chapter.split(":",3);if(parts.length<3)return;String lessonId=parts[1];
         LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(dp(20),dp(8),dp(20),dp(4));
         TextView note=text("Название и материал темы можно будет изменить позже.",12,MUTED,false);body.addView(note,lp(-1,-2,0,0,0,8));
-        EditText name=new EditText(this);name.setSingleLine(true);name.setTextSize(16);name.setTextColor(DARK);name.setHint("Название темы");name.setText(oldName==null?"":oldName);name.setPadding(dp(13),dp(8),dp(13),dp(8));name.setBackground(shape(0xFFFFF9F7,14,0xFFEADDE2));body.addView(name,lp(-1,50,0,0,0,9));
-        EditText content=new EditText(this);content.setTextSize(15);content.setTextColor(DARK);content.setHint("Добавь конспект, объяснение или заметки…");content.setGravity(Gravity.TOP);content.setMinLines(4);content.setText(oldContent);content.setPadding(dp(13),dp(12),dp(13),dp(12));content.setBackground(shape(0xFFFFF9F7,14,0xFFEADDE2));body.addView(content,lp(-1,118,0,0,0,0));
+        EditText name=new EditText(this);name.setSingleLine(true);name.setTextSize(16);name.setTextColor(DARK);name.setHint("Название темы");name.setText(oldName==null?"":oldName);name.setPadding(dp(13),dp(8),dp(13),dp(8));name.setBackground(shape(PALE,14,0));name.setHintTextColor(MUTED);body.addView(name,lp(-1,50,0,0,0,9));
+        EditText content=new EditText(this);content.setTextSize(15);content.setTextColor(DARK);content.setHint("Добавь конспект, объяснение или заметки…");content.setGravity(Gravity.TOP);content.setMinLines(4);content.setText(oldContent);content.setPadding(dp(13),dp(12),dp(13),dp(12));content.setBackground(shape(PALE,14,0));content.setHintTextColor(MUTED);body.addView(content,lp(-1,118,0,0,0,0));
         android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle(oldName==null?"♡  Новая тема":"✎  Изменить тему").setView(body).setNegativeButton("Отмена",null).setPositiveButton(oldName==null?"Добавить":"Сохранить",null).create();
         dialog.setOnShowListener(v->dialog.getButton(-1).setOnClickListener(q->{
             String n=name.getText().toString().trim();if(n.isEmpty()){name.setError("Введи название");name.requestFocus();return;}
