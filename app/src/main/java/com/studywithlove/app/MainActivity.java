@@ -721,9 +721,9 @@ public class MainActivity extends Activity {
         appearance.setTag("appearance");
         addText(appearance,"Тема приложения",14,DARK,true);
         addText(appearance,"Нажми на палитру, чтобы сразу применить оформление.",12,MUTED,false);
-        String[] names={"Розовая","Лавандовая","Мятная","Ночная","Белая","Кофейная","Золотая","Люкс","Небесная","Персиковая","Красная","LV"};
+        String[] names={"Лавандовая","Сиреневая","Мятная","Ночная","Белая","Кофейная","Золотая","Люкс","Небесная","Персиковая","Красная","LV"};
         String[] keys={"pink","lavender","mint","night","white","brown","gold","luxury","sky","peach","red","lv"};
-        int[] colors={0xFFC97891,0xFF8979B8,0xFF659B86,0xFF302735,0xFFFFFFFF,0xFF8B6046,0xFFC49318,0xFF30251F,0xFF5D91B5,0xFFD88968,0xFFB32635,0xFFD9C19A};
+        int[] colors={0xFF8070A8,0xFF8979B8,0xFF659B86,0xFF302735,0xFFFFFFFF,0xFF8B6046,0xFFC49318,0xFF30251F,0xFF5D91B5,0xFFD88968,0xFFB32635,0xFFD9C19A};
         LinearLayout preview = card();
         preview.setPadding(dp(14), dp(12), dp(14), dp(12));
         preview.setBackground(shape(isDarkAppearance() ? 0xFF302735 : 0xFFFFF0F4, 18, PINK));
@@ -3379,10 +3379,10 @@ public class MainActivity extends Activity {
             if (white) color = color == 0xFFFFF9F7 ? 0xFF17151D : 0xFF25212B;
             else if (soft) color = 0xFF302735; else if (pale) color = 0xFF342E39;
             if (border) stroke = 0xFF403541;
-        } else if ("lavender".equals(theme)) {
-            if (white) color = color == 0xFFFFF9F7 ? 0xFFF8F6FF : 0xFFFEFDFF;
-            else if (soft || pale) color = 0xFFF0ECFA;
-            if (border) stroke = 0xFFE0D9F0;
+        } else if ("lavender".equals(theme) || "pink".equals(theme)) {
+            if (white) color = color == 0xFFFFF9F7 ? 0xFFF8F7FC : 0xFFFFFFFF;
+            else if (soft || pale) color = 0xFFF0EDFA;
+            if (border) stroke = 0xFFE5E1EF;
         } else if ("mint".equals(theme)) {
             if (white) color = color == 0xFFFFF9F7 ? 0xFFF5FAF7 : 0xFFFEFFFE;
             else if (soft || pale) color = 0xFFEAF5EF;
