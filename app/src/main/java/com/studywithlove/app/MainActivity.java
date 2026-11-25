@@ -720,22 +720,30 @@ public class MainActivity extends Activity {
             iconSlot.setBackgroundColor(android.graphics.Color.TRANSPARENT);
             NavigationIconView icon=new NavigationIconView(this,i,selected?0xFFFFFFFF:MUTED);
             android.widget.FrameLayout.LayoutParams iconParams=
-                new android.widget.FrameLayout.LayoutParams(dp(21),dp(21),Gravity.CENTER);
+                new android.widget.FrameLayout.LayoutParams(dp(22),dp(22),Gravity.CENTER);
             iconSlot.addView(icon,iconParams);
             android.widget.FrameLayout.LayoutParams slotParams=
-                new android.widget.FrameLayout.LayoutParams(dp(34),dp(25),Gravity.TOP|Gravity.CENTER_HORIZONTAL);
-            slotParams.topMargin=dp(5);
+                new android.widget.FrameLayout.LayoutParams(dp(36),dp(27),Gravity.TOP|Gravity.CENTER_HORIZONTAL);
+            slotParams.topMargin=dp(3);
             item.addView(iconSlot,slotParams);
 
-            TextView label=textFixed(labels[i],10,selected?0xFFFFFFFF:MUTED,selected);
+            TextView label=textFixed(labels[i],11,selected?0xFFFFFFFF:MUTED,selected);
             label.setGravity(Gravity.CENTER);
             label.setMaxLines(1);
             label.setSingleLine(true);
             label.setIncludeFontPadding(false);
             android.widget.FrameLayout.LayoutParams labelParams=
-                new android.widget.FrameLayout.LayoutParams(-1,dp(13),Gravity.BOTTOM);
-            labelParams.bottomMargin=dp(3);
+                new android.widget.FrameLayout.LayoutParams(-1,dp(14),Gravity.BOTTOM);
+            labelParams.bottomMargin=dp(2);
             item.addView(label,labelParams);
+            item.setContentDescription(labels[i]);
+            item.setFocusable(true);
+            item.setMinimumHeight(dp(52));
+            if(selected && !prefs.getBoolean("reduce_motion",false)){
+                item.setScaleX(0.94f);item.setScaleY(0.94f);item.setAlpha(0.82f);
+                item.post(()->item.animate().scaleX(1f).scaleY(1f).alpha(1f)
+                    .setDuration(220).setInterpolator(new android.view.animation.OvershootInterpolator(1.15f)).start());
+            }
 
             LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-1,1f);
             p.setMargins(dp(1),0,dp(1),0);
