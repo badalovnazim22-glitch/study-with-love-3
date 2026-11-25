@@ -564,8 +564,9 @@ public class MainActivity extends Activity {
 
     private void base(String title, String subtitle) {
         final boolean backNavigation=navigatingBack;
+        final boolean screenChanged=!currentScreen.equals(renderedScreen);
         if (!"flower".equals(currentScreen) && flowerBreatheAnimator!=null) { flowerBreatheAnimator.cancel(); flowerBreatheAnimator=null; }
-        if (!currentScreen.equals(renderedScreen)) { if (!renderedScreen.isEmpty() && !navigatingBack) screenHistory.add(renderedScreen); renderedScreen=currentScreen; }
+        if (screenChanged) { if (!renderedScreen.isEmpty() && !navigatingBack) screenHistory.add(renderedScreen); renderedScreen=currentScreen; }
         navigatingBack=false;
         LinearLayout shell = new LinearLayout(this);
         shell.setOrientation(LinearLayout.VERTICAL);
@@ -602,6 +603,23 @@ public class MainActivity extends Activity {
             setContentView(overlay);
         } else {
             setContentView(shell);
+        }
+        // Единая мягкая анимация появления содержимого при переходе между экранами.
+        // Повторное обновление той же вкладки не перезапускает анимацию.
+        if(screenChanged && !"welcome".equals(currentScreen) && !(prefs!=null && prefs.getBoolean("reduce_motion",false))){
+            root.setAlpha(0f);
+            root.setScaleX(0.985f);
+            root.setScaleY(0.985f);
+            root.setTranslationY(dp(8));
+            root.post(()->{
+                root.animate().cancel();
+                root.setLayerType(View.LAYER_TYPE_HARDWARE,null);
+                root.animate().alpha(1f).scaleX(1f).scaleY(1f).translationY(0f)
+                    .setDuration(360)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator(1.7f))
+                    .withEndAction(()->root.setLayerType(View.LAYER_TYPE_NONE,null))
+                    .start();
+            });
         }
         if(currentScreen.startsWith("settings_") || "settings".equals(currentScreen)) {
             final int restoreY=pendingSettingsScrollY;
