@@ -547,7 +547,7 @@ public class MainActivity extends Activity {
         contentFrame.addView(root, contentParams);
         scroll.addView(contentFrame, new android.widget.ScrollView.LayoutParams(-1, -2));
         shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
-        if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 68, 0, 0, 0, 0));
+        if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 56, 0, 0, 0, 0));
         // Нижняя навигация закреплена в shell и не зависит от прокрутки контента.
         final View navigationBar=shell.getChildCount()>1?shell.getChildAt(1):null;
         if(navigationBar!=null){navigationBar.setTranslationY(0f);navigationBar.setAlpha(1f);}
@@ -627,7 +627,7 @@ public class MainActivity extends Activity {
         LinearLayout bar=new LinearLayout(this);
         bar.setOrientation(LinearLayout.HORIZONTAL);
         bar.setGravity(Gravity.CENTER);
-        bar.setPadding(dp(5),dp(3),dp(5),dp(3));
+        bar.setPadding(dp(4),dp(1),dp(4),dp(1));
         GradientDrawable navBg=new GradientDrawable();
         navBg.setColor(isDarkAppearance()?0xFF211E29:0xFFFFFFFF);
         navBg.setCornerRadius(0);
@@ -651,16 +651,16 @@ public class MainActivity extends Activity {
                 :shape(0x00FFFFFF,18,0));
             NavigationIconView icon=new NavigationIconView(this,i,selected?PINK:MUTED);
             android.widget.FrameLayout.LayoutParams iconParams=
-                new android.widget.FrameLayout.LayoutParams(dp(21),dp(21),Gravity.CENTER);
+                new android.widget.FrameLayout.LayoutParams(dp(20),dp(20),Gravity.CENTER);
             iconSlot.addView(icon,iconParams);
-            item.addView(iconSlot,new LinearLayout.LayoutParams(dp(40),dp(27)));
+            item.addView(iconSlot,new LinearLayout.LayoutParams(dp(36),dp(23)));
 
             TextView label=textFixed(labels[i],9,selected?PINK:MUTED,selected);
             label.setGravity(Gravity.CENTER);
             label.setMaxLines(1);
             label.setSingleLine(true);
             label.setIncludeFontPadding(false);
-            item.addView(label,lp(-1,dp(14),0,dp(1),0,0));
+            item.addView(label,lp(-1,dp(12),0,0,0,0));
 
             LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-2,1f);
             p.setMargins(dp(1),0,dp(1),0);
@@ -1461,11 +1461,25 @@ public class MainActivity extends Activity {
      private String word(int n) { int x=n%10, y=n%100; if(x==1 && y!=11)return "урок"; if(x>=2&&x<=4&&(y<12||y>14))return "урока"; return "уроков"; }
     private void showChapters() {
         currentScreen = "chapters";
-        base("Уроки 📚", "Выбери предмет или создай свой урок");
-        LinearLayout lessonHead=new LinearLayout(this);lessonHead.setGravity(Gravity.CENTER_VERTICAL);
-        TextView orderLabel=text("МОИ ПРЕДМЕТЫ",11,PINK,true);lessonHead.addView(orderLabel,new LinearLayout.LayoutParams(0,dp(38),1f));
-        TextView search=text("⌕",27,PINK,true);search.setGravity(Gravity.CENTER);search.setBackgroundColor(android.graphics.Color.TRANSPARENT);search.setContentDescription(translate("Поиск уроков и тем"));lessonHead.addView(search,lp(42,42,0,0,7,0));search.setOnClickListener(v->showSearchDialog());
-        Button orderButton=button("⋮",false);orderButton.setContentDescription(translate("Сортировка предметов"));orderButton.setTextSize(22);orderButton.setPadding(0,0,0,0);lessonHead.addView(orderButton,lp(48,48,0,0,0,0));root.addView(lessonHead,lp(-1, 48,0,0,0,8));
+        base("", "");
+        // Actions stay at the upper-right edge; section title sits directly below.
+        LinearLayout lessonActions=new LinearLayout(this);
+        lessonActions.setGravity(Gravity.CENTER_VERTICAL|Gravity.RIGHT);
+        TextView search=text("⌕",27,PINK,true);
+        search.setGravity(Gravity.CENTER);
+        search.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        search.setContentDescription(translate("Поиск уроков и тем"));
+        lessonActions.addView(search,lp(40,40,0,0,5,0));
+        search.setOnClickListener(v->showSearchDialog());
+        TextView orderButton=text("⋮",24,DARK,true);
+        orderButton.setGravity(Gravity.CENTER);
+        orderButton.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        orderButton.setContentDescription(translate("Сортировка предметов"));
+        lessonActions.addView(orderButton,lp(38,40,0,0,0,0));
+        root.addView(lessonActions,lp(-1,40,0,0,0,1));
+        TextView orderLabel=text("МОИ ПРЕДМЕТЫ",12,PINK,true);
+        orderLabel.setGravity(Gravity.CENTER_VERTICAL);
+        root.addView(orderLabel,lp(-1,27,0,0,0,5));
         orderButton.setOnClickListener(v->{android.widget.PopupMenu menu=new android.widget.PopupMenu(this,orderButton);menu.getMenu().add(0,1,0,"По умолчанию");menu.getMenu().add(0,2,1,"По названию А—Я");menu.getMenu().add(0,3,2,"Сначала новые");menu.getMenu().add(0,4,3,"По прогрессу");menu.setOnMenuItemClickListener(mi->{prefs.edit().putString("lesson_sort",mi.getItemId()==2?"alpha":mi.getItemId()==3?"new":mi.getItemId()==4?"progress":"default").apply();showChapters();return true;});menu.show();});
         LinearLayout weak=new LinearLayout(this);weak.setGravity(Gravity.CENTER);weak.setPadding(dp(4),dp(2),dp(4),dp(2));weak.setBackgroundColor(android.graphics.Color.TRANSPARENT);TextView weakText=text("🧠  Мои слабые места · "+countMistakes(),13,DARK,true);weak.addView(weakText);weak.setOnClickListener(v->showWeaknessTrainer());root.addView(weak,lp(-1,34,0,0,0,7));
         List<String> mathTopics=chapters.get("1️⃣ Натуральные числа и действия с ними");int total=0,done=0;for(List<String> topics:chapters.values()){total+=topics.size();done+=countCompleted(topics);}
