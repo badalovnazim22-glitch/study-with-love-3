@@ -670,9 +670,9 @@ public class MainActivity extends Activity {
             // Иконка центрирована по вертикали панели; подпись закреплена у нижнего края.
             android.widget.FrameLayout iconSlot=new android.widget.FrameLayout(this);
             iconSlot.setBackground(selected
-                ?shape(isDarkAppearance()?0xFF49313D:0xFFFCE8EE,18,0)
+                ?shape(adjustColor(PINK,0.88f),18,0)
                 :shape(0x00FFFFFF,18,0));
-            NavigationIconView icon=new NavigationIconView(this,i,selected?PINK:MUTED);
+            NavigationIconView icon=new NavigationIconView(this,i,selected?0xFFFFFFFF:MUTED);
             android.widget.FrameLayout.LayoutParams iconParams=
                 new android.widget.FrameLayout.LayoutParams(dp(21),dp(21),Gravity.CENTER);
             iconSlot.addView(icon,iconParams);
@@ -681,7 +681,7 @@ public class MainActivity extends Activity {
             slotParams.topMargin=dp(13);
             item.addView(iconSlot,slotParams);
 
-            TextView label=textFixed(labels[i],10,selected?PINK:MUTED,selected);
+            TextView label=textFixed(labels[i],10,selected?0xFFFFFFFF:MUTED,selected);
             label.setGravity(Gravity.CENTER);
             label.setMaxLines(1);
             label.setSingleLine(true);
