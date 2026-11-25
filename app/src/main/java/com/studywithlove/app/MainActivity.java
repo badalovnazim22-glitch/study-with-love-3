@@ -1967,10 +1967,10 @@ public class MainActivity extends Activity {
     private void showPomodoro() {
         currentScreen="pomodoro";
         base("Фокус","Время для себя и своих целей");
-        int bg=isDarkAppearance()?0xFF201B25:0xFFFFF8FA;
-        int track=isDarkAppearance()?0xFF49404D:0xFFF0DDE5;
-        int fg=isDarkAppearance()?0xFFFFF5FA:0xFF302630;
-        int muted=isDarkAppearance()?0xFFBBAFBA:0xFF927F8A;
+        int bg=isDarkAppearance()?0xFF25212B:0xFFFFFFFF;
+        int track=isDarkAppearance()?0xFF49404D:PALE;
+        int fg=DARK;
+        int muted=MUTED;
         if(timerRemainingMs<=0)timerRemainingMs=(timerIsBreak?selectedBreakMinutes:selectedStudyMinutes)*60000L;
         int diameter=Math.min(dp(326),Math.max(dp(250),getResources().getDisplayMetrics().widthPixels-dp(56)));
         LinearLayout screen=new LinearLayout(this);screen.setOrientation(LinearLayout.VERTICAL);screen.setGravity(Gravity.CENTER_HORIZONTAL);screen.setPadding(0,dp(4),0,dp(10));
