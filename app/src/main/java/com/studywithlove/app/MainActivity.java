@@ -1084,19 +1084,22 @@ public class MainActivity extends Activity {
         final String chapterToResume = resumeChapter;
         final boolean hasResumeTopic = resumeFound;
 
-        // Compact motivational progress card on the home screen.
+        // Compact motivational progress card: consistent small vertical rhythm.
         LinearLayout continueCard = card();
-        continueCard.setPadding(dp(13), dp(12), dp(13), dp(12));
+        continueCard.setPadding(dp(13), dp(8), dp(13), dp(8));
         continueCard.setBackground(shape(0xFFF8E8EE, 24, 0));
-        addText(continueCard, "ТВОЙ ПРОГРЕСС", 13, PINK, true);
-        addText(continueCard, "Ты справляешься.\\nПродолжай в своём темпе.", 24, DARK, true);
-        addText(continueCard, "✧  Ты отлично справляешься! ❤️", 15, PINK, true);
+        TextView progressCaption=text("ТВОЙ ПРОГРЕСС",13,PINK,true);
+        continueCard.addView(progressCaption,lp(-1,-2,0,0,0,2));
+        TextView encouragement=text("Ты справляешься.\\nПродолжай в своём темпе.",22,DARK,true);
+        continueCard.addView(encouragement,lp(-1,-2,0,0,0,2));
+        TextView praise=text("✧  Ты отлично справляешься! ❤️",14,PINK,true);
+        continueCard.addView(praise,lp(-1,-2,0,0,0,4));
         LinearLayout overallHead = new LinearLayout(this);
         overallHead.setGravity(Gravity.CENTER_VERTICAL);
-        overallHead.addView(text("Учебный план", 16, DARK, true),
-                new LinearLayout.LayoutParams(0, dp(24), 1f));
-        overallHead.addView(text(overall + "%", 21, PINK, true));
-        continueCard.addView(overallHead, lp(-1, 34, 0, 18, 0, 4));
+        overallHead.addView(text("Учебный план", 15, DARK, true),
+                new LinearLayout.LayoutParams(0, dp(22), 1f));
+        overallHead.addView(text(overall + "%", 20, PINK, true));
+        continueCard.addView(overallHead, lp(-1, 28, 0, 5, 0, 2));
         ProgressBar overallBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         overallBar.setMax(100);
         overallBar.setProgress(overall);
@@ -1104,8 +1107,9 @@ public class MainActivity extends Activity {
             overallBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
             overallBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFDCE6));
         }
-        continueCard.addView(overallBar, lp(-1, 6, 0, 0, 0, 8));
-        addText(continueCard, completedTopics + " из " + totalTopics + " тем завершено", 14, MUTED, false);
+        continueCard.addView(overallBar, lp(-1, 5, 0, 0, 0, 4));
+        TextView completedLabel=text(completedTopics + " из " + totalTopics + " тем завершено",13,MUTED,false);
+        continueCard.addView(completedLabel,lp(-1,-2,0,0,0,0));
         root.addView(continueCard, lp(-1, -2, 0, 1, 0, 6));
 
         // Three compact home summary tiles restored from the earlier design.
