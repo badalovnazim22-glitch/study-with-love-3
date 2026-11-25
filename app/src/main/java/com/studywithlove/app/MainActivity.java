@@ -136,6 +136,30 @@ public class MainActivity extends Activity {
         }
     }
 
+    /** Matching outline icons for the Lessons screen action row. */
+    private static class HeaderActionIconView extends View {
+        private final android.graphics.Paint p=new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        private final android.graphics.Path path=new android.graphics.Path();
+        private final int type,color;
+        HeaderActionIconView(Context c,int type,int color){super(c);this.type=type;this.color=color;setContentDescription(type==0?"Мои слабые места":type==1?"Поиск уроков и тем":"Сортировка предметов");}
+        @Override protected void onDraw(android.graphics.Canvas c){
+            super.onDraw(c);
+            float d=getResources().getDisplayMetrics().density,scale=Math.min(getWidth(),getHeight())/(24f*d);
+            c.save();c.translate((getWidth()-24f*d*scale)/2f,(getHeight()-24f*d*scale)/2f);c.scale(d*scale,d*scale);
+            p.setColor(color);p.setStyle(android.graphics.Paint.Style.STROKE);p.setStrokeWidth(1.9f);p.setStrokeCap(android.graphics.Paint.Cap.ROUND);p.setStrokeJoin(android.graphics.Paint.Join.ROUND);
+            path.reset();
+            if(type==0){
+                path.moveTo(12,3.2f);path.cubicTo(9.5f,1.8f,7.2f,3.2f,7.1f,5.4f);path.cubicTo(4.3f,5.1f,2.7f,7.2f,3.5f,9.5f);path.cubicTo(1.7f,11.2f,2.8f,14.1f,5.1f,14.7f);path.cubicTo(4.6f,17.5f,7.2f,19.4f,9.5f,18.1f);path.cubicTo(10.2f,20.8f,13.8f,20.8f,14.5f,18.1f);path.cubicTo(16.8f,19.4f,19.4f,17.5f,18.9f,14.7f);path.cubicTo(21.2f,14.1f,22.3f,11.2f,20.5f,9.5f);path.cubicTo(21.3f,7.2f,19.7f,5.1f,16.9f,5.4f);path.cubicTo(16.8f,3.2f,14.5f,1.8f,12,3.2f);path.moveTo(12,3.5f);path.lineTo(12,18.5f);path.moveTo(7.2f,7.2f);path.quadTo(10,7.3f,10,10);path.moveTo(16.8f,7.2f);path.quadTo(14,7.3f,14,10);path.moveTo(5.2f,13);path.quadTo(8,12.2f,9,14.8f);path.moveTo(18.8f,13);path.quadTo(16,12.2f,15,14.8f);
+                c.drawPath(path,p);
+            }else if(type==1){
+                c.drawCircle(10.5f,10.5f,6.3f,p);path.moveTo(15.2f,15.2f);path.lineTo(21,21);c.drawPath(path,p);
+            }else{
+                p.setStyle(android.graphics.Paint.Style.FILL);c.drawCircle(12,5,1.55f,p);c.drawCircle(12,12,1.55f,p);c.drawCircle(12,19,1.55f,p);
+            }
+            c.restore();
+        }
+    }
+
     private static class TimerRingView extends View {
         private final android.graphics.Paint paint=new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
         private final android.graphics.RectF arc=new android.graphics.RectF();
@@ -604,10 +628,10 @@ public class MainActivity extends Activity {
                     }
                 } catch (Exception ignored) {}
             }
-            TextView settings = text("⚙", 17, PINK, false); settings.setGravity(Gravity.CENTER);
-            settings.setBackground(shape(PALE, 16, "night".equals(prefs.getString("app_theme","pink"))?0xFF65566A:0xFFF1DDE4));
+            TextView settings = text("⚙", 19, PINK, false); settings.setGravity(Gravity.CENTER);
+            settings.setBackgroundColor(android.graphics.Color.TRANSPARENT);
             settings.setContentDescription("Открыть настройки");
-            brandRow.addView(settings, lp(48, 48, 5, 0, 0, 0));
+            brandRow.addView(settings, lp(42, 44, 5, 0, 0, 0));
             settings.setOnClickListener(v -> {settings.animate().rotationBy(90f).scaleX(1.18f).scaleY(1.18f).setDuration(170).withEndAction(()->{settings.animate().rotationBy(90f).scaleX(1f).scaleY(1f).setDuration(180).start();showSettings();}).start();});
         }
         root.addView(brandRow, lp(-1, 48, 0, 0, 0, 16));
@@ -1226,16 +1250,16 @@ public class MainActivity extends Activity {
         LinearLayout reminder = card();
         reminder.setOrientation(LinearLayout.HORIZONTAL);
         reminder.setGravity(Gravity.CENTER_VERTICAL);
-        reminder.setPadding(dp(9), dp(5), dp(8), dp(5));
-        reminder.setBackground(shape(PALE, 18, PINK));
+        reminder.setPadding(dp(8), dp(2), dp(7), dp(2));
+        reminder.setBackground(shape(PALE, 15, PINK));
         LinearLayout reminderWords = new LinearLayout(this);
         reminderWords.setOrientation(LinearLayout.VERTICAL);
-        addText(reminderWords, "НАПОМИНАНИЯ", 10, PINK, true);
-        addText(reminderWords, reminderSummary(), 11, DARK, false);
+        addText(reminderWords, "НАПОМИНАНИЯ", 9, PINK, true);
+        addText(reminderWords, reminderSummary(), 10, DARK, false);
         reminder.addView(reminderWords, new LinearLayout.LayoutParams(0, -2, 1f));
-        reminder.addView(text("›", 22, PINK, true), lp(24, 30, 3, 0, 0, 0));
+        reminder.addView(text("›", 19, PINK, true), lp(20, 24, 2, 0, 0, 0));
         reminder.setOnClickListener(v -> showReminderSettings());
-        root.addView(reminder, lp(-1, dp(36), 0, 2, 0, 1));reminder.setTag("home_reminders");
+        root.addView(reminder, lp(-1, dp(30), 0, 2, 0, 1));reminder.setTag("home_reminders");
 
         TextView made = text("Сделано с любовью ♡", 11, DARK, false);
         made.setGravity(Gravity.CENTER);
@@ -1491,11 +1515,11 @@ public class MainActivity extends Activity {
         pageTitle.setGravity(Gravity.CENTER_VERTICAL);pageTitle.setSingleLine(true);pageTitle.setIncludeFontPadding(false);
         lessonTop.addView(pageTitle,new LinearLayout.LayoutParams(0,dp(44),1f));
         LinearLayout lessonActions=new LinearLayout(this);lessonActions.setGravity(Gravity.CENTER_VERTICAL|Gravity.RIGHT);
-        TextView weaknessAction=text("🧠",19,PINK,true);weaknessAction.setGravity(Gravity.CENTER);weaknessAction.setBackgroundColor(android.graphics.Color.TRANSPARENT);weaknessAction.setContentDescription("Мои слабые места");
+        HeaderActionIconView weaknessAction=new HeaderActionIconView(this,0,PINK);
         lessonActions.addView(weaknessAction,lp(38,44,0,0,3,0));weaknessAction.setOnClickListener(v->showWeaknessTrainer());
-        TextView search=text("⌕",27,PINK,true);search.setGravity(Gravity.CENTER);search.setBackgroundColor(android.graphics.Color.TRANSPARENT);search.setContentDescription(translate("Поиск уроков и тем"));
+        HeaderActionIconView search=new HeaderActionIconView(this,1,PINK);
         lessonActions.addView(search,lp(38,44,0,0,3,0));
-        TextView orderButton=text("⋮",24,DARK,true);orderButton.setGravity(Gravity.CENTER);orderButton.setBackgroundColor(android.graphics.Color.TRANSPARENT);orderButton.setContentDescription(translate("Сортировка предметов"));
+        HeaderActionIconView orderButton=new HeaderActionIconView(this,2,PINK);
         lessonActions.addView(orderButton,lp(34,44,0,0,0,0));lessonTop.addView(lessonActions,lp(-2,44,0,0,0,0));
         root.addView(lessonTop,lp(-1,46,0,0,0,1));
 
