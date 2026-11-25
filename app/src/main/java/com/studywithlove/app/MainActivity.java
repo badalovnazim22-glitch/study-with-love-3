@@ -2469,7 +2469,7 @@ public class MainActivity extends Activity {
                 prefs.edit().putString("exam_main_goal_id",selectedMain).apply();
             }else{heroName.setText("Главная цель пока не выбрана");heroDate.setText("Добавь цель и отметь её главной");heroDays.setText("—");heroCaption.setText("ДНЕЙ");prepProgress.setProgress(0);prepLabel.setText("Добавь цель, чтобы отслеживать подготовку");formatToggle.setText(formatWeeks[0]?"Недели + дни  ·  Только дни":"Только дни  ·  Недели + дни");}
             newGoal.setVisibility(View.VISIBLE);
-            if(order.isEmpty()){LinearLayout empty=card();empty.setBackgroundColor(android.graphics.Color.TRANSPARENT);empty.setGravity(Gravity.CENTER);addText(empty,"Пока нет целей",15,DARK,true);addText(empty,"Добавь первую дату экзамена или важную цель.",13,MUTED,false);goals.addView(empty,lp(-1,-2,0,0,0,10));}
+            if(order.isEmpty())addEmptyState(goals,"🎯","Пока нет целей","Добавь первую дату экзамена или важную цель.","Добавить цель",()->newGoal.performClick());
             for(String id:order){
                 String goalTitle=prefs.getString("exam_goal_title_"+id,""),goalDate=prefs.getString("exam_goal_date_"+id,"");if(goalTitle.isEmpty()||goalDate.isEmpty())continue;
                 long remain=daysUntil(goalDate);boolean isMain=id.equals(selectedMain);
@@ -2647,15 +2647,7 @@ public class MainActivity extends Activity {
             if(filtering){TextView reset=text("Сбросить",12,PINK,true);reset.setGravity(Gravity.CENTER);reset.setPadding(dp(8),0,0,0);heading.addView(reset,lp(-2,48,5,0,0,0));reset.setOnClickListener(v->{queryValue[0]="";search.setText("");activeFilter[0]="Все";render[0].run();});}
             if(matches.isEmpty()){
                 if(filtering) addEmptyState(entries, "⌕", "Ничего не найдено", "Попробуй изменить запрос или фильтр.", "Сбросить поиск", () -> { queryValue[0]=""; search.setText(""); activeFilter[0]="Все"; render[0].run(); });
-                else {
-                    LinearLayout empty=new LinearLayout(this);empty.setOrientation(LinearLayout.VERTICAL);empty.setGravity(Gravity.CENTER_HORIZONTAL);empty.setPadding(dp(10),dp(12),dp(10),dp(12));empty.setBackgroundColor(android.graphics.Color.TRANSPARENT);empty.setElevation(0f);
-                    TextView art=text("🌷",38,PINK,true);art.setGravity(Gravity.CENTER);empty.addView(art,lp(-1,52,0,0,0,5));
-                    TextView emptyTitle=text("Здесь будут твои победы",16,DARK,true);emptyTitle.setGravity(Gravity.CENTER);empty.addView(emptyTitle,lp(-1,-2,0,0,0,5));
-                    TextView emptyText=text("Сохрани первую запись — и возвращайся к ней, чтобы вспомнить, как много уже получилось.",12,MUTED,false);emptyText.setGravity(Gravity.CENTER);empty.addView(emptyText,lp(-1,-2,0,0,0,7));
-                    TextView addFirst=text("＋  Написать первую запись",12,PINK,true);addFirst.setGravity(Gravity.CENTER);empty.addView(addFirst,lp(-1,38,0,0,0,0));
-                    addFirst.setOnClickListener(v->{note.requestFocus();((android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).showSoftInput(note,android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);});
-                    entries.addView(empty,lp(-1,-2,0,0,0,8));
-                }
+                else addEmptyState(entries,"🌷","Здесь будут твои победы","Сохрани первую запись — и возвращайся к ней, чтобы вспомнить, как много уже получилось.","Написать первую запись",()->{note.requestFocus();((android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).showSoftInput(note,android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);});
                 return;
             }
             String currentMonth="";
@@ -2787,7 +2779,7 @@ public class MainActivity extends Activity {
             entry.addView(top,lp(-1,36,0,0,0,3));
             String tag=prefs.getString("diary_tag_"+id,"Учёба");TextView tagView=text("#"+tag,11,PINK,true);entry.addView(tagView,lp(-1,22,0,0,0,4));
             TextView body=text(value,15,DARK,false);body.setGravity(Gravity.TOP);body.setPadding(0,dp(3),0,dp(8));entry.addView(body,lp(-1,-2,0,0,0,0));
-            LinearLayout editArea=new LinearLayout(this);editArea.setOrientation(LinearLayout.VERTICAL);editArea.setVisibility(View.GONE);EditText editText=new EditText(this);editText.setText(value);editText.setTextSize(15);editText.setTextColor(DARK);editText.setGravity(Gravity.TOP);editText.setMinLines(3);editText.setBackground(shape(0xFFFFF9F7,14,0xFFEADDE2));editArea.addView(editText,lp(-1,100,0,0,0,7));Button saveInline=button("Сохранить",true),cancel=button("Отмена",false);editArea.addView(saveInline,lp(-1, 48,0,0,0,4));editArea.addView(cancel,lp(-1, 48,0,0,0,0));entry.addView(editArea,lp(-1,-2,0,0,0,0));
+            LinearLayout editArea=new LinearLayout(this);editArea.setOrientation(LinearLayout.VERTICAL);editArea.setVisibility(View.GONE);EditText editText=new EditText(this);editText.setText(value);editText.setTextSize(15);editText.setGravity(Gravity.TOP);editText.setMinLines(3);styleFormField(editText);editArea.addView(editText,lp(-1,100,0,0,0,7));Button saveInline=button("Сохранить",true),cancel=button("Отмена",false);editArea.addView(saveInline,lp(-1, 48,0,0,0,4));editArea.addView(cancel,lp(-1, 48,0,0,0,0));entry.addView(editArea,lp(-1,-2,0,0,0,0));
             edit.setOnClickListener(v->{body.setVisibility(View.GONE);tagView.setVisibility(View.GONE);editArea.setVisibility(View.VISIBLE);});cancel.setOnClickListener(v->{editArea.setVisibility(View.GONE);body.setVisibility(View.VISIBLE);tagView.setVisibility(View.VISIBLE);});saveInline.setOnClickListener(v->{String updated=editText.getText().toString().trim();if(updated.isEmpty()){editText.setError("Напиши пару слов");return;}prefs.edit().putString("diary_"+id,updated).apply();renderDiaryEntries(entries,note,save,editingId);});
             del.setOnClickListener(v->new android.app.AlertDialog.Builder(this).setMessage("Удалить эту запись?").setNegativeButton("Отмена",null).setPositiveButton("Удалить",(d,w)->{Set<String> latest=new TreeSet<>(prefs.getStringSet("diary_ids",new TreeSet<String>()));latest.remove(id);prefs.edit().remove("diary_"+id).remove("diary_tag_"+id).putStringSet("diary_ids",latest).apply();renderDiaryEntries(entries,note,save,editingId);}).show());
             View line=new View(this);line.setBackgroundColor(0xFFEFE5E8);entry.addView(line,lp(-1,1,0,5,0,0));entries.addView(entry,lp(-1,-2,0,0,0,7));
