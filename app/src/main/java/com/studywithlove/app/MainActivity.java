@@ -531,7 +531,7 @@ public class MainActivity extends Activity {
         activeScrollView = scroll;
         scroll.setFillViewport(true); scroll.setClipToPadding(false);
         root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(15), dp(12), dp(15), dp(28)); root.setBackgroundColor(BG);
+        root.setPadding(dp(15), dp(12), dp(15), dp(14)); root.setBackgroundColor(BG);
         installThemeFontListener(root);
         String customBg=prefs.getString("custom_background_uri","");
         if(!customBg.isEmpty()){try{if(!customBg.equals(cachedBackgroundUri)||cachedBackgroundBitmap==null){java.io.InputStream in=getContentResolver().openInputStream(android.net.Uri.parse(customBg));if(in!=null){android.graphics.Bitmap decoded=android.graphics.BitmapFactory.decodeStream(in);in.close();cachedBackgroundBitmap=decoded;cachedBackgroundUri=customBg;}}if(cachedBackgroundBitmap!=null){Drawable photo=new android.graphics.drawable.BitmapDrawable(getResources(),cachedBackgroundBitmap);photo.setAlpha(42);root.setBackground(photo);}}catch(Exception ignored){}}
@@ -1189,30 +1189,27 @@ public class MainActivity extends Activity {
         aiCard.setOnClickListener(v -> launchAiTutor());
         root.addView(aiCard, lp(-1, -2, 0, 0, 0, 14));aiCard.setTag("home_ai");
 
-        LinearLayout study2 = new LinearLayout(this);
-        study2.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(study2, "▦", "Планировщик", "План на день", this::showPlanner);
-        ritualTile(study2, "⌕", "Слабые места", "Работа над ошибками", this::showWeaknessTrainer);
-        root.addView(study2, lp(-1, -2, 0, 0, 0, 13));
+        TextView plannerAction=text("▦  Планировщик  ›",15,PINK,true);
+        plannerAction.setGravity(Gravity.CENTER_VERTICAL);
+        plannerAction.setPadding(dp(4),dp(7),dp(4),dp(7));
+        plannerAction.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        plannerAction.setOnClickListener(v->showPlanner());
+        root.addView(plannerAction,lp(-1,dp(38),0,0,0,6));
 
         TextView emotionsTitle=text("ЭМОЦИИ И МОТИВАЦИЯ",11,PINK,true);emotionsTitle.setTag("home_emotions");root.addView(emotionsTitle,lp(-1,-2,0,0,0,0));
-        LinearLayout feelings1 = new LinearLayout(this);
-        feelings1.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(feelings1, "♡", "Дневник", "Маленькие победы", this::showDiary);
-        ritualTile(feelings1, "✉", "Письмо себе", "В будущее", this::showFutureLetters);
-        root.addView(feelings1, lp(-1, -2, 0, 7, 0, 8));feelings1.setTag("home_emotions");
+        TextView diaryAction=text("♡  Дневник  ›",15,PINK,true);
+        diaryAction.setGravity(Gravity.CENTER_VERTICAL);
+        diaryAction.setPadding(dp(4),dp(6),dp(4),dp(6));
+        diaryAction.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        diaryAction.setOnClickListener(v->showDiary());
+        root.addView(diaryAction,lp(-1,dp(36),0,7,0,4));diaryAction.setTag("home_emotions");
         LinearLayout feelings2 = new LinearLayout(this);
         feelings2.setOrientation(LinearLayout.HORIZONTAL);
         ritualTile(feelings2, "✿", "Цветочек", "Растёт с тобой", this::showFlower);
         ritualTile(feelings2, "♫", "Атмосфера", "Звуки для учёбы", this::showAtmosphere);
         root.addView(feelings2, lp(-1, -2, 0, 0, 0, 13));feelings2.setTag("home_emotions");
 
-        addText(root, "ТВОЙ ПРОГРЕСС", 11, PINK, true);
-        LinearLayout progressRow = new LinearLayout(this);
-        progressRow.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(progressRow, "▣", "Мой прогресс", "Календарь и темы", this::showProgress);
-        ritualTile(progressRow, "◷", "Статистика", "Подробный обзор", this::showDetailedStats);
-        root.addView(progressRow, lp(-1, -2, 0, 7, 0, 8));
+        // Detailed statistics are opened from the My Progress screen.
         LinearLayout awardsRow = new LinearLayout(this);
         awardsRow.setOrientation(LinearLayout.HORIZONTAL);
         ritualTile(awardsRow, "✧", "Достижения", "Твои награды", this::showAchievements);
@@ -1241,7 +1238,7 @@ public class MainActivity extends Activity {
     }
 
     private void reorderHomeBlocks(){
-        if(root==null)return;String[] defaults={"stats","weekly","ai","emotions","reminders"};String saved=prefs.getString("home_block_order","stats,weekly,ai,emotions,reminders");List<String> order=new ArrayList<>();for(String key:saved.split(","))if(java.util.Arrays.asList(defaults).contains(key)&&!order.contains(key))order.add(key);for(String key:defaults)if(!order.contains(key))order.add(key);Map<String,List<View>> groups=new LinkedHashMap<>();for(String key:defaults)groups.put(key,new ArrayList<View>());int first=-1;for(int i=0;i<root.getChildCount();i++){Object tag=root.getChildAt(i).getTag();if(tag instanceof String&&((String)tag).startsWith("home_")){String key=((String)tag).substring(5);if(groups.containsKey(key)){if(first<0)first=i;groups.get(key).add(root.getChildAt(i));}}}if(first<0)return;for(List<View> group:groups.values())for(View v:group)root.removeView(v);int at=Math.min(first,root.getChildCount());for(String key:order)for(View v:groups.get(key))root.addView(v,at++);
+        if(root==null)return;String[] defaults={"stats","weekly","ai","emotions","reminders"};String saved=prefs.getString("home_block_order","stats,weekly,ai,emotions,reminders");List<String> order=new ArrayList<>();for(String key:saved.split(","))if(java.util.Arrays.asList(defaults).contains(key)&&!order.contains(key))order.add(key);for(String key:defaults)if(!order.contains(key))order.add(key);order.remove("reminders");order.add("reminders");Map<String,List<View>> groups=new LinkedHashMap<>();for(String key:defaults)groups.put(key,new ArrayList<View>());int first=-1;for(int i=0;i<root.getChildCount();i++){Object tag=root.getChildAt(i).getTag();if(tag instanceof String&&((String)tag).startsWith("home_")){String key=((String)tag).substring(5);if(groups.containsKey(key)){if(first<0)first=i;groups.get(key).add(root.getChildAt(i));}}}if(first<0)return;for(List<View> group:groups.values())for(View v:group)root.removeView(v);int at=Math.min(first,root.getChildCount());for(String key:order)for(View v:groups.get(key))root.addView(v,at++);
     }
     private void showHomeBlockOrderDialog(){
         final String[] keys={"stats","weekly","ai","emotions","reminders"};final String[] names={"Статистика","Недельная цель","Карточка ИИ","Плитки эмоций","Напоминания"};List<String> order=new ArrayList<>();for(String k:prefs.getString("home_block_order","stats,weekly,ai,emotions,reminders").split(","))if(java.util.Arrays.asList(keys).contains(k)&&!order.contains(k))order.add(k);for(String k:keys)if(!order.contains(k))order.add(k);
@@ -1976,7 +1973,13 @@ public class MainActivity extends Activity {
         addText(summary, "⏱ Сегодня: " + prefs.getInt("focus_minutes_" + todayKey(), 0) + " минут по таймеру", 14, PINK, true);
         addText(summary, "Всего: " + totalStudyMinutes() + " минут", 13, MUTED, false);
         addProgressLine(summary, "Весь учебный план", overall);
-        root.addView(summary, lp(-1, -2, 0, 0, 0, 16));
+        root.addView(summary, lp(-1, -2, 0, 0, 0, 8));
+        TextView detailedStatsAction=text("◷  Моя статистика  ›",15,PINK,true);
+        detailedStatsAction.setGravity(Gravity.CENTER_VERTICAL);
+        detailedStatsAction.setPadding(dp(4),dp(8),dp(4),dp(8));
+        detailedStatsAction.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        detailedStatsAction.setOnClickListener(v->showDetailedStats());
+        root.addView(detailedStatsAction,lp(-1,dp(42),0,0,0,12));
 
         for (String chapter : chapters.keySet()) {
             List<String> topics = new ArrayList<>();
@@ -2833,14 +2836,50 @@ public class MainActivity extends Activity {
     private void showAtmosphere() {
         currentScreen = "atmosphere";
         if(prefs.getBoolean("ambience_autostart",false)&&!ambiencePlaying&&!ambienceLoading)startAmbience();
-        base("Атмосфера учёбы", "Выбери настроение — звук включится сразу");
+        base("Атмосфера учёбы", "Нажми на звук, чтобы включить или остановить");
         String[] names={"🌧️  Дождь за окном","☕  Уютное кафе","🌿  Звуки природы","📚  Тихая библиотека"};
         String[] descriptions={"Мягкий дождливый настрой","Тёплая атмосфера кофейни","Спокойствие и свежесть","Минимум отвлечений"};
         String chosen=prefs.getString("study_atmosphere",names[0]);
-        for(int i=0;i<names.length;i++){final String n=names[i];boolean selected=chosen.equals(n);LinearLayout c=card();addText(c,n,18,DARK,true);addText(c,descriptions[i],13,MUTED,false);TextView state=text(selected?(ambienceLoading?"Загрузка звука…":ambiencePlaying?"Играет сейчас  •  ✓":"Выбрано  •  ▶"):"Нажми, чтобы включить",12,selected?PINK:MUTED,true);c.addView(state,lp(-1,30,0,5,0,0));c.setOnClickListener(v->{prefs.edit().putString("study_atmosphere",n).apply();if(selected&&ambiencePlaying)stopAmbience();else if(!ambiencePlaying)startAmbience();else{stopAmbience();startAmbience();}showAtmosphere();});root.addView(c,lp(-1,-2,0,0,0,9));}
-        android.widget.SeekBar volume=new android.widget.SeekBar(this);volume.setMax(100);volume.setProgress(prefs.getInt("ambience_volume",35));if(Build.VERSION.SDK_INT>=21)volume.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));addText(root,"ГРОМКОСТЬ",11,PINK,true);root.addView(volume,lp(-1,36,0,0,0,8));volume.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener(){public void onProgressChanged(android.widget.SeekBar b,int value,boolean user){if(user){prefs.edit().putInt("ambience_volume",value).apply();if(ambiencePlayer!=null)ambiencePlayer.setVolume(value/100f,value/100f);}}public void onStartTrackingTouch(android.widget.SeekBar b){}public void onStopTrackingTouch(android.widget.SeekBar b){}});
-        if(ambiencePlaying){Button stop=button("Остановить звук",false);stop.setOnClickListener(v->{stopAmbience();showAtmosphere();});root.addView(stop,lp(-1, 48,0,4,0,8));}
-        Button credits=button("ⓘ  Источники звуков и лицензии",false);credits.setOnClickListener(v->showAudioCredits());root.addView(credits,lp(-1, 48,0,6,0,0));
+        for(int i=0;i<names.length;i++){
+            final String n=names[i];
+            final boolean selected=chosen.equals(n);
+            LinearLayout row=new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(dp(4),dp(9),dp(4),dp(9));
+            row.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+            LinearLayout words=new LinearLayout(this);
+            words.setOrientation(LinearLayout.VERTICAL);
+            TextView title=text(n,16,selected?PINK:DARK,selected);
+            words.addView(title,lp(-1,-2,0,0,0,3));
+            words.addView(text(descriptions[i],12,MUTED,false),lp(-1,-2,0,0,0,0));
+            row.addView(words,new LinearLayout.LayoutParams(0,-2,1f));
+            TextView state=text(selected?(ambienceLoading?"Загрузка…":ambiencePlaying?"Ⅱ":"▶"):"▶",18,selected?PINK:MUTED,true);
+            state.setGravity(Gravity.CENTER);
+            row.addView(state,lp(36,36,4,0,0,0));
+            row.setOnClickListener(v->{
+                boolean same=prefs.getString("study_atmosphere",names[0]).equals(n);
+                if(same&&ambiencePlaying){stopAmbience();}
+                else{
+                    if(ambiencePlaying||ambienceLoading)stopAmbience();
+                    prefs.edit().putString("study_atmosphere",n).apply();
+                    startAmbience();
+                }
+                showAtmosphere();
+            });
+            root.addView(row,lp(-1,-2,0,0,0,2));
+        }
+        android.widget.SeekBar volume=new android.widget.SeekBar(this);
+        volume.setMax(100);
+        volume.setProgress(prefs.getInt("ambience_volume",35));
+        if(Build.VERSION.SDK_INT>=21)volume.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
+        addText(root,"ГРОМКОСТЬ",11,PINK,true);
+        root.addView(volume,lp(-1,34,0,4,0,4));
+        volume.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener(){
+            public void onProgressChanged(android.widget.SeekBar b,int value,boolean user){if(user){prefs.edit().putInt("ambience_volume",value).apply();if(ambiencePlayer!=null)ambiencePlayer.setVolume(value/100f,value/100f);}}
+            public void onStartTrackingTouch(android.widget.SeekBar b){}
+            public void onStopTrackingTouch(android.widget.SeekBar b){}
+        });
         backHome();
     }
     private void showAudioCredits(){new android.app.AlertDialog.Builder(this).setTitle("Источники звуков").setMessage("Дождь — ジダネ, Wikimedia Commons, общественное достояние.\n\nКафе — Marble Toast, Wikimedia Commons, CC0 1.0.\n\nПрирода — Barracuda1983, Wikimedia Commons, общественное достояние.\n\nТихая библиотека — “Quiet study room ambience”, el_mar, Wikimedia Commons, CC BY 3.0. Запись используется без изменений.\n\nПодробности: AUDIO_CREDITS.md в репозитории проекта.").setPositiveButton("Понятно",null).show();}
