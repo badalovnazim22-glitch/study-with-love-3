@@ -33,6 +33,7 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.widget.Toast;
 import android.widget.FrameLayout;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TreeMap;
@@ -64,6 +65,7 @@ public class MainActivity extends Activity {
     private boolean lessonsSearchOpen = false;
     private long lastBackPressedAt=0L;
     private SharedPreferences prefs;
+    private FirebaseAnalytics firebaseAnalytics;
     private String selectedTopic = null, selectedChapter = null;
     private TextView topicProgressLabel;
     private ProgressBar topicProgressBar;
@@ -211,6 +213,8 @@ public class MainActivity extends Activity {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(0, this::handleBackNavigation);
         }
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+        firebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        firebaseAnalytics.logEvent("app_open", null);
         // Возвращаем розовую тему после прежнего обновления с лавандовой палитрой.
         if ("lavender".equals(prefs.getString("app_theme", "pink"))) {
             SharedPreferences.Editor themeMigration=prefs.edit().putString("app_theme","pink");
@@ -565,6 +569,9 @@ public class MainActivity extends Activity {
     private void base(String title, String subtitle) {
         final boolean backNavigation=navigatingBack;
         final boolean screenChanged=!currentScreen.equals(renderedScreen);
+        if (screenChanged && firebaseAnalytics != null && !"welcome".equals(currentScreen)) {
+            firebaseAnalytics.setCurrentScreen(this, currentScreen, null);
+        }
         if (!"flower".equals(currentScreen) && flowerBreatheAnimator!=null) { flowerBreatheAnimator.cancel(); flowerBreatheAnimator=null; }
         if (screenChanged) { if (!renderedScreen.isEmpty() && !navigatingBack) screenHistory.add(renderedScreen); renderedScreen=currentScreen; }
         navigatingBack=false;
