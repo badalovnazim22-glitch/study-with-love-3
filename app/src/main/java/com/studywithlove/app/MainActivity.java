@@ -572,7 +572,7 @@ public class MainActivity extends Activity {
         contentFrame.addView(root, contentParams);
         scroll.addView(contentFrame, new android.widget.ScrollView.LayoutParams(-1, -2));
         shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
-        if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 56, 0, 0, 0, 0));
+        if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 72, 14, 0, 14, 8));
         // Нижняя навигация закреплена в shell и не зависит от прокрутки контента.
         final View navigationBar=shell.getChildCount()>1?shell.getChildAt(1):null;
         if(navigationBar!=null){navigationBar.setTranslationY(0f);navigationBar.setAlpha(1f);}
@@ -652,12 +652,14 @@ public class MainActivity extends Activity {
         LinearLayout bar=new LinearLayout(this);
         bar.setOrientation(LinearLayout.HORIZONTAL);
         bar.setGravity(Gravity.CENTER);
-        bar.setPadding(dp(4),dp(1),dp(4),dp(1));
+        bar.setPadding(dp(6),dp(6),dp(6),dp(6));
         GradientDrawable navBg=new GradientDrawable();
         navBg.setColor(isDarkAppearance()?0xFF211E29:0xFFFFFFFF);
-        navBg.setCornerRadius(0);
+        navBg.setCornerRadius(dp(36));
         navBg.setStroke(dp(1),isDarkAppearance()?0xFF393442:0xFFECEAF2);
         bar.setBackground(navBg);
+        bar.setElevation(dp(8));
+        bar.setClipToOutline(true);
         String[] labels={"Главная","Уроки","Прогресс","Экзамен","Дневник","Таймер"};
         String active=currentScreen.equals("home")?"home":(currentScreen.equals("chapters")||currentScreen.equals("math_chapters")||currentScreen.equals("topics")||currentScreen.equals("topic"))?"math":currentScreen.equals("progress")||currentScreen.equals("flower")||currentScreen.equals("achievements")||currentScreen.equals("stats")?"progress":currentScreen.equals("exam")?"exam":currentScreen.equals("diary")||currentScreen.equals("letters")?"diary":currentScreen.equals("pomodoro")?"timer":"";
         String[] keys={"home","math","progress","exam","diary","timer"};
@@ -665,20 +667,20 @@ public class MainActivity extends Activity {
             final String key=keys[i];
             boolean selected=key.equals(active);
             android.widget.FrameLayout item=new android.widget.FrameLayout(this);
-            item.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+            item.setBackground(selected
+                ?shape(adjustColor(PINK,0.88f),24,0)
+                :shape(0x00FFFFFF,24,0));
 
-            // Иконка центрирована по вертикали панели; подпись закреплена у нижнего края.
+            // Иконка и подпись собраны в одну высокую мягкую капсулу активной вкладки.
             android.widget.FrameLayout iconSlot=new android.widget.FrameLayout(this);
-            iconSlot.setBackground(selected
-                ?shape(adjustColor(PINK,0.88f),18,0)
-                :shape(0x00FFFFFF,18,0));
+            iconSlot.setBackgroundColor(android.graphics.Color.TRANSPARENT);
             NavigationIconView icon=new NavigationIconView(this,i,selected?0xFFFFFFFF:MUTED);
             android.widget.FrameLayout.LayoutParams iconParams=
                 new android.widget.FrameLayout.LayoutParams(dp(21),dp(21),Gravity.CENTER);
             iconSlot.addView(icon,iconParams);
             android.widget.FrameLayout.LayoutParams slotParams=
                 new android.widget.FrameLayout.LayoutParams(dp(36),dp(28),Gravity.TOP|Gravity.CENTER_HORIZONTAL);
-            slotParams.topMargin=dp(13);
+            slotParams.topMargin=dp(7);
             item.addView(iconSlot,slotParams);
 
             TextView label=textFixed(labels[i],10,selected?0xFFFFFFFF:MUTED,selected);
@@ -688,7 +690,7 @@ public class MainActivity extends Activity {
             label.setIncludeFontPadding(false);
             android.widget.FrameLayout.LayoutParams labelParams=
                 new android.widget.FrameLayout.LayoutParams(-1,dp(14),Gravity.BOTTOM);
-            labelParams.bottomMargin=dp(1);
+            labelParams.bottomMargin=dp(5);
             item.addView(label,labelParams);
 
             LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-1,1f);
