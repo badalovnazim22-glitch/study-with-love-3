@@ -1118,18 +1118,19 @@ public class MainActivity extends Activity {
             LinearLayout statCard = card();
             statCard.setOrientation(LinearLayout.VERTICAL);
             statCard.setGravity(Gravity.CENTER);
-            statCard.setPadding(dp(5), dp(12), dp(5), dp(12));
-            TextView statValue = text(String.valueOf(statValues[statIndex]), 23, DARK, true);
+            statCard.setPadding(dp(4), dp(8), dp(4), dp(8));
+            statCard.setBackground(shape(PALE, 16, PINK));
+            TextView statValue = text(String.valueOf(statValues[statIndex]), 22, DARK, true);
             statValue.setGravity(Gravity.CENTER);
             statCard.addView(statValue, lp(-1, 30, 0, 0, 0, 3));
-            TextView statLabel = text(statLabels[statIndex], 12, MUTED, false);
+            TextView statLabel = text(statLabels[statIndex], 11, DARK, true);
             statLabel.setGravity(Gravity.CENTER);
             statCard.addView(statLabel, lp(-1, -2, 0, 0, 0, 0));
-            LinearLayout.LayoutParams statLp = new LinearLayout.LayoutParams(0, dp(82), 1f);
-            if (statIndex > 0) statLp.setMargins(dp(6), 0, 0, 0);
+            LinearLayout.LayoutParams statLp = new LinearLayout.LayoutParams(0, dp(76), 1f);
+            statLp.setMargins(dp(3), 0, dp(3), 0);
             homeStats.addView(statCard, statLp);
         }
-        root.addView(homeStats, lp(-1, -2, 0, 0, 0, 7));homeStats.setTag("home_stats");
+        root.addView(homeStats, lp(-1, -2, 0, 0, 0, 6));homeStats.setTag("home_stats");
 
         // Weekly goal with a Monday-to-Sunday activity strip on the home screen.
         int weeklyGoal = prefs.getInt("weekly_goal_minutes", 300);
@@ -1156,10 +1157,12 @@ public class MainActivity extends Activity {
             LinearLayout dayCell = new LinearLayout(this);
             dayCell.setOrientation(LinearLayout.VERTICAL);
             dayCell.setGravity(Gravity.CENTER);
-            TextView dayName = text(weekLabels[dayIndex], 10, MUTED, true);
+            TextView dayName = text(weekLabels[dayIndex], 10, isToday ? PINK : MUTED, true);
+            dayName.setGravity(Gravity.CENTER);
             dayCell.addView(dayName, lp(-1, 18, 0, 0, 0, 3));
-            TextView dayMark = text(dayMinutes > 0 ? "♥" : (isToday ? "○" : "·"),
-                    dayMinutes > 0 ? 18 : 21, dayMinutes > 0 ? PINK : MUTED, true);
+            if (isToday) dayCell.setBackground(shape(PALE, 12, PINK));
+            TextView dayMark = text(dayMinutes > 0 ? "♥" : (isToday ? "●" : "·"),
+                    dayMinutes > 0 ? 18 : 17, (dayMinutes > 0 || isToday) ? PINK : MUTED, true);
             dayMark.setGravity(Gravity.CENTER);
             dayCell.addView(dayMark, lp(-1, 25, 0, 0, 0, 0));
             TextView minutesLabel = text(dayMinutes > 0 ? dayMinutes + "м" : "—",
@@ -1169,7 +1172,7 @@ public class MainActivity extends Activity {
             daysRow.addView(dayCell, new LinearLayout.LayoutParams(0, dp(59), 1f));
             weekDay.add(Calendar.DAY_OF_YEAR, 1);
         }
-        weeklyCard.addView(daysRow, lp(-1, 59, 0, 9, 0, 0));
+        weeklyCard.addView(daysRow, lp(-1, 59, 0, 7, 0, 0));
         root.addView(weeklyCard, lp(-1, -2, 0, 0, 0, 8));weeklyCard.setTag("home_weekly");
 
         LinearLayout aiCard = card();
@@ -1197,22 +1200,21 @@ public class MainActivity extends Activity {
         root.addView(feelings2, lp(-1, -2, 0, 0, 0, 6));feelings2.setTag("home_emotions");
 
         // Compact three-column square shortcuts; planner remains easy to find.
-        TextView plannerHeading=text("ПЛАНИРОВАНИЕ",11,PINK,true);
-        plannerHeading.setLetterSpacing(0.04f);
-        root.addView(plannerHeading,lp(-1,-2,0,5,0,4));
+        // Planner shortcuts are self-explanatory; no extra section caption.
         LinearLayout plannerAwardsRow = new LinearLayout(this);
         plannerAwardsRow.setOrientation(LinearLayout.HORIZONTAL);
         plannerAwardsRow.setGravity(Gravity.CENTER_VERTICAL);
         ritualTile(plannerAwardsRow, "▦", "Планировщик", "План на день", this::showPlanner);
         ritualTile(plannerAwardsRow, "✧", "Достижения", "Твои награды", this::showAchievements);
         ritualTile(plannerAwardsRow, "♧", "Напарник", "Общая цель", this::showStudyBuddy);
-        root.addView(plannerAwardsRow,lp(-1,-2,0,0,0,5));
+        root.addView(plannerAwardsRow,lp(-1,-2,0,0,0,4));
         plannerAwardsRow.setTag("home_planner");
 
         LinearLayout reminder = card();
         reminder.setOrientation(LinearLayout.HORIZONTAL);
         reminder.setGravity(Gravity.CENTER_VERTICAL);
-        reminder.setBackground(shape(0xFFF3F0FF, 24, 0));
+        reminder.setPadding(dp(12), dp(8), dp(10), dp(8));
+        reminder.setBackground(shape(PALE, 18, PINK));
         LinearLayout reminderWords = new LinearLayout(this);
         reminderWords.setOrientation(LinearLayout.VERTICAL);
         addText(reminderWords, "НАПОМИНАНИЯ", 11, PINK, true);
@@ -1220,11 +1222,11 @@ public class MainActivity extends Activity {
         reminder.addView(reminderWords, new LinearLayout.LayoutParams(0, -2, 1f));
         reminder.addView(text("›", 27, PINK, true), lp(28, 38, 4, 0, 0, 0));
         reminder.setOnClickListener(v -> showReminderSettings());
-        root.addView(reminder, lp(-1, -2, 0, 4, 0, 2));reminder.setTag("home_reminders");
+        root.addView(reminder, lp(-1, dp(58), 0, 3, 0, 1));reminder.setTag("home_reminders");
 
-        TextView made = text("Сделано с любовью ♡", 11, MUTED, false);
+        TextView made = text("Сделано с любовью ♡", 11, DARK, false);
         made.setGravity(Gravity.CENTER);
-        root.addView(made, lp(-1, 30, 0, 3, 0, 0));
+        root.addView(made, lp(-1, 24, 0, 2, 0, 0));
         reorderHomeBlocks();
         applyHomeBlockVisibility();
         animateHomeCascade();
