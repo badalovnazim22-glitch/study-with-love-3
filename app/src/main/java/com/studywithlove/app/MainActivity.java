@@ -712,7 +712,7 @@ public class MainActivity extends Activity {
         String activeSection = currentScreen.startsWith("settings_") ? currentScreen.substring("settings_".length()) : "menu";
         boolean sectionPage = !"menu".equals(activeSection);
         String sectionTitle = "appearance".equals(activeSection) ? "Внешний вид" : "study".equals(activeSection) ? "Учёба" : "notifications_sound".equals(activeSection) ? "Уведомления и звук" : "profile_ai".equals(activeSection) ? "Профиль и ИИ" : "data_security".equals(activeSection) ? "Данные и безопасность" : "О приложении";
-        base(sectionPage ? sectionTitle : "Настройки ⚙", sectionPage ? "Настрой приложение под себя" : "Всё нужное — в одном месте");
+        base(sectionPage ? sectionTitle : "Настройки ⚙", sectionPage ? "" : "");
         LinearLayout sectionMenu = new LinearLayout(this);
         sectionMenu.setOrientation(LinearLayout.VERTICAL);
         String[][] sections = {
@@ -726,7 +726,13 @@ public class MainActivity extends Activity {
         for (String[] section : sections) {
             Button item = button(section[1] + "   " + section[2] + "   ›", false);
             item.setGravity(Gravity.CENTER_VERTICAL);
-            sectionMenu.addView(item, lp(-1, 54, 0, 4, 0, 4));
+            item.setTextColor(DARK);
+            item.setTextSize(16);
+            item.setAllCaps(false);
+            item.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+            item.setElevation(0f);
+            item.setPadding(dp(2),0,dp(2),0);
+            sectionMenu.addView(item, lp(-1, 48, 0, 0, 0, 0));
             item.setOnClickListener(v -> { currentScreen = "settings_" + section[0]; showSettings(); });
         }
         if (!sectionPage) root.addView(sectionMenu, lp(-1, -2, 0, 0, 0, 12));
@@ -753,7 +759,7 @@ public class MainActivity extends Activity {
         LinearLayout appearance=settingsGroup("ВНЕШНИЙ ВИД");
         appearance.setTag("appearance");
         addText(appearance,"Тема приложения",14,DARK,true);
-        addText(appearance,"Нажми на палитру, чтобы сразу применить оформление.",12,MUTED,false);
+        
         String[] names={"Лавандовая","Сиреневая","Мятная","Ночная","Белая","Кофейная","Золотая","Люкс","Небесная","Персиковая","Красная","LV"};
         String[] keys={"pink","lavender","mint","night","white","brown","gold","luxury","sky","peach","red","lv"};
         int[] colors={0xFF8070A8,0xFF8979B8,0xFF659B86,0xFF302735,0xFFFFFFFF,0xFF8B6046,0xFFC49318,0xFF30251F,0xFF5D91B5,0xFFD88968,0xFFB32635,0xFFD9C19A};
@@ -780,7 +786,7 @@ public class MainActivity extends Activity {
         }
         appearance.addView(palette,lp(-1,-2,0,7,0,8));
         LinearLayout fontGroup=settingsGroup("ШРИФТ ПРИЛОЖЕНИЯ");
-        addText(fontGroup,"Шрифт применяется ко всем экранам и полям ввода.",12,MUTED,false);
+        
         String[] fontNames={"Современный","Округлый","С засечками","Моноширинный","Узкий","Средний"};
         String[] fontKeys={"sans","rounded","serif","mono","condensed","medium"};
         String[] fontFamilies={"sans-serif","sans-serif-rounded","serif","monospace","sans-serif-condensed","sans-serif-medium"};
@@ -790,7 +796,7 @@ public class MainActivity extends Activity {
         fontGroup.addView(fontGrid,lp(-1,-2,0,4,0,0));appearance.addView(fontGroup,lp(-1,-2,0,4,0,6));
         LinearLayout fontSizeGroup=settingsGroup("РАЗМЕР ТЕКСТА");
         fontSizeGroup.setTag("appearance");
-        addText(fontSizeGroup,"Выбери удобный размер надписей. Нижние иконки навигации останутся прежнего размера.",12,MUTED,false);
+        
         float[] textScales={0.9f,1.0f,1.15f,1.3f};
         String[] textScaleNames={"Маленький","Обычный","Крупный","Очень крупный"};
         float activeScale=prefs.getFloat("app_text_scale",1.0f);
@@ -821,7 +827,7 @@ public class MainActivity extends Activity {
         Button darkStart=button("Начало ночной темы · "+prefs.getString("scheduled_dark_start","21:00"),false),darkEnd=button("Конец ночной темы · "+prefs.getString("scheduled_dark_end","07:00"),false);darkStart.setOnClickListener(v->chooseClockPreference("scheduled_dark_start","Начало тёмной темы","21:00"));darkEnd.setOnClickListener(v->chooseClockPreference("scheduled_dark_end","Конец тёмной темы","07:00"));appearanceExtras.addView(darkStart,lp(-1,42,0,3,0,2));appearanceExtras.addView(darkEnd,lp(-1,42,0,2,0,5));
         addText(appearanceExtras,"СКРУГЛЕНИЕ УГЛОВ",11,PINK,true);LinearLayout corners=new LinearLayout(this);String corner=prefs.getString("corner_style","round");String[] cornerKeys={"sharp","normal","round"},cornerNames={"Острые","Обычные","Круглые"};for(int i=0;i<3;i++){final String key=cornerKeys[i];Button b=button(cornerNames[i],corner.equals(key));LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(42),1f);cp.setMargins(dp(2),dp(3),dp(2),dp(3));corners.addView(b,cp);b.setOnClickListener(v->{prefs.edit().putString("corner_style",key).apply();showSettings();});}appearanceExtras.addView(corners,lp(-1,46,0,2,0,7));
         Button orderHome=button("↕  Изменить порядок блоков",false);orderHome.setOnClickListener(v->showHomeBlockOrderDialog());appearanceExtras.addView(orderHome,lp(-1,44,0,2,0,7));
-        addText(appearanceExtras,"БЛОКИ ГЛАВНОГО ЭКРАНА",11,PINK,true);addSettingsToggle(appearanceExtras,"Настроение","home_show_mood",true,null);addSettingsToggle(appearanceExtras,"Статистика","home_show_stats",true,null);addSettingsToggle(appearanceExtras,"Недельная цель","home_show_weekly",true,null);addSettingsToggle(appearanceExtras,"Карточка ИИ","home_show_ai",true,null);addSettingsToggle(appearanceExtras,"Плитки эмоций","home_show_emotions",true,null);addSettingsToggle(appearanceExtras,"Напоминания","home_show_reminders",true,null);addText(appearanceExtras,"Изменения блоков применяются при следующем открытии главного экрана.",11,MUTED,false);root.addView(appearanceExtras,lp(-1,-2,0,0,0,4));
+        addText(appearanceExtras,"БЛОКИ ГЛАВНОГО ЭКРАНА",11,PINK,true);addSettingsToggle(appearanceExtras,"Настроение","home_show_mood",true,null);addSettingsToggle(appearanceExtras,"Статистика","home_show_stats",true,null);addSettingsToggle(appearanceExtras,"Недельная цель","home_show_weekly",true,null);addSettingsToggle(appearanceExtras,"Карточка ИИ","home_show_ai",true,null);addSettingsToggle(appearanceExtras,"Плитки эмоций","home_show_emotions",true,null);addSettingsToggle(appearanceExtras,"Напоминания","home_show_reminders",true,null);root.addView(appearanceExtras,lp(-1,-2,0,0,0,4));
         LinearLayout appearanceActions=card();
         appearanceActions.setPadding(dp(12),dp(5),dp(12),dp(5));
         Button systemTheme=button("Цвета и тёмная тема — как в системе   ›","system".equals(activeTheme));systemTheme.setCompoundDrawablesRelative(settingsIcon(0),null,null,null);systemTheme.setCompoundDrawablePadding(dp(10));systemTheme.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);systemTheme.setBackground(shape(isDarkAppearance()?0xFF25212B:0xFFFFFFFF,12,0));systemTheme.setOnClickListener(v->{prefs.edit().putString("app_theme","system").remove("app_accent_color").apply();applySavedTheme();showSettings();});appearanceActions.addView(systemTheme,lp(-1,42,0,2,0,2));
@@ -835,7 +841,7 @@ public class MainActivity extends Activity {
 
         LinearLayout language=settingsGroup("ЯЗЫК ПРИЛОЖЕНИЯ");
         language.setTag("appearance");
-        addText(language,"После выбора язык применяется ко всем экранам приложения.",12,MUTED,false);
+        
         String[] languageNames={"Русский","English","Azərbaycan dili"};String[] languageKeys={"ru","en","az"};String selectedLanguage=prefs.getString("app_language","ru");
         LinearLayout languageCard=card();languageCard.setPadding(dp(12),dp(4),dp(12),dp(4));
         for(int i=0;i<languageKeys.length;i++){final String key=languageKeys[i];boolean selected=selectedLanguage.equals(key);Button choice=button((selected?"✓  ":"")+"   "+languageNames[i]+"   "+(selected?"":"›"),selected);choice.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);choice.setBackground(shape(isDarkAppearance()?(selected?0xFF342E39:0xFF25212B):(selected?PALE:0xFFFFFFFF),12,0));languageCard.addView(choice,lp(-1,42,0,2,0,2));choice.setOnClickListener(v->{prefs.edit().putString("app_language",key).apply();showSettings();});if(i<languageKeys.length-1){View d=new View(this);d.setBackgroundColor(isDarkAppearance()?0xFF49404B:0xFFECE5E9);languageCard.addView(d,lp(-1,1,0,3,0,3));}}
@@ -844,7 +850,7 @@ public class MainActivity extends Activity {
 
         LinearLayout progress=settingsGroup("ОТОБРАЖЕНИЕ ПРОГРЕССА");
         progress.setTag("appearance");
-        addText(progress,"Выбери удобный формат отображения учебных результатов.",12,MUTED,false);
+        
         String mode=prefs.getString("progress_display","percent");LinearLayout modes=new LinearLayout(this);modes.setOrientation(LinearLayout.HORIZONTAL);
         Button percent=button("С процентами",!"slider".equals(mode));Button slider=button("Полосы прогресса","slider".equals(mode));
         LinearLayout.LayoutParams m1=new LinearLayout.LayoutParams(0,dp(48),1f);m1.setMargins(dp(2),dp(7),dp(3),0);modes.addView(percent,m1);
@@ -852,8 +858,8 @@ public class MainActivity extends Activity {
         percent.setOnClickListener(v->{prefs.edit().putString("progress_display","percent").apply();showSettings();});slider.setOnClickListener(v->{prefs.edit().putString("progress_display","slider").apply();showSettings();});
         progress.addView(modes,lp(-1,54,0,0,0,0));root.addView(progress,lp(-1,-2,0,0,0,4));
 
-        LinearLayout weekly=settingsGroup("НЕДЕЛЬНАЯ ЦЕЛЬ");weekly.setTag("study");addText(weekly,"Сколько минут учёбы ты хочешь набрать за неделю?",12,MUTED,false);EditText weeklyInput=new EditText(this);weeklyInput.setSingleLine(true);weeklyInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);weeklyInput.setText(String.valueOf(prefs.getInt("weekly_goal_minutes",300)));weeklyInput.setHint("Например, 300");weeklyInput.setTextColor(DARK);weeklyInput.setBackground(shape(0xFFFFF9F7,14,0xFFEADDE2));weekly.addView(weeklyInput,lp(-1,48,0,6,0,7));Button saveWeekly=button("Сохранить цель недели",true);saveWeekly.setOnClickListener(v->{try{int value=Integer.parseInt(weeklyInput.getText().toString().trim());if(value<30||value>10080)throw new Exception();prefs.edit().putInt("weekly_goal_minutes",value).apply();showAppMessage("Недельная цель обновлена ♡");}catch(Exception e){weeklyInput.setError("Укажи от 30 до 10080 минут");}});weekly.addView(saveWeekly,lp(-1,43,0,0,0,0));root.addView(weekly,lp(-1,-2,0,0,0,4));
-        LinearLayout testOptions=settingsGroup("НАСТРОЙКИ ТЕСТОВ");testOptions.setTag("study");addSettingsToggle(testOptions,"Показывать правильный ответ сразу","show_correct_immediately",true,null);addText(testOptions,"Если выключить, все правильные ответы и объяснения появятся в конце теста.",11,MUTED,false);int reviewDays=prefs.getInt("weakness_review_interval_days",1);int[] reviewIntervals={1,3,7,14};int reviewIdx=0;for(int ri=0;ri<reviewIntervals.length;ri++)if(reviewIntervals[ri]==reviewDays)reviewIdx=ri;final int[] reviewSelected={reviewIdx};String[] reviewLabels={"1 день","3 дня","7 дней","14 дней"};Button reviewInterval=button("Интервал повторения ошибок · "+reviewLabels[reviewIdx],false);reviewInterval.setOnClickListener(v->{reviewSelected[0]=(reviewSelected[0]+1)%reviewIntervals.length;prefs.edit().putInt("weakness_review_interval_days",reviewIntervals[reviewSelected[0]]).apply();reviewInterval.setText("Интервал повторения ошибок · "+reviewLabels[reviewSelected[0]]);});testOptions.addView(reviewInterval,lp(-1,44,0,4,0,0));root.addView(testOptions,lp(-1,-2,0,0,0,4));
+        LinearLayout weekly=settingsGroup("НЕДЕЛЬНАЯ ЦЕЛЬ");weekly.setTag("study");EditText weeklyInput=new EditText(this);weeklyInput.setSingleLine(true);weeklyInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);weeklyInput.setText(String.valueOf(prefs.getInt("weekly_goal_minutes",300)));weeklyInput.setHint("Например, 300");weeklyInput.setTextColor(DARK);weeklyInput.setBackground(shape(0xFFFFF9F7,14,0xFFEADDE2));weekly.addView(weeklyInput,lp(-1,48,0,6,0,7));Button saveWeekly=button("Сохранить цель недели",true);saveWeekly.setOnClickListener(v->{try{int value=Integer.parseInt(weeklyInput.getText().toString().trim());if(value<30||value>10080)throw new Exception();prefs.edit().putInt("weekly_goal_minutes",value).apply();showAppMessage("Недельная цель обновлена ♡");}catch(Exception e){weeklyInput.setError("Укажи от 30 до 10080 минут");}});weekly.addView(saveWeekly,lp(-1,43,0,0,0,0));root.addView(weekly,lp(-1,-2,0,0,0,4));
+        LinearLayout testOptions=settingsGroup("НАСТРОЙКИ ТЕСТОВ");testOptions.setTag("study");addSettingsToggle(testOptions,"Показывать правильный ответ сразу","show_correct_immediately",true,null);int reviewDays=prefs.getInt("weakness_review_interval_days",1);int[] reviewIntervals={1,3,7,14};int reviewIdx=0;for(int ri=0;ri<reviewIntervals.length;ri++)if(reviewIntervals[ri]==reviewDays)reviewIdx=ri;final int[] reviewSelected={reviewIdx};String[] reviewLabels={"1 день","3 дня","7 дней","14 дней"};Button reviewInterval=button("Интервал повторения ошибок · "+reviewLabels[reviewIdx],false);reviewInterval.setOnClickListener(v->{reviewSelected[0]=(reviewSelected[0]+1)%reviewIntervals.length;prefs.edit().putInt("weakness_review_interval_days",reviewIntervals[reviewSelected[0]]).apply();reviewInterval.setText("Интервал повторения ошибок · "+reviewLabels[reviewSelected[0]]);});testOptions.addView(reviewInterval,lp(-1,44,0,4,0,0));root.addView(testOptions,lp(-1,-2,0,0,0,4));
 
         LinearLayout reminders=settingsGroup("НАПОМИНАНИЯ");
         reminders.setTag("notifications_sound");
@@ -865,7 +871,7 @@ public class MainActivity extends Activity {
 
         LinearLayout focus=settingsGroup("РЕЖИМ ФОКУСА");
         focus.setTag("notifications_sound");
-        addText(focus,"Временно отключает учебные напоминания.",12,MUTED,false);CheckBox focusToggle=new CheckBox(this);focusToggle.setText("Не отвлекать");focusToggle.setTextColor(DARK);focusToggle.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));focusToggle.setChecked(prefs.getBoolean("do_not_disturb",false));focus.addView(focusToggle,lp(-1, 48,0,0,0,0));focusToggle.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("do_not_disturb",on).apply();scheduleReminders(this);});root.addView(focus,lp(-1,-2,0,0,0,4));
+        CheckBox focusToggle=new CheckBox(this);focusToggle.setText("Не отвлекать");focusToggle.setTextColor(DARK);focusToggle.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));focusToggle.setChecked(prefs.getBoolean("do_not_disturb",false));focus.addView(focusToggle,lp(-1, 48,0,0,0,0));focusToggle.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("do_not_disturb",on).apply();scheduleReminders(this);});root.addView(focus,lp(-1,-2,0,0,0,4));
         LinearLayout feedbackSettings=settingsGroup("ЗВУК И ОТКЛИК");feedbackSettings.setTag("notifications_sound");addSettingsToggle(feedbackSettings,"Вибрация при действиях","haptics_enabled",true,null);addSettingsToggle(feedbackSettings,"Звук завершения темы","topic_sound_enabled",true,null);addSettingsToggle(feedbackSettings,"Звук окончания Pomodoro","timer_sound_enabled",true,null);addSettingsToggle(feedbackSettings,"Звук правильного ответа","correct_answer_sound_enabled",true,null);addSettingsToggle(feedbackSettings,"Уведомление об окончании таймера","timer_notification_enabled",true,null);addSettingsToggle(feedbackSettings,"Конфетти и праздничные эффекты","celebrations_enabled",true,null);
         addText(feedbackSettings,"ГРОМКОСТЬ СИГНАЛОВ",11,PINK,true);android.widget.SeekBar soundVolume=new android.widget.SeekBar(this);soundVolume.setMax(100);soundVolume.setProgress(prefs.getInt("completion_sound_volume",55));if(Build.VERSION.SDK_INT>=21)soundVolume.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));feedbackSettings.addView(soundVolume,lp(-1,38,0,0,0,5));soundVolume.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener(){public void onProgressChanged(android.widget.SeekBar b,int value,boolean user){if(user)prefs.edit().putInt("completion_sound_volume",value).apply();}public void onStartTrackingTouch(android.widget.SeekBar b){}public void onStopTrackingTouch(android.widget.SeekBar b){}});
         addSettingsToggle(feedbackSettings,"Автовключение выбранной атмосферы при открытии","ambience_autostart",false,null);
@@ -873,11 +879,11 @@ public class MainActivity extends Activity {
 
         LinearLayout backup=settingsGroup("РЕЗЕРВНАЯ КОПИЯ");
         backup.setTag("data_security");
-        addText(backup,"Сохрани уроки, цели, дневник и прогресс в один файл.",12,MUTED,false);
+        
         Button export=button("Экспортировать копию",true);export.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");i.putExtra(Intent.EXTRA_TITLE,"study_with_love_backup.json");startActivityForResult(i,BACKUP_EXPORT);});backup.addView(export,lp(-1, 48,0,7,0,5));
         Button diaryTxt=button("Экспортировать дневник · TXT",false);diaryTxt.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("text/plain");i.putExtra(Intent.EXTRA_TITLE,"study_with_love_diary.txt");startActivityForResult(i,DIARY_EXPORT);});backup.addView(diaryTxt,lp(-1,44,0,4,0,3));Button diaryPdf=button("Экспортировать дневник · PDF",false);diaryPdf.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/pdf");i.putExtra(Intent.EXTRA_TITLE,"study_with_love_diary.pdf");startActivityForResult(i,DIARY_PDF_EXPORT);});backup.addView(diaryPdf,lp(-1,44,0,2,0,5));Button resetProgress=button("Сбросить только учебный прогресс",false);resetProgress.setTextColor(0xFFB32635);resetProgress.setOnClickListener(v->new android.app.AlertDialog.Builder(this).setTitle("Сбросить прогресс?").setMessage("Будут удалены учебные отметки, серии и статистика. Дневник, письма, настройки и резервные копии останутся.").setNegativeButton("Отмена",null).setPositiveButton("Сбросить",(d,w)->{SharedPreferences.Editor e=prefs.edit();for(String key:prefs.getAll().keySet())if((key.startsWith("progress_")&&!key.equals("progress_display")&&!key.equals("progress_month_offset"))||key.startsWith("done_")||key.startsWith("topic_completed_at_")||key.startsWith("focus_minutes_")||key.startsWith("focus_remainder_ms_"))e.remove(key);e.remove("done_count").remove("study_days").remove("last_study_date").remove("current_streak").remove("longest_streak").remove("focus_total_minutes").apply();loadChapters();showHome();showAppMessage("Учебный прогресс сброшен. Дневник сохранён.");}).show());backup.addView(resetProgress,lp(-1,46,0,2,0,5));Button restore=button("Восстановить из копии",false);restore.setTextColor(0xFFB32635);restore.setOnClickListener(v->new android.app.AlertDialog.Builder(this).setTitle("Восстановить данные?")
             .setMessage("Текущие данные приложения будут заменены содержимым выбранной копии. Перед продолжением убедись, что у тебя есть актуальная резервная копия.")
-            .setNegativeButton("Отмена",null).setPositiveButton("Продолжить",(dialog,which)->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");startActivityForResult(i,BACKUP_IMPORT);}).show());backup.addView(restore,lp(-1,48,0,0,0,0));addSettingsToggle(backup,"Автоматическая копия каждое воскресенье","weekly_backup_enabled",false,()->WeeklyBackupReceiver.schedule(this));Button chooseBackupFolder=button(prefs.getString("weekly_backup_tree_uri","").isEmpty()?"Выбрать папку для копий":"Изменить папку для копий",false);chooseBackupFolder.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,WEEKLY_BACKUP_FOLDER);});backup.addView(chooseBackupFolder,lp(-1,44,0,3,0,5));long backupAt=prefs.getLong("weekly_backup_last_success",0L);addText(backup,backupAt>0?"Последняя копия: "+new java.text.SimpleDateFormat("dd.MM.yyyy HH:mm",Locale.getDefault()).format(new Date(backupAt)):prefs.getString("weekly_backup_last_error","Резервная копия ещё не создавалась"),11,MUTED,false);addSettingsToggle(backup,"Скрывать содержимое в списке недавних приложений","hide_recent_preview",false,()->{if(prefs.getBoolean("hide_recent_preview",false))getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);else getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);});Button pinButton=button(prefs.getString("app_pin_hash","").isEmpty()?"Установить PIN-код":"Изменить или отключить PIN-код",false);pinButton.setOnClickListener(v->showPinSetupDialog());backup.addView(pinButton,lp(-1,46,0,6,0,0));root.addView(backup,lp(-1,-2,0,0,0,4));
+            .setNegativeButton("Отмена",null).setPositiveButton("Продолжить",(dialog,which)->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");startActivityForResult(i,BACKUP_IMPORT);}).show());backup.addView(restore,lp(-1,48,0,0,0,0));addSettingsToggle(backup,"Автоматическая копия каждое воскресенье","weekly_backup_enabled",false,()->WeeklyBackupReceiver.schedule(this));Button chooseBackupFolder=button(prefs.getString("weekly_backup_tree_uri","").isEmpty()?"Выбрать папку для копий":"Изменить папку для копий",false);chooseBackupFolder.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,WEEKLY_BACKUP_FOLDER);});backup.addView(chooseBackupFolder,lp(-1,44,0,3,0,5));long backupAt=prefs.getLong("weekly_backup_last_success",0L);addSettingsToggle(backup,"Скрывать содержимое в списке недавних приложений","hide_recent_preview",false,()->{if(prefs.getBoolean("hide_recent_preview",false))getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);else getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);});Button pinButton=button(prefs.getString("app_pin_hash","").isEmpty()?"Установить PIN-код":"Изменить или отключить PIN-код",false);pinButton.setOnClickListener(v->showPinSetupDialog());backup.addView(pinButton,lp(-1,46,0,6,0,0));root.addView(backup,lp(-1,-2,0,0,0,4));
 
         LinearLayout updates=settingsGroup("ОБНОВЛЕНИЕ ПРИЛОЖЕНИЯ");
         updates.setTag("about");
@@ -890,8 +896,8 @@ public class MainActivity extends Activity {
         reduceMotion.setOnCheckedChangeListener((v, checked) -> prefs.edit().putBoolean("reduce_motion", checked).apply());
         String installedVersion="—";
         try { installedVersion=getPackageManager().getPackageInfo(getPackageName(),0).versionName; } catch(Exception ignored) {}
-        addText(updates,"Установленная версия: "+installedVersion,13,MUTED,false);
-        addText(updates,"Проверяй наличие новых возможностей и исправлений.",12,MUTED,false);
+        
+        
         Button checkUpdates=button("Проверить обновления",true);
         checkUpdates.setOnClickListener(v->AppUpdater.checkAndOffer(this));
         updates.addView(checkUpdates,lp(-1,48,0,7,0,0));
