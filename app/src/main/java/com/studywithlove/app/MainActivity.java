@@ -1254,8 +1254,8 @@ public class MainActivity extends Activity {
         reminder.setBackground(shape(PALE, 15, PINK));
         LinearLayout reminderWords = new LinearLayout(this);
         reminderWords.setOrientation(LinearLayout.VERTICAL);
-        addText(reminderWords, "НАПОМИНАНИЯ", 9, PINK, true);
-        addText(reminderWords, reminderSummary(), 10, DARK, false);
+        addText(reminderWords, "НАПОМИНАНИЯ", 8, PINK, true);
+        addText(reminderWords, reminderSummary(), 9, DARK, false);
         reminder.addView(reminderWords, new LinearLayout.LayoutParams(0, -2, 1f));
         reminder.addView(text("›", 19, PINK, true), lp(20, 24, 2, 0, 0, 0));
         reminder.setOnClickListener(v -> showReminderSettings());
@@ -1511,16 +1511,16 @@ public class MainActivity extends Activity {
         base("", "");
         LinearLayout lessonTop=new LinearLayout(this);
         lessonTop.setGravity(Gravity.CENTER_VERTICAL);
-        TextView pageTitle=text("Уроки",25,DARK,true);
+        TextView pageTitle=text("Уроки 📚",25,DARK,true);
         pageTitle.setGravity(Gravity.CENTER_VERTICAL);pageTitle.setSingleLine(true);pageTitle.setIncludeFontPadding(false);
         lessonTop.addView(pageTitle,new LinearLayout.LayoutParams(0,dp(44),1f));
         LinearLayout lessonActions=new LinearLayout(this);lessonActions.setGravity(Gravity.CENTER_VERTICAL|Gravity.RIGHT);
         HeaderActionIconView weaknessAction=new HeaderActionIconView(this,0,PINK);
-        lessonActions.addView(weaknessAction,lp(32,36,0,0,2,0));weaknessAction.setOnClickListener(v->showWeaknessTrainer());
+        lessonActions.addView(weaknessAction,lp(27,31,0,0,2,0));weaknessAction.setOnClickListener(v->showWeaknessTrainer());
         HeaderActionIconView search=new HeaderActionIconView(this,1,PINK);
-        lessonActions.addView(search,lp(32,36,0,0,2,0));
+        lessonActions.addView(search,lp(27,31,0,0,2,0));
         HeaderActionIconView orderButton=new HeaderActionIconView(this,2,PINK);
-        lessonActions.addView(orderButton,lp(30,36,0,0,0,0));lessonTop.addView(lessonActions,lp(-2,40,0,0,0,0));
+        lessonActions.addView(orderButton,lp(25,31,0,0,0,0));lessonTop.addView(lessonActions,lp(-2,40,0,0,0,0));
         root.addView(lessonTop,lp(-1,46,0,0,0,1));
 
         LinearLayout inlineSearch=new LinearLayout(this);
@@ -1596,7 +1596,7 @@ public class MainActivity extends Activity {
         LinearLayout mathTop=new LinearLayout(this);mathTop.setGravity(Gravity.CENTER_VERTICAL);TextView mathIcon=text("📐",27,PINK,true);mathTop.addView(mathIcon,lp(42,42,0,0,10,0));LinearLayout mathWords=new LinearLayout(this);mathWords.setOrientation(LinearLayout.VERTICAL);addText(mathWords,"Математика",16,DARK,true);addText(mathWords,"Все разделы и темы по математике",11,MUTED,false);mathTop.addView(mathWords,new LinearLayout.LayoutParams(0,-2,1f));TextView arrow=text("›",25,PINK,false);mathTop.addView(arrow);math.addView(mathTop,lp(-1,-2,0,0,0,7));
         addText(math,mathDone+" из "+mathTotal+" тем",11,MUTED,true);ProgressBar mathBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);mathBar.setMax(Math.max(1,mathTotal));mathBar.setProgress(mathDone);mathBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));mathBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));math.addView(mathBar,lp(-1,6,0,3,0,0));root.addView(math,lp(-1,-2,0,0,0,8));
         Set<String> ids=prefs.getStringSet("custom_lesson_ids",new TreeSet<String>());List<String> lessonOrder=new ArrayList<>(ids);String sort=prefs.getString("lesson_sort","default");if("alpha".equals(sort))java.util.Collections.sort(lessonOrder,(a,b)->prefs.getString("custom_lesson_name_"+a,"").compareToIgnoreCase(prefs.getString("custom_lesson_name_"+b,"")));else if("new".equals(sort))java.util.Collections.sort(lessonOrder,java.util.Collections.reverseOrder());else if("progress".equals(sort))java.util.Collections.sort(lessonOrder,(a,b)->{String na=prefs.getString("custom_lesson_name_"+a,""),nb=prefs.getString("custom_lesson_name_"+b,"");List<String> ta=chapters.get("CUSTOM:"+a+":"+na),tb=chapters.get("CUSTOM:"+b+":"+nb);int ca=ta==null?0:countCompleted(ta),cb=tb==null?0:countCompleted(tb);int sa=ta==null?0:ta.size(),sb=tb==null?0:tb.size();double pa=sa==0?0:(double)ca/sa,pb=sb==0?0:(double)cb/sb;return Double.compare(pb,pa);});
-        for(String id:lessonOrder){String name=prefs.getString("custom_lesson_name_"+id,"Мой урок");List<String> topics=chapters.get("CUSTOM:"+id+":"+name);if(topics==null)topics=new ArrayList<>();int c=countCompleted("CUSTOM:"+id+":"+name,topics),n=topics.size();LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.VERTICAL);item.setBackgroundColor(android.graphics.Color.TRANSPARENT);item.setPadding(dp(3),dp(8),dp(3),dp(8));LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);TextView emoji=text(prefs.getString("custom_lesson_emoji_"+id,"📚"),25,PINK,true);row.addView(emoji,lp(40,40,0,0,9,0));LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,name,15,DARK,true);addText(words,c+" из "+n+" тем",11,MUTED,false);row.addView(words,new LinearLayout.LayoutParams(0,-2,1f));TextView go=text("›",24,PINK,false);row.addView(go);item.addView(row);ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(Math.max(1,n));bar.setProgress(c);bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));item.addView(bar,lp(-1,5,0,7,0,0));item.setOnClickListener(v->animateLessonTap(item,()->{selectedChapter="CUSTOM:"+id+":"+name;showTopics(selectedChapter);}));item.setOnLongClickListener(v->{confirmDeleteCustomLesson(id,name);return true;});root.addView(item,lp(-1,-2,0,0,0,7));}
+        for(String id:lessonOrder){String name=prefs.getString("custom_lesson_name_"+id,"Мой урок");List<String> topics=chapters.get("CUSTOM:"+id+":"+name);if(topics==null)topics=new ArrayList<>();int c=countCompleted("CUSTOM:"+id+":"+name,topics),n=topics.size();LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.VERTICAL);item.setBackgroundColor(android.graphics.Color.TRANSPARENT);item.setPadding(dp(3),dp(8),dp(3),dp(8));LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);TextView emoji=text(prefs.getString("custom_lesson_emoji_"+id,"📚"),25,PINK,true);row.addView(emoji,lp(40,40,0,0,9,0));LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,prefs.getString("custom_lesson_emoji_"+id,"📚")+"  "+name,15,DARK,true);addText(words,c+" из "+n+" тем",11,MUTED,false);row.addView(words,new LinearLayout.LayoutParams(0,-2,1f));TextView go=text("›",24,PINK,false);row.addView(go);item.addView(row);ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(Math.max(1,n));bar.setProgress(c);bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));item.addView(bar,lp(-1,5,0,7,0,0));item.setOnClickListener(v->animateLessonTap(item,()->{selectedChapter="CUSTOM:"+id+":"+name;showTopics(selectedChapter);}));item.setOnLongClickListener(v->{confirmDeleteCustomLesson(id,name);return true;});root.addView(item,lp(-1,-2,0,0,0,7));}
         TextView add=text("＋  Добавить свой урок",14,PINK,true);add.setGravity(Gravity.CENTER);add.setBackgroundColor(android.graphics.Color.TRANSPARENT);add.setPadding(dp(8),dp(5),dp(8),dp(5));add.setOnClickListener(v->addCustomLesson());root.addView(add,lp(-1,42,0,3,0,9));
         String recent=prefs.getString("recent_topic","");String recentChapter=prefs.getString("recent_chapter","");if(!recent.isEmpty()&&!recentChapter.isEmpty()&&chapters.containsKey(recentChapter)){Button last=button("↗  Продолжить: "+recent,false);last.setOnClickListener(v->{selectedChapter=recentChapter;selectedTopic=recent;showTopic(recent);});root.addView(last,lp(-1,46,0,0,0,3));}
         LinearLayout stats=new LinearLayout(this);stats.setOrientation(LinearLayout.VERTICAL);stats.setPadding(dp(2),dp(7),dp(2),dp(4));stats.setBackgroundColor(android.graphics.Color.TRANSPARENT);addText(stats,"ТВОЙ УЧЕБНЫЙ РИТМ",10,PINK,true);addText(stats,done+" из "+total+" тем завершено",15,DARK,true);addText(stats,"Продолжай в своём темпе — каждый пройденный раздел приближает к цели ♡",10,MUTED,false);ProgressBar allBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);allBar.setMax(Math.max(1,total));allBar.setProgress(done);allBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));allBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));stats.addView(allBar,lp(-1,5,0,5,0,0));root.addView(stats,lp(-1,-2,0,5,0,2));
@@ -2353,25 +2353,32 @@ public class MainActivity extends Activity {
         render[0].run();
     }
     private void showExamGoalForm(String editId) {
-        currentScreen="exam_goal_form";
+        currentScreen="exam";
         boolean isEdit=editId!=null;
-        base(isEdit?"Изменить цель":"Новая цель","Укажи название и дату экзамена");
-        Button back=button("←  Назад к экзамену",false);
-        back.setOnClickListener(v->showExam());
-        root.addView(back,lp(-1,44,0,0,0,14));
+        if(root==null)return;
+        for(int i=root.getChildCount()-1;i>=0;i--){View child=root.getChildAt(i);if("exam_goal_inline_form".equals(child.getTag()))root.removeViewAt(i);}
         LinearLayout form=card();
-        addText(form,"НАЗВАНИЕ ЦЕЛИ",12,PINK,true);
-        EditText title=new EditText(this);title.setSingleLine(true);title.setTextSize(16);title.setTextColor(DARK);title.setHint("Например, экзамен по математике");title.setPadding(dp(13),dp(8),dp(13),dp(8));title.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));
+        form.setTag("exam_goal_inline_form");
+        form.setPadding(dp(16),dp(14),dp(16),dp(14));
+        form.setBackground(shape(0xFFFFF7F8,20,blendColors(PINK,BG,0.55f)));
+        addText(form,isEdit?"✎  ИЗМЕНИТЬ ЦЕЛЬ":"✨  НОВАЯ ЦЕЛЬ",12,PINK,true);
+        EditText title=new EditText(this);title.setSingleLine(true);title.setTextSize(15);title.setTextColor(DARK);title.setHint("Например, экзамен по математике");title.setPadding(dp(13),dp(8),dp(13),dp(8));title.setBackground(shape(0xFFFFFFFF,14,0xFFEADDE2));
         if(isEdit)title.setText(prefs.getString("exam_goal_title_"+editId,""));
-        form.addView(title,lp(-1,50,0,7,0,14));
-        addText(form,"ДАТА",12,PINK,true);
-        EditText date=new EditText(this);date.setSingleLine(true);date.setFocusable(false);date.setClickable(true);date.setTextSize(15);date.setTextColor(DARK);date.setHint("Выбери дату");date.setPadding(dp(13),dp(8),dp(13),dp(8));date.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));
+        form.addView(title,lp(-1,48,0,7,0,10));
+        addText(form,"ДАТА ЭКЗАМЕНА",11,PINK,true);
+        EditText date=new EditText(this);date.setSingleLine(true);date.setFocusable(false);date.setClickable(true);date.setTextSize(14);date.setTextColor(DARK);date.setHint("Выбери дату");date.setPadding(dp(13),dp(8),dp(13),dp(8));date.setBackground(shape(0xFFFFFFFF,14,0xFFEADDE2));
         if(isEdit)date.setText(prefs.getString("exam_goal_date_"+editId,""));
-        form.addView(date,lp(-1,50,0,7,0,14));
+        form.addView(date,lp(-1,48,0,6,0,10));
         date.setOnClickListener(v->{Calendar now=Calendar.getInstance(AppTime.zone());Calendar min=(Calendar)now.clone();min.set(Calendar.HOUR_OF_DAY,0);min.set(Calendar.MINUTE,0);min.set(Calendar.SECOND,0);min.set(Calendar.MILLISECOND,0);android.app.DatePickerDialog dialog=new android.app.DatePickerDialog(this,(p,y,m,d)->date.setText(String.format(Locale.US,"%04d-%02d-%02d",y,m+1,d)),now.get(Calendar.YEAR),now.get(Calendar.MONTH),now.get(Calendar.DAY_OF_MONTH));dialog.getDatePicker().setMinDate(min.getTimeInMillis());dialog.show();});
-        Button save=button(isEdit?"Сохранить изменения":"＋  Добавить цель",true);form.addView(save,lp(-1,50,0,5,0,0));
-        root.addView(form,lp(-1,-2,0,0,0,0));
+        LinearLayout actions=new LinearLayout(this);actions.setOrientation(LinearLayout.HORIZONTAL);
+        Button cancel=button("Отмена",false),save=button(isEdit?"Сохранить изменения":"＋  Добавить цель",true);
+        actions.addView(cancel,new LinearLayout.LayoutParams(0,dp(46),.72f));
+        LinearLayout.LayoutParams saveLp=new LinearLayout.LayoutParams(0,dp(46),1.28f);saveLp.setMargins(dp(6),0,0,0);actions.addView(save,saveLp);
+        form.addView(actions,lp(-1,46,0,3,0,0));
+        cancel.setOnClickListener(v->root.removeView(form));
         save.setOnClickListener(v->{String n=title.getText().toString().trim(),d=date.getText().toString().trim();if(n.isEmpty()){title.setError("Введи название цели");return;}if(d.isEmpty()){showSavedBanner("Выбери дату","Укажи день экзамена ♡");return;}if(daysUntil(d)<0){showSavedBanner("Неверная дата","Выбери сегодняшнюю или будущую дату");return;}String id=isEdit?editId:String.valueOf(System.currentTimeMillis());Set<String> ids=new TreeSet<>(prefs.getStringSet("exam_goal_ids",new TreeSet<String>()));ids.add(id);SharedPreferences.Editor e=prefs.edit().putString("exam_goal_title_"+id,n).putString("exam_goal_date_"+id,d).putStringSet("exam_goal_ids",ids);if(!isEdit)e.putString("exam_goal_created_"+id,todayKey());if(prefs.getString("exam_main_goal_id","").isEmpty())e.putString("exam_main_goal_id",id);e.apply();StudyWidgetProvider.updateAll(this);showSavedBanner("Цель сохранена","Она появилась в твоём списке ♡");showExam();});
+        root.addView(form,Math.min(2,root.getChildCount()),lp(-1,-2,0,0,0,12));
+        form.setAlpha(0f);form.setTranslationY(-dp(8));form.animate().alpha(1f).translationY(0f).setDuration(190).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
     }
     private void showExamTopics(){
         currentScreen="exam_topics";
