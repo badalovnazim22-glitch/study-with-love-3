@@ -1400,7 +1400,7 @@ public class MainActivity extends Activity {
     }
     private void showHomeBlockOrderDialog(){
         final String[] keys={"stats","weekly","ai","emotions","reminders"};final String[] names={"Статистика","Недельная цель","Карточка ИИ","Плитки эмоций","Напоминания"};List<String> order=new ArrayList<>();for(String k:prefs.getString("home_block_order","stats,weekly,ai,emotions,reminders").split(","))if(java.util.Arrays.asList(keys).contains(k)&&!order.contains(k))order.add(k);for(String k:keys)if(!order.contains(k))order.add(k);
-        LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(dp(12),dp(8),dp(12),dp(8));android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("Порядок главной страницы").setView(body).setNegativeButton("Закрыть",null).setPositiveButton("Сохранить",(d,w)->{prefs.edit().putString("home_block_order",android.text.TextUtils.join(",",order)).apply();showHome();}).create();Runnable[] render={null};render[0]=()->{body.removeAllViews();for(int i=0;i<order.size();i++){final int index=i;String key=order.get(i);int pos=java.util.Arrays.asList(keys).indexOf(key);LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);TextView label=text((i+1)+". "+names[pos],14,DARK,true);row.addView(label,new LinearLayout.LayoutParams(0,dp(44),1f));Button up=button("↑",false),down=button("↓",false);up.setEnabled(index>0);down.setEnabled(index<order.size()-1);row.addView(up,lp(42,40,2,0,2,0));row.addView(down,lp(42,40,2,0,0,0));up.setOnClickListener(v->{java.util.Collections.swap(order,index,index-1);render[0].run();});down.setOnClickListener(v->{java.util.Collections.swap(order,index,index+1);render[0].run();});body.addView(row,lp(-1,46,0,1,0,1));}};render[0].run();dialog.show();
+        LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(dp(12),dp(8),dp(12),dp(8));android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("Порядок главной страницы").setView(body).setNegativeButton("Закрыть",null).setPositiveButton("Сохранить",(d,w)->{prefs.edit().putString("home_block_order",android.text.TextUtils.join(",",order)).apply();showHome();}).create();Runnable[] render={null};render[0]=()->{body.removeAllViews();for(int i=0;i<order.size();i++){final int index=i;String key=order.get(i);int pos=java.util.Arrays.asList(keys).indexOf(key);LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);TextView label=text((i+1)+". "+names[pos],14,DARK,true);row.addView(label,new LinearLayout.LayoutParams(0,dp(44),1f));Button up=button("↑",false),down=button("↓",false);up.setEnabled(index>0);down.setEnabled(index<order.size()-1);row.addView(up,lp(42,40,2,0,2,0));row.addView(down,lp(42,40,2,0,0,0));up.setOnClickListener(v->{java.util.Collections.swap(order,index,index-1);render[0].run();});down.setOnClickListener(v->{java.util.Collections.swap(order,index,index+1);render[0].run();});body.addView(row,lp(-1,46,0,1,0,1));}};render[0].run();dialog.show();polishDialog(dialog);
     }
     private void applyHomeBlockVisibility(){
         if(root==null)return;
@@ -1722,7 +1722,7 @@ public class MainActivity extends Activity {
             TextView menuTitle=text("СОРТИРОВКА ПРЕДМЕТОВ",11,PINK,true);menuTitle.setPadding(dp(5),dp(5),dp(5),dp(10));menuBody.addView(menuTitle);
             android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setView(menuBody).create();
             for(int i=0;i<labels.length;i++){final String value=values[i];LinearLayout option=new LinearLayout(this);option.setGravity(Gravity.CENTER_VERTICAL);option.setPadding(dp(12),0,dp(12),0);option.setBackground(shape(prefs.getString("lesson_sort","default").equals(value)?0xFFFFEAF0:0xFFFFFFFF,14,0xFFF3E2E8));TextView label=text(labels[i],14,DARK,prefs.getString("lesson_sort","default").equals(value));option.addView(label,new LinearLayout.LayoutParams(0,dp(48),1f));TextView check=text(prefs.getString("lesson_sort","default").equals(value)?"✓":"",17,PINK,true);option.addView(check);LinearLayout.LayoutParams op=new LinearLayout.LayoutParams(-1,dp(48));op.bottomMargin=dp(7);menuBody.addView(option,op);option.setOnClickListener(q->{prefs.edit().putString("lesson_sort",value).apply();dialog.dismiss();showChapters();});}
-            dialog.setOnShowListener(q->{if(dialog.getWindow()!=null){dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);dialog.getWindow().setDimAmount(0.28f);}});dialog.show();
+            dialog.setOnShowListener(q->{if(dialog.getWindow()!=null){dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);dialog.getWindow().setDimAmount(0.28f);}});dialog.show();polishDialog(dialog);
         });
         List<String> mathTopics=chapters.get("1️⃣ Натуральные числа и действия с ними");int total=0,done=0;for(List<String> topics:chapters.values()){total+=topics.size();done+=countCompleted(topics);}
         int mathTotal=0,mathDone=0;for(Map.Entry<String,List<String>> e:chapters.entrySet())if(!e.getKey().startsWith("CUSTOM:")){mathTotal+=e.getValue().size();mathDone+=countCompleted(e.getValue());}
@@ -1761,7 +1761,7 @@ public class MainActivity extends Activity {
                 selectedChapter="CUSTOM:"+id+":"+name;chapters.put(selectedChapter,new ArrayList<String>());showTopics(selectedChapter);
             }).create();
         addDialog.setOnShowListener(v->{if(addDialog.getWindow()!=null)addDialog.getWindow().setBackgroundDrawable(shape(BG,22,0));addDialog.getButton(-1).setTextColor(PINK);addDialog.getButton(-2).setTextColor(MUTED);});
-        addDialog.show();
+        addDialog.show();polishDialog(addDialog);
     }
     private String topicContentKey(String lessonId,String topic){return "custom_topic_content_"+lessonId+"_"+android.util.Base64.encodeToString(topic.getBytes(java.nio.charset.StandardCharsets.UTF_8),android.util.Base64.URL_SAFE|android.util.Base64.NO_WRAP);}
     private void openCustomTopicDialog(String chapter,String oldName,String oldContent){
@@ -1779,7 +1779,7 @@ public class MainActivity extends Activity {
             if(oldName!=null&&!oldName.equals(n)){topics.remove(oldName);topics.add(n);int oldProgress=prefs.getInt("progress_"+oldName,0);e.remove("progress_"+oldName).remove("done_"+oldName);if(oldProgress>0)e.putInt("progress_"+n,oldProgress);e.remove(topicContentKey(lessonId,oldName));}else topics.add(n);
             e.putStringSet("custom_lesson_topics_"+lessonId,topics).putString(topicContentKey(lessonId,n),content.getText().toString().trim()).apply();chapters.put(chapter,new ArrayList<>(topics));if(oldName!=null&&oldName.equals(selectedTopic))selectedTopic=n;dialog.dismiss();showTopics(chapter);
         }));
-        dialog.show();
+        dialog.show();polishDialog(dialog);
     }
     private void addCustomTopic(String chapter){openCustomTopicDialog(chapter,null,"");}
 
@@ -1959,7 +1959,7 @@ public class MainActivity extends Activity {
                 int ownCount=0;for(String raw:prefs.getStringSet("custom_question_cards",new TreeSet<String>()))try{if(topic.equals(new org.json.JSONObject(raw).optString("topic","")))ownCount++;}catch(Exception ignored){}
                 if(ownCount>=100){showAppMessage("В одной теме можно сохранить не более 100 карточек");return;}
                 try{org.json.JSONObject item=new org.json.JSONObject();item.put("topic",topic);item.put("prompt",p);item.put("answer",a);item.put("note",n);Set<String> cards=new TreeSet<>(prefs.getStringSet("custom_question_cards",new TreeSet<String>()));cards.add(item.toString());prefs.edit().putStringSet("custom_question_cards",cards).apply();loadQuestionBank();dialog.dismiss();showTopic(topic);showAppMessage("Карточка сохранена ♡");}catch(Exception ex){showAppMessage("Не удалось сохранить карточку");}
-            }));dialog.show();
+            }));dialog.show();polishDialog(dialog);
         });
         Button manage=button("Мои карточки · посмотреть и удалить",false);section.addView(manage,lp(-1, 48,0,6,0,0));
         manage.setOnClickListener(v->{List<String> payloads=new ArrayList<>(),labels=new ArrayList<>();for(String raw:prefs.getStringSet("custom_question_cards",new TreeSet<String>()))try{org.json.JSONObject item=new org.json.JSONObject(raw);if(topic.equals(item.optString("topic",""))){payloads.add(raw);labels.add(item.optString("prompt","Карточка"));}}catch(Exception ignored){}if(payloads.isEmpty()){showAppMessage("В этой теме пока нет своих карточек");return;}new android.app.AlertDialog.Builder(this).setTitle("Мои карточки").setItems(labels.toArray(new String[0]),(dlg,index)->{String raw=payloads.get(index);try{org.json.JSONObject item=new org.json.JSONObject(raw);new android.app.AlertDialog.Builder(this).setTitle(item.optString("prompt","Карточка")).setMessage("Ответ: "+item.optString("answer","")+(item.optString("note","").isEmpty()?"":"\\n\\nЗаметка: "+item.optString("note",""))).setNegativeButton("Закрыть",null).setPositiveButton("Удалить",(d,w)->{Set<String> cards=new TreeSet<>(prefs.getStringSet("custom_question_cards",new TreeSet<String>()));cards.remove(raw);prefs.edit().putStringSet("custom_question_cards",cards).apply();loadQuestionBank();showTopic(topic);}).show();}catch(Exception ignored){}}).show();});
@@ -2965,6 +2965,26 @@ public class MainActivity extends Activity {
         dialog.show();
     }
 
+    private void polishDialog(android.app.AlertDialog dialog){
+        if(dialog==null||dialog.getWindow()==null)return;
+        android.view.Window window=dialog.getWindow();
+        int surface=isDarkAppearance()?0xFF292431:0xFFFFFCFD;
+        int outline=isDarkAppearance()?0xFF514454:0xFFF0DCE4;
+        window.setBackgroundDrawable(shape(surface,24,outline));
+        window.setDimAmount(0.30f);
+        int width=Math.min(getResources().getDisplayMetrics().widthPixels-dp(36),dp(420));
+        window.setLayout(Math.max(dp(280),width),-2);
+        View decor=window.getDecorView();
+        if(prefs==null||!prefs.getBoolean("reduce_motion",false)){
+            decor.setAlpha(0f);decor.setScaleX(0.96f);decor.setScaleY(0.96f);decor.setTranslationY(dp(8));
+            decor.animate().alpha(1f).scaleX(1f).scaleY(1f).translationY(0f).setDuration(220).setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f)).start();
+        }
+        android.widget.Button positive=dialog.getButton(-1),negative=dialog.getButton(-2),neutral=dialog.getButton(-3);
+        if(positive!=null){positive.setTextColor(PINK);positive.setAllCaps(false);positive.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);}
+        if(negative!=null){negative.setTextColor(MUTED);negative.setAllCaps(false);}
+        if(neutral!=null){neutral.setTextColor(PINK);neutral.setAllCaps(false);}
+    }
+
     private int achievementCurrent(int index,int days,int minutes,int completed,int sessions){if(index<=5||index>=14)return days;if(index<=9)return completed;if(index<=11)return minutes;if(index==12)return sessions;if(index==13)return completed+sessions;return 0;}
 
     private void scheduleFutureLetterReminder(String id,String date) {
@@ -3062,7 +3082,7 @@ public class MainActivity extends Activity {
             }).show();
         }).create();
         query.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int st,int count,int after){}public void onTextChanged(CharSequence s,int st,int before,int count){clear.setVisibility(s.length()>0?View.VISIBLE:View.GONE);}public void afterTextChanged(android.text.Editable e){}});
-        dialog.show();
+        dialog.show();polishDialog(dialog);
     }
     private String mainExamDate(){
         String id=prefs.getString("exam_main_goal_id","");Set<String> ids=prefs.getStringSet("exam_goal_ids",new TreeSet<String>());if(!ids.contains(id)){id="";for(String candidate:ids){if(id.isEmpty()||candidate.compareTo(id)>0)id=candidate;}}
