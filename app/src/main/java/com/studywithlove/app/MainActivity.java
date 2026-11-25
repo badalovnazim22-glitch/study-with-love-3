@@ -2327,8 +2327,8 @@ public class MainActivity extends Activity {
                 long remain=daysUntil(mainDate);heroName.setText(mainTitle);heroDate.setText("Дата экзамена: "+mainDate);
                 if(remain<0){heroDays.setText("—");heroCaption.setText("ДАТА ПРОШЛА");}
                 else if(remain==0){heroDays.setText("0");heroCaption.setText("СЕГОДНЯ");}
-                else if(formatWeeks[0]){heroDays.setText((remain/7)+" нед. "+(remain%7)+" дн.");heroCaption.setText("ДО ЭКЗАМЕНА");}
-                else{heroDays.setText(String.valueOf(remain));heroCaption.setText("ДНЕЙ ОСТАЛОСЬ");}
+                else if(formatWeeks[0]){heroDays.setTextSize(22);heroDays.setText((remain/7)+" нед. "+(remain%7)+" дн.");heroCaption.setText("ДО ЭКЗАМЕНА");}
+                else{heroDays.setTextSize(38);heroDays.setText(String.valueOf(remain));heroCaption.setText("ДНЕЙ ОСТАЛОСЬ");}
                 formatToggle.setText(formatWeeks[0]?"Недели + дни  ·  Только дни":"Только дни  ·  Недели + дни");
                 long total=0,elapsed=0;try{java.text.SimpleDateFormat df=new java.text.SimpleDateFormat("yyyy-MM-dd",Locale.US);df.setTimeZone(AppTime.zone());java.util.Date created=df.parse(prefs.getString("exam_goal_created_"+selectedMain,todayKey()));java.util.Date exam=df.parse(mainDate);java.util.Date today=df.parse(todayKey());if(created!=null&&exam!=null&&today!=null){total=Math.max(1,(exam.getTime()-created.getTime())/86400000L+1);elapsed=Math.max(0,Math.min(total,(today.getTime()-created.getTime())/86400000L+1));}}catch(Exception ignored){}
                 prepProgress.setProgress(total>0?(int)Math.min(100,elapsed*100/total):0);prepLabel.setText(total>0?"Прошло "+elapsed+" из "+total+" дней подготовки · "+(elapsed*100/total)+"%":"Прогресс подготовки появится после выбора даты");
