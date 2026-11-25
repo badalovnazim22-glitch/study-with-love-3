@@ -61,6 +61,7 @@ public class MainActivity extends Activity {
     private String renderedScreen = "";
     private final List<String> screenHistory = new ArrayList<>();
     private boolean navigatingBack = false;
+    private boolean lessonsSearchOpen = false;
     private long lastBackPressedAt=0L;
     private SharedPreferences prefs;
     private String selectedTopic = null, selectedChapter = null;
@@ -678,7 +679,7 @@ public class MainActivity extends Activity {
         group.setOrientation(LinearLayout.VERTICAL);
         // Минималистичные настройки: заголовки без разделительных линий и рамок.
         group.setPadding(0,dp(12),0,dp(10));
-        TextView heading=text(title,13,PINK,true);
+        TextView heading=text(title,16,PINK,true);
         heading.setLetterSpacing(0.035f);
         group.addView(heading,lp(-1,-2,0,0,0,10));
         return group;
@@ -1474,6 +1475,7 @@ public class MainActivity extends Activity {
 
     private void showChapters() {
         currentScreen = "chapters";
+        lessonsSearchOpen=false;
         base("", "");
         LinearLayout lessonTop=new LinearLayout(this);
         lessonTop.setGravity(Gravity.CENTER_VERTICAL);
@@ -1494,7 +1496,7 @@ public class MainActivity extends Activity {
         inlineSearch.setPadding(dp(12),0,dp(8),0);
         inlineSearch.setBackground(shape(0xFFFFF5F7,15,0xFFF0DCE4));
         TextView inlineSearchIcon=text("⌕",22,PINK,true);
-        inlineSearch.addView(inlineSearchIcon,lp(28,44,0,0,7,0));
+        inlineSearchIcon.setVisibility(View.GONE);
         EditText inlineQuery=new EditText(this);
         inlineQuery.setSingleLine(true);
         inlineQuery.setTextSize(14);
@@ -1504,10 +1506,14 @@ public class MainActivity extends Activity {
         inlineQuery.setBackgroundColor(0x00000000);
         inlineQuery.setPadding(0,0,0,0);
         inlineSearch.addView(inlineQuery,new LinearLayout.LayoutParams(0,dp(44),1f));
+        TextView closeSearch=text("×",26,PINK,true);
+        closeSearch.setGravity(Gravity.CENTER);
+        closeSearch.setContentDescription("Закрыть поиск");
+        inlineSearch.addView(closeSearch,0,lp(38,44,0,0,8,0));
         TextView clearSearch=text("×",22,MUTED,true);
         clearSearch.setGravity(Gravity.CENTER);
         clearSearch.setVisibility(View.GONE);
-        inlineSearch.addView(clearSearch,lp(38,44,0,0,0,0));
+        inlineSearch.addView(clearSearch,lp(32,44,0,0,0,0));
         clearSearch.setOnClickListener(v->inlineQuery.setText(""));
         inlineSearch.setVisibility(View.GONE);
         root.addView(inlineSearch,lp(-1,48,0,0,0,5));
@@ -1515,17 +1521,28 @@ public class MainActivity extends Activity {
         orderLabel.setGravity(Gravity.CENTER_VERTICAL);
         root.addView(orderLabel,lp(-1,27,0,0,0,5));
         inlineSearch.setAlpha(0f);inlineSearch.setTranslationY(-dp(8));
+        Runnable closeInlineSearch=()->{
+            if(!lessonsSearchOpen)return;
+            lessonsSearchOpen=false;
+            android.view.inputmethod.InputMethodManager imm=(android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+            if(imm!=null)imm.hideSoftInputFromWindow(inlineQuery.getWindowToken(),0);
+            inlineSearch.animate().alpha(0f).translationY(-dp(7)).setDuration(150).withEndAction(()->{
+                inlineQuery.setText("");root.removeView(inlineSearch);root.removeView(lessonTop);
+                root.addView(lessonTop,0);root.addView(inlineSearch,1);
+                inlineSearch.setVisibility(View.GONE);inlineSearch.setAlpha(1f);inlineSearch.setTranslationY(0f);
+                for(int i=0;i<root.getChildCount();i++)root.getChildAt(i).setVisibility(View.VISIBLE);
+            }).start();
+        };
+        closeSearch.setOnClickListener(v->closeInlineSearch.run());
         search.setOnClickListener(v->{
-            boolean opening=inlineSearch.getVisibility()!=View.VISIBLE;
-            if(opening){
-                pageTitle.animate().alpha(0f).setDuration(150).withEndAction(()->pageTitle.setVisibility(View.GONE)).start();
-                inlineSearch.setVisibility(View.VISIBLE);inlineSearch.setAlpha(0f);inlineSearch.setTranslationY(-dp(8));
-                inlineSearch.animate().alpha(1f).translationY(0f).setDuration(230).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
-                inlineQuery.requestFocus();inlineQuery.post(()->{android.view.inputmethod.InputMethodManager imm=(android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);if(imm!=null)imm.showSoftInput(inlineQuery,android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);});
-            }else{
-                android.view.inputmethod.InputMethodManager imm=(android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);if(imm!=null)imm.hideSoftInputFromWindow(inlineQuery.getWindowToken(),0);
-                inlineSearch.animate().alpha(0f).translationY(-dp(8)).setDuration(170).withEndAction(()->{inlineSearch.setVisibility(View.GONE);inlineSearch.setAlpha(1f);inlineSearch.setTranslationY(0f);inlineQuery.setText("");pageTitle.setAlpha(0f);pageTitle.setVisibility(View.VISIBLE);pageTitle.animate().alpha(1f).setDuration(190).start();}).start();
-            }
+            if(lessonsSearchOpen){closeInlineSearch.run();return;}
+            lessonsSearchOpen=true;
+            root.removeView(lessonTop);root.removeView(inlineSearch);
+            inlineSearch.setVisibility(View.VISIBLE);inlineSearch.setAlpha(0f);inlineSearch.setTranslationY(-dp(7));
+            root.addView(inlineSearch,0);
+            inlineSearch.animate().alpha(1f).translationY(0f).setDuration(210).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
+            inlineQuery.requestFocus();
+            inlineQuery.post(()->{android.view.inputmethod.InputMethodManager imm=(android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);if(imm!=null)imm.showSoftInput(inlineQuery,android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);});
         });
         inlineQuery.addTextChangedListener(new android.text.TextWatcher(){
             public void beforeTextChanged(CharSequence s,int st,int count,int after){}
@@ -1543,11 +1560,11 @@ public class MainActivity extends Activity {
         orderButton.setOnClickListener(v->{android.widget.PopupMenu menu=new android.widget.PopupMenu(this,orderButton);menu.getMenu().add(0,1,0,"По умолчанию");menu.getMenu().add(0,2,1,"По названию А—Я");menu.getMenu().add(0,3,2,"Сначала новые");menu.getMenu().add(0,4,3,"По прогрессу");menu.setOnMenuItemClickListener(mi->{prefs.edit().putString("lesson_sort",mi.getItemId()==2?"alpha":mi.getItemId()==3?"new":mi.getItemId()==4?"progress":"default").apply();showChapters();return true;});menu.show();});
         List<String> mathTopics=chapters.get("1️⃣ Натуральные числа и действия с ними");int total=0,done=0;for(List<String> topics:chapters.values()){total+=topics.size();done+=countCompleted(topics);}
         int mathTotal=0,mathDone=0;for(Map.Entry<String,List<String>> e:chapters.entrySet())if(!e.getKey().startsWith("CUSTOM:")){mathTotal+=e.getValue().size();mathDone+=countCompleted(e.getValue());}
-        LinearLayout math=card();math.setOrientation(LinearLayout.VERTICAL);math.setPadding(dp(15),dp(13),dp(15),dp(12));math.setOnClickListener(v->showMathChapters());
+        LinearLayout math=new LinearLayout(this);math.setOrientation(LinearLayout.VERTICAL);math.setBackgroundColor(android.graphics.Color.TRANSPARENT);math.setPadding(dp(2),dp(8),dp(2),dp(8));math.setOnClickListener(v->showMathChapters());
         LinearLayout mathTop=new LinearLayout(this);mathTop.setGravity(Gravity.CENTER_VERTICAL);TextView mathIcon=text("📐",27,PINK,true);mathTop.addView(mathIcon,lp(42,42,0,0,10,0));LinearLayout mathWords=new LinearLayout(this);mathWords.setOrientation(LinearLayout.VERTICAL);addText(mathWords,"Математика",16,DARK,true);addText(mathWords,"Все разделы и темы по математике",11,MUTED,false);mathTop.addView(mathWords,new LinearLayout.LayoutParams(0,-2,1f));TextView arrow=text("›",25,PINK,false);mathTop.addView(arrow);math.addView(mathTop,lp(-1,-2,0,0,0,7));
-        addText(math,mathDone+" из "+mathTotal+" тем пройдено",10,MUTED,true);ProgressBar mathBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);mathBar.setMax(Math.max(1,mathTotal));mathBar.setProgress(mathDone);mathBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));mathBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));math.addView(mathBar,lp(-1,6,0,3,0,0));root.addView(math,lp(-1,-2,0,0,0,8));
+        addText(math,mathDone+" из "+mathTotal+" тем",11,MUTED,true);ProgressBar mathBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);mathBar.setMax(Math.max(1,mathTotal));mathBar.setProgress(mathDone);mathBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));mathBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));math.addView(mathBar,lp(-1,6,0,3,0,0));root.addView(math,lp(-1,-2,0,0,0,8));
         Set<String> ids=prefs.getStringSet("custom_lesson_ids",new TreeSet<String>());List<String> lessonOrder=new ArrayList<>(ids);String sort=prefs.getString("lesson_sort","default");if("alpha".equals(sort))java.util.Collections.sort(lessonOrder,(a,b)->prefs.getString("custom_lesson_name_"+a,"").compareToIgnoreCase(prefs.getString("custom_lesson_name_"+b,"")));else if("new".equals(sort))java.util.Collections.sort(lessonOrder,java.util.Collections.reverseOrder());else if("progress".equals(sort))java.util.Collections.sort(lessonOrder,(a,b)->{String na=prefs.getString("custom_lesson_name_"+a,""),nb=prefs.getString("custom_lesson_name_"+b,"");List<String> ta=chapters.get("CUSTOM:"+a+":"+na),tb=chapters.get("CUSTOM:"+b+":"+nb);int ca=ta==null?0:countCompleted(ta),cb=tb==null?0:countCompleted(tb);int sa=ta==null?0:ta.size(),sb=tb==null?0:tb.size();double pa=sa==0?0:(double)ca/sa,pb=sb==0?0:(double)cb/sb;return Double.compare(pb,pa);});
-        for(String id:lessonOrder){String name=prefs.getString("custom_lesson_name_"+id,"Мой урок");List<String> topics=chapters.get("CUSTOM:"+id+":"+name);if(topics==null)topics=new ArrayList<>();int c=countCompleted("CUSTOM:"+id+":"+name,topics),n=topics.size();LinearLayout item=card();item.setOrientation(LinearLayout.VERTICAL);item.setPadding(dp(14),dp(11),dp(14),dp(11));LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);TextView emoji=text(prefs.getString("custom_lesson_emoji_"+id,"📚"),25,PINK,true);row.addView(emoji,lp(40,40,0,0,9,0));LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,name,15,DARK,true);addText(words,c+" из "+n+" тем пройдено",11,MUTED,false);row.addView(words,new LinearLayout.LayoutParams(0,-2,1f));TextView go=text("›",24,PINK,false);row.addView(go);item.addView(row);ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(Math.max(1,n));bar.setProgress(c);bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));item.addView(bar,lp(-1,5,0,7,0,0));item.setOnClickListener(v->{selectedChapter="CUSTOM:"+id+":"+name;showTopics(selectedChapter);});item.setOnLongClickListener(v->{confirmDeleteCustomLesson(id,name);return true;});root.addView(item,lp(-1,-2,0,0,0,7));}
+        for(String id:lessonOrder){String name=prefs.getString("custom_lesson_name_"+id,"Мой урок");List<String> topics=chapters.get("CUSTOM:"+id+":"+name);if(topics==null)topics=new ArrayList<>();int c=countCompleted("CUSTOM:"+id+":"+name,topics),n=topics.size();LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.VERTICAL);item.setBackgroundColor(android.graphics.Color.TRANSPARENT);item.setPadding(dp(3),dp(8),dp(3),dp(8));LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);TextView emoji=text(prefs.getString("custom_lesson_emoji_"+id,"📚"),25,PINK,true);row.addView(emoji,lp(40,40,0,0,9,0));LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,name,15,DARK,true);addText(words,c+" из "+n+" тем",11,MUTED,false);row.addView(words,new LinearLayout.LayoutParams(0,-2,1f));TextView go=text("›",24,PINK,false);row.addView(go);item.addView(row);ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(Math.max(1,n));bar.setProgress(c);bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));item.addView(bar,lp(-1,5,0,7,0,0));item.setOnClickListener(v->{selectedChapter="CUSTOM:"+id+":"+name;showTopics(selectedChapter);});item.setOnLongClickListener(v->{confirmDeleteCustomLesson(id,name);return true;});root.addView(item,lp(-1,-2,0,0,0,7));}
         TextView add=text("＋  Добавить свой урок",14,PINK,true);add.setGravity(Gravity.CENTER);add.setBackgroundColor(android.graphics.Color.TRANSPARENT);add.setPadding(dp(8),dp(5),dp(8),dp(5));add.setOnClickListener(v->addCustomLesson());root.addView(add,lp(-1,42,0,3,0,9));
         String recent=prefs.getString("recent_topic","");String recentChapter=prefs.getString("recent_chapter","");if(!recent.isEmpty()&&!recentChapter.isEmpty()&&chapters.containsKey(recentChapter)){Button last=button("↗  Продолжить: "+recent,false);last.setOnClickListener(v->{selectedChapter=recentChapter;selectedTopic=recent;showTopic(recent);});root.addView(last,lp(-1,46,0,0,0,3));}
         LinearLayout stats=new LinearLayout(this);stats.setOrientation(LinearLayout.VERTICAL);stats.setPadding(dp(2),dp(7),dp(2),dp(4));stats.setBackgroundColor(android.graphics.Color.TRANSPARENT);addText(stats,"ТВОЙ УЧЕБНЫЙ РИТМ",10,PINK,true);addText(stats,done+" из "+total+" тем завершено",15,DARK,true);addText(stats,"Продолжай в своём темпе — каждый пройденный раздел приближает к цели ♡",10,MUTED,false);ProgressBar allBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);allBar.setMax(Math.max(1,total));allBar.setProgress(done);allBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));allBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF3E5EA));stats.addView(allBar,lp(-1,5,0,5,0,0));root.addView(stats,lp(-1,-2,0,5,0,2));
@@ -2966,6 +2983,11 @@ public class MainActivity extends Activity {
     }
 
     private void handleBackNavigation() {
+        if ("chapters".equals(currentScreen) && lessonsSearchOpen) {
+            lessonsSearchOpen=false;
+            showChapters();
+            return;
+        }
         if (!screenHistory.isEmpty()) {
             String target = screenHistory.remove(screenHistory.size() - 1);
             navigatingBack = true;
