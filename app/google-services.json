@@ -12,7 +12,20 @@
           "package_name": "com.studywithlove.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "947785304879-9egscrdc48f7rlou4g4cgovs4igu97jd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.studywithlove.app",
+            "certificate_hash": "5fc703ea438704ae307983d3c433b43a657497d1"
+          }
+        },
+        {
+          "client_id": "947785304879-r6h9q72qgum0to4r6b60m3465afaffqs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCEGlpNDf2MWKR64kKlOZZIQFKIFHTTWhk"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "947785304879-r6h9q72qgum0to4r6b60m3465afaffqs.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
