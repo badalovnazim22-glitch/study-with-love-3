@@ -51,7 +51,7 @@ import java.util.TimeZone;
 public class MainActivity extends Activity {
     public static volatile boolean activityVisible=false;
     private static volatile MainActivity foregroundActivity;
-    private int BG = 0xFFFFF9F7, PINK = 0xFFC97891, PALE = 0xFFFCEEF2, DARK = 0xFF3F3439, MUTED = 0xFF75666D;
+    private int BG = 0xFFF8F7FC, PINK = 0xFF8070A8, PALE = 0xFFF0EDFA, DARK = 0xFF292638, MUTED = 0xFF858096;
     private int progressMonthOffset = 0;
     private LinearLayout progressCalendarHost;
     private LinearLayout root;
@@ -348,10 +348,10 @@ public class MainActivity extends Activity {
     
     private void applyWelcomeTheme(String theme) {
         if ("night".equals(theme)) { BG=0xFF17151D; PINK=0xFFE39AB5; PALE=0xFF302735; DARK=0xFFF4EAF0; MUTED=0xFFC8BDC8; }
-        else if ("lavender".equals(theme)) { BG=0xFFF8F6FF; PINK=0xFF8979B8; PALE=0xFFF0ECFA; DARK=0xFF393448; MUTED=0xFF6F6684; }
+        else if ("lavender".equals(theme)) { BG=0xFFF8F7FC; PINK=0xFF8070A8; PALE=0xFFF0EDFA; DARK=0xFF292638; MUTED=0xFF858096; }
         else if ("mint".equals(theme)) { BG=0xFFF5FAF7; PINK=0xFF659B86; PALE=0xFFEAF5EF; DARK=0xFF34443D; MUTED=0xFF60786B; }
         else if ("white".equals(theme)) { BG=0xFFF7F8FA; PINK=0xFF65758B; PALE=0xFFE9EDF2; DARK=0xFF303844; MUTED=0xFF65717F; }
-        else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF75666D; }
+        else { BG=0xFFF8F7FC; PINK=0xFF8070A8; PALE=0xFFF0EDFA; DARK=0xFF292638; MUTED=0xFF858096; }
         if (getWindow()!=null) { getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG); }
     }
 
@@ -565,18 +565,42 @@ public class MainActivity extends Activity {
     }
 
     private View bottomNavigation() {
-        LinearLayout bar=new LinearLayout(this);bar.setOrientation(LinearLayout.HORIZONTAL);bar.setGravity(Gravity.CENTER);bar.setPadding(dp(5),dp(5),dp(5),dp(5));
-        GradientDrawable navBg=new GradientDrawable();navBg.setColor(isDarkAppearance()?0xFF201D25:0xFFFDFEFF);navBg.setCornerRadius(0);navBg.setStroke(dp(1),isDarkAppearance()?0xFF39333F:0xFFE8EEF3);bar.setBackground(navBg);
-        String[] icons={"⌂","▦","▤","▣","♡","◷"};String[] labels={"Главная","Уроки","Прогресс","Экзамен","Дневник","Таймер"};
+        LinearLayout bar=new LinearLayout(this);
+        bar.setOrientation(LinearLayout.HORIZONTAL);
+        bar.setGravity(Gravity.CENTER);
+        bar.setPadding(dp(8),dp(7),dp(8),dp(5));
+        GradientDrawable navBg=new GradientDrawable();
+        navBg.setColor(isDarkAppearance()?0xFF211E29:0xFFFFFFFF);
+        navBg.setCornerRadius(0);
+        navBg.setStroke(dp(1),isDarkAppearance()?0xFF393442:0xFFECEAF2);
+        bar.setBackground(navBg);
+        String[] labels={"Главная","Уроки","Прогресс","Экзамен","Дневник","Таймер"};
         String active=currentScreen.equals("home")?"home":(currentScreen.equals("chapters")||currentScreen.equals("math_chapters")||currentScreen.equals("topics")||currentScreen.equals("topic"))?"math":currentScreen.equals("progress")||currentScreen.equals("flower")||currentScreen.equals("achievements")||currentScreen.equals("stats")?"progress":currentScreen.equals("exam")?"exam":currentScreen.equals("diary")||currentScreen.equals("letters")?"diary":currentScreen.equals("pomodoro")?"timer":"";
         String[] keys={"home","math","progress","exam","diary","timer"};
-        for(int i=0;i<keys.length;i++){final String key=keys[i];boolean selected=key.equals(active);LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.VERTICAL);item.setGravity(Gravity.CENTER);item.setPadding(dp(1),dp(3),dp(1),dp(2));item.setBackground(selected?shape(isDarkAppearance()?0xFF34303D:0xFFEAF2F9,12,0):shape(0x00FFFFFF,12,0));
-            TextView icon=textFixed(icons[i],21,selected?0xFF28699F:MUTED,true);icon.setGravity(Gravity.CENTER);icon.setIncludeFontPadding(false);item.addView(icon,lp(-1,29,0,0,0,2));
-            TextView label=textFixed(labels[i],9,selected?0xFF28699F:MUTED,selected);label.setGravity(Gravity.CENTER);label.setMaxLines(1);label.setSingleLine(true);label.setIncludeFontPadding(false);item.addView(label,lp(-1,19,0,0,0,0));
-            LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-1,1f);p.setMargins(dp(1),0,dp(1),0);bar.addView(item,p);
+        for(int i=0;i<keys.length;i++){
+            final String key=keys[i];
+            boolean selected=key.equals(active);
+            LinearLayout item=new LinearLayout(this);
+            item.setOrientation(LinearLayout.VERTICAL);
+            item.setGravity(Gravity.CENTER);
+            item.setPadding(dp(1),dp(3),dp(1),dp(2));
+            item.setBackground(selected?shape(isDarkAppearance()?0xFF383244:0xFFF0EDFA,18,0):shape(0x00FFFFFF,18,0));
+            NavigationIconView icon=new NavigationIconView(this,i,selected?PINK:MUTED);
+            item.addView(icon,new LinearLayout.LayoutParams(dp(27),dp(27)));
+            TextView label=textFixed(labels[i],9,selected?PINK:MUTED,selected);
+            label.setGravity(Gravity.CENTER);
+            label.setMaxLines(1);
+            label.setSingleLine(true);
+            label.setIncludeFontPadding(false);
+            item.addView(label,lp(-1,dp(19),0,dp(2),0,0));
+            LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-1,1f);
+            p.setMargins(dp(2),0,dp(2),0);
+            bar.addView(item,p);
             item.setOnClickListener(v->{if(key.equals("home"))showHome();else if(key.equals("math"))showChapters();else if(key.equals("progress"))showProgress();else if(key.equals("exam"))showExam();else if(key.equals("diary"))showDiary();else if(key.equals("timer"))showPomodoro();});
-        }return bar;
+        }
+        return bar;
     }
+
 
     @android.annotation.SuppressLint("WrongConstant")
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){super.onActivityResult(requestCode,resultCode,data);if(requestCode==PICK_TOPIC_CAMERA&&resultCode==RESULT_OK&&data!=null&&data.getExtras()!=null){try{android.graphics.Bitmap photo=(android.graphics.Bitmap)data.getExtras().get("data");if(photo!=null){String suffix=topicStorageSuffix(selectedChapter,selectedTopic);java.io.File file=new java.io.File(getFilesDir(),"topic_photo_"+Math.abs(suffix.hashCode())+".jpg");java.io.FileOutputStream out=new java.io.FileOutputStream(file);photo.compress(android.graphics.Bitmap.CompressFormat.JPEG,90,out);out.close();prefs.edit().putString("topic_photo_file_"+suffix,file.getAbsolutePath()).remove("topic_photo_"+suffix).apply();showTopic(selectedTopic);}}catch(Exception e){showAppMessage("Не удалось сохранить фото");}return;}if(resultCode!=RESULT_OK||data==null||data.getData()==null)return;android.net.Uri uri=data.getData();if(requestCode==WEEKLY_BACKUP_FOLDER){try{getContentResolver().takePersistableUriPermission(uri,data.getFlags()&(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION));prefs.edit().putString("weekly_backup_tree_uri",uri.toString()).apply();WeeklyBackupReceiver.schedule(this);showSettings();showAppMessage("Папка резервных копий сохранена ♡");}catch(Exception e){showAppMessage("Не удалось сохранить доступ к папке");}return;}if(requestCode==PICK_BACKGROUND){try{getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);}catch(Exception ignored){}prefs.edit().putString("custom_background_uri",uri.toString()).apply();showSettings();showAppMessage("Фото установлено как фон ♡");}else if(requestCode==PICK_TOPIC_PHOTO){try{getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);}catch(Exception ignored){}prefs.edit().putString("topic_photo_"+topicStorageSuffix(selectedChapter,selectedTopic),uri.toString()).apply();showTopic(selectedTopic);}else if(requestCode==WEEKLY_IMAGE_EXPORT){try{java.io.OutputStream out=getContentResolver().openOutputStream(uri,"wt");if(out==null||pendingWeeklyBitmap==null)throw new Exception();pendingWeeklyBitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,out);out.close();pendingWeeklyBitmap.recycle();pendingWeeklyBitmap=null;showAppMessage("Итоги недели сохранены ♡");}catch(Exception e){showAppMessage("Не удалось сохранить изображение");}}else if(requestCode==PDF_REPORT_EXPORT){try{writeProgressPdf(uri);showAppMessage("PDF-отчёт сохранён ♡");}catch(Exception e){showAppMessage("Не удалось создать PDF-отчёт");}}else if(requestCode==DIARY_EXPORT){try{java.io.OutputStream out=getContentResolver().openOutputStream(uri,"wt");if(out==null)throw new Exception();out.write(createDiaryExportText().getBytes("UTF-8"));out.close();showAppMessage("Дневник экспортирован в TXT ♡");}catch(Exception e){showAppMessage("Не удалось экспортировать дневник");}}else if(requestCode==DIARY_PDF_EXPORT){try{writeDiaryPdf(uri);showAppMessage("Дневник экспортирован в PDF ♡");}catch(Exception e){showAppMessage("Не удалось создать PDF дневника");}}else if(requestCode==BACKUP_EXPORT){try{java.io.OutputStream out=getContentResolver().openOutputStream(uri,"wt");if(out==null)throw new Exception();out.write(createBackupJson().getBytes("UTF-8"));out.close();showAppMessage("Резервная копия сохранена ♡");}catch(Exception e){showAppMessage("Не удалось сохранить копию");}}else if(requestCode==BACKUP_IMPORT){try{java.io.InputStream in=getContentResolver().openInputStream(uri);java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();byte[] buffer=new byte[4096];int n;while((n=in.read(buffer))>0)bytes.write(buffer,0,n);in.close();restoreBackupJson(new String(bytes.toByteArray(),"UTF-8"));showAppMessage("Данные восстановлены ♡");loadChapters();showHome();}catch(Exception e){showAppMessage("Файл копии не удалось прочитать");}}}
@@ -822,7 +846,7 @@ public class MainActivity extends Activity {
             else{BG=0xFFFFF9F7;PINK=0xFFC97891;PALE=0xFFFCEEF2;DARK=0xFF3F3439;MUTED=0xFF75666D;}
         }
         else if ("night".equals(theme)) { BG=0xFF17151D; PINK=0xFFE39AB5; PALE=0xFF302735; DARK=0xFFF4EAF0; MUTED=0xFFC8BDC8; }
-        else if ("lavender".equals(theme)) { BG=0xFFF8F6FF; PINK=0xFF8979B8; PALE=0xFFF0ECFA; DARK=0xFF393448; MUTED=0xFF6F6684; }
+        else if ("lavender".equals(theme)) { BG=0xFFF8F7FC; PINK=0xFF8070A8; PALE=0xFFF0EDFA; DARK=0xFF292638; MUTED=0xFF858096; }
         else if ("mint".equals(theme)) { BG=0xFFF5FAF7; PINK=0xFF659B86; PALE=0xFFEAF5EF; DARK=0xFF34443D; MUTED=0xFF60786B; }
         else if ("white".equals(theme)) { BG=0xFFF7F8FA; PINK=0xFF65758B; PALE=0xFFE9EDF2; DARK=0xFF303844; MUTED=0xFF65717F; }
         else if ("brown".equals(theme)) { BG=0xFFF7F1EA; PINK=0xFF8B6046; PALE=0xFFEDE0D2; DARK=0xFF49382E; MUTED=0xFF796657; }
@@ -832,7 +856,7 @@ public class MainActivity extends Activity {
         else if ("peach".equals(theme)) { BG=0xFFFFF5EF; PINK=0xFFD88968; PALE=0xFFFBE5D9; DARK=0xFF513D34; MUTED=0xFF856C60; }
         else if ("red".equals(theme)) { BG=0xFFFFF5F4; PINK=0xFFB32635; PALE=0xFFF8E2E3; DARK=0xFF4B2026; MUTED=0xFF81595E; }
         else if ("lv".equals(theme)) { BG=0xFFF4E8D5; PINK=0xFF76502F; PALE=0xFFE7D2B3; DARK=0xFF3B281C; MUTED=0xFF76604A; }
-        else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF75666D; }
+        else { BG=0xFFF8F7FC; PINK=0xFF8070A8; PALE=0xFFF0EDFA; DARK=0xFF292638; MUTED=0xFF858096; }
         applyAccentOverlay(theme);
         if (prefs != null && prefs.contains("app_accent_color")) PINK = prefs.getInt("app_accent_color", PINK);
         if (getWindow() != null) { getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(BG)); getWindow().getDecorView().setBackgroundColor(BG); if(Build.VERSION.SDK_INT>=30){getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);getWindow().setDecorFitsSystemWindows(false);if(Build.VERSION.SDK_INT>=29){getWindow().setStatusBarContrastEnforced(false);getWindow().setNavigationBarContrastEnforced(false);}}else{getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(BG);} updateSystemBarIcons(); }
@@ -3054,7 +3078,7 @@ public class MainActivity extends Activity {
                 c==0xFF81595E||c==0xFF76604A||c==0xFF795B1E;
     }
     private boolean isDarkAppearance(){String t=prefs==null?"pink":prefs.getString("app_theme","pink");return "night".equals(t)||"luxury".equals(t)||("system".equals(t)&&(getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES);}
-    private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(17), dp(16), dp(17), dp(16)); boolean night = isDarkAppearance(); String theme=prefs==null?"pink":prefs.getString("app_theme","pink");int surface=night?("luxury".equals(theme)?0xFF30251F:0xFF25212B):0xFFFFFFFF;int border=night?("luxury".equals(theme)?0xFF78613D:0xFF403541):0xFFF3E9EC;android.graphics.drawable.Drawable bg=shape(surface,24,border);if(Build.VERSION.SDK_INT>=21)l.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf((0x22000000 | (PINK & 0x00FFFFFF))),bg,shape(0xFFFFFFFF,24,0)));else l.setBackground(bg);l.setElevation(dp(2)); return l; }
+    private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(20), dp(18), dp(20), dp(18)); boolean night = isDarkAppearance(); String theme=prefs==null?"pink":prefs.getString("app_theme","pink");int surface=night?("luxury".equals(theme)?0xFF30251F:0xFF25212B):0xFFFFFFFF;int border=night?("luxury".equals(theme)?0xFF78613D:0xFF403541):0xFFF3E9EC;android.graphics.drawable.Drawable bg=shape(surface,28,border);if(Build.VERSION.SDK_INT>=21)l.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf((0x22000000 | (PINK & 0x00FFFFFF))),bg,shape(0xFFFFFFFF,24,0)));else l.setBackground(bg);l.setElevation(dp(0)); return l; }
     private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, size, color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
     private TextView text(String value, int size, int color, boolean bold) {
         if(isThemeAccentColor(color))color=PINK;
@@ -3141,14 +3165,14 @@ public class MainActivity extends Activity {
         if(primary){
             GradientDrawable gradient=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
                     new int[]{adjustColor(accent,0.92f),accentDeep});
-            gradient.setCornerRadius(dp(13));
-            gradient.setStroke(dp(1),accentDeep);
+            gradient.setCornerRadius(dp(18));
+            gradient.setStroke(dp(0),accentDeep);
             bg=gradient;
         }else{
             GradientDrawable inactive=new GradientDrawable();
             inactive.setColor(isDarkAppearance()?blendColors(PALE,BG,0.22f):0xBFFFFFFF);
-            inactive.setCornerRadius(dp(13));
-            inactive.setStroke(dp(1),outline);
+            inactive.setCornerRadius(dp(18));
+            inactive.setStroke(dp(1),isDarkAppearance()?0xFF4B4558:0xFFE7E3F0);
             bg=inactive;
         }
         if(Build.VERSION.SDK_INT>=21){
