@@ -1091,7 +1091,8 @@ public class MainActivity extends Activity {
         continueCard.setBackground(shape(0xFFF8E8EE, 24, 0));
         TextView progressCaption=text("ТВОЙ ПРОГРЕСС",13,PINK,true);
         continueCard.addView(progressCaption,lp(-1,-2,0,0,0,2));
-        TextView encouragement=text("Ты справляешься.\nПродолжай в своём темпе.",21,DARK,true);\n        encouragement.setLineSpacing(dp(2),1.02f);
+        TextView encouragement=text("Ты справляешься.\nПродолжай в своём темпе.",21,DARK,true);
+        encouragement.setLineSpacing(dp(2),1.02f);
         continueCard.addView(encouragement,lp(-1,-2,0,0,0,2));
         TextView praise=text("✧  Ты отлично справляешься! ❤️",14,PINK,true);
         continueCard.addView(praise,lp(-1,-2,0,0,0,4));
