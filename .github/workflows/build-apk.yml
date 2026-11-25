@@ -39,6 +39,15 @@ jobs:
           echo "::error::Permanent APK signing is required for safe in-app updates."
           exit 1
 
+      - name: Print signing certificate SHA-1
+        shell: bash
+        run: |
+          keytool -list -v \
+            -keystore "$ANDROID_KEYSTORE_PATH" \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+            -alias "$ANDROID_KEY_ALIAS" \
+            | grep -m1 'SHA1:'
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
