@@ -1,6 +1,6 @@
 # Study with Love
 
-**Версия приложения:** 4.64 (versionCode 73)  
+**Версия приложения:** 4.65 (versionCode 74)  
 **Пакет:** `com.studywithlove.app`  
 **Android:** minSdk 23, targetSdk 35
 
