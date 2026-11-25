@@ -751,11 +751,11 @@ public class MainActivity extends Activity {
         android.graphics.drawable.GradientDrawable unchecked=new android.graphics.drawable.GradientDrawable();
         unchecked.setShape(android.graphics.drawable.GradientDrawable.OVAL);
         unchecked.setColor(android.graphics.Color.TRANSPARENT);
-        unchecked.setStroke(dp(1.6f),0xFFB9AAB1);
+        unchecked.setStroke(dp(2),0xFFB9AAB1);
         android.graphics.drawable.GradientDrawable checked=new android.graphics.drawable.GradientDrawable();
         checked.setShape(android.graphics.drawable.GradientDrawable.OVAL);
         checked.setColor(PINK);
-        checked.setStroke(dp(1.6f),PINK);
+        checked.setStroke(dp(2),PINK);
         android.graphics.drawable.Drawable mark=android.graphics.drawable.Drawable.createFromPath("");
         android.graphics.drawable.StateListDrawable states=new android.graphics.drawable.StateListDrawable();
         states.addState(new int[]{android.R.attr.state_checked},checked);
