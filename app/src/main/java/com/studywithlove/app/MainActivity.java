@@ -640,12 +640,10 @@ public class MainActivity extends Activity {
         for(int i=0;i<keys.length;i++){
             final String key=keys[i];
             boolean selected=key.equals(active);
-            LinearLayout item=new LinearLayout(this);
-            item.setOrientation(LinearLayout.VERTICAL);
-            item.setGravity(Gravity.CENTER);
+            android.widget.FrameLayout item=new android.widget.FrameLayout(this);
             item.setBackgroundColor(android.graphics.Color.TRANSPARENT);
 
-            // Компактная плашка выделяет только иконку, а не растягивается на всю высоту панели.
+            // Иконка центрирована по вертикали панели; подпись закреплена у нижнего края.
             android.widget.FrameLayout iconSlot=new android.widget.FrameLayout(this);
             iconSlot.setBackground(selected
                 ?shape(isDarkAppearance()?0xFF49313D:0xFFFCE8EE,18,0)
@@ -654,14 +652,20 @@ public class MainActivity extends Activity {
             android.widget.FrameLayout.LayoutParams iconParams=
                 new android.widget.FrameLayout.LayoutParams(dp(21),dp(21),Gravity.CENTER);
             iconSlot.addView(icon,iconParams);
-            item.addView(iconSlot,new LinearLayout.LayoutParams(dp(36),dp(25)));
+            android.widget.FrameLayout.LayoutParams slotParams=
+                new android.widget.FrameLayout.LayoutParams(dp(36),dp(28),Gravity.TOP|Gravity.CENTER_HORIZONTAL);
+            slotParams.topMargin=dp(13);
+            item.addView(iconSlot,slotParams);
 
             TextView label=textFixed(labels[i],10,selected?PINK:MUTED,selected);
             label.setGravity(Gravity.CENTER);
             label.setMaxLines(1);
             label.setSingleLine(true);
             label.setIncludeFontPadding(false);
-            item.addView(label,lp(-1,dp(16),0,dp(2),0,0));
+            android.widget.FrameLayout.LayoutParams labelParams=
+                new android.widget.FrameLayout.LayoutParams(-1,dp(14),Gravity.BOTTOM);
+            labelParams.bottomMargin=dp(1);
+            item.addView(label,labelParams);
 
             LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-1,1f);
             p.setMargins(dp(1),0,dp(1),0);
