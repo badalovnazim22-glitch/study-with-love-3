@@ -1459,27 +1459,97 @@ public class MainActivity extends Activity {
 
     private String dailyMotivation() {String last=prefs.getString("last_study_date","");if(!last.isEmpty()&&!todayKey().equals(last)&&!isYesterday(last))return "♡  Давно не занимались? Ничего страшного — начни с 5 минут. Ты справишься.";return "✧  "+messages[Math.floorMod(todayKey().hashCode(),messages.length)]; }
      private String word(int n) { int x=n%10, y=n%100; if(x==1 && y!=11)return "урок"; if(x>=2&&x<=4&&(y<12||y>14))return "урока"; return "уроков"; }
+    private boolean viewContainsText(View view,String query){
+        if(view==null)return false;
+        if(view instanceof TextView){
+            CharSequence value=((TextView)view).getText();
+            if(value!=null&&value.toString().toLowerCase(Locale.ROOT).contains(query))return true;
+        }
+        if(view instanceof android.view.ViewGroup){
+            android.view.ViewGroup group=(android.view.ViewGroup)view;
+            for(int i=0;i<group.getChildCount();i++)if(viewContainsText(group.getChildAt(i),query))return true;
+        }
+        return false;
+    }
+
     private void showChapters() {
         currentScreen = "chapters";
         base("", "");
-        // Actions stay at the upper-right edge; section title sits directly below.
+        LinearLayout lessonTop=new LinearLayout(this);
+        lessonTop.setGravity(Gravity.CENTER_VERTICAL);
+        TextView pageTitle=text("Уроки",25,DARK,true);
+        pageTitle.setGravity(Gravity.CENTER_VERTICAL);
+        pageTitle.setSingleLine(true);
+        pageTitle.setIncludeFontPadding(false);
+        lessonTop.addView(pageTitle,new LinearLayout.LayoutParams(0,dp(44),1f));
         LinearLayout lessonActions=new LinearLayout(this);
         lessonActions.setGravity(Gravity.CENTER_VERTICAL|Gravity.RIGHT);
         TextView search=text("⌕",27,PINK,true);
         search.setGravity(Gravity.CENTER);
         search.setBackgroundColor(android.graphics.Color.TRANSPARENT);
         search.setContentDescription(translate("Поиск уроков и тем"));
-        lessonActions.addView(search,lp(40,40,0,0,5,0));
-        search.setOnClickListener(v->showSearchDialog());
+        lessonActions.addView(search,lp(40,44,0,0,5,0));
         TextView orderButton=text("⋮",24,DARK,true);
         orderButton.setGravity(Gravity.CENTER);
         orderButton.setBackgroundColor(android.graphics.Color.TRANSPARENT);
         orderButton.setContentDescription(translate("Сортировка предметов"));
-        lessonActions.addView(orderButton,lp(38,40,0,0,0,0));
-        root.addView(lessonActions,lp(-1,40,0,0,0,1));
+        lessonActions.addView(orderButton,lp(38,44,0,0,0,0));
+        lessonTop.addView(lessonActions,lp(-2,44,0,0,0,0));
+        root.addView(lessonTop,lp(-1,48,0,0,0,2));
+
+        LinearLayout inlineSearch=new LinearLayout(this);
+        inlineSearch.setGravity(Gravity.CENTER_VERTICAL);
+        inlineSearch.setPadding(dp(12),0,dp(8),0);
+        inlineSearch.setBackground(shape(0xFFFFF5F7,15,0xFFF0DCE4));
+        TextView inlineSearchIcon=text("⌕",22,PINK,true);
+        inlineSearch.addView(inlineSearchIcon,lp(28,44,0,0,7,0));
+        EditText inlineQuery=new EditText(this);
+        inlineQuery.setSingleLine(true);
+        inlineQuery.setTextSize(14);
+        inlineQuery.setTextColor(DARK);
+        inlineQuery.setHintTextColor(MUTED);
+        inlineQuery.setHint("Найти предмет или тему");
+        inlineQuery.setBackgroundColor(0x00000000);
+        inlineQuery.setPadding(0,0,0,0);
+        inlineSearch.addView(inlineQuery,new LinearLayout.LayoutParams(0,dp(44),1f));
+        TextView clearSearch=text("×",22,MUTED,true);
+        clearSearch.setGravity(Gravity.CENTER);
+        clearSearch.setVisibility(View.GONE);
+        inlineSearch.addView(clearSearch,lp(38,44,0,0,0,0));
+        clearSearch.setOnClickListener(v->inlineQuery.setText(""));
+        inlineSearch.setVisibility(View.GONE);
+        root.addView(inlineSearch,lp(-1,48,0,0,0,5));
         TextView orderLabel=text("МОИ ПРЕДМЕТЫ",12,PINK,true);
         orderLabel.setGravity(Gravity.CENTER_VERTICAL);
         root.addView(orderLabel,lp(-1,27,0,0,0,5));
+        search.setOnClickListener(v->{
+            if(inlineSearch.getVisibility()!=View.VISIBLE){
+                inlineSearch.setVisibility(View.VISIBLE);
+                inlineQuery.requestFocus();
+                inlineQuery.post(()->{
+                    android.view.inputmethod.InputMethodManager imm=(android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+                    if(imm!=null)imm.showSoftInput(inlineQuery,android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+                });
+            }else{
+                inlineSearch.setVisibility(View.GONE);
+                inlineQuery.setText("");
+                android.view.inputmethod.InputMethodManager imm=(android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+                if(imm!=null)imm.hideSoftInputFromWindow(inlineQuery.getWindowToken(),0);
+            }
+        });
+        inlineQuery.addTextChangedListener(new android.text.TextWatcher(){
+            public void beforeTextChanged(CharSequence s,int st,int count,int after){}
+            public void onTextChanged(CharSequence s,int st,int before,int count){
+                String q=s.toString().trim().toLowerCase(Locale.ROOT);
+                clearSearch.setVisibility(q.isEmpty()?View.GONE:View.VISIBLE);
+                for(int i=0;i<root.getChildCount();i++){
+                    View child=root.getChildAt(i);
+                    if(child==lessonTop||child==inlineSearch||child==orderLabel)continue;
+                    child.setVisibility(q.isEmpty()||viewContainsText(child,q)?View.VISIBLE:View.GONE);
+                }
+            }
+            public void afterTextChanged(android.text.Editable e){}
+        });
         orderButton.setOnClickListener(v->{android.widget.PopupMenu menu=new android.widget.PopupMenu(this,orderButton);menu.getMenu().add(0,1,0,"По умолчанию");menu.getMenu().add(0,2,1,"По названию А—Я");menu.getMenu().add(0,3,2,"Сначала новые");menu.getMenu().add(0,4,3,"По прогрессу");menu.setOnMenuItemClickListener(mi->{prefs.edit().putString("lesson_sort",mi.getItemId()==2?"alpha":mi.getItemId()==3?"new":mi.getItemId()==4?"progress":"default").apply();showChapters();return true;});menu.show();});
         LinearLayout weak=new LinearLayout(this);weak.setGravity(Gravity.CENTER);weak.setPadding(dp(4),dp(2),dp(4),dp(2));weak.setBackgroundColor(android.graphics.Color.TRANSPARENT);TextView weakText=text("🧠  Мои слабые места · "+countMistakes(),13,DARK,true);weak.addView(weakText);weak.setOnClickListener(v->showWeaknessTrainer());root.addView(weak,lp(-1,34,0,0,0,7));
         List<String> mathTopics=chapters.get("1️⃣ Натуральные числа и действия с ними");int total=0,done=0;for(List<String> topics:chapters.values()){total+=topics.size();done+=countCompleted(topics);}
