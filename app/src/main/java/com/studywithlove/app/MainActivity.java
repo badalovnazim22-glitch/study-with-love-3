@@ -940,7 +940,10 @@ public class MainActivity extends Activity {
         TextView versionLabel=text("Версия приложения  ·  "+installedVersion,13,MUTED,false);
         versionLabel.setGravity(Gravity.CENTER_VERTICAL);
         updates.addView(versionLabel,lp(-1,34,0,5,0,2));
-        Button checkUpdates=button("Проверить обновления",true);
+        Button checkUpdates=button("Проверить обновления",false);
+        checkUpdates.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        checkUpdates.setTextColor(DARK);
+        checkUpdates.setElevation(0f);
         checkUpdates.setOnClickListener(v->AppUpdater.checkAndOffer(this));
         updates.addView(checkUpdates,lp(-1,48,0,7,0,0));
         root.addView(updates,lp(-1,-2,0,0,0,4));
@@ -950,8 +953,20 @@ public class MainActivity extends Activity {
             Object tag = child.getTag();
             if (tag instanceof String) child.setVisibility(sectionPage && activeSection.equals(tag) ? View.VISIBLE : View.GONE);
         }
+        // Настройки: единый плоский стиль без теней у карточек, плиток и вложенных элементов.
+        removeSettingsShadows(root);
 
         backHome();
+    }
+
+    private void removeSettingsShadows(View view) {
+        if(view==null)return;
+        view.setElevation(0f);
+        view.setTranslationZ(0f);
+        if(view instanceof android.view.ViewGroup){
+            android.view.ViewGroup group=(android.view.ViewGroup)view;
+            for(int i=0;i<group.getChildCount();i++)removeSettingsShadows(group.getChildAt(i));
+        }
     }
 
     private void updateSystemBarIcons() {
