@@ -1516,11 +1516,11 @@ public class MainActivity extends Activity {
         lessonTop.addView(pageTitle,new LinearLayout.LayoutParams(0,dp(44),1f));
         LinearLayout lessonActions=new LinearLayout(this);lessonActions.setGravity(Gravity.CENTER_VERTICAL|Gravity.RIGHT);
         HeaderActionIconView weaknessAction=new HeaderActionIconView(this,0,PINK);
-        lessonActions.addView(weaknessAction,lp(38,44,0,0,3,0));weaknessAction.setOnClickListener(v->showWeaknessTrainer());
+        lessonActions.addView(weaknessAction,lp(32,36,0,0,2,0));weaknessAction.setOnClickListener(v->showWeaknessTrainer());
         HeaderActionIconView search=new HeaderActionIconView(this,1,PINK);
-        lessonActions.addView(search,lp(38,44,0,0,3,0));
+        lessonActions.addView(search,lp(32,36,0,0,2,0));
         HeaderActionIconView orderButton=new HeaderActionIconView(this,2,PINK);
-        lessonActions.addView(orderButton,lp(34,44,0,0,0,0));lessonTop.addView(lessonActions,lp(-2,44,0,0,0,0));
+        lessonActions.addView(orderButton,lp(30,36,0,0,0,0));lessonTop.addView(lessonActions,lp(-2,40,0,0,0,0));
         root.addView(lessonTop,lp(-1,46,0,0,0,1));
 
         LinearLayout inlineSearch=new LinearLayout(this);
@@ -3052,9 +3052,12 @@ public class MainActivity extends Activity {
         if ("exam_topics".equals(currentScreen)) { showExam(); return; }
         if ("chapters".equals(currentScreen) && lessonsSearchOpen) {
             lessonsSearchOpen=false;
+            android.view.inputmethod.InputMethodManager imm=(android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+            if(imm!=null)imm.hideSoftInputFromWindow(root.getWindowToken(),0);
             showChapters();
             return;
         }
+        if ("exam_goal_form".equals(currentScreen)) { showExam(); return; }
         if (!screenHistory.isEmpty()) {
             String target = screenHistory.remove(screenHistory.size() - 1);
             navigatingBack = true;
