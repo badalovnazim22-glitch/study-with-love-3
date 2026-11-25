@@ -547,7 +547,7 @@ public class MainActivity extends Activity {
         contentFrame.addView(root, contentParams);
         scroll.addView(contentFrame, new android.widget.ScrollView.LayoutParams(-1, -2));
         shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
-        if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 84, 0, 0, 0, 0));
+        if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 68, 0, 0, 0, 0));
         // Нижняя навигация закреплена в shell и не зависит от прокрутки контента.
         final View navigationBar=shell.getChildCount()>1?shell.getChildAt(1):null;
         if(navigationBar!=null){navigationBar.setTranslationY(0f);navigationBar.setAlpha(1f);}
@@ -627,7 +627,7 @@ public class MainActivity extends Activity {
         LinearLayout bar=new LinearLayout(this);
         bar.setOrientation(LinearLayout.HORIZONTAL);
         bar.setGravity(Gravity.CENTER);
-        bar.setPadding(dp(6),dp(5),dp(6),dp(5));
+        bar.setPadding(dp(5),dp(3),dp(5),dp(3));
         GradientDrawable navBg=new GradientDrawable();
         navBg.setColor(isDarkAppearance()?0xFF211E29:0xFFFFFFFF);
         navBg.setCornerRadius(0);
@@ -651,16 +651,16 @@ public class MainActivity extends Activity {
                 :shape(0x00FFFFFF,18,0));
             NavigationIconView icon=new NavigationIconView(this,i,selected?PINK:MUTED);
             android.widget.FrameLayout.LayoutParams iconParams=
-                new android.widget.FrameLayout.LayoutParams(dp(24),dp(24),Gravity.CENTER);
+                new android.widget.FrameLayout.LayoutParams(dp(21),dp(21),Gravity.CENTER);
             iconSlot.addView(icon,iconParams);
-            item.addView(iconSlot,new LinearLayout.LayoutParams(dp(46),dp(36)));
+            item.addView(iconSlot,new LinearLayout.LayoutParams(dp(40),dp(27)));
 
-            TextView label=textFixed(labels[i],10,selected?PINK:MUTED,selected);
+            TextView label=textFixed(labels[i],9,selected?PINK:MUTED,selected);
             label.setGravity(Gravity.CENTER);
             label.setMaxLines(1);
             label.setSingleLine(true);
             label.setIncludeFontPadding(false);
-            item.addView(label,lp(-1,dp(17),0,dp(3),0,0));
+            item.addView(label,lp(-1,dp(14),0,dp(1),0,0));
 
             LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-2,1f);
             p.setMargins(dp(1),0,dp(1),0);
@@ -689,7 +689,22 @@ public class MainActivity extends Activity {
         LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(dp(20),dp(8),dp(20),dp(4));EditText first=new EditText(this);first.setSingleLine(true);first.setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);first.setHint("Новый PIN · 4–8 цифр");body.addView(first,lp(-1,52,0,0,0,8));EditText second=new EditText(this);second.setSingleLine(true);second.setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);second.setHint("Повтори PIN");body.addView(second,lp(-1,52,0,0,0,8));android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("Защита приложения").setView(body).setNegativeButton("Отмена",null).setNeutralButton(prefs.getString("app_pin_hash","").isEmpty()?"":"Отключить PIN",(d,w)->prefs.edit().remove("app_pin_hash").remove("app_pin_salt").apply()).setPositiveButton("Сохранить PIN",null).create();dialog.setOnShowListener(v->{if(prefs.getString("app_pin_hash","").isEmpty())dialog.getButton(-3).setVisibility(View.GONE);dialog.getButton(-1).setOnClickListener(q->{String a=first.getText().toString(),b=second.getText().toString();if(!a.matches("[0-9]{4,8}")){first.setError("Нужно от 4 до 8 цифр");return;}if(!a.equals(b)){second.setError("PIN-коды не совпадают");return;}byte[] bytes=new byte[16];new java.security.SecureRandom().nextBytes(bytes);String salt=android.util.Base64.encodeToString(bytes,android.util.Base64.NO_WRAP);prefs.edit().putString("app_pin_salt",salt).putString("app_pin_hash",pinHash(a,salt)).apply();dialog.dismiss();showAppMessage("PIN-код установлен");});});dialog.show();
     }
     private void showPinLockDialog(){if(pinDialogVisible||prefs==null||prefs.getString("app_pin_hash","").isEmpty())return;pinDialogVisible=true;LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(dp(20),dp(8),dp(20),dp(4));EditText pin=new EditText(this);pin.setSingleLine(true);pin.setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);pin.setHint("Введи PIN-код");body.addView(pin,lp(-1,52,0,0,0,0));android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("Приложение защищено").setMessage("Введи свой PIN, чтобы продолжить.").setView(body).setCancelable(false).setPositiveButton("Разблокировать",null).create();dialog.setOnShowListener(v->dialog.getButton(-1).setOnClickListener(q->{String salt=prefs.getString("app_pin_salt","");if(pinHash(pin.getText().toString(),salt).equals(prefs.getString("app_pin_hash",""))){pinUnlocked=true;pinDialogVisible=false;dialog.dismiss();}else{pin.setError("Неверный PIN");pin.setText("");}}));dialog.setOnCancelListener(d->pinDialogVisible=false);dialog.show();}
-    private CheckBox addSettingsToggle(LinearLayout host,String label,String key,boolean defaultValue,Runnable afterChange){CheckBox box=new CheckBox(this);box.setText(translate(label));box.setTextSize(14);box.setTextColor(DARK);box.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));box.setChecked(prefs.getBoolean(key,defaultValue));host.addView(box,lp(-1,46,0,1,0,1));box.setOnCheckedChangeListener((button,checked)->{prefs.edit().putBoolean(key,checked).apply();if(afterChange!=null)afterChange.run();});return box;}
+    private CheckBox addSettingsToggle(LinearLayout host,String label,String key,boolean defaultValue,Runnable afterChange){
+        CheckBox box=new CheckBox(this);
+        box.setText(translate(label));
+        box.setTextSize(14);
+        box.setTextColor(DARK);
+        box.setMinHeight(dp(36));
+        box.setGravity(Gravity.CENTER_VERTICAL);
+        box.setIncludeFontPadding(false);
+        box.setPadding(0,0,dp(4),0);
+        box.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));
+        box.setChecked(prefs.getBoolean(key,defaultValue));
+        // Плотная строка переключателя без лишних вертикальных отступов.
+        host.addView(box,lp(-1,38,0,0,0,0));
+        box.setOnCheckedChangeListener((button,checked)->{prefs.edit().putBoolean(key,checked).apply();if(afterChange!=null)afterChange.run();});
+        return box;
+    }
 
     private void showSettings() {
         if ((currentScreen.startsWith("settings_") || "settings".equals(currentScreen)) && activeScrollView != null) pendingSettingsScrollY=activeScrollView.getScrollY();
@@ -3148,7 +3163,33 @@ public class MainActivity extends Activity {
                 c==0xFF81595E||c==0xFF76604A||c==0xFF795B1E;
     }
     private boolean isDarkAppearance(){String t=prefs==null?"pink":prefs.getString("app_theme","pink");return "night".equals(t)||"luxury".equals(t)||("system".equals(t)&&(getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES);}
-    private LinearLayout card() { LinearLayout l = new LinearLayout(this); l.setOrientation(LinearLayout.VERTICAL); l.setPadding(dp(20), dp(18), dp(20), dp(18)); boolean night = isDarkAppearance(); String theme=prefs==null?"pink":prefs.getString("app_theme","pink");int surface=night?("luxury".equals(theme)?0xFF30251F:0xFF25212B):0xFFFFFFFF;int border=night?("luxury".equals(theme)?0xFF78613D:0xFF403541):0xFFF3E9EC;android.graphics.drawable.Drawable bg=shape(surface,28,border);if(Build.VERSION.SDK_INT>=21)l.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf((0x22000000 | (PINK & 0x00FFFFFF))),bg,shape(0xFFFFFFFF,24,0)));else l.setBackground(bg);l.setElevation(dp(0)); return l; }
+    private LinearLayout card() {
+        LinearLayout l=new LinearLayout(this);
+        l.setOrientation(LinearLayout.VERTICAL);
+        l.setPadding(dp(20),dp(18),dp(20),dp(18));
+        String theme=prefs==null?"pink":prefs.getString("app_theme","pink");
+        boolean night=isDarkAppearance();
+        int surface,border;
+        switch(theme){
+            case "night": surface=0xFF25212B;border=0xFF403541;break;
+            case "luxury": surface=0xFF30251F;border=0xFF78613D;break;
+            case "lavender": surface=night?0xFF25212B:0xFFFFFFFF;border=night?0xFF403541:0xFFE5E1EF;break;
+            case "mint": surface=night?0xFF252B28:0xFFFEFFFE;border=night?0xFF3C5147:0xFFDCEBE2;break;
+            case "white": surface=night?0xFF252A32:0xFFFFFFFF;border=night?0xFF414B58:0xFFDCE1E8;break;
+            case "brown": surface=night?0xFF302720:0xFFFFFCF7;border=night?0xFF594535:0xFFE1D0BE;break;
+            case "gold": surface=night?0xFF302A1D:0xFFFFFBEA;border=night?0xFF665329:0xFFD9B64B;break;
+            case "sky": surface=night?0xFF202B33:0xFFFFFFFF;border=night?0xFF3A5262:0xFFD4E5F0;break;
+            case "peach": surface=night?0xFF30251F:0xFFFFFCF9;border=night?0xFF654638:0xFFF0D2C4;break;
+            case "red": surface=night?0xFF302124:0xFFFFFCFC;border=night?0xFF5A343A:0xFFECC9CC;break;
+            case "lv": surface=night?0xFF30281F:0xFFFFF9EF;border=night?0xFF68553B:0xFFC6A779;break;
+            default: surface=night?0xFF30232A:0xFFFFFFFF;border=night?0xFF60404E:0xFFF4DCE5;break;
+        }
+        android.graphics.drawable.Drawable bg=shape(surface,26,border);
+        if(Build.VERSION.SDK_INT>=21)l.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x22000000|(PINK&0x00FFFFFF)),bg,shape(surface,24,0)));
+        else l.setBackground(bg);
+        l.setElevation(dp(0));
+        return l;
+    }
     private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, size, color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
     private TextView text(String value, int size, int color, boolean bold) {
         if(isThemeAccentColor(color))color=PINK;
@@ -3397,10 +3438,14 @@ public class MainActivity extends Activity {
             if (white) color = color == 0xFFFFF9F7 ? 0xFF17151D : 0xFF25212B;
             else if (soft) color = 0xFF302735; else if (pale) color = 0xFF342E39;
             if (border) stroke = 0xFF403541;
-        } else if ("lavender".equals(theme) || "pink".equals(theme)) {
+        } else if ("lavender".equals(theme)) {
             if (white) color = color == 0xFFFFF9F7 ? 0xFFF8F7FC : 0xFFFFFFFF;
             else if (soft || pale) color = 0xFFF0EDFA;
             if (border) stroke = 0xFFE5E1EF;
+        } else if ("pink".equals(theme)) {
+            if (white) color = color == 0xFFFFF9F7 ? 0xFFFFF9F7 : 0xFFFFFFFF;
+            else if (soft || pale) color = 0xFFFCEEF2;
+            if (border) stroke = 0xFFF4DCE5;
         } else if ("mint".equals(theme)) {
             if (white) color = color == 0xFFFFF9F7 ? 0xFFF5FAF7 : 0xFFFEFFFE;
             else if (soft || pale) color = 0xFFEAF5EF;
