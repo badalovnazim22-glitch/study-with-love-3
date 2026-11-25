@@ -656,12 +656,12 @@ public class MainActivity extends Activity {
             iconSlot.addView(icon,iconParams);
             item.addView(iconSlot,new LinearLayout.LayoutParams(dp(36),dp(25)));
 
-            TextView label=textFixed(labels[i],9,selected?PINK:MUTED,selected);
+            TextView label=textFixed(labels[i],10,selected?PINK:MUTED,selected);
             label.setGravity(Gravity.CENTER);
             label.setMaxLines(1);
             label.setSingleLine(true);
             label.setIncludeFontPadding(false);
-            item.addView(label,lp(-1,dp(14),0,dp(2),0,0));
+            item.addView(label,lp(-1,dp(16),0,dp(2),0,0));
 
             LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-1,1f);
             p.setMargins(dp(1),0,dp(1),0);
@@ -1087,11 +1087,12 @@ public class MainActivity extends Activity {
 
         // Compact motivational progress card: consistent small vertical rhythm.
         LinearLayout continueCard = card();
-        continueCard.setPadding(dp(13), dp(8), dp(13), dp(8));
+        continueCard.setPadding(dp(16), dp(12), dp(16), dp(12));
         continueCard.setBackground(shape(0xFFF8E8EE, 24, 0));
         TextView progressCaption=text("ТВОЙ ПРОГРЕСС",13,PINK,true);
         continueCard.addView(progressCaption,lp(-1,-2,0,0,0,2));
-        TextView encouragement=text("Ты справляешься.\nПродолжай в своём темпе.",22,DARK,true);
+        TextView encouragement=text("Ты справляешься.\nПродолжай в своём темпе.",21,DARK,true);
+        encouragement.setLineSpacing(dp(2),1.02f);
         continueCard.addView(encouragement,lp(-1,-2,0,0,0,2));
         TextView praise=text("✧  Ты отлично справляешься! ❤️",14,PINK,true);
         continueCard.addView(praise,lp(-1,-2,0,0,0,4));
@@ -1128,10 +1129,10 @@ public class MainActivity extends Activity {
             TextView statValue = text(String.valueOf(statValues[statIndex]), 22, DARK, true);
             statValue.setGravity(Gravity.CENTER);
             statCard.addView(statValue, lp(-1, 30, 0, 0, 0, 3));
-            TextView statLabel = text(statLabels[statIndex], 11, DARK, true);
+            TextView statLabel = text(statLabels[statIndex], 12, DARK, true);
             statLabel.setGravity(Gravity.CENTER);
             statCard.addView(statLabel, lp(-1, -2, 0, 0, 0, 0));
-            LinearLayout.LayoutParams statLp = new LinearLayout.LayoutParams(0, dp(76), 1f);
+            LinearLayout.LayoutParams statLp = new LinearLayout.LayoutParams(0, dp(82), 1f);
             statLp.setMargins(dp(3), 0, dp(3), 0);
             homeStats.addView(statCard, statLp);
         }
@@ -1141,9 +1142,9 @@ public class MainActivity extends Activity {
         int weeklyGoal = prefs.getInt("weekly_goal_minutes", 300);
         int weeklyDone = weeklyMinutesLast7Days();
         LinearLayout weeklyCard = card();
-        weeklyCard.setPadding(dp(10), dp(7), dp(10), dp(7));
-        addText(weeklyCard, "🎯  ЦЕЛЬ НЕДЕЛИ", 10, PINK, true);
-        addText(weeklyCard, weeklyDone + " из " + weeklyGoal + " минут", 13, DARK, true);
+        weeklyCard.setPadding(dp(13), dp(12), dp(13), dp(12));
+        addText(weeklyCard, "🎯  ЦЕЛЬ НЕДЕЛИ", 11, PINK, true);
+        addText(weeklyCard, weeklyDone + " из " + weeklyGoal + " минут", 14, DARK, true);
         addProgressLine(weeklyCard, "Твой недельный результат",
                 weeklyGoal <= 0 ? 0 : Math.min(100, weeklyDone * 100 / weeklyGoal));
         LinearLayout daysRow = new LinearLayout(this);
@@ -1162,22 +1163,22 @@ public class MainActivity extends Activity {
             LinearLayout dayCell = new LinearLayout(this);
             dayCell.setOrientation(LinearLayout.VERTICAL);
             dayCell.setGravity(Gravity.CENTER);
-            TextView dayName = text(weekLabels[dayIndex], 9, isToday ? PINK : MUTED, true);
+            TextView dayName = text(weekLabels[dayIndex], 10, isToday ? PINK : MUTED, true);
             dayName.setGravity(Gravity.CENTER);
-            dayCell.addView(dayName, lp(-1, 14, 0, 0, 0, 2));
+            dayCell.addView(dayName, lp(-1, 16, 0, 0, 0, 2));
             if (isToday) dayCell.setBackground(shape(PALE, 12, PINK));
             TextView dayMark = text(dayMinutes > 0 ? "♥" : (isToday ? "●" : "·"),
                     dayMinutes > 0 ? 18 : 17, (dayMinutes > 0 || isToday) ? PINK : MUTED, true);
             dayMark.setGravity(Gravity.CENTER);
-            dayCell.addView(dayMark, lp(-1, 18, 0, 0, 0, 0));
+            dayCell.addView(dayMark, lp(-1, 22, 0, 0, 0, 0));
             TextView minutesLabel = text(dayMinutes > 0 ? dayMinutes + "м" : "—",
-                    9, MUTED, false);
+                    10, MUTED, false);
             minutesLabel.setGravity(Gravity.CENTER);
-            dayCell.addView(minutesLabel, lp(-1, 12, 0, 0, 0, 0));
-            daysRow.addView(dayCell, new LinearLayout.LayoutParams(0, dp(40), 1f));
+            dayCell.addView(minutesLabel, lp(-1, 14, 0, 0, 0, 0));
+            daysRow.addView(dayCell, new LinearLayout.LayoutParams(0, dp(54), 1f));
             weekDay.add(Calendar.DAY_OF_YEAR, 1);
         }
-        weeklyCard.addView(daysRow, lp(-1, 40, 0, 3, 0, 0));
+        weeklyCard.addView(daysRow, lp(-1, 54, 0, 5, 0, 0));
         root.addView(weeklyCard, lp(-1, -2, 0, 0, 0, 8));weeklyCard.setTag("home_weekly");
 
         LinearLayout aiCard = card();
@@ -1197,7 +1198,7 @@ public class MainActivity extends Activity {
         aiCard.setOnClickListener(v -> launchAiTutor());
         root.addView(aiCard, lp(-1, -2, 0, 0, 0, 8));aiCard.setTag("home_ai");
 
-        TextView emotionsTitle=text("ЭМОЦИИ И МОТИВАЦИЯ",11,PINK,true);emotionsTitle.setTag("home_emotions");root.addView(emotionsTitle,lp(-1,-2,0,0,0,0));
+        TextView emotionsTitle=text("ЭМОЦИИ И МОТИВАЦИЯ",12,PINK,true);emotionsTitle.setTag("home_emotions");root.addView(emotionsTitle,lp(-1,-2,0,0,0,0));
         LinearLayout feelings2 = new LinearLayout(this);
         feelings2.setOrientation(LinearLayout.HORIZONTAL);
         ritualTile(feelings2, "✿", "Цветочек", "Растёт с тобой", this::showFlower);
