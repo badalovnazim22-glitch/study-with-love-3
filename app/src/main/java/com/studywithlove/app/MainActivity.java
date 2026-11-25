@@ -663,7 +663,7 @@ public class MainActivity extends Activity {
             label.setIncludeFontPadding(false);
             item.addView(label,lp(-1,dp(14),0,dp(2),0,0));
 
-            LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-2,1f);
+            LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-1,1f);
             p.setMargins(dp(1),0,dp(1),0);
             bar.addView(item,p);
             item.setOnClickListener(v->{if(key.equals("home"))showHome();else if(key.equals("math"))showChapters();else if(key.equals("progress"))showProgress();else if(key.equals("exam"))showExam();else if(key.equals("diary"))showDiary();else if(key.equals("timer"))showPomodoro();});
