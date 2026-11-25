@@ -752,16 +752,18 @@ public class MainActivity extends Activity {
         unchecked.setShape(android.graphics.drawable.GradientDrawable.OVAL);
         unchecked.setColor(android.graphics.Color.TRANSPARENT);
         unchecked.setStroke(dp(2),0xFFB9AAB1);
+        unchecked.setSize(dp(22),dp(22));
         android.graphics.drawable.GradientDrawable checked=new android.graphics.drawable.GradientDrawable();
         checked.setShape(android.graphics.drawable.GradientDrawable.OVAL);
         checked.setColor(PINK);
         checked.setStroke(dp(2),PINK);
-        android.graphics.drawable.Drawable mark=android.graphics.drawable.Drawable.createFromPath("");
+        checked.setSize(dp(22),dp(22));
         android.graphics.drawable.StateListDrawable states=new android.graphics.drawable.StateListDrawable();
         states.addState(new int[]{android.R.attr.state_checked},checked);
         states.addState(new int[]{},unchecked);
         if(Build.VERSION.SDK_INT>=21)box.setButtonTintList(null);
         box.setButtonDrawable(states);
+        box.setTag("round_checkbox");
         box.setCompoundDrawablePadding(dp(8));
     }
 
@@ -827,7 +829,7 @@ public class MainActivity extends Activity {
         male.setOnClickListener(v->{prefs.edit().putString("profile_gender","male").apply();showSettings();});
         profile.addView(genderRow,lp(-1,48,0,4,0,8));
         addText(profile,"ОБРАЩЕНИЕ",11,PINK,true);
-        String addressStyle=prefs.getString("address_style","you");LinearLayout addressRow=new LinearLayout(this);Button informal=button("На ты",!"formal".equals(addressStyle)),formal=button("На вы","formal".equals(addressStyle));addressRow.addView(informal,new LinearLayout.LayoutParams(0,dp(44),1f));addressRow.addView(formal,new LinearLayout.LayoutParams(0,dp(44),1f));informal.setOnClickListener(v->{prefs.edit().putString("address_style","you").apply();showSettings();});formal.setOnClickListener(v->{prefs.edit().putString("address_style","formal").apply();showSettings();});profile.addView(addressRow,lp(-1,44,0,4,0,8));addText(profile,"АВАТАР",11,PINK,true);android.widget.GridLayout avatarGrid=new android.widget.GridLayout(this);avatarGrid.setColumnCount(6);String[] profileAvatars={"🌸","🐰","🦋","🐱","🌷","⭐"};String currentAvatar=prefs.getString("onboarding_avatar","🌸");for(String avatarChoice:profileAvatars){TextView av=text((currentAvatar.equals(avatarChoice)?"✓\n":"")+avatarChoice,21,DARK,true);av.setGravity(Gravity.CENTER);av.setBackground(shape(currentAvatar.equals(avatarChoice)?PALE:0x00FFFFFF,12,currentAvatar.equals(avatarChoice)?PINK:0));android.widget.GridLayout.LayoutParams avp=new android.widget.GridLayout.LayoutParams();avp.width=0;avp.height=dp(48);avp.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);avp.setMargins(dp(2),dp(2),dp(2),dp(2));avatarGrid.addView(av,avp);av.setOnClickListener(v->{prefs.edit().putString("onboarding_avatar",avatarChoice).apply();showSettings();});}profile.addView(avatarGrid,lp(-1,52,0,3,0,8));
+        String addressStyle=prefs.getString("address_style","you");LinearLayout addressRow=new LinearLayout(this);Button informal=button("На ты",!"formal".equals(addressStyle)),formal=button("На вы","formal".equals(addressStyle));addressRow.addView(informal,new LinearLayout.LayoutParams(0,dp(44),1f));addressRow.addView(formal,new LinearLayout.LayoutParams(0,dp(44),1f));informal.setOnClickListener(v->{prefs.edit().putString("address_style","you").apply();showSettings();});formal.setOnClickListener(v->{prefs.edit().putString("address_style","formal").apply();showSettings();});profile.addView(addressRow,lp(-1,44,0,4,0,8));addText(profile,"АВАТАР",11,PINK,true);android.widget.GridLayout avatarGrid=new android.widget.GridLayout(this);avatarGrid.setColumnCount(6);String[] profileAvatars={"🌸","🐰","🦋","🐱","🌷","⭐"};String currentAvatar=prefs.getString("onboarding_avatar","🌸");for(String avatarChoice:profileAvatars){TextView av=text((currentAvatar.equals(avatarChoice)?"✓\n":"")+avatarChoice,21,DARK,true);av.setGravity(Gravity.CENTER);av.setBackground(shape(currentAvatar.equals(avatarChoice)?PALE:0x00FFFFFF,12,currentAvatar.equals(avatarChoice)?PINK:0));android.widget.GridLayout.LayoutParams avp=new android.widget.GridLayout.LayoutParams();avp.width=0;avp.height=dp(48);avp.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);avp.setMargins(dp(2),dp(2),dp(2),dp(2));avatarGrid.addView(av,avp);av.setOnClickListener(v->{prefs.edit().putString("onboarding_avatar",avatarChoice).apply();showSettings();});}TextView moreAvatar=text("＋",21,PINK,true);moreAvatar.setGravity(Gravity.CENTER);moreAvatar.setBackground(shape(0xFFFFF0F4,12,PINK));android.widget.GridLayout.LayoutParams moreAvatarLp=new android.widget.GridLayout.LayoutParams();moreAvatarLp.width=0;moreAvatarLp.height=dp(48);moreAvatarLp.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);moreAvatarLp.setMargins(dp(2),dp(2),dp(2),dp(2));avatarGrid.addView(moreAvatar,moreAvatarLp);moreAvatar.setOnClickListener(v->{String[] extra={"⭐","📚","🌻","🧸","🍓","💗","🦄","🐼","🐨","🍀","🌙","✨","🎀","🐥","🪻","🌈","🍒","🧁","🪴","💜"};android.widget.GridLayout choices=new android.widget.GridLayout(this);choices.setColumnCount(4);android.app.AlertDialog picker=new android.app.AlertDialog.Builder(this).setTitle("Другие аватары").setView(choices).setNegativeButton("Закрыть",null).create();for(String emoji:extra){TextView option=text(emoji,25,DARK,false);option.setGravity(Gravity.CENTER);option.setBackground(shape(PALE,14,0));android.widget.GridLayout.LayoutParams ep=new android.widget.GridLayout.LayoutParams();ep.width=dp(54);ep.height=dp(54);ep.setMargins(dp(3),dp(3),dp(3),dp(3));choices.addView(option,ep);option.setOnClickListener(q->{prefs.edit().putString("onboarding_avatar",emoji).apply();picker.dismiss();showSettings();});}android.widget.ScrollView scroll=new android.widget.ScrollView(this);scroll.setPadding(dp(8),dp(4),dp(8),dp(4));scroll.addView(choices);picker.setView(scroll);picker.show();});profile.addView(avatarGrid,lp(-1,52,0,3,0,8));
         addSettingsToggle(profile,"Показывать талисман и эмодзи","mascot_enabled",true,null);
         Button saveName=button("Сохранить имя",true);saveName.setOnClickListener(v->{String value=name.getText().toString().trim();if(value.isEmpty()){name.setError("Введи имя");return;}prefs.edit().putString("display_name",value).apply();showAppMessage("Имя сохранено ♡");});
         profile.addView(saveName,lp(-1,48,0,0,0,0));root.addView(profile,lp(-1,-2,0,0,0,4));
@@ -3476,7 +3478,7 @@ public class MainActivity extends Activity {
             bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(isDarkAppearance()?0xFF49404B:PALE));
             if(view instanceof android.widget.SeekBar)((android.widget.SeekBar)view).setThumbTintList(android.content.res.ColorStateList.valueOf(PINK));
         }
-        if(view instanceof CheckBox&&Build.VERSION.SDK_INT>=21)((CheckBox)view).setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));
+        if(view instanceof CheckBox&&Build.VERSION.SDK_INT>=21&&!("round_checkbox".equals(view.getTag())))((CheckBox)view).setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));
         if(view instanceof android.view.ViewGroup)installThemeFontListener((android.view.ViewGroup)view);
     }
     private boolean isThemeAccentColor(int c){
