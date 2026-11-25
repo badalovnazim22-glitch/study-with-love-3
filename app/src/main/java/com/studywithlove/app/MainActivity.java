@@ -2087,7 +2087,7 @@ public class MainActivity extends Activity {
     }
 
     private void addSpacedRepetitionSection(){
-        LinearLayout section=card();addText(section,"🔁  ПОРА ПОВТОРИТЬ",12,PINK,true);int count=0;long now=System.currentTimeMillis();
+        LinearLayout section=card();section.setBackgroundColor(android.graphics.Color.TRANSPARENT);section.setElevation(0);section.setPadding(0,dp(4),0,dp(4));addText(section,"🔁  ПОРА ПОВТОРИТЬ",12,PINK,true);int count=0;long now=System.currentTimeMillis();
         for(Map.Entry<String,List<String>> entry:chapters.entrySet())for(String topic:entry.getValue()){
             String suffix=topicStorageSuffix(entry.getKey(),topic);long completed=prefs.getLong("topic_completed_at_"+suffix,0);if(completed<=0)continue;long age=(now-completed)/86400000L;
             for(int interval:new int[]{3,7,14})if(age>=interval&&!prefs.getBoolean("review_done_"+suffix+"_"+interval,false)){
@@ -2191,22 +2191,22 @@ public class MainActivity extends Activity {
         for (String dayLabel : shortDays) {
             TextView cell = text(dayLabel, 11, MUTED, true);
             cell.setGravity(Gravity.CENTER);
-            weekHeader.addView(cell, new LinearLayout.LayoutParams(0, dp(30), 1f));
+            weekHeader.addView(cell, new LinearLayout.LayoutParams(0, dp(22), 1f));
         }
-        calendarCard.addView(weekHeader, lp(-1, 24, 0, 4, 0, 2));
+        calendarCard.addView(weekHeader, lp(-1, 20, 0, 2, 0, 1));
         LinearLayout week = null;
         for (int slot = 0; slot < 42; slot++) {
-            if (slot % 7 == 0) { week = new LinearLayout(this); week.setOrientation(LinearLayout.HORIZONTAL); week.setGravity(Gravity.CENTER_VERTICAL); calendarCard.addView(week, lp(-1, 38, 0, 1, 0, 1)); }
-            TextView cell = text("", 12, DARK, true); cell.setGravity(Gravity.CENTER); cell.setIncludeFontPadding(false); cell.setMinHeight(dp(36)); cell.setMinWidth(dp(32));
+            if (slot % 7 == 0) { week = new LinearLayout(this); week.setOrientation(LinearLayout.HORIZONTAL); week.setGravity(Gravity.CENTER_VERTICAL); calendarCard.addView(week, lp(-1, 30, 0, 1, 0, 1)); }
+            TextView cell = text("", 12, DARK, true); cell.setGravity(Gravity.CENTER); cell.setIncludeFontPadding(false); cell.setMinHeight(dp(28)); cell.setMinWidth(dp(26));
             if (slot >= offset && slot < offset + daysInMonth) {
                 int day = slot - offset + 1;
                 String dateKey = String.format(Locale.US, "%04d-%02d-%02d", yearNumber, monthNumber + 1, day);
                 boolean studied = studiedDays.contains(dateKey), visited = visitedDays.contains(dateKey), isToday = progressMonthOffset == 0 && day == todayDay;
                 cell.setText(String.valueOf(day)); int minutes=prefs.getInt("focus_minutes_"+dateKey,0);int heatColor=minutes>=60?0xFFFFC4D5:minutes>=30?0xFFFFD8E3:minutes>=15?0xFFFFE8EE:studied?0xFFFFF2F5:(isToday?PALE:(visited?0xFFF1F0F2:0xFFFFFFFF));cell.setTextColor(studied?PINK:DARK);
-                cell.setBackground(shape(heatColor,11,isToday?PINK:(studied?0xFFFFC6D7:0x00FFFFFF)));
+                cell.setBackground(shape(heatColor,9,isToday?PINK:(studied?0xFFFFC6D7:0x00FFFFFF)));
                 cell.setElevation(dp(1)); if (isToday) cell.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             }
-            LinearLayout.LayoutParams dayCell=new LinearLayout.LayoutParams(0,dp(36),1f); dayCell.gravity=Gravity.CENTER; dayCell.setMargins(dp(2),0,dp(2),0); week.addView(cell,dayCell);
+            LinearLayout.LayoutParams dayCell=new LinearLayout.LayoutParams(0,dp(28),1f); dayCell.gravity=Gravity.CENTER; dayCell.setMargins(dp(1),0,dp(1),0); week.addView(cell,dayCell);
         }
         addText(calendarCard, "♥ Учебные дни: " + countStudyDaysThisMonth(studiedDays, yearNumber, monthNumber) + "   ·   Заходила: " + countStudyDaysThisMonth(visitedDays, yearNumber, monthNumber), 12, MUTED, false);
         progressCalendarHost.addView(calendarCard, lp(-1, -2, 0, 0, 0, 0));
@@ -3116,22 +3116,22 @@ public class MainActivity extends Activity {
         currentScreen="planner";base("Умный планировщик","Небольшой план — уже хороший шаг");
         String[] selectedDate={todayKey()},duration={""},action={""};
         String[] durations={"15 мин","30 мин","1 час"},actions={"Повторить тему","Решить 5 задач","Сделать конспект"};
-        LinearLayout switcher=new LinearLayout(this);switcher.setGravity(Gravity.CENTER);switcher.setBackground(shape(PALE,16,0));
+        LinearLayout switcher=new LinearLayout(this);switcher.setGravity(Gravity.CENTER);switcher.setBackgroundColor(android.graphics.Color.TRANSPARENT);
         TextView todayChip=text("Сегодня",13,PINK,true),tomorrowChip=text("Завтра",13,MUTED,true);todayChip.setGravity(Gravity.CENTER);tomorrowChip.setGravity(Gravity.CENTER);
         switcher.addView(todayChip,new LinearLayout.LayoutParams(0,dp(48),1f));switcher.addView(tomorrowChip,new LinearLayout.LayoutParams(0,dp(48),1f));root.addView(switcher,lp(-1, 48,0,0,0,10));
         addSpacedRepetitionSection();
-        int examPlanTopics=ensureExamPlan();if(!mainExamDate().isEmpty()){boolean noExamTopics=prefs.getBoolean("exam_topic_filter_enabled",false)&&prefs.getStringSet("exam_topic_ids",new TreeSet<String>()).isEmpty();String planMessage=daysUntil(mainExamDate())<0?"Дата экзамена уже прошла.":noExamTopics?"Отметь темы для экзамена в разделе «Мой экзамен» — тогда появится план.":examPlanTopics==0?"Все выбранные темы уже завершены.":"План автоматически распределил "+examPlanTopics+" незавершённых тем до "+mainExamDate()+". При пропуске план пересчитывается при следующем открытии.";LinearLayout planCard=card();addText(planCard,"🎯  ПЛАН ДО ЭКЗАМЕНА",11,PINK,true);addText(planCard,planMessage,13,DARK,false);root.addView(planCard,lp(-1,-2,0,0,0,10));}
-        LinearLayout form=card();addText(form,"НОВАЯ ЗАДАЧА",12,PINK,true);TextView counter=text("0 / 3 важных дела",11,MUTED,true);form.addView(counter,lp(-1,22,0,2,0,0));
-        EditText task=new EditText(this);task.setSingleLine(true);task.setHint("Например: Дроби");task.setTextColor(DARK);task.setBackground(shape(0xFFFFFFFF,15,0xFFEADDE2));form.addView(task,lp(-1,48,0,7,0,8));
+        int examPlanTopics=ensureExamPlan();if(!mainExamDate().isEmpty()){boolean noExamTopics=prefs.getBoolean("exam_topic_filter_enabled",false)&&prefs.getStringSet("exam_topic_ids",new TreeSet<String>()).isEmpty();String planMessage=daysUntil(mainExamDate())<0?"Дата экзамена уже прошла.":noExamTopics?"Отметь темы для экзамена в разделе «Мой экзамен» — тогда появится план.":examPlanTopics==0?"Все выбранные темы уже завершены.":"План автоматически распределил "+examPlanTopics+" незавершённых тем до "+mainExamDate()+". При пропуске план пересчитывается при следующем открытии.";LinearLayout planCard=card();planCard.setBackgroundColor(android.graphics.Color.TRANSPARENT);planCard.setElevation(0);planCard.setPadding(0,dp(4),0,dp(4));addText(planCard,"🎯  ПЛАН ДО ЭКЗАМЕНА",11,PINK,true);addText(planCard,planMessage,13,DARK,false);root.addView(planCard,lp(-1,-2,0,0,0,10));}
+        LinearLayout form=card();form.setBackgroundColor(android.graphics.Color.TRANSPARENT);form.setElevation(0);form.setPadding(0,dp(5),0,dp(5));addText(form,"НОВАЯ ЗАДАЧА",12,PINK,true);TextView counter=text("0 / 3 важных дела",11,MUTED,true);form.addView(counter,lp(-1,22,0,2,0,0));
+        EditText task=new EditText(this);task.setSingleLine(true);task.setHint("Например: Дроби");task.setTextColor(DARK);task.setHintTextColor(MUTED);task.setTextSize(16);task.setInputType(android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);task.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_DONE);task.setPadding(dp(15),dp(11),dp(15),dp(11));task.setIncludeFontPadding(false);task.setMinHeight(dp(52));task.setBackground(shape(0xFFFFF8FA,16,0xFFEAD5DE));form.addView(task,lp(-1,52,0,7,0,8));
         addText(form,"СКОЛЬКО ВРЕМЕНИ?",10,MUTED,true);
         LinearLayout durationRow=new LinearLayout(this);durationRow.setGravity(Gravity.CENTER_VERTICAL);form.addView(durationRow,lp(-1,38,0,3,0,7));
         TextView[] durationViews=new TextView[durations.length];
-        Runnable refreshDuration=()->{for(int i=0;i<durations.length;i++){boolean on=duration[0].equals(durations[i]);durationViews[i].setTextColor(on?0xFFFFFFFF:PINK);durationViews[i].setBackground(shape(on?PINK:0xFFFFF0F4,15,on?PINK:0));}};
+        Runnable refreshDuration=()->{for(int i=0;i<durations.length;i++){boolean on=duration[0].equals(durations[i]);durationViews[i].setTextColor(on?0xFFFFFFFF:PINK);durationViews[i].setBackgroundColor(android.graphics.Color.TRANSPARENT);}};
         for(int i=0;i<durations.length;i++){final String value=durations[i];TextView chip=text(value,12,PINK,true);chip.setGravity(Gravity.CENTER);durationViews[i]=chip;LinearLayout.LayoutParams durationLp=new LinearLayout.LayoutParams(0,dp(48),1f);durationLp.setMargins(0,0,dp(6),0);durationRow.addView(chip,durationLp);chip.setOnClickListener(v->{duration[0]=value;refreshDuration.run();});}
         addText(form,"ЧТО ДЕЛАЕМ?",10,MUTED,true);
         LinearLayout actionRow=new LinearLayout(this);actionRow.setGravity(Gravity.CENTER_VERTICAL);form.addView(actionRow,lp(-1,38,0,3,0,7));
         TextView[] actionViews=new TextView[actions.length];
-        Runnable refreshAction=()->{for(int i=0;i<actions.length;i++){boolean on=action[0].equals(actions[i]);actionViews[i].setTextColor(on?0xFFFFFFFF:PINK);actionViews[i].setBackground(shape(on?PINK:0xFFFFF0F4,14,on?PINK:0));}};
+        Runnable refreshAction=()->{for(int i=0;i<actions.length;i++){boolean on=action[0].equals(actions[i]);actionViews[i].setTextColor(on?0xFFFFFFFF:PINK);actionViews[i].setBackgroundColor(android.graphics.Color.TRANSPARENT);}};
         for(int i=0;i<actions.length;i++){final String value=actions[i];TextView chip=text(value,12,PINK,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(3),0,dp(3),0);actionViews[i]=chip;actionRow.addView(chip,new LinearLayout.LayoutParams(0,dp(48),1f));chip.setOnClickListener(v->{action[0]=value;refreshAction.run();});}
         Button add=button("＋  Добавить в план",true);add.setEnabled(false);add.setAlpha(.45f);form.addView(add,lp(-1,48,0,4,0,0));root.addView(form,lp(-1,-2,0,0,0,10));
         task.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int st,int count,int after){}public void onTextChanged(CharSequence s,int st,int before,int count){boolean valid=s.toString().trim().length()>0;add.setEnabled(valid);add.setAlpha(valid?1f:.45f);}public void afterTextChanged(android.text.Editable e){}});
@@ -3143,7 +3143,7 @@ public class MainActivity extends Activity {
         render[0]=()->{list.removeAllViews();String key="planner_tasks_"+selectedDate[0];Set<String> tasks=new TreeSet<>(prefs.getStringSet(key,new TreeSet<String>()));counter.setText(tasks.size()+" / 3 важных дела");overload.setText(tasks.size()>=3?"Уже "+tasks.size()+" задач — точно хватит сил на ещё одну? ♡":"");
             move.setVisibility(tasks.isEmpty()||!selectedDate[0].equals(todayKey())?View.GONE:View.VISIBLE);
             if(tasks.isEmpty()){addText(list,"Можно добавить одно важное дело, если есть силы ♡",12,MUTED,false);}
-            for(String item:tasks){LinearLayout row=card();row.setOrientation(LinearLayout.HORIZONTAL);row.setGravity(Gravity.CENTER_VERTICAL);CheckBox done=new CheckBox(this);done.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));done.setText(item);done.setTextColor(DARK);row.addView(done,new LinearLayout.LayoutParams(0,dp(48),1f));Button del=button("×",false);del.setMinWidth(dp(38));row.addView(del);
+            for(String item:tasks){LinearLayout row=card();row.setBackgroundColor(android.graphics.Color.TRANSPARENT);row.setElevation(0);row.setPadding(0,dp(3),0,dp(3));row.setOrientation(LinearLayout.HORIZONTAL);row.setGravity(Gravity.CENTER_VERTICAL);CheckBox done=new CheckBox(this);done.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));done.setText(item);done.setTextColor(DARK);row.addView(done,new LinearLayout.LayoutParams(0,dp(48),1f));Button del=button("×",false);del.setMinWidth(dp(38));row.addView(del);
                 done.setOnCheckedChangeListener((b,on)->{if(on){Set<String> latest=new TreeSet<>(prefs.getStringSet(key,new TreeSet<String>()));latest.remove(item);prefs.edit().putStringSet(key,latest).putInt("planner_completed_"+selectedDate[0],prefs.getInt("planner_completed_"+selectedDate[0],0)+1).apply();row.animate().alpha(0).setDuration(180).withEndAction(render[0]::run).start();}});
                 del.setOnClickListener(v->{Set<String> latest=new TreeSet<>(prefs.getStringSet(key,new TreeSet<String>()));latest.remove(item);prefs.edit().putStringSet(key,latest).apply();render[0].run();});
                 final float[] down={0};row.setOnTouchListener((v,event)->{if(event.getAction()==android.view.MotionEvent.ACTION_DOWN){down[0]=event.getX();return true;}if(event.getAction()==android.view.MotionEvent.ACTION_UP){float dx=event.getX()-down[0];if(Math.abs(dx)>dp(55)){Set<String> latest=new TreeSet<>(prefs.getStringSet(key,new TreeSet<String>()));latest.remove(item);if(dx>0)prefs.edit().putInt("planner_completed_"+selectedDate[0],prefs.getInt("planner_completed_"+selectedDate[0],0)+1).apply();prefs.edit().putStringSet(key,latest).apply();row.animate().alpha(0).setDuration(160).withEndAction(render[0]::run).start();return true;}return false;}return true;});
