@@ -3152,18 +3152,45 @@ public class MainActivity extends Activity {
 
     private String levelName(int level){if(level<3)return "Начинающий";if(level<6)return "Ученик";if(level<10)return "Знаток";if(level<15)return "Мастер";return "Легенда знаний";}
     private void renderStudyHeatmapCalendar(){
-        Calendar now=Calendar.getInstance(AppTime.zone());LinearLayout box=card();addText(box,"КАЛЕНДАРЬ АКТИВНОСТИ",11,PINK,true);
+        Calendar today=Calendar.getInstance(AppTime.zone());
+        Calendar month=(Calendar)today.clone();month.add(Calendar.MONTH,progressMonthOffset);
+        Calendar first=(Calendar)month.clone();first.set(Calendar.DAY_OF_MONTH,1);
+        LinearLayout box=card();addText(box,"КАЛЕНДАРЬ АКТИВНОСТИ",11,PINK,true);
         LinearLayout header=new LinearLayout(this);header.setGravity(Gravity.CENTER_VERTICAL);
-        TextView monthName=text(new SimpleDateFormat("LLLL yyyy",new Locale("ru")).format(now.getTime()),15,DARK,true);header.addView(monthName,new LinearLayout.LayoutParams(0,-2,1f));
-        TextView active=text(prefs.getStringSet("study_days",new TreeSet<String>()).size()+" дней всего",10,MUTED,false);header.addView(active);box.addView(header,lp(-1,30,0,2,0,4));
+        TextView previous=text("‹",27,PINK,true);previous.setGravity(Gravity.CENTER);header.addView(previous,lp(38,34,0,0,0,0));
+        TextView monthName=text(new SimpleDateFormat("LLLL yyyy",new Locale("ru")).format(month.getTime()),15,DARK,true);monthName.setGravity(Gravity.CENTER);header.addView(monthName,new LinearLayout.LayoutParams(0,dp(34),1f));
+        TextView next=text("›",27,PINK,true);next.setGravity(Gravity.CENTER);next.setAlpha(progressMonthOffset>=0?0.35f:1f);header.addView(next,lp(38,34,0,0,0,0));
+        previous.setBackground(shape(0x00FFFFFF,12,0));next.setBackground(shape(0x00FFFFFF,12,0));
+        previous.setOnClickListener(v->{progressMonthOffset--;renderStudyHeatmapCalendar();});
+        next.setOnClickListener(v->{if(progressMonthOffset<0){progressMonthOffset++;renderStudyHeatmapCalendar();}});
+        box.addView(header,lp(-1,36,0,2,0,3));
+        Set<String> days=prefs.getStringSet("study_days",new TreeSet<String>());
+        int total=days.size();TextView active=text(total+" учебных дней всего",10,MUTED,false);box.addView(active,lp(-1,-2,0,0,0,5));
         String[] weekdays={"ПН","ВТ","СР","ЧТ","ПТ","СБ","ВС"};android.widget.GridLayout grid=new android.widget.GridLayout(this);grid.setColumnCount(7);
         for(String day:weekdays){TextView label=text(day,9,MUTED,true);label.setGravity(Gravity.CENTER);android.widget.GridLayout.LayoutParams p=new android.widget.GridLayout.LayoutParams();p.width=0;p.height=dp(22);p.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);grid.addView(label,p);}
-        Calendar first=(Calendar)now.clone();first.set(Calendar.DAY_OF_MONTH,1);int offset=(first.get(Calendar.DAY_OF_WEEK)+5)%7,count=now.getActualMaximum(Calendar.DAY_OF_MONTH);
-        for(int i=0;i<offset;i++){View blank=new View(this);android.widget.GridLayout.LayoutParams p=new android.widget.GridLayout.LayoutParams();p.width=0;p.height=dp(29);p.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);grid.addView(blank,p);}
-        Set<String> days=prefs.getStringSet("study_days",new TreeSet<String>());
-        for(int day=1;day<=count;day++){Calendar date=(Calendar)first.clone();date.set(Calendar.DAY_OF_MONTH,day);String key=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(date.getTime());int mins=prefs.getInt("focus_minutes_"+key,0);boolean studied=days.contains(key)||mins>0;
-            TextView cell=text(String.valueOf(day),10,studied?0xFFFFFFFF:MUTED,true);cell.setGravity(Gravity.CENTER);cell.setBackground(shape(studied?PINK:PALE,8,0));android.widget.GridLayout.LayoutParams p=new android.widget.GridLayout.LayoutParams();p.width=0;p.height=dp(29);p.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);p.setMargins(dp(2),dp(2),dp(2),dp(2));grid.addView(cell,p);cell.setOnClickListener(v->showAppMessage(new SimpleDateFormat("d MMMM",new Locale("ru")).format(date.getTime())+": "+mins+" мин учёбы"));}
-        box.addView(grid,lp(-1,-2,0,3,0,0));root.addView(box,lp(-1,-2,0,0,0,10));
+        int offset=(first.get(Calendar.DAY_OF_WEEK)+5)%7,count=month.getActualMaximum(Calendar.DAY_OF_MONTH);
+        for(int i=0;i<offset;i++){View blank=new View(this);android.widget.GridLayout.LayoutParams p=new android.widget.GridLayout.LayoutParams();p.width=0;p.height=dp(34);p.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);grid.addView(blank,p);}
+        for(int day=1;day<=count;day++){
+            Calendar date=(Calendar)first.clone();date.set(Calendar.DAY_OF_MONTH,day);
+            String key=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(date.getTime());
+            int mins=prefs.getInt("focus_minutes_"+key,0);boolean studied=days.contains(key)||mins>0;
+            boolean isToday=key.equals(todayKey());boolean future=date.after(today);
+            int fill=studied?PINK:(isToday?0xFFFFE3EC:0xFFF8F3F5);
+            int stroke=isToday?PINK:0;
+            TextView cell=text(String.valueOf(day),11,studied?0xFFFFFFFF:(future?0xFFBEB4B9:MUTED),true);
+            cell.setGravity(Gravity.CENTER);cell.setBackground(shape(fill,11,stroke));
+            android.widget.GridLayout.LayoutParams p=new android.widget.GridLayout.LayoutParams();p.width=0;p.height=dp(34);p.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);p.setMargins(dp(2),dp(2),dp(2),dp(2));grid.addView(cell,p);
+            cell.setContentDescription(new SimpleDateFormat("d MMMM",new Locale("ru")).format(date.getTime())+(studied?", учёба "+mins+" минут":", без отметок"));
+            cell.setOnClickListener(v->showAppMessage(new SimpleDateFormat("d MMMM",new Locale("ru")).format(date.getTime())+": "+mins+" мин учёбы"));
+        }
+        box.addView(grid,lp(-1,-2,0,3,0,5));
+        LinearLayout legend=new LinearLayout(this);legend.setGravity(Gravity.CENTER_VERTICAL);
+        View dot=new View(this);dot.setBackground(shape(PINK,20,0));legend.addView(dot,lp(9,9,0,0,6,0));
+        TextView studiedLabel=text("Занимался(ась)",10,MUTED,false);legend.addView(studiedLabel);
+        View todayDot=new View(this);todayDot.setBackground(shape(0xFFFFE3EC,20,PINK));legend.addView(todayDot,lp(9,9,0,0,6,0));
+        TextView todayLabel=text("Сегодня",10,MUTED,false);legend.addView(todayLabel,lp(-2,-2,0,0,0,0));
+        box.addView(legend,lp(-1,18,0,2,0,0));
+        root.addView(box,lp(-1,-2,0,0,0,10));
     }
     private void showFocusMode(){
         currentScreen="focus_mode";base("Режим концентрации","Подготовь спокойное место и начни короткий фокус-сеанс");
@@ -3328,11 +3355,11 @@ public class MainActivity extends Activity {
         ProgressBar bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         bar.setMax(100);
         bar.setProgress(Math.max(0, Math.min(100, percent)));
-        if (Build.VERSION.SDK_INT >= 21) {
-            bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
-            bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFE2EA));
-        }
-        parent.addView(bar, lp(-1, 8, 0, 0, 0, 5));
+        GradientDrawable track=new GradientDrawable();track.setColor(isDarkAppearance()?0xFF514650:0xFFFFE6ED);track.setCornerRadius(dp(20));
+        GradientDrawable fill=new GradientDrawable();fill.setColor(PINK);fill.setCornerRadius(dp(20));
+        android.graphics.drawable.ClipDrawable clipped=new android.graphics.drawable.ClipDrawable(fill,Gravity.LEFT,android.view.Gravity.HORIZONTAL);
+        bar.setProgressDrawable(new android.graphics.drawable.LayerDrawable(new android.graphics.drawable.Drawable[]{track,clipped}){{setId(0,android.R.id.background);setId(1,android.R.id.progress);}});
+        parent.addView(bar, lp(-1, 9, 0, 0, 0, 6));
     }
 
     private boolean isYesterday(String date) {
