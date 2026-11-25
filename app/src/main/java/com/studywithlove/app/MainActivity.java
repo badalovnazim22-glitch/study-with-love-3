@@ -409,7 +409,7 @@ public class MainActivity extends Activity {
         else if ("lavender".equals(theme)) { BG=0xFFF8F7FC; PINK=0xFF8070A8; PALE=0xFFF0EDFA; DARK=0xFF292638; MUTED=0xFF858096; }
         else if ("mint".equals(theme)) { BG=0xFFF5FAF7; PINK=0xFF659B86; PALE=0xFFEAF5EF; DARK=0xFF34443D; MUTED=0xFF60786B; }
         else if ("white".equals(theme)) { BG=0xFFF7F8FA; PINK=0xFF65758B; PALE=0xFFE9EDF2; DARK=0xFF303844; MUTED=0xFF65717F; }
-        else { BG=0xFFF8F7FC; PINK=0xFF8070A8; PALE=0xFFF0EDFA; DARK=0xFF292638; MUTED=0xFF858096; }
+        else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF75666D; }
         if (getWindow()!=null) { getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG); }
     }
 
@@ -915,7 +915,7 @@ public class MainActivity extends Activity {
         else if ("peach".equals(theme)) { BG=0xFFFFF5EF; PINK=0xFFD88968; PALE=0xFFFBE5D9; DARK=0xFF513D34; MUTED=0xFF856C60; }
         else if ("red".equals(theme)) { BG=0xFFFFF5F4; PINK=0xFFB32635; PALE=0xFFF8E2E3; DARK=0xFF4B2026; MUTED=0xFF81595E; }
         else if ("lv".equals(theme)) { BG=0xFFF4E8D5; PINK=0xFF76502F; PALE=0xFFE7D2B3; DARK=0xFF3B281C; MUTED=0xFF76604A; }
-        else { BG=0xFFF8F7FC; PINK=0xFF8070A8; PALE=0xFFF0EDFA; DARK=0xFF292638; MUTED=0xFF858096; }
+        else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF75666D; }
         applyAccentOverlay(theme);
         if (prefs != null && prefs.contains("app_accent_color")) PINK = prefs.getInt("app_accent_color", PINK);
         if (getWindow() != null) { getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(BG)); getWindow().getDecorView().setBackgroundColor(BG); if(Build.VERSION.SDK_INT>=30){getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);getWindow().setDecorFitsSystemWindows(false);if(Build.VERSION.SDK_INT>=29){getWindow().setStatusBarContrastEnforced(false);getWindow().setNavigationBarContrastEnforced(false);}}else{getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(BG);} updateSystemBarIcons(); }
