@@ -2945,8 +2945,8 @@ public class MainActivity extends Activity {
             words.addView(title,lp(-1,-2,0,0,0,3));
             words.addView(text(descriptions[i],12,MUTED,false),lp(-1,-2,0,0,0,0));
             row.addView(words,new LinearLayout.LayoutParams(0,-2,1f));
-            TextView state=text(selected&&ambiencePlaying?"Ⅱ":"▶",21,selected?PINK:MUTED,true);
-            state.setGravity(Gravity.CENTER);state.setContentDescription(selected&&ambiencePlaying?"Остановить звук":"Включить звук");
+            TextView state=text(selected&&(ambiencePlaying||ambienceLoading)?"Ⅱ":"▶",21,selected?PINK:MUTED,true);
+            state.setGravity(Gravity.CENTER);state.setContentDescription(selected&&(ambiencePlaying||ambienceLoading)?"Остановить звук":"Включить звук");
             row.addView(state,lp(36,36,4,0,0,0));
             row.setOnClickListener(v->{
                 boolean same=prefs.getString("study_atmosphere",names[0]).equals(n);
