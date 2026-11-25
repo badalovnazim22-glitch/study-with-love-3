@@ -3593,7 +3593,7 @@ public class MainActivity extends Activity {
     private LinearLayout card() {
         LinearLayout l=new LinearLayout(this);
         l.setOrientation(LinearLayout.VERTICAL);
-        l.setPadding(dp(20),dp(18),dp(20),dp(18));
+        l.setPadding(dp(18),dp(16),dp(18),dp(16));
         String theme=prefs==null?"pink":prefs.getString("app_theme","pink");
         boolean night=isDarkAppearance();
         int surface,border;
@@ -3611,8 +3611,8 @@ public class MainActivity extends Activity {
             case "lv": surface=night?0xFF30281F:0xFFFFF9EF;border=night?0xFF68553B:0xFFC6A779;break;
             default: surface=night?0xFF30232A:0xFFFFFFFF;border=night?0xFF60404E:0xFFF4DCE5;break;
         }
-        android.graphics.drawable.Drawable bg=shape(surface,26,border);
-        if(Build.VERSION.SDK_INT>=21)l.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x22000000|(PINK&0x00FFFFFF)),bg,shape(surface,24,0)));
+        android.graphics.drawable.Drawable bg=shape(surface,24,border);
+        if(Build.VERSION.SDK_INT>=21)l.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x1E000000|(PINK&0x00FFFFFF)),bg,shape(surface,24,0)));
         else l.setBackground(bg);
         l.setElevation(dp(0));
         return l;
