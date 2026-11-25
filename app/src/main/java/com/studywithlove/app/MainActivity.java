@@ -2301,6 +2301,13 @@ public class MainActivity extends Activity {
         root.addView(topicsButton,lp(-1,50,0,0,0,12));
         LinearLayout goals=new LinearLayout(this);goals.setOrientation(LinearLayout.VERTICAL);root.addView(goals,lp(-1,-2,0,0,0,0));
         final Runnable[] render={null};
+        final boolean[] formatWeeks={prefs.getBoolean("exam_countdown_weeks",false)};
+        TextView formatToggle=text("Только дни  ·  Недели + дни",11,PINK,true);formatToggle.setGravity(Gravity.CENTER);
+        formatToggle.setPadding(dp(8),dp(5),dp(8),dp(5));formatToggle.setBackground(shape(0x00FFFFFF,12,0xFFEAD4DE));
+        formatToggle.setOnClickListener(v->{formatWeeks[0]=!formatWeeks[0];prefs.edit().putBoolean("exam_countdown_weeks",formatWeeks[0]).apply();if(render[0]!=null)render[0].run();});
+        hero.addView(formatToggle,lp(-2,30,0,8,0,0));
+        android.widget.ProgressBar prepProgress=new android.widget.ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);prepProgress.setMax(100);prepProgress.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));prepProgress.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFEADDE2));
+        TextView prepLabel=text("Подготовка начнётся после добавления цели",11,MUTED,false);hero.addView(prepLabel,lp(-1,20,0,8,0,1));hero.addView(prepProgress,lp(-1,dp(5),0,0,0,0));
         render[0]=()->{
             goals.removeAllViews();
             Set<String> ids=new TreeSet<>(prefs.getStringSet("exam_goal_ids",new TreeSet<String>()));
