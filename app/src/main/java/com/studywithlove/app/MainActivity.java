@@ -654,14 +654,14 @@ public class MainActivity extends Activity {
             android.widget.FrameLayout.LayoutParams iconParams=
                 new android.widget.FrameLayout.LayoutParams(dp(20),dp(20),Gravity.CENTER);
             iconSlot.addView(icon,iconParams);
-            item.addView(iconSlot,new LinearLayout.LayoutParams(dp(36),dp(23)));
+            item.addView(iconSlot,new LinearLayout.LayoutParams(dp(36),dp(20)));
 
             TextView label=textFixed(labels[i],9,selected?PINK:MUTED,selected);
             label.setGravity(Gravity.CENTER);
             label.setMaxLines(1);
             label.setSingleLine(true);
             label.setIncludeFontPadding(false);
-            item.addView(label,lp(-1,dp(12),0,0,0,0));
+            item.addView(label,lp(-1,dp(12),0,dp(1),0,0));
 
             LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-2,1f);
             p.setMargins(dp(1),0,dp(1),0);
