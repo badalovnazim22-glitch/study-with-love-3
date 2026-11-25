@@ -3533,12 +3533,8 @@ public class MainActivity extends Activity {
         applyPressFeedback(b);
         return b;
     }
-    private int onAccentTextColor(){return onAccentTextColor(PINK);}
-    private int onAccentTextColor(int background){
-        double white=contrastRatio(background,0xFFFFFFFF);
-        double dark=contrastRatio(background,0xFF17151D);
-        return white>=dark?0xFFFFFFFF:0xFF17151D;
-    }
+    private int onAccentTextColor(){return 0xFFFFFFFF;}
+    private int onAccentTextColor(int background){return 0xFFFFFFFF;}
     private double contrastRatio(int first,int second){
         double a=relativeLuminance(first),b=relativeLuminance(second);
         return (Math.max(a,b)+0.05)/(Math.min(a,b)+0.05);
