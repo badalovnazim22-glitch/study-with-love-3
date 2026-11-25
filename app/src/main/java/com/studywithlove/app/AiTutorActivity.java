@@ -188,11 +188,12 @@ public class AiTutorActivity extends Activity {
         suggestions.setOrientation(LinearLayout.HORIZONTAL);
         String[] prompts = {tr("Объясни тему", "Explain a topic", "Mövzunu izah et"), tr("Разбери задачу", "Solve a problem", "Məsələni izah et"), tr("Составь тест", "Create a quiz", "Test hazırla")};
         for (String prompt : prompts) {
-            TextView chip = label(prompt, 13, PINK, true);
+            TextView chip = label(prompt, 12, DARK, true);
             chip.setGravity(Gravity.CENTER);
-            chip.setPadding(dp(9), dp(6), dp(9), dp(6));
-            chip.setBackground(round(PALE, 18, PALE));
-            chip.setMinHeight(dp(40));
+            chip.setPadding(dp(11), dp(5), dp(11), dp(5));
+            chip.setBackground(round(0xFFFFF7F8, 16, 0xFFEADDE2));
+            chip.setMinHeight(dp(36));
+            chip.setElevation(dp(1));
             LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(-2, -2);
             cp.setMargins(dp(2), 0, dp(6), dp(8));
             suggestions.addView(chip, cp);
