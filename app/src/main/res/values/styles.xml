@@ -9,8 +9,8 @@
         <item name="android:windowBackground">#FFF8F7FC</item>
     </style>
 
-    <style name="AppAccentPink"><item name="android:colorAccent">#C97891</item></style>
-    <style name="AppAccentLavender"><item name="android:colorAccent">#8979B8</item></style>
+    <style name="AppAccentPink"><item name="android:colorAccent">#8070A8</item></style>
+    <style name="AppAccentLavender"><item name="android:colorAccent">#8070A8</item></style>
     <style name="AppAccentMint"><item name="android:colorAccent">#659B86</item></style>
     <style name="AppAccentNight"><item name="android:colorAccent">#E39AB5</item></style>
     <style name="AppAccentWhite"><item name="android:colorAccent">#65758B</item></style>
