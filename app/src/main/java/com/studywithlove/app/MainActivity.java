@@ -746,25 +746,41 @@ public class MainActivity extends Activity {
         LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(dp(20),dp(8),dp(20),dp(4));EditText first=new EditText(this);first.setSingleLine(true);first.setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);first.setHint("Новый PIN · 4–8 цифр");body.addView(first,lp(-1,52,0,0,0,8));EditText second=new EditText(this);second.setSingleLine(true);second.setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);second.setHint("Повтори PIN");body.addView(second,lp(-1,52,0,0,0,8));android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("Защита приложения").setView(body).setNegativeButton("Отмена",null).setNeutralButton(prefs.getString("app_pin_hash","").isEmpty()?"":"Отключить PIN",(d,w)->prefs.edit().remove("app_pin_hash").remove("app_pin_salt").apply()).setPositiveButton("Сохранить PIN",null).create();dialog.setOnShowListener(v->{if(prefs.getString("app_pin_hash","").isEmpty())dialog.getButton(-3).setVisibility(View.GONE);dialog.getButton(-1).setOnClickListener(q->{String a=first.getText().toString(),b=second.getText().toString();if(!a.matches("[0-9]{4,8}")){first.setError("Нужно от 4 до 8 цифр");return;}if(!a.equals(b)){second.setError("PIN-коды не совпадают");return;}byte[] bytes=new byte[16];new java.security.SecureRandom().nextBytes(bytes);String salt=android.util.Base64.encodeToString(bytes,android.util.Base64.NO_WRAP);prefs.edit().putString("app_pin_salt",salt).putString("app_pin_hash",pinHash(a,salt)).apply();dialog.dismiss();showAppMessage("PIN-код установлен");});});dialog.show();
     }
     private void showPinLockDialog(){if(pinDialogVisible||prefs==null||prefs.getString("app_pin_hash","").isEmpty())return;pinDialogVisible=true;LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(dp(20),dp(8),dp(20),dp(4));EditText pin=new EditText(this);pin.setSingleLine(true);pin.setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);pin.setHint("Введи PIN-код");body.addView(pin,lp(-1,52,0,0,0,0));android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("Приложение защищено").setMessage("Введи свой PIN, чтобы продолжить.").setView(body).setCancelable(false).setPositiveButton("Разблокировать",null).create();dialog.setOnShowListener(v->dialog.getButton(-1).setOnClickListener(q->{String salt=prefs.getString("app_pin_salt","");if(pinHash(pin.getText().toString(),salt).equals(prefs.getString("app_pin_hash",""))){pinUnlocked=true;pinDialogVisible=false;dialog.dismiss();}else{pin.setError("Неверный PIN");pin.setText("");}}));dialog.setOnCancelListener(d->pinDialogVisible=false);dialog.show();}
+    private static class SettingsCheckDrawable extends android.graphics.drawable.Drawable {
+        private final android.graphics.Paint paint=new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        private final boolean checked;
+        private final int accent;
+        SettingsCheckDrawable(boolean checked,int accent){this.checked=checked;this.accent=accent;}
+        @Override public void draw(android.graphics.Canvas canvas){
+            android.graphics.Rect b=getBounds();float side=Math.min(b.width(),b.height());float cx=b.exactCenterX(),cy=b.exactCenterY(),r=side*0.39f;
+            paint.setStyle(android.graphics.Paint.Style.FILL);paint.setColor(checked?accent:0x00FFFFFF);canvas.drawCircle(cx,cy,r,paint);
+            paint.setStyle(android.graphics.Paint.Style.STROKE);paint.setStrokeWidth(Math.max(1.8f,side*0.075f));paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);paint.setStrokeJoin(android.graphics.Paint.Join.ROUND);paint.setColor(checked?accent:0xFFBDAEB6);canvas.drawCircle(cx,cy,r,paint);
+            if(checked){paint.setStyle(android.graphics.Paint.Style.STROKE);paint.setStrokeWidth(Math.max(2f,side*0.085f));paint.setColor(android.graphics.Color.WHITE);android.graphics.Path p=new android.graphics.Path();p.moveTo(cx-side*0.19f,cy);p.lineTo(cx-side*0.045f,cy+side*0.14f);p.lineTo(cx+side*0.22f,cy-side*0.17f);canvas.drawPath(p,paint);}
+        }
+        @Override public void setAlpha(int alpha){paint.setAlpha(alpha);invalidateSelf();}
+        @Override public void setColorFilter(android.graphics.ColorFilter filter){paint.setColorFilter(filter);invalidateSelf();}
+        @Override public int getOpacity(){return android.graphics.PixelFormat.TRANSLUCENT;}
+    }
+
     private void styleRoundCheckBox(CheckBox box) {
         if(box==null)return;
-        android.graphics.drawable.GradientDrawable unchecked=new android.graphics.drawable.GradientDrawable();
-        unchecked.setShape(android.graphics.drawable.GradientDrawable.OVAL);
-        unchecked.setColor(android.graphics.Color.TRANSPARENT);
-        unchecked.setStroke(dp(2),0xFFB9AAB1);
-        unchecked.setSize(dp(22),dp(22));
-        android.graphics.drawable.GradientDrawable checked=new android.graphics.drawable.GradientDrawable();
-        checked.setShape(android.graphics.drawable.GradientDrawable.OVAL);
-        checked.setColor(PINK);
-        checked.setStroke(dp(2),PINK);
-        checked.setSize(dp(22),dp(22));
         android.graphics.drawable.StateListDrawable states=new android.graphics.drawable.StateListDrawable();
-        states.addState(new int[]{android.R.attr.state_checked},checked);
-        states.addState(new int[]{},unchecked);
+        states.addState(new int[]{android.R.attr.state_checked},new SettingsCheckDrawable(true,PINK));
+        states.addState(new int[]{},new SettingsCheckDrawable(false,PINK));
         if(Build.VERSION.SDK_INT>=21)box.setButtonTintList(null);
         box.setButtonDrawable(states);
         box.setTag("round_checkbox");
-        box.setCompoundDrawablePadding(dp(8));
+        box.setCompoundDrawablePadding(dp(11));
+        box.setMinHeight(dp(48));
+        box.setGravity(Gravity.CENTER_VERTICAL);
+        box.setIncludeFontPadding(false);
+        box.setPadding(dp(2),dp(4),dp(8),dp(4));
+        box.setButtonDrawable(states);
+        if(Build.VERSION.SDK_INT>=21){
+            android.graphics.drawable.GradientDrawable rippleMask=new android.graphics.drawable.GradientDrawable();
+            rippleMask.setColor(0xFFFFFFFF);rippleMask.setCornerRadius(dp(13));
+            box.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x18C97891),null,rippleMask));
+        }
     }
 
     private CheckBox addSettingsToggle(LinearLayout host,String label,String key,boolean defaultValue,Runnable afterChange){
@@ -779,7 +795,7 @@ public class MainActivity extends Activity {
         styleRoundCheckBox(box);
         box.setChecked(prefs.getBoolean(key,defaultValue));
         // Плотная строка переключателя без лишних вертикальных отступов.
-        host.addView(box,lp(-1,38,0,0,0,0));
+        host.addView(box,lp(-1,50,0,0,0,0));
         box.setOnCheckedChangeListener((button,checked)->{prefs.edit().putBoolean(key,checked).apply();if(afterChange!=null)afterChange.run();});
         return box;
     }
