@@ -83,6 +83,58 @@ public class MainActivity extends Activity {
     private int miniScore=0;
     private String miniTopic="";
     private boolean weaknessTrainingMode=false,miniResultSaved=false;
+    /** Consistent lightweight outline icons used by the app's primary navigation. */
+    private static class NavigationIconView extends View {
+        private final android.graphics.Paint paint=new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        private final android.graphics.Path path=new android.graphics.Path();
+        private final int type,color;
+        NavigationIconView(Context context,int type,int color){super(context);this.type=type;this.color=color;setContentDescription(new String[]{"Главная","Уроки","Прогресс","Экзамен","Дневник","Таймер"}[Math.max(0,Math.min(5,type))]);}
+        @Override protected void onDraw(android.graphics.Canvas canvas){
+            super.onDraw(canvas);
+            float scale=Math.min(getWidth(),getHeight())/24f;
+            canvas.save();
+            canvas.translate((getWidth()-24f*scale)/2f,(getHeight()-24f*scale)/2f);
+            canvas.scale(scale,scale);
+            paint.setColor(color);paint.setStyle(android.graphics.Paint.Style.STROKE);paint.setStrokeWidth(1.85f);
+            paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);paint.setStrokeJoin(android.graphics.Paint.Join.ROUND);
+            path.reset();
+            switch(type){
+                case 0: // Home
+                    path.moveTo(2.5f,10.5f);path.lineTo(12,3);path.lineTo(21.5f,10.5f);
+                    path.moveTo(5,9.5f);path.lineTo(5,20.5f);path.lineTo(19,20.5f);path.lineTo(19,9.5f);
+                    path.moveTo(9.5f,20.5f);path.lineTo(9.5f,14);path.lineTo(14.5f,14);path.lineTo(14.5f,20.5f);
+                    canvas.drawPath(path,paint);break;
+                case 1: // Open book
+                    path.moveTo(12,6.5f);path.cubicTo(9,4.5f,5.5f,4.5f,3,5.5f);path.lineTo(3,19);
+                    path.cubicTo(6.5f,17.8f,9.5f,18.2f,12,20);
+                    path.cubicTo(14.5f,18.2f,17.5f,17.8f,21,19);path.lineTo(21,5.5f);
+                    path.cubicTo(18.5f,4.5f,15,4.5f,12,6.5f);path.moveTo(12,6.5f);path.lineTo(12,20);
+                    canvas.drawPath(path,paint);break;
+                case 2: // Progress chart
+                    path.moveTo(3,20.5f);path.lineTo(21,20.5f);
+                    path.moveTo(4,16.5f);path.lineTo(9,11.5f);path.lineTo(13,14.5f);path.lineTo(19.5f,6);
+                    path.moveTo(16,6);path.lineTo(19.5f,6);path.lineTo(19.5f,9.5f);
+                    canvas.drawPath(path,paint);break;
+                case 3: // Exam clipboard
+                    path.moveTo(8,5.5f);path.lineTo(5,5.5f);path.lineTo(5,21);path.lineTo(19,21);path.lineTo(19,5.5f);path.lineTo(16,5.5f);
+                    path.moveTo(9,4);path.lineTo(15,4);path.quadTo(16.5f,4,16.5f,5.5f);path.lineTo(16.5f,7);path.lineTo(7.5f,7);path.lineTo(7.5f,5.5f);path.quadTo(7.5f,4,9,4);
+                    path.moveTo(8.5f,13);path.lineTo(10.5f,15);path.lineTo(15.5f,10.5f);
+                    canvas.drawPath(path,paint);break;
+                case 4: // Diary / notes
+                    path.moveTo(5,3.5f);path.lineTo(19,3.5f);path.lineTo(19,20.5f);path.lineTo(5,20.5f);path.close();
+                    path.moveTo(8.5f,8);path.lineTo(15.5f,8);path.moveTo(8.5f,12);path.lineTo(15.5f,12);path.moveTo(8.5f,16);path.lineTo(13.5f,16);
+                    canvas.drawPath(path,paint);break;
+                default: // Focus timer
+                    canvas.drawCircle(12,12.5f,8.5f,paint);
+                    path.moveTo(12,7);path.lineTo(12,12.5f);path.lineTo(16,15);
+                    path.moveTo(9,2.5f);path.lineTo(15,2.5f);
+                    path.moveTo(12,2.5f);path.lineTo(12,4);
+                    canvas.drawPath(path,paint);break;
+            }
+            canvas.restore();
+        }
+    }
+
     private static class TimerRingView extends View {
         private final android.graphics.Paint paint=new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
         private final android.graphics.RectF arc=new android.graphics.RectF();
