@@ -356,16 +356,34 @@ public class MainActivity extends Activity {
         } else if (step == 2) {
             addText(page,"Выбери аватарку",25,DARK,true);
             addText(page,"Её можно будет поменять позже.",14,MUTED,false);
-            String[] avatars={"🌸","🐰","🦋","🐱","🌷","⭐"};
+            String[] avatars={"🌸","🐰","🦋","🐱","🌷"};
+            String[] moreAvatars={"⭐","📚","🌻","🧸","🍓","💗","🦄","🐼","🐨","🍀","🌙","✨","🎀","🐥","🪻","🌈","🍒","🧁","🪴","💜"};
             android.widget.GridLayout avatarGrid=new android.widget.GridLayout(this);avatarGrid.setColumnCount(3);
             String selectedAvatar=prefs.getString("onboarding_avatar","🌸");
-            for(String avatar:avatars){
-                Button av=button((selectedAvatar.equals(avatar)?"✓  ":"")+avatar,selectedAvatar.equals(avatar));
-                android.widget.GridLayout.LayoutParams ap=new android.widget.GridLayout.LayoutParams();
-                ap.width=0;ap.height=dp(76);ap.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);
-                ap.setMargins(dp(5),dp(6),dp(5),dp(6));avatarGrid.addView(av,ap);
-                av.setOnClickListener(v->{v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);prefs.edit().putString("onboarding_avatar",avatar).apply();renderWelcomeStep(3,name,address,theme,focus,minutes,slide);});
-            }
+            Runnable renderAvatarChoices=()->{
+                avatarGrid.removeAllViews();
+                for(String avatar:avatars){
+                    Button av=button((selectedAvatar.equals(avatar)?"✓  ":"")+avatar,selectedAvatar.equals(avatar));
+                    android.widget.GridLayout.LayoutParams ap=new android.widget.GridLayout.LayoutParams();
+                    ap.width=0;ap.height=dp(76);ap.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);
+                    ap.setMargins(dp(5),dp(6),dp(5),dp(6));avatarGrid.addView(av,ap);
+                    av.setOnClickListener(v->{prefs.edit().putString("onboarding_avatar",avatar).apply();renderWelcomeStep(3,name,address,theme,focus,minutes,slide);});
+                }
+                Button plus=button("＋",false);
+                android.widget.GridLayout.LayoutParams pp=new android.widget.GridLayout.LayoutParams();
+                pp.width=0;pp.height=dp(76);pp.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);
+                pp.setMargins(dp(5),dp(6),dp(5),dp(6));avatarGrid.addView(plus,pp);
+                plus.setOnClickListener(v->{
+                    android.widget.GridLayout moreGrid=new android.widget.GridLayout(this);moreGrid.setColumnCount(4);
+                    for(String emoji:moreAvatars){TextView option=text(emoji,25,DARK,false);option.setGravity(Gravity.CENTER);option.setBackground(shape(selectedAvatar.equals(emoji)?0xFFFFE3EC:PALE,14,selectedAvatar.equals(emoji)?PINK:0));
+                        android.widget.GridLayout.LayoutParams ep=new android.widget.GridLayout.LayoutParams();ep.width=dp(54);ep.height=dp(54);ep.setMargins(dp(3),dp(3),dp(3),dp(3));moreGrid.addView(option,ep);
+                        option.setOnClickListener(q->{prefs.edit().putString("onboarding_avatar",emoji).apply();renderWelcomeStep(3,name,address,theme,focus,minutes,slide);((android.app.Dialog)moreGrid.getTag()).dismiss();});
+                    }
+                    android.widget.ScrollView scroll=new android.widget.ScrollView(this);scroll.setPadding(dp(8),dp(4),dp(8),dp(4));scroll.addView(moreGrid);
+                    android.app.AlertDialog picker=new android.app.AlertDialog.Builder(this).setTitle("Другие аватары").setView(scroll).setNegativeButton("Закрыть",null).create();moreGrid.setTag(picker);picker.show();
+                });
+            };
+            renderAvatarChoices.run();
             page.addView(avatarGrid,lp(-1,-2,0,22,0,0));
             page.addView(new android.widget.Space(this),new LinearLayout.LayoutParams(1,0,1f));
             TextView skip=text("Пропустить",14,MUTED,true);skip.setGravity(Gravity.CENTER);skip.setPadding(0,dp(12),0,dp(8));page.addView(skip,lp(-1,42,0,8,0,0));skip.setOnClickListener(v->renderWelcomeStep(3,name,address,theme,focus,minutes,slide));
@@ -728,6 +746,25 @@ public class MainActivity extends Activity {
         LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(dp(20),dp(8),dp(20),dp(4));EditText first=new EditText(this);first.setSingleLine(true);first.setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);first.setHint("Новый PIN · 4–8 цифр");body.addView(first,lp(-1,52,0,0,0,8));EditText second=new EditText(this);second.setSingleLine(true);second.setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);second.setHint("Повтори PIN");body.addView(second,lp(-1,52,0,0,0,8));android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("Защита приложения").setView(body).setNegativeButton("Отмена",null).setNeutralButton(prefs.getString("app_pin_hash","").isEmpty()?"":"Отключить PIN",(d,w)->prefs.edit().remove("app_pin_hash").remove("app_pin_salt").apply()).setPositiveButton("Сохранить PIN",null).create();dialog.setOnShowListener(v->{if(prefs.getString("app_pin_hash","").isEmpty())dialog.getButton(-3).setVisibility(View.GONE);dialog.getButton(-1).setOnClickListener(q->{String a=first.getText().toString(),b=second.getText().toString();if(!a.matches("[0-9]{4,8}")){first.setError("Нужно от 4 до 8 цифр");return;}if(!a.equals(b)){second.setError("PIN-коды не совпадают");return;}byte[] bytes=new byte[16];new java.security.SecureRandom().nextBytes(bytes);String salt=android.util.Base64.encodeToString(bytes,android.util.Base64.NO_WRAP);prefs.edit().putString("app_pin_salt",salt).putString("app_pin_hash",pinHash(a,salt)).apply();dialog.dismiss();showAppMessage("PIN-код установлен");});});dialog.show();
     }
     private void showPinLockDialog(){if(pinDialogVisible||prefs==null||prefs.getString("app_pin_hash","").isEmpty())return;pinDialogVisible=true;LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(dp(20),dp(8),dp(20),dp(4));EditText pin=new EditText(this);pin.setSingleLine(true);pin.setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD);pin.setHint("Введи PIN-код");body.addView(pin,lp(-1,52,0,0,0,0));android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("Приложение защищено").setMessage("Введи свой PIN, чтобы продолжить.").setView(body).setCancelable(false).setPositiveButton("Разблокировать",null).create();dialog.setOnShowListener(v->dialog.getButton(-1).setOnClickListener(q->{String salt=prefs.getString("app_pin_salt","");if(pinHash(pin.getText().toString(),salt).equals(prefs.getString("app_pin_hash",""))){pinUnlocked=true;pinDialogVisible=false;dialog.dismiss();}else{pin.setError("Неверный PIN");pin.setText("");}}));dialog.setOnCancelListener(d->pinDialogVisible=false);dialog.show();}
+    private void styleRoundCheckBox(CheckBox box) {
+        if(box==null)return;
+        android.graphics.drawable.GradientDrawable unchecked=new android.graphics.drawable.GradientDrawable();
+        unchecked.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+        unchecked.setColor(android.graphics.Color.TRANSPARENT);
+        unchecked.setStroke(dp(1.6f),0xFFB9AAB1);
+        android.graphics.drawable.GradientDrawable checked=new android.graphics.drawable.GradientDrawable();
+        checked.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+        checked.setColor(PINK);
+        checked.setStroke(dp(1.6f),PINK);
+        android.graphics.drawable.Drawable mark=android.graphics.drawable.Drawable.createFromPath("");
+        android.graphics.drawable.StateListDrawable states=new android.graphics.drawable.StateListDrawable();
+        states.addState(new int[]{android.R.attr.state_checked},checked);
+        states.addState(new int[]{},unchecked);
+        if(Build.VERSION.SDK_INT>=21)box.setButtonTintList(null);
+        box.setButtonDrawable(states);
+        box.setCompoundDrawablePadding(dp(8));
+    }
+
     private CheckBox addSettingsToggle(LinearLayout host,String label,String key,boolean defaultValue,Runnable afterChange){
         CheckBox box=new CheckBox(this);
         box.setText(translate(label));
@@ -737,7 +774,7 @@ public class MainActivity extends Activity {
         box.setGravity(Gravity.CENTER_VERTICAL);
         box.setIncludeFontPadding(false);
         box.setPadding(0,0,dp(4),0);
-        box.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));
+        styleRoundCheckBox(box);
         box.setChecked(prefs.getBoolean(key,defaultValue));
         // Плотная строка переключателя без лишних вертикальных отступов.
         host.addView(box,lp(-1,38,0,0,0,0));
@@ -902,15 +939,15 @@ public class MainActivity extends Activity {
 
         LinearLayout reminders=settingsGroup("НАПОМИНАНИЯ");
         reminders.setTag("notifications_sound");
-        CheckBox enabled=new CheckBox(this);enabled.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));enabled.setText(translate("Включить напоминания о занятиях"));enabled.setTextSize(14);enabled.setTextColor(DARK);enabled.setChecked(prefs.getBoolean("notifications_enabled",true));reminders.addView(enabled,lp(-1,48,0,0,0,4));
+        CheckBox enabled=new CheckBox(this);styleRoundCheckBox(enabled);enabled.setText(translate("Включить напоминания о занятиях"));enabled.setTextSize(14);enabled.setTextColor(DARK);enabled.setChecked(prefs.getBoolean("notifications_enabled",true));reminders.addView(enabled,lp(-1,48,0,0,0,4));
         enabled.setOnCheckedChangeListener((buttonView,checked)->{prefs.edit().putBoolean("notifications_enabled",checked).apply();scheduleReminders(this);if(checked&&Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},20);});
-        CheckBox quietToggle=new CheckBox(this);quietToggle.setText("Тихие часы для уведомлений");quietToggle.setTextColor(DARK);quietToggle.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));quietToggle.setChecked(prefs.getBoolean("quiet_hours_enabled",false));reminders.addView(quietToggle,lp(-1, 48,0,4,0,0));quietToggle.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("quiet_hours_enabled",on).apply();scheduleReminders(this);});
+        CheckBox quietToggle=new CheckBox(this);quietToggle.setText("Тихие часы для уведомлений");quietToggle.setTextColor(DARK);styleRoundCheckBox(quietToggle);quietToggle.setChecked(prefs.getBoolean("quiet_hours_enabled",false));reminders.addView(quietToggle,lp(-1, 48,0,4,0,0));quietToggle.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("quiet_hours_enabled",on).apply();scheduleReminders(this);});
         Button quietStart=button("Начало тишины · "+prefs.getString("quiet_hours_start","22:00"),false);Button quietEnd=button("Конец тишины · "+prefs.getString("quiet_hours_end","08:00"),false);quietStart.setOnClickListener(v->chooseQuietTime("quiet_hours_start"));quietEnd.setOnClickListener(v->chooseQuietTime("quiet_hours_end"));reminders.addView(quietStart,lp(-1,48,0,3,0,3));reminders.addView(quietEnd,lp(-1, 48,0,0,0,5));
         Button reminderSettings=button("Настроить дни и время",false);reminderSettings.setOnClickListener(v->showReminderSettings());reminders.addView(reminderSettings,lp(-1, 48,0,0,0,0));addSettingsToggle(reminders,"Недельный отчёт","weekly_report_enabled",true,()->WeeklyReportReceiver.schedule(this));int repeat=prefs.getInt("reminder_repeat_minutes",0);int[] repeats={0,5,10,15,30};String[] repeatNames={"Не повторять","5 минут","10 минут","15 минут","30 минут"};int ri=0;for(int k=0;k<repeats.length;k++)if(repeats[k]==repeat)ri=k;final int[] repeatIndex={ri};Button repeatButton=button("Повтор напоминания · "+repeatNames[ri],false);repeatButton.setOnClickListener(v->{repeatIndex[0]=(repeatIndex[0]+1)%repeats.length;prefs.edit().putInt("reminder_repeat_minutes",repeats[repeatIndex[0]]).apply();repeatButton.setText("Повтор напоминания · "+repeatNames[repeatIndex[0]]);});reminders.addView(repeatButton,lp(-1,42,0,3,0,3));String tone=prefs.getString("reminder_tone","soft");String[] tones={"soft","neutral","strict"},toneNames={"Мягкий","Нейтральный","Строгий"};int ti=0;for(int k=0;k<tones.length;k++)if(tones[k].equals(tone))ti=k;final int[] toneIndex={ti};Button toneButton=button("Тон напоминаний · "+toneNames[ti],false);toneButton.setOnClickListener(v->{toneIndex[0]=(toneIndex[0]+1)%tones.length;prefs.edit().putString("reminder_tone",tones[toneIndex[0]]).apply();toneButton.setText("Тон напоминаний · "+toneNames[toneIndex[0]]);});reminders.addView(toneButton,lp(-1,42,0,2,0,3));addSettingsToggle(reminders,"Напоминания о письмах себе","future_letters_enabled",true,()->rescheduleFutureLetterReminders(this));addSettingsToggle(reminders,"Вечернее напоминание об отдыхе","evening_rest_enabled",false,()->scheduleReminders(this));root.addView(reminders,lp(-1,-2,0,0,0,4));
 
         LinearLayout focus=settingsGroup("РЕЖИМ ФОКУСА");
         focus.setTag("notifications_sound");
-        CheckBox focusToggle=new CheckBox(this);focusToggle.setText("Не отвлекать");focusToggle.setTextColor(DARK);focusToggle.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));focusToggle.setChecked(prefs.getBoolean("do_not_disturb",false));focus.addView(focusToggle,lp(-1, 48,0,0,0,0));focusToggle.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("do_not_disturb",on).apply();scheduleReminders(this);});root.addView(focus,lp(-1,-2,0,0,0,4));
+        CheckBox focusToggle=new CheckBox(this);focusToggle.setText("Не отвлекать");focusToggle.setTextColor(DARK);styleRoundCheckBox(focusToggle);focusToggle.setChecked(prefs.getBoolean("do_not_disturb",false));focus.addView(focusToggle,lp(-1, 48,0,0,0,0));focusToggle.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("do_not_disturb",on).apply();scheduleReminders(this);});root.addView(focus,lp(-1,-2,0,0,0,4));
         LinearLayout feedbackSettings=settingsGroup("ЗВУК И ОТКЛИК");feedbackSettings.setTag("notifications_sound");addSettingsToggle(feedbackSettings,"Вибрация при действиях","haptics_enabled",true,null);addSettingsToggle(feedbackSettings,"Звук завершения темы","topic_sound_enabled",true,null);addSettingsToggle(feedbackSettings,"Звук окончания Pomodoro","timer_sound_enabled",true,null);addSettingsToggle(feedbackSettings,"Звук правильного ответа","correct_answer_sound_enabled",true,null);addSettingsToggle(feedbackSettings,"Уведомление об окончании таймера","timer_notification_enabled",true,null);addSettingsToggle(feedbackSettings,"Конфетти и праздничные эффекты","celebrations_enabled",true,null);
         addText(feedbackSettings,"ГРОМКОСТЬ СИГНАЛОВ",11,PINK,true);android.widget.SeekBar soundVolume=new android.widget.SeekBar(this);soundVolume.setMax(100);soundVolume.setProgress(prefs.getInt("completion_sound_volume",55));if(Build.VERSION.SDK_INT>=21)soundVolume.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));feedbackSettings.addView(soundVolume,lp(-1,38,0,0,0,5));soundVolume.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener(){public void onProgressChanged(android.widget.SeekBar b,int value,boolean user){if(user)prefs.edit().putInt("completion_sound_volume",value).apply();}public void onStartTrackingTouch(android.widget.SeekBar b){}public void onStopTrackingTouch(android.widget.SeekBar b){}});
         addSettingsToggle(feedbackSettings,"Автовключение выбранной атмосферы при открытии","ambience_autostart",false,null);
@@ -919,8 +956,11 @@ public class MainActivity extends Activity {
         LinearLayout backup=settingsGroup("РЕЗЕРВНАЯ КОПИЯ");
         backup.setTag("data_security");
         
-        Button export=button("Экспортировать копию",true);export.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");i.putExtra(Intent.EXTRA_TITLE,"study_with_love_backup.json");startActivityForResult(i,BACKUP_EXPORT);});backup.addView(export,lp(-1, 48,0,7,0,5));
-        Button diaryTxt=button("Экспортировать дневник · TXT",false);diaryTxt.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("text/plain");i.putExtra(Intent.EXTRA_TITLE,"study_with_love_diary.txt");startActivityForResult(i,DIARY_EXPORT);});backup.addView(diaryTxt,lp(-1,44,0,4,0,3));Button diaryPdf=button("Экспортировать дневник · PDF",false);diaryPdf.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/pdf");i.putExtra(Intent.EXTRA_TITLE,"study_with_love_diary.pdf");startActivityForResult(i,DIARY_PDF_EXPORT);});backup.addView(diaryPdf,lp(-1,44,0,2,0,5));Button resetProgress=button("Сбросить только учебный прогресс",false);resetProgress.setTextColor(0xFFB32635);resetProgress.setOnClickListener(v->new android.app.AlertDialog.Builder(this).setTitle("Сбросить прогресс?").setMessage("Будут удалены учебные отметки, серии и статистика. Дневник, письма, настройки и резервные копии останутся.").setNegativeButton("Отмена",null).setPositiveButton("Сбросить",(d,w)->{SharedPreferences.Editor e=prefs.edit();for(String key:prefs.getAll().keySet())if((key.startsWith("progress_")&&!key.equals("progress_display")&&!key.equals("progress_month_offset"))||key.startsWith("done_")||key.startsWith("topic_completed_at_")||key.startsWith("focus_minutes_")||key.startsWith("focus_remainder_ms_"))e.remove(key);e.remove("done_count").remove("study_days").remove("last_study_date").remove("current_streak").remove("longest_streak").remove("focus_total_minutes").apply();loadChapters();showHome();showAppMessage("Учебный прогресс сброшен. Дневник сохранён.");}).show());backup.addView(resetProgress,lp(-1,46,0,2,0,5));Button restore=button("Восстановить из копии",false);restore.setTextColor(0xFFB32635);restore.setOnClickListener(v->new android.app.AlertDialog.Builder(this).setTitle("Восстановить данные?")
+        Button export=button("Экспортировать копию",true);export.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");i.putExtra(Intent.EXTRA_TITLE,"study_with_love_backup.json");startActivityForResult(i,BACKUP_EXPORT);});backup.addView(export,lp(-1, 48,0,7,0,7));
+        LinearLayout diaryExports=new LinearLayout(this);diaryExports.setOrientation(LinearLayout.HORIZONTAL);diaryExports.setGravity(Gravity.CENTER_VERTICAL);
+        Button diaryTxt=button("Дневник · TXT",false);diaryTxt.setTextSize(12);diaryTxt.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("text/plain");i.putExtra(Intent.EXTRA_TITLE,"study_with_love_diary.txt");startActivityForResult(i,DIARY_EXPORT);});
+        Button diaryPdf=button("Дневник · PDF",false);diaryPdf.setTextSize(12);diaryPdf.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/pdf");i.putExtra(Intent.EXTRA_TITLE,"study_with_love_diary.pdf");startActivityForResult(i,DIARY_PDF_EXPORT);});
+        diaryExports.addView(diaryTxt,new LinearLayout.LayoutParams(0,dp(44),1f));diaryExports.addView(new View(this),lp(8,1,0,0,0,0));diaryExports.addView(diaryPdf,new LinearLayout.LayoutParams(0,dp(44),1f));backup.addView(diaryExports,lp(-1,44,0,0,0,7));Button resetProgress=button("Сбросить только учебный прогресс",false);resetProgress.setTextColor(0xFFB32635);resetProgress.setOnClickListener(v->new android.app.AlertDialog.Builder(this).setTitle("Сбросить прогресс?").setMessage("Будут удалены учебные отметки, серии и статистика. Дневник, письма, настройки и резервные копии останутся.").setNegativeButton("Отмена",null).setPositiveButton("Сбросить",(d,w)->{SharedPreferences.Editor e=prefs.edit();for(String key:prefs.getAll().keySet())if((key.startsWith("progress_")&&!key.equals("progress_display")&&!key.equals("progress_month_offset"))||key.startsWith("done_")||key.startsWith("topic_completed_at_")||key.startsWith("focus_minutes_")||key.startsWith("focus_remainder_ms_"))e.remove(key);e.remove("done_count").remove("study_days").remove("last_study_date").remove("current_streak").remove("longest_streak").remove("focus_total_minutes").apply();loadChapters();showHome();showAppMessage("Учебный прогресс сброшен. Дневник сохранён.");}).show());backup.addView(resetProgress,lp(-1,46,0,2,0,5));Button restore=button("Восстановить из копии",false);restore.setTextColor(0xFFB32635);restore.setOnClickListener(v->new android.app.AlertDialog.Builder(this).setTitle("Восстановить данные?")
             .setMessage("Текущие данные приложения будут заменены содержимым выбранной копии. Перед продолжением убедись, что у тебя есть актуальная резервная копия.")
             .setNegativeButton("Отмена",null).setPositiveButton("Продолжить",(dialog,which)->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");startActivityForResult(i,BACKUP_IMPORT);}).show());backup.addView(restore,lp(-1,48,0,0,0,0));addSettingsToggle(backup,"Автоматическая копия каждое воскресенье","weekly_backup_enabled",false,()->WeeklyBackupReceiver.schedule(this));Button chooseBackupFolder=button(prefs.getString("weekly_backup_tree_uri","").isEmpty()?"Выбрать папку для копий":"Изменить папку для копий",false);chooseBackupFolder.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,WEEKLY_BACKUP_FOLDER);});backup.addView(chooseBackupFolder,lp(-1,44,0,3,0,5));long backupAt=prefs.getLong("weekly_backup_last_success",0L);addSettingsToggle(backup,"Скрывать содержимое в списке недавних приложений","hide_recent_preview",false,()->{if(prefs.getBoolean("hide_recent_preview",false))getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);else getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);});Button pinButton=button(prefs.getString("app_pin_hash","").isEmpty()?"Установить PIN-код":"Изменить или отключить PIN-код",false);pinButton.setOnClickListener(v->showPinSetupDialog());backup.addView(pinButton,lp(-1,46,0,6,0,0));root.addView(backup,lp(-1,-2,0,0,0,4));
 
@@ -929,7 +969,7 @@ public class MainActivity extends Activity {
         CheckBox reduceMotion = new CheckBox(this);
         reduceMotion.setText("Меньше анимации");
         reduceMotion.setTextSize(14); reduceMotion.setTextColor(DARK);
-        reduceMotion.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));
+        styleRoundCheckBox(reduceMotion);
         reduceMotion.setChecked(prefs.getBoolean("reduce_motion", false));
         updates.addView(reduceMotion, lp(-1, 48, 0, 2, 0, 5));
         reduceMotion.setOnCheckedChangeListener((v, checked) -> prefs.edit().putBoolean("reduce_motion", checked).apply());
@@ -2813,9 +2853,22 @@ public class MainActivity extends Activity {
             TextView state=text(open?"Открыто ✓":progress,10,open?PINK:0xFF625A61,true);state.setGravity(Gravity.CENTER);tile.addView(state,lp(-1,18,0,0,0,2));
             if(!open){ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(Math.max(1,target));bar.setProgress(Math.min(current,target));bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFE6DFE2));tile.addView(bar,lp(-1,5,0,2,0,0));}
             android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(116);gp.columnSpec=android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED,1f);gp.setMargins(dp(4),dp(4),dp(4),dp(4));grid.addView(tile,gp);
-            tile.setOnClickListener(v->{String detail=x[2];if(open){String date=prefs.getString("achievement_date_"+x[1],"");if(date.isEmpty())date="Дата получения не сохранена";detail+="\n\nОткрыто ✓ · "+date;}else detail+="\n\nПрогресс: "+Math.min(current,target)+" из "+target;new android.app.AlertDialog.Builder(this).setTitle(x[0]+"  "+x[1]).setMessage(detail).setPositiveButton("Понятно",null).show();});
+            tile.setOnClickListener(v->showAchievementDetail(x[0],x[1],x[2],open,current,target));
         }
         root.addView(grid,lp(-1,-2,0,8,0,8));backHome();
+    }
+
+    private void showAchievementDetail(String emoji,String name,String description,boolean unlocked,int current,int target){
+        LinearLayout panel=new LinearLayout(this);panel.setOrientation(LinearLayout.VERTICAL);panel.setGravity(Gravity.CENTER_HORIZONTAL);panel.setPadding(dp(22),dp(18),dp(22),dp(18));
+        panel.setBackground(shape(isDarkAppearance()?0xFF292431:0xFFFFF7FA,24,isDarkAppearance()?0xFF514454:0xFFF0D7E1));
+        TextView icon=text(emoji,54,PINK,true);icon.setGravity(Gravity.CENTER);icon.setBackground(shape(isDarkAppearance()?0xFF3B3040:0xFFFFE8F0,48,0));panel.addView(icon,lp(104,104,0,0,0,12));
+        TextView title=text(name,20,DARK,true);title.setGravity(Gravity.CENTER);panel.addView(title,lp(-1,-2,0,0,0,7));
+        TextView desc=text(description,14,MUTED,false);desc.setGravity(Gravity.CENTER);panel.addView(desc,lp(-1,-2,0,0,0,12));
+        if(unlocked){String date=prefs.getString("achievement_date_"+name,"Дата получения не сохранена");TextView status=text("✦  ДОСТИЖЕНИЕ ОТКРЫТО",11,PINK,true);status.setGravity(Gravity.CENTER);status.setBackground(shape(isDarkAppearance()?0xFF493344:0xFFFFE8F0,18,0));panel.addView(status,lp(-1,38,0,0,0,7));TextView when=text("Получено: "+date,12,MUTED,true);when.setGravity(Gravity.CENTER);panel.addView(when,lp(-1,26,0,0,0,0));}
+        else{TextView progress=text("Прогресс · "+Math.min(current,target)+" из "+target,13,PINK,true);progress.setGravity(Gravity.CENTER);panel.addView(progress,lp(-1,30,0,0,0,5));ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(Math.max(1,target));bar.setProgress(Math.min(current,target));bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFEADDE4));panel.addView(bar,lp(-1,7,0,0,0,0));}
+        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setView(panel).setPositiveButton("Понятно",null).create();
+        dialog.setOnShowListener(d->{if(dialog.getWindow()!=null){dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);dialog.getWindow().setLayout(Math.min(getResources().getDisplayMetrics().widthPixels-dp(40),dp(360)),-2);}});
+        dialog.show();
     }
 
     private int achievementCurrent(int index,int days,int minutes,int completed,int sessions){if(index<=5||index>=14)return days;if(index<=9)return completed;if(index<=11)return minutes;if(index==12)return sessions;if(index==13)return completed+sessions;return 0;}
