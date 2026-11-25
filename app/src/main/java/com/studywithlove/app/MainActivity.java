@@ -2621,7 +2621,7 @@ public class MainActivity extends Activity {
         EditText search=new EditText(this);search.setSingleLine(true);search.setTextSize(13);search.setTextColor(DARK);search.setHintTextColor(MUTED);search.setHint("Поиск по победам...");search.setPadding(0,0,0,0);search.setBackgroundColor(0x00000000);searchWrap.addView(search,new LinearLayout.LayoutParams(0,dp(48),1f));
         TextView clear=text("×",22,MUTED,true);clear.setContentDescription(translate("Очистить поиск"));clear.setGravity(Gravity.CENTER);clear.setVisibility(View.GONE);searchWrap.addView(clear,lp(40,48,0,0,0,0));
         TextView closeDiarySearch=text("×",25,PINK,true);closeDiarySearch.setGravity(Gravity.CENTER);closeDiarySearch.setContentDescription("Закрыть поиск");searchWrap.addView(closeDiarySearch,lp(38,48,0,0,0,0));root.addView(searchWrap,lp(-1, 48,0,0,0,7));
-        searchWrap.setAlpha(0f);searchWrap.setTranslationY(-dp(7));
+        searchWrap.setVisibility(View.GONE);searchWrap.setAlpha(0f);searchWrap.setTranslationY(-dp(7));
         LinearLayout filterRow=new LinearLayout(this);filterRow.setGravity(Gravity.CENTER_VERTICAL);
         HorizontalScrollView filterScroll=new HorizontalScrollView(this);filterScroll.setHorizontalScrollBarEnabled(false);filterScroll.addView(filterRow);root.addView(filterScroll,lp(-1, 38,0,0,0,4));
         LinearLayout entries=new LinearLayout(this);entries.setOrientation(LinearLayout.VERTICAL);root.addView(entries,lp(-1,-2,0,0,0,0));
