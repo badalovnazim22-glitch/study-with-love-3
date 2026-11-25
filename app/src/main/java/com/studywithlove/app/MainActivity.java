@@ -51,7 +51,7 @@ import java.util.TimeZone;
 public class MainActivity extends Activity {
     public static volatile boolean activityVisible=false;
     private static volatile MainActivity foregroundActivity;
-    private int BG = 0xFFF8F7FC, PINK = 0xFF8070A8, PALE = 0xFFF0EDFA, DARK = 0xFF292638, MUTED = 0xFF858096;
+    private int BG = 0xFFFFF9F7, PINK = 0xFFC97891, PALE = 0xFFFCEEF2, DARK = 0xFF3F3439, MUTED = 0xFF75666D;
     private int progressMonthOffset = 0;
     private LinearLayout progressCalendarHost;
     private LinearLayout root;
@@ -186,6 +186,12 @@ public class MainActivity extends Activity {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(0, this::handleBackNavigation);
         }
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+        // Возвращаем розовую тему после прежнего обновления с лавандовой палитрой.
+        if ("lavender".equals(prefs.getString("app_theme", "pink"))) {
+            SharedPreferences.Editor themeMigration=prefs.edit().putString("app_theme","pink");
+            if (prefs.getInt("app_accent_color",0)==0xFF8070A8) themeMigration.remove("app_accent_color");
+            themeMigration.apply();
+        }
         selectedStudyMinutes=Math.max(1,Math.min(600,prefs.getInt("selected_study_minutes",25)));
         selectedBreakMinutes=Math.max(1,Math.min(30,prefs.getInt("selected_break_minutes",5)));
         int openedReminder=getIntent()==null?-1:getIntent().getIntExtra("opened_reminder_id",-1);if(openedReminder>0)prefs.edit().putLong("reminder_opened_at_"+openedReminder,System.currentTimeMillis()).apply();
@@ -525,7 +531,7 @@ public class MainActivity extends Activity {
         activeScrollView = scroll;
         scroll.setFillViewport(true); scroll.setClipToPadding(false);
         root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(15), dp(12), dp(15), dp(18)); root.setBackgroundColor(BG);
+        root.setPadding(dp(15), dp(12), dp(15), dp(28)); root.setBackgroundColor(BG);
         installThemeFontListener(root);
         String customBg=prefs.getString("custom_background_uri","");
         if(!customBg.isEmpty()){try{if(!customBg.equals(cachedBackgroundUri)||cachedBackgroundBitmap==null){java.io.InputStream in=getContentResolver().openInputStream(android.net.Uri.parse(customBg));if(in!=null){android.graphics.Bitmap decoded=android.graphics.BitmapFactory.decodeStream(in);in.close();cachedBackgroundBitmap=decoded;cachedBackgroundUri=customBg;}}if(cachedBackgroundBitmap!=null){Drawable photo=new android.graphics.drawable.BitmapDrawable(getResources(),cachedBackgroundBitmap);photo.setAlpha(42);root.setBackground(photo);}}catch(Exception ignored){}}
@@ -541,9 +547,10 @@ public class MainActivity extends Activity {
         contentFrame.addView(root, contentParams);
         scroll.addView(contentFrame, new android.widget.ScrollView.LayoutParams(-1, -2));
         shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
-        if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 78, 0, 0, 0, 0));
+        if (!currentScreen.equals("welcome")) shell.addView(bottomNavigation(), lp(-1, 84, 0, 0, 0, 0));
+        // Нижняя навигация закреплена в shell и не зависит от прокрутки контента.
         final View navigationBar=shell.getChildCount()>1?shell.getChildAt(1):null;
-        scroll.setOnScrollChangeListener((view,scrollX,scrollY,oldX,oldY)->{if(navigationBar==null)return;if(scrollY>oldY+dp(3)){navigationBar.animate().translationY(dp(84)).alpha(0f).setDuration(170).start();}else if(scrollY<oldY-dp(3)){navigationBar.animate().translationY(0f).alpha(1f).setDuration(190).start();}});
+        if(navigationBar!=null){navigationBar.setTranslationY(0f);navigationBar.setAlpha(1f);}
         setContentView(shell);
         if(currentScreen.startsWith("settings_") || "settings".equals(currentScreen)) {
             final int restoreY=pendingSettingsScrollY;
@@ -620,7 +627,7 @@ public class MainActivity extends Activity {
         LinearLayout bar=new LinearLayout(this);
         bar.setOrientation(LinearLayout.HORIZONTAL);
         bar.setGravity(Gravity.CENTER);
-        bar.setPadding(dp(8),dp(7),dp(8),dp(5));
+        bar.setPadding(dp(7),dp(6),dp(7),dp(6));
         GradientDrawable navBg=new GradientDrawable();
         navBg.setColor(isDarkAppearance()?0xFF211E29:0xFFFFFFFF);
         navBg.setCornerRadius(0);
@@ -635,16 +642,16 @@ public class MainActivity extends Activity {
             LinearLayout item=new LinearLayout(this);
             item.setOrientation(LinearLayout.VERTICAL);
             item.setGravity(Gravity.CENTER);
-            item.setPadding(dp(1),dp(3),dp(1),dp(2));
-            item.setBackground(selected?shape(isDarkAppearance()?0xFF383244:0xFFF0EDFA,18,0):shape(0x00FFFFFF,18,0));
+            item.setPadding(dp(1),dp(4),dp(1),dp(3));
+            item.setBackground(selected?shape(isDarkAppearance()?0xFF49313D:0xFFFCE8EE,20,0):shape(0x00FFFFFF,18,0));
             NavigationIconView icon=new NavigationIconView(this,i,selected?PINK:MUTED);
-            item.addView(icon,new LinearLayout.LayoutParams(dp(27),dp(27)));
-            TextView label=textFixed(labels[i],9,selected?PINK:MUTED,selected);
+            item.addView(icon,new LinearLayout.LayoutParams(dp(28),dp(28)));
+            TextView label=textFixed(labels[i],10,selected?PINK:MUTED,selected);
             label.setGravity(Gravity.CENTER);
             label.setMaxLines(1);
             label.setSingleLine(true);
             label.setIncludeFontPadding(false);
-            item.addView(label,lp(-1,dp(19),0,dp(2),0,0));
+            item.addView(label,lp(-1,dp(20),0,dp(3),0,0));
             LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-1,1f);
             p.setMargins(dp(2),0,dp(2),0);
             bar.addView(item,p);
