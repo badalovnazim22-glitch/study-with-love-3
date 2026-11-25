@@ -45,31 +45,15 @@ public final class AppUpdater {
             String latestVersion = null;
             String notes = "";
             String error = null;
-            HttpURLConnection connection = null;
             try {
-                // Add a unique query parameter and explicit no-cache headers so GitHub/CDN
-                // cannot return an older "latest release" response.
-                String uncachedApi = RELEASE_API + "?_=" + System.currentTimeMillis();
-                connection = (HttpURLConnection) new URL(uncachedApi).openConnection();
-                connection.setRequestMethod("GET");
-                connection.setConnectTimeout(12000);
-                connection.setReadTimeout(15000);
-                connection.setRequestProperty("Accept", "application/vnd.github+json");
-                connection.setRequestProperty("User-Agent", "Study-with-Love-Updater");
-                connection.setRequestProperty("Cache-Control", "no-cache, no-store, max-age=0");
-                connection.setRequestProperty("Pragma", "no-cache");
-                int status = connection.getResponseCode();
-                if (status != 200) throw new Exception("HTTP " + status);
-                String json = readText(connection.getInputStream(), 1024 * 1024);
-                JSONObject release = new JSONObject(json);
-                String tag = release.optString("tag_name", "").trim();
-                latestVersion = tag.startsWith("v") || tag.startsWith("V") ? tag.substring(1) : tag;
-                notes = release.optString("body", "").trim();
-                if (latestVersion.isEmpty()) throw new Exception("Не удалось определить версию.");
+                // GitHub API is not reachable on some mobile networks. Try the API first,
+                // then use GitHub's public /releases/latest redirect as a fallback.
+                latestVersion = fetchLatestVersion();
+                if (latestVersion == null || latestVersion.trim().isEmpty()) {
+                    throw new Exception("Latest release version is empty");
+                }
             } catch (Exception e) {
-                error = "Не удалось проверить обновления. Попробуй позже.";
-            } finally {
-                if (connection != null) connection.disconnect();
+                error = "Не удалось проверить обновления. Проверь подключение к интернету и попробуй ещё раз.";
             }
 
             final String foundVersion = latestVersion;
@@ -102,6 +86,62 @@ public final class AppUpdater {
                         .show();
             });
         }, "app-update-check").start();
+    }
+
+    private static String fetchLatestVersion() throws Exception {
+        HttpURLConnection api = null;
+        try {
+            String uncachedApi = RELEASE_API + "?_=" + System.currentTimeMillis();
+            api = (HttpURLConnection) new URL(uncachedApi).openConnection();
+            api.setRequestMethod("GET");
+            api.setConnectTimeout(10000);
+            api.setReadTimeout(12000);
+            api.setRequestProperty("Accept", "application/vnd.github+json");
+            api.setRequestProperty("User-Agent", "Study-with-Love-Updater");
+            api.setRequestProperty("Cache-Control", "no-cache");
+            int status = api.getResponseCode();
+            if (status == 200) {
+                JSONObject release = new JSONObject(readText(api.getInputStream(), 1024 * 1024));
+                String tag = release.optString("tag_name", "").trim();
+                if (!tag.isEmpty()) return stripVersionPrefix(tag);
+            }
+        } catch (Exception ignored) {
+            // Continue with the public GitHub release redirect below.
+        } finally {
+            if (api != null) api.disconnect();
+        }
+
+        HttpURLConnection web = null;
+        try {
+            URL latestUrl = new URL("https://github.com/badalovnazim22-glitch/study-with-love-3/releases/latest");
+            web = (HttpURLConnection) latestUrl.openConnection();
+            web.setInstanceFollowRedirects(false);
+            web.setConnectTimeout(10000);
+            web.setReadTimeout(12000);
+            web.setRequestMethod("GET");
+            web.setRequestProperty("User-Agent", "Study-with-Love-Updater");
+            int status = web.getResponseCode();
+            String location = web.getHeaderField("Location");
+            if (location == null || location.trim().isEmpty()) {
+                if (status >= 200 && status < 300) {
+                    location = web.getURL().toString();
+                } else {
+                    throw new Exception("GitHub release lookup HTTP " + status);
+                }
+            }
+            java.util.regex.Matcher matcher = java.util.regex.Pattern
+                    .compile("/releases/tag/([^/?#]+)")
+                    .matcher(location);
+            if (!matcher.find()) throw new Exception("GitHub latest release tag not found");
+            return stripVersionPrefix(java.net.URLDecoder.decode(matcher.group(1), "UTF-8"));
+        } finally {
+            if (web != null) web.disconnect();
+        }
+    }
+
+    private static String stripVersionPrefix(String tag) {
+        String value = tag == null ? "" : tag.trim();
+        return value.startsWith("v") || value.startsWith("V") ? value.substring(1) : value;
     }
 
     private static void download(Activity activity) {
