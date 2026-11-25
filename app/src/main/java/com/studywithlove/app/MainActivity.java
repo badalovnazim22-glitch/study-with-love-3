@@ -1106,7 +1106,7 @@ public class MainActivity extends Activity {
         }
         continueCard.addView(overallBar, lp(-1, 6, 0, 0, 0, 8));
         addText(continueCard, completedTopics + " из " + totalTopics + " тем завершено", 14, MUTED, false);
-        root.addView(continueCard, lp(-1, -2, 0, 2, 0, 10));
+        root.addView(continueCard, lp(-1, -2, 0, 1, 0, 6));
 
         // Three compact home summary tiles restored from the earlier design.
         LinearLayout homeStats = new LinearLayout(this);
@@ -1129,7 +1129,7 @@ public class MainActivity extends Activity {
             if (statIndex > 0) statLp.setMargins(dp(6), 0, 0, 0);
             homeStats.addView(statCard, statLp);
         }
-        root.addView(homeStats, lp(-1, -2, 0, 0, 0, 12));homeStats.setTag("home_stats");
+        root.addView(homeStats, lp(-1, -2, 0, 0, 0, 7));homeStats.setTag("home_stats");
 
         // Weekly goal with a Monday-to-Sunday activity strip on the home screen.
         int weeklyGoal = prefs.getInt("weekly_goal_minutes", 300);
@@ -1170,7 +1170,7 @@ public class MainActivity extends Activity {
             weekDay.add(Calendar.DAY_OF_YEAR, 1);
         }
         weeklyCard.addView(daysRow, lp(-1, 59, 0, 9, 0, 0));
-        root.addView(weeklyCard, lp(-1, -2, 0, 0, 0, 13));weeklyCard.setTag("home_weekly");
+        root.addView(weeklyCard, lp(-1, -2, 0, 0, 0, 8));weeklyCard.setTag("home_weekly");
 
         LinearLayout aiCard = card();
         aiCard.setOrientation(LinearLayout.HORIZONTAL);
@@ -1187,50 +1187,27 @@ public class MainActivity extends Activity {
         aiCard.addView(aiWords, new LinearLayout.LayoutParams(0, -2, 1f));
         aiCard.addView(text("›", 27, PINK, true));
         aiCard.setOnClickListener(v -> launchAiTutor());
-        root.addView(aiCard, lp(-1, -2, 0, 0, 0, 14));aiCard.setTag("home_ai");
+        root.addView(aiCard, lp(-1, -2, 0, 0, 0, 8));aiCard.setTag("home_ai");
 
         TextView emotionsTitle=text("ЭМОЦИИ И МОТИВАЦИЯ",11,PINK,true);emotionsTitle.setTag("home_emotions");root.addView(emotionsTitle,lp(-1,-2,0,0,0,0));
-        TextView diaryAction=text("♡  Дневник  ›",15,PINK,true);
-        diaryAction.setGravity(Gravity.CENTER_VERTICAL);
-        diaryAction.setPadding(dp(4),dp(6),dp(4),dp(6));
-        diaryAction.setBackgroundColor(android.graphics.Color.TRANSPARENT);
-        diaryAction.setOnClickListener(v->showDiary());
-        root.addView(diaryAction,lp(-1,dp(36),0,7,0,4));diaryAction.setTag("home_emotions");
         LinearLayout feelings2 = new LinearLayout(this);
         feelings2.setOrientation(LinearLayout.HORIZONTAL);
         ritualTile(feelings2, "✿", "Цветочек", "Растёт с тобой", this::showFlower);
         ritualTile(feelings2, "♫", "Атмосфера", "Звуки для учёбы", this::showAtmosphere);
-        root.addView(feelings2, lp(-1, -2, 0, 0, 0, 8));feelings2.setTag("home_emotions");
+        root.addView(feelings2, lp(-1, -2, 0, 0, 0, 6));feelings2.setTag("home_emotions");
 
-        // A full-width planner tile restores a clear, prominent entry point.
+        // Compact three-column square shortcuts; planner remains easy to find.
         TextView plannerHeading=text("ПЛАНИРОВАНИЕ",11,PINK,true);
         plannerHeading.setLetterSpacing(0.04f);
-        root.addView(plannerHeading,lp(-1,-2,0,8,0,5));
-        LinearLayout plannerTile=card();
-        plannerTile.setOrientation(LinearLayout.HORIZONTAL);
-        plannerTile.setGravity(Gravity.CENTER_VERTICAL);
-        plannerTile.setPadding(dp(14),dp(12),dp(14),dp(12));
-        TextView plannerIcon=text("▦",23,PINK,true);
-        plannerIcon.setGravity(Gravity.CENTER);
-        plannerIcon.setBackground(shape(PALE,16,0));
-        plannerTile.addView(plannerIcon,lp(44,44,0,0,12,0));
-        LinearLayout plannerWords=new LinearLayout(this);
-        plannerWords.setOrientation(LinearLayout.VERTICAL);
-        addText(plannerWords,"Планировщик",16,DARK,true);
-        addText(plannerWords,"План на сегодня и завтра",12,MUTED,false);
-        plannerTile.addView(plannerWords,new LinearLayout.LayoutParams(0,-2,1f));
-        plannerTile.addView(text("›",25,PINK,true),lp(24,36,4,0,0,0));
-        plannerTile.setContentDescription("Планировщик. План на сегодня и завтра");
-        plannerTile.setOnClickListener(v->showPlanner());
-        root.addView(plannerTile,lp(-1,dp(78),0,0,0,8));
-        plannerTile.setTag("home_planner");
-
-        // Detailed statistics are opened from the My Progress screen.
-        LinearLayout awardsRow = new LinearLayout(this);
-        awardsRow.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(awardsRow, "✧", "Достижения", "Твои награды", this::showAchievements);
-        ritualTile(awardsRow, "♧", "Напарник", "Общая цель", this::showStudyBuddy);
-        root.addView(awardsRow, lp(-1, -2, 0, 0, 0, 13));
+        root.addView(plannerHeading,lp(-1,-2,0,5,0,4));
+        LinearLayout plannerAwardsRow = new LinearLayout(this);
+        plannerAwardsRow.setOrientation(LinearLayout.HORIZONTAL);
+        plannerAwardsRow.setGravity(Gravity.CENTER_VERTICAL);
+        ritualTile(plannerAwardsRow, "▦", "Планировщик", "План на день", this::showPlanner);
+        ritualTile(plannerAwardsRow, "✧", "Достижения", "Твои награды", this::showAchievements);
+        ritualTile(plannerAwardsRow, "♧", "Напарник", "Общая цель", this::showStudyBuddy);
+        root.addView(plannerAwardsRow,lp(-1,-2,0,0,0,5));
+        plannerAwardsRow.setTag("home_planner");
 
         LinearLayout reminder = card();
         reminder.setOrientation(LinearLayout.HORIZONTAL);
@@ -1243,18 +1220,18 @@ public class MainActivity extends Activity {
         reminder.addView(reminderWords, new LinearLayout.LayoutParams(0, -2, 1f));
         reminder.addView(text("›", 27, PINK, true), lp(28, 38, 4, 0, 0, 0));
         reminder.setOnClickListener(v -> showReminderSettings());
-        root.addView(reminder, lp(-1, -2, 0, 0, 0, 4));reminder.setTag("home_reminders");
+        root.addView(reminder, lp(-1, -2, 0, 4, 0, 2));reminder.setTag("home_reminders");
 
-        TextView made = text("Сделано с любовью ♡", 12, MUTED, false);
+        TextView made = text("Сделано с любовью ♡", 11, MUTED, false);
         made.setGravity(Gravity.CENTER);
-        root.addView(made, lp(-1, 43, 0, 8, 0, 0));
+        root.addView(made, lp(-1, 30, 0, 3, 0, 0));
         reorderHomeBlocks();
         applyHomeBlockVisibility();
         animateHomeCascade();
     }
 
     private void reorderHomeBlocks(){
-        if(root==null)return;String[] defaults={"stats","weekly","ai","emotions","planner","reminders"};String saved=prefs.getString("home_block_order","stats,weekly,ai,emotions,reminders");List<String> order=new ArrayList<>();for(String key:saved.split(","))if(java.util.Arrays.asList(defaults).contains(key)&&!order.contains(key))order.add(key);for(String key:defaults)if(!order.contains(key))order.add(key);order.remove("reminders");order.add("reminders");Map<String,List<View>> groups=new LinkedHashMap<>();for(String key:defaults)groups.put(key,new ArrayList<View>());int first=-1;for(int i=0;i<root.getChildCount();i++){Object tag=root.getChildAt(i).getTag();if(tag instanceof String&&((String)tag).startsWith("home_")){String key=((String)tag).substring(5);if(groups.containsKey(key)){if(first<0)first=i;groups.get(key).add(root.getChildAt(i));}}}if(first<0)return;for(List<View> group:groups.values())for(View v:group)root.removeView(v);int at=Math.min(first,root.getChildCount());for(String key:order)for(View v:groups.get(key))root.addView(v,at++);
+        if(root==null)return;String[] defaults={"stats","weekly","ai","emotions","planner","reminders"};String saved=prefs.getString("home_block_order","stats,weekly,ai,emotions,planner,reminders");List<String> order=new ArrayList<>();for(String key:saved.split(","))if(java.util.Arrays.asList(defaults).contains(key)&&!order.contains(key))order.add(key);for(String key:defaults)if(!order.contains(key))order.add(key);order.remove("reminders");order.add("reminders");Map<String,List<View>> groups=new LinkedHashMap<>();for(String key:defaults)groups.put(key,new ArrayList<View>());int first=-1;for(int i=0;i<root.getChildCount();i++){Object tag=root.getChildAt(i).getTag();if(tag instanceof String&&((String)tag).startsWith("home_")){String key=((String)tag).substring(5);if(groups.containsKey(key)){if(first<0)first=i;groups.get(key).add(root.getChildAt(i));}}}if(first<0)return;for(List<View> group:groups.values())for(View v:group)root.removeView(v);int at=Math.min(first,root.getChildCount());for(String key:order)for(View v:groups.get(key))root.addView(v,at++);
     }
     private void showHomeBlockOrderDialog(){
         final String[] keys={"stats","weekly","ai","emotions","reminders"};final String[] names={"Статистика","Недельная цель","Карточка ИИ","Плитки эмоций","Напоминания"};List<String> order=new ArrayList<>();for(String k:prefs.getString("home_block_order","stats,weekly,ai,emotions,reminders").split(","))if(java.util.Arrays.asList(keys).contains(k)&&!order.contains(k))order.add(k);for(String k:keys)if(!order.contains(k))order.add(k);
@@ -3112,20 +3089,20 @@ public class MainActivity extends Activity {
             LinearLayout tile = card();
             tile.setOrientation(LinearLayout.VERTICAL);
             tile.setGravity(Gravity.CENTER_VERTICAL);
-            tile.setPadding(dp(12), dp(11), dp(11), dp(10));
+            tile.setPadding(dp(9), dp(8), dp(8), dp(7));
             TextView symbol = text(icon, 24, PINK, true);
             symbol.setGravity(Gravity.CENTER);
             symbol.setIncludeFontPadding(false);
             symbol.setBackground(shape(PALE, 15, 0));
-            tile.addView(symbol, lp(38, 38, 0, 0, 0, 8));
+            tile.addView(symbol, lp(32, 32, 0, 0, 0, 5));
             TextView heading = text(title, 15, DARK, true);
             heading.setMaxLines(2);
             tile.addView(heading, lp(-1, -2, 0, 0, 0, 4));
             TextView detail = text(subtitle, 12, MUTED, false);
             detail.setMaxLines(2);
             tile.addView(detail, lp(-1, -2, 0, 0, 0, 0));
-            LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, dp(124), 1f);
-            p.setMargins(dp(4), 0, dp(4), 0);
+            LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, dp(106), 1f);
+            p.setMargins(dp(3), 0, dp(3), 0);
             row.addView(tile, p);
             tile.setContentDescription(title + ". " + subtitle);
             tile.setFocusable(true);
