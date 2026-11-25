@@ -678,8 +678,8 @@ public class MainActivity extends Activity {
         LinearLayout group=new LinearLayout(this);
         group.setOrientation(LinearLayout.VERTICAL);
         // Минималистичные настройки: заголовки без разделительных линий и рамок.
-        group.setPadding(0,dp(12),0,dp(10));
-        TextView heading=text(title,16,PINK,true);
+        group.setPadding(0,dp(10),0,dp(8));group.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        TextView heading=text(title,18,PINK,true);
         heading.setLetterSpacing(0.035f);
         group.addView(heading,lp(-1,-2,0,0,0,10));
         return group;
@@ -693,7 +693,7 @@ public class MainActivity extends Activity {
     private CheckBox addSettingsToggle(LinearLayout host,String label,String key,boolean defaultValue,Runnable afterChange){
         CheckBox box=new CheckBox(this);
         box.setText(translate(label));
-        box.setTextSize(14);
+        box.setTextSize(16);
         box.setTextColor(DARK);
         box.setMinHeight(dp(36));
         box.setGravity(Gravity.CENTER_VERTICAL);
@@ -728,7 +728,7 @@ public class MainActivity extends Activity {
             Button item = button(section[1] + "   " + section[2] + "   ›", false);
             item.setGravity(Gravity.CENTER_VERTICAL);
             item.setTextColor(DARK);
-            item.setTextSize(16);
+            item.setTextSize(18);
             item.setAllCaps(false);
             item.setBackgroundColor(android.graphics.Color.TRANSPARENT);
             item.setElevation(0f);
@@ -1141,9 +1141,9 @@ public class MainActivity extends Activity {
         int weeklyGoal = prefs.getInt("weekly_goal_minutes", 300);
         int weeklyDone = weeklyMinutesLast7Days();
         LinearLayout weeklyCard = card();
-        weeklyCard.setPadding(dp(13), dp(12), dp(13), dp(12));
-        addText(weeklyCard, "🎯  ЦЕЛЬ НЕДЕЛИ", 11, PINK, true);
-        addText(weeklyCard, weeklyDone + " из " + weeklyGoal + " минут", 19, DARK, true);
+        weeklyCard.setPadding(dp(10), dp(7), dp(10), dp(7));
+        addText(weeklyCard, "🎯  ЦЕЛЬ НЕДЕЛИ", 10, PINK, true);
+        addText(weeklyCard, weeklyDone + " из " + weeklyGoal + " минут", 15, DARK, true);
         addProgressLine(weeklyCard, "Твой недельный результат",
                 weeklyGoal <= 0 ? 0 : Math.min(100, weeklyDone * 100 / weeklyGoal));
         LinearLayout daysRow = new LinearLayout(this);
@@ -1164,20 +1164,20 @@ public class MainActivity extends Activity {
             dayCell.setGravity(Gravity.CENTER);
             TextView dayName = text(weekLabels[dayIndex], 10, isToday ? PINK : MUTED, true);
             dayName.setGravity(Gravity.CENTER);
-            dayCell.addView(dayName, lp(-1, 18, 0, 0, 0, 3));
+            dayCell.addView(dayName, lp(-1, 14, 0, 0, 0, 2));
             if (isToday) dayCell.setBackground(shape(PALE, 12, PINK));
             TextView dayMark = text(dayMinutes > 0 ? "♥" : (isToday ? "●" : "·"),
                     dayMinutes > 0 ? 18 : 17, (dayMinutes > 0 || isToday) ? PINK : MUTED, true);
             dayMark.setGravity(Gravity.CENTER);
-            dayCell.addView(dayMark, lp(-1, 25, 0, 0, 0, 0));
+            dayCell.addView(dayMark, lp(-1, 18, 0, 0, 0, 0));
             TextView minutesLabel = text(dayMinutes > 0 ? dayMinutes + "м" : "—",
                     9, MUTED, false);
             minutesLabel.setGravity(Gravity.CENTER);
-            dayCell.addView(minutesLabel, lp(-1, 16, 0, 0, 0, 0));
-            daysRow.addView(dayCell, new LinearLayout.LayoutParams(0, dp(59), 1f));
+            dayCell.addView(minutesLabel, lp(-1, 12, 0, 0, 0, 0));
+            daysRow.addView(dayCell, new LinearLayout.LayoutParams(0, dp(45), 1f));
             weekDay.add(Calendar.DAY_OF_YEAR, 1);
         }
-        weeklyCard.addView(daysRow, lp(-1, 59, 0, 7, 0, 0));
+        weeklyCard.addView(daysRow, lp(-1, 45, 0, 4, 0, 0));
         root.addView(weeklyCard, lp(-1, -2, 0, 0, 0, 8));weeklyCard.setTag("home_weekly");
 
         LinearLayout aiCard = card();
@@ -1227,7 +1227,7 @@ public class MainActivity extends Activity {
         reminder.addView(reminderWords, new LinearLayout.LayoutParams(0, -2, 1f));
         reminder.addView(text("›", 27, PINK, true), lp(28, 38, 4, 0, 0, 0));
         reminder.setOnClickListener(v -> showReminderSettings());
-        root.addView(reminder, lp(-1, dp(58), 0, 3, 0, 1));reminder.setTag("home_reminders");
+        root.addView(reminder, lp(-1, dp(44), 0, 2, 0, 1));reminder.setTag("home_reminders");
 
         TextView made = text("Сделано с любовью ♡", 11, DARK, false);
         made.setGravity(Gravity.CENTER);
@@ -2941,12 +2941,12 @@ public class MainActivity extends Activity {
             row.setBackgroundColor(android.graphics.Color.TRANSPARENT);
             LinearLayout words=new LinearLayout(this);
             words.setOrientation(LinearLayout.VERTICAL);
-            TextView title=text(n,16,selected?PINK:DARK,selected);
+            TextView title=text(n,18,selected?PINK:DARK,selected);
             words.addView(title,lp(-1,-2,0,0,0,3));
             words.addView(text(descriptions[i],12,MUTED,false),lp(-1,-2,0,0,0,0));
             row.addView(words,new LinearLayout.LayoutParams(0,-2,1f));
-            TextView state=text(selected?(ambienceLoading?"Загрузка…":ambiencePlaying?"Ⅱ":"▶"):"▶",18,selected?PINK:MUTED,true);
-            state.setGravity(Gravity.CENTER);
+            TextView state=text(selected&&ambiencePlaying?"Ⅱ":"▶",21,selected?PINK:MUTED,true);
+            state.setGravity(Gravity.CENTER);state.setContentDescription(selected&&ambiencePlaying?"Остановить звук":"Включить звук");
             row.addView(state,lp(36,36,4,0,0,0));
             row.setOnClickListener(v->{
                 boolean same=prefs.getString("study_atmosphere",names[0]).equals(n);
