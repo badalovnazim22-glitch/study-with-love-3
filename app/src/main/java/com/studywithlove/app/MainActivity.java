@@ -169,7 +169,7 @@ public class MainActivity extends Activity {
         TimerRingView(Context c,int fill,int track,int accent){super(c);fillColor=fill;trackColor=track;progressColor=accent;setLayerType(View.LAYER_TYPE_SOFTWARE,null);}
         void setProgress(float value){float target=Math.max(0f,Math.min(1f,value));if(progressAnimator!=null)progressAnimator.cancel();progressAnimator=android.animation.ValueAnimator.ofFloat(progress,target);progressAnimator.setDuration(280);progressAnimator.setInterpolator(new android.view.animation.DecelerateInterpolator());progressAnimator.addUpdateListener(a->{progress=(float)a.getAnimatedValue();invalidate();});progressAnimator.start();}
         void setRunning(boolean running){if(pulseAnimator!=null){pulseAnimator.cancel();pulseAnimator=null;}if(!running){pulse=1f;invalidate();return;}pulseAnimator=android.animation.ValueAnimator.ofFloat(1f,1.018f);pulseAnimator.setDuration(1350);pulseAnimator.setRepeatMode(android.animation.ValueAnimator.REVERSE);pulseAnimator.setRepeatCount(android.animation.ValueAnimator.INFINITE);pulseAnimator.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());pulseAnimator.addUpdateListener(a->{pulse=(float)a.getAnimatedValue();invalidate();});pulseAnimator.start();}
-        @Override protected void onDraw(android.graphics.Canvas c){super.onDraw(c);float cx=getWidth()/2f,cy=getHeight()/2f,d=getResources().getDisplayMetrics().density,stroke=11f*d,r=Math.min(cx,cy)-stroke*1.25f;if(r<=0)return;c.save();c.scale(pulse,pulse,cx,cy);paint.setStyle(android.graphics.Paint.Style.FILL);paint.setColor(fillColor);paint.clearShadowLayer();c.drawCircle(cx,cy,r-stroke*.55f,paint);arc.set(cx-r,cy-r,cx+r,cy+r);paint.setStyle(android.graphics.Paint.Style.STROKE);paint.setStrokeWidth(stroke);paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);paint.setColor(trackColor);c.drawArc(arc,0,360,false,paint);if(progress>.0005f){paint.setColor(progressColor);paint.setShadowLayer(12f*d,0,0,progressColor);c.drawArc(arc,-90,Math.min(359.8f,360f*progress),false,paint);paint.clearShadowLayer();float angle=(float)Math.toRadians(-90+360f*progress),x=cx+(float)Math.cos(angle)*r,y=cy+(float)Math.sin(angle)*r;paint.setStyle(android.graphics.Paint.Style.FILL);paint.setColor(0xFFFFFFFF);c.drawCircle(x,y,stroke*.34f,paint);paint.setColor(progressColor);c.drawCircle(x,y,stroke*.22f,paint);}c.restore();paint.setStyle(android.graphics.Paint.Style.FILL);}
+        @Override protected void onDraw(android.graphics.Canvas c){super.onDraw(c);float cx=getWidth()/2f,cy=getHeight()/2f,d=getResources().getDisplayMetrics().density,stroke=13f*d,r=Math.min(cx,cy)-stroke*1.25f;if(r<=0)return;c.save();c.scale(pulse,pulse,cx,cy);paint.setStyle(android.graphics.Paint.Style.FILL);paint.setColor(fillColor);paint.clearShadowLayer();c.drawCircle(cx,cy,r-stroke*.55f,paint);arc.set(cx-r,cy-r,cx+r,cy+r);paint.setStyle(android.graphics.Paint.Style.STROKE);paint.setStrokeWidth(stroke);paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);paint.setColor(trackColor);c.drawArc(arc,0,360,false,paint);if(progress>.0005f){paint.setColor(progressColor);paint.setShadowLayer(16f*d,0,0,progressColor);c.drawArc(arc,-90,Math.min(359.8f,360f*progress),false,paint);paint.clearShadowLayer();float angle=(float)Math.toRadians(-90+360f*progress),x=cx+(float)Math.cos(angle)*r,y=cy+(float)Math.sin(angle)*r;paint.setStyle(android.graphics.Paint.Style.FILL);paint.setColor(0xFFFFFFFF);c.drawCircle(x,y,stroke*.34f,paint);paint.setColor(progressColor);c.drawCircle(x,y,stroke*.22f,paint);}c.restore();paint.setStyle(android.graphics.Paint.Style.FILL);}
         @Override protected void onDetachedFromWindow(){if(progressAnimator!=null)progressAnimator.cancel();if(pulseAnimator!=null)pulseAnimator.cancel();super.onDetachedFromWindow();}
     }
     private static class MiniQuestion { String prompt,explanation,type,answer,topic; String[] options; int correct; MiniQuestion(String p,String[] o,int c,String e){this(p,o,c,e,"choice",o!=null&&c>=0&&c<o.length?o[c]:"");} MiniQuestion(String p,String[] o,int c,String e,String t,String a){prompt=p;options=o;correct=c;explanation=e;type=t;answer=a;topic="";} }
@@ -2273,17 +2273,17 @@ public class MainActivity extends Activity {
         base("Фокус","Время для себя и своих целей");
         int bg=isDarkAppearance()?0xFF25212B:0xFFFFFFFF;
         int track=isDarkAppearance()?0xFF49404D:PALE;
-        int fg=DARK;
+        int fg=isDarkAppearance()?0xFFF8F1F6:0xFF342A36;
         int muted=MUTED;
         if(timerRemainingMs<=0)timerRemainingMs=(timerIsBreak?selectedBreakMinutes:selectedStudyMinutes)*60000L;
-        int diameter=Math.min(dp(326),Math.max(dp(250),getResources().getDisplayMetrics().widthPixels-dp(56)));
-        LinearLayout screen=new LinearLayout(this);screen.setOrientation(LinearLayout.VERTICAL);screen.setGravity(Gravity.CENTER_HORIZONTAL);screen.setPadding(0,dp(4),0,dp(10));
-        FrameLayout dial=new FrameLayout(this);dial.setBackground(shape(bg,28,0));dial.setElevation(dp(2));
+        int diameter=Math.min(dp(342),Math.max(dp(270),getResources().getDisplayMetrics().widthPixels-dp(44)));
+        LinearLayout screen=new LinearLayout(this);screen.setOrientation(LinearLayout.VERTICAL);screen.setGravity(Gravity.CENTER_HORIZONTAL);screen.setPadding(0,dp(2),0,dp(8));
+        FrameLayout dial=new FrameLayout(this);dial.setBackgroundColor(android.graphics.Color.TRANSPARENT);dial.setClickable(true);dial.setFocusable(true);
         timerRing=new TimerRingView(this,bg,track,PINK);
         dial.addView(timerRing,new FrameLayout.LayoutParams(-1,-1));
         LinearLayout center=new LinearLayout(this);center.setOrientation(LinearLayout.VERTICAL);center.setGravity(Gravity.CENTER);
         TextView phase=text(timerIsBreak?"ПЕРЕРЫВ":"ВРЕМЯ ФОКУСА",11,muted,true);phase.setLetterSpacing(0.16f);phase.setGravity(Gravity.CENTER);center.addView(phase,lp(-1,-2,0,0,0,dp(10)));
-        timerDisplay=text(formatTimer(timerRemainingMs),52,fg,true);timerDisplay.setGravity(Gravity.CENTER);timerDisplay.setIncludeFontPadding(false);timerDisplay.setTypeface(android.graphics.Typeface.create("sans-serif",android.graphics.Typeface.BOLD));center.addView(timerDisplay,lp(-1,-2,0,0,0,dp(8)));
+        timerDisplay=text(formatTimer(timerRemainingMs),56,fg,true);timerDisplay.setGravity(Gravity.CENTER);timerDisplay.setIncludeFontPadding(false);timerDisplay.setTypeface(android.graphics.Typeface.create("sans-serif",android.graphics.Typeface.BOLD));center.addView(timerDisplay,lp(-1,-2,0,0,0,dp(8)));
         TextView hint=text(timerRunning?"Ты в потоке":"Нажми, чтобы начать",13,muted,false);hint.setGravity(Gravity.CENTER);center.addView(hint,lp(-1,-2,0,0,0,0));
         dial.addView(center,new FrameLayout.LayoutParams(-1,-1));screen.addView(dial,new LinearLayout.LayoutParams(diameter,diameter));
         timerStatus=text(timerIsBreak?"Отдых тоже часть успеха":"Один шаг за раз",14,muted,false);timerStatus.setGravity(Gravity.CENTER);timerStatus.setPadding(dp(12),dp(16),dp(12),dp(12));screen.addView(timerStatus,lp(-1,-2,0,0,0,dp(4)));
@@ -2306,6 +2306,7 @@ public class MainActivity extends Activity {
         timerStartButton=button(timerRunning?"Продолжается":"Начать фокус",true);timerStartButton.setEnabled(!timerRunning);timerStartButton.setTextSize(14);
         timerStartButton.setOnClickListener(v->{if(!timerIsBreak&&timerRemainingMs>=selectedStudyMinutes*60000L-1000L)showStudyRitual();else startTimer();});
         timerPauseButton=button("Пауза",false);timerPauseButton.setTextSize(14);timerPauseButton.setEnabled(timerRunning);timerPauseButton.setOnClickListener(v->pauseTimer());
+        dial.setOnClickListener(v->{if(timerRunning)pauseTimer();else if(timerStartButton!=null)timerStartButton.performClick();});
         Button reset=button("Сбросить",false);reset.setTextSize(14);reset.setOnClickListener(v->{
             long elapsed=timerRunning&&!timerIsBreak?Math.max(0,System.currentTimeMillis()-timerSessionStarted):0;
             FocusTimerController.clearIfMatches(this,timerEndElapsed);
@@ -2316,7 +2317,7 @@ public class MainActivity extends Activity {
             if(timerDisplay!=null)timerDisplay.animate().cancel();timerIsBreak=false;timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();
         });
         LinearLayout.LayoutParams main=new LinearLayout.LayoutParams(0,dp(52),1f);main.setMargins(dp(4),0,dp(4),0);controls.addView(timerStartButton,main);
-        LinearLayout.LayoutParams side=new LinearLayout.LayoutParams(0,dp(52),0.72f);side.setMargins(dp(4),0,dp(4),0);controls.addView(timerPauseButton,side);controls.addView(reset,side);
+        LinearLayout.LayoutParams side=new LinearLayout.LayoutParams(0,dp(52),0.58f);side.setMargins(dp(4),0,dp(4),0);controls.addView(timerPauseButton,side);controls.addView(reset,side);
         screen.addView(controls,lp(-1,dp(58),0,dp(12),0,0));
         timerDisplay.setOnLongClickListener(v->{if(timerRunning)return true;new TimePickerDialog(this,(picker,hour,minute)->{selectedStudyMinutes=Math.max(1,Math.min(600,hour*60+minute));prefs.edit().putInt("selected_study_minutes",selectedStudyMinutes).apply();if(!timerIsBreak)timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();},selectedStudyMinutes/60,selectedStudyMinutes%60,true).show();return true;});
         root.addView(screen,lp(-1,-2,0,dp(6),0,dp(10)));
@@ -3357,7 +3358,7 @@ public class MainActivity extends Activity {
         bar.setProgress(Math.max(0, Math.min(100, percent)));
         GradientDrawable track=new GradientDrawable();track.setColor(isDarkAppearance()?0xFF514650:0xFFFFE6ED);track.setCornerRadius(dp(20));
         GradientDrawable fill=new GradientDrawable();fill.setColor(PINK);fill.setCornerRadius(dp(20));
-        android.graphics.drawable.ClipDrawable clipped=new android.graphics.drawable.ClipDrawable(fill,Gravity.LEFT,android.view.Gravity.HORIZONTAL);
+        android.graphics.drawable.ClipDrawable clipped=new android.graphics.drawable.ClipDrawable(fill,Gravity.LEFT,android.graphics.drawable.ClipDrawable.HORIZONTAL);
         bar.setProgressDrawable(new android.graphics.drawable.LayerDrawable(new android.graphics.drawable.Drawable[]{track,clipped}){{setId(0,android.R.id.background);setId(1,android.R.id.progress);}});
         parent.addView(bar, lp(-1, 9, 0, 0, 0, 6));
     }
