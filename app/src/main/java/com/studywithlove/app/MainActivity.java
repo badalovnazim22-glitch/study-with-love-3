@@ -627,7 +627,7 @@ public class MainActivity extends Activity {
         LinearLayout bar=new LinearLayout(this);
         bar.setOrientation(LinearLayout.HORIZONTAL);
         bar.setGravity(Gravity.CENTER);
-        bar.setPadding(dp(7),dp(6),dp(7),dp(6));
+        bar.setPadding(dp(6),dp(5),dp(6),dp(5));
         GradientDrawable navBg=new GradientDrawable();
         navBg.setColor(isDarkAppearance()?0xFF211E29:0xFFFFFFFF);
         navBg.setCornerRadius(0);
@@ -642,24 +642,33 @@ public class MainActivity extends Activity {
             LinearLayout item=new LinearLayout(this);
             item.setOrientation(LinearLayout.VERTICAL);
             item.setGravity(Gravity.CENTER);
-            item.setPadding(dp(1),dp(4),dp(1),dp(3));
-            item.setBackground(selected?shape(isDarkAppearance()?0xFF49313D:0xFFFCE8EE,20,0):shape(0x00FFFFFF,18,0));
+            item.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+
+            // Компактная плашка выделяет только иконку, а не растягивается на всю высоту панели.
+            android.widget.FrameLayout iconSlot=new android.widget.FrameLayout(this);
+            iconSlot.setBackground(selected
+                ?shape(isDarkAppearance()?0xFF49313D:0xFFFCE8EE,18,0)
+                :shape(0x00FFFFFF,18,0));
             NavigationIconView icon=new NavigationIconView(this,i,selected?PINK:MUTED);
-            item.addView(icon,new LinearLayout.LayoutParams(dp(28),dp(28)));
+            android.widget.FrameLayout.LayoutParams iconParams=
+                new android.widget.FrameLayout.LayoutParams(dp(24),dp(24),Gravity.CENTER);
+            iconSlot.addView(icon,iconParams);
+            item.addView(iconSlot,new LinearLayout.LayoutParams(dp(46),dp(36)));
+
             TextView label=textFixed(labels[i],10,selected?PINK:MUTED,selected);
             label.setGravity(Gravity.CENTER);
             label.setMaxLines(1);
             label.setSingleLine(true);
             label.setIncludeFontPadding(false);
-            item.addView(label,lp(-1,dp(20),0,dp(3),0,0));
-            LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-1,1f);
-            p.setMargins(dp(2),0,dp(2),0);
+            item.addView(label,lp(-1,dp(17),0,dp(3),0,0));
+
+            LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-2,1f);
+            p.setMargins(dp(1),0,dp(1),0);
             bar.addView(item,p);
             item.setOnClickListener(v->{if(key.equals("home"))showHome();else if(key.equals("math"))showChapters();else if(key.equals("progress"))showProgress();else if(key.equals("exam"))showExam();else if(key.equals("diary"))showDiary();else if(key.equals("timer"))showPomodoro();});
         }
         return bar;
     }
-
 
     @android.annotation.SuppressLint("WrongConstant")
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){super.onActivityResult(requestCode,resultCode,data);if(requestCode==PICK_TOPIC_CAMERA&&resultCode==RESULT_OK&&data!=null&&data.getExtras()!=null){try{android.graphics.Bitmap photo=(android.graphics.Bitmap)data.getExtras().get("data");if(photo!=null){String suffix=topicStorageSuffix(selectedChapter,selectedTopic);java.io.File file=new java.io.File(getFilesDir(),"topic_photo_"+Math.abs(suffix.hashCode())+".jpg");java.io.FileOutputStream out=new java.io.FileOutputStream(file);photo.compress(android.graphics.Bitmap.CompressFormat.JPEG,90,out);out.close();prefs.edit().putString("topic_photo_file_"+suffix,file.getAbsolutePath()).remove("topic_photo_"+suffix).apply();showTopic(selectedTopic);}}catch(Exception e){showAppMessage("Не удалось сохранить фото");}return;}if(resultCode!=RESULT_OK||data==null||data.getData()==null)return;android.net.Uri uri=data.getData();if(requestCode==WEEKLY_BACKUP_FOLDER){try{getContentResolver().takePersistableUriPermission(uri,data.getFlags()&(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION));prefs.edit().putString("weekly_backup_tree_uri",uri.toString()).apply();WeeklyBackupReceiver.schedule(this);showSettings();showAppMessage("Папка резервных копий сохранена ♡");}catch(Exception e){showAppMessage("Не удалось сохранить доступ к папке");}return;}if(requestCode==PICK_BACKGROUND){try{getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);}catch(Exception ignored){}prefs.edit().putString("custom_background_uri",uri.toString()).apply();showSettings();showAppMessage("Фото установлено как фон ♡");}else if(requestCode==PICK_TOPIC_PHOTO){try{getContentResolver().takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);}catch(Exception ignored){}prefs.edit().putString("topic_photo_"+topicStorageSuffix(selectedChapter,selectedTopic),uri.toString()).apply();showTopic(selectedTopic);}else if(requestCode==WEEKLY_IMAGE_EXPORT){try{java.io.OutputStream out=getContentResolver().openOutputStream(uri,"wt");if(out==null||pendingWeeklyBitmap==null)throw new Exception();pendingWeeklyBitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,out);out.close();pendingWeeklyBitmap.recycle();pendingWeeklyBitmap=null;showAppMessage("Итоги недели сохранены ♡");}catch(Exception e){showAppMessage("Не удалось сохранить изображение");}}else if(requestCode==PDF_REPORT_EXPORT){try{writeProgressPdf(uri);showAppMessage("PDF-отчёт сохранён ♡");}catch(Exception e){showAppMessage("Не удалось создать PDF-отчёт");}}else if(requestCode==DIARY_EXPORT){try{java.io.OutputStream out=getContentResolver().openOutputStream(uri,"wt");if(out==null)throw new Exception();out.write(createDiaryExportText().getBytes("UTF-8"));out.close();showAppMessage("Дневник экспортирован в TXT ♡");}catch(Exception e){showAppMessage("Не удалось экспортировать дневник");}}else if(requestCode==DIARY_PDF_EXPORT){try{writeDiaryPdf(uri);showAppMessage("Дневник экспортирован в PDF ♡");}catch(Exception e){showAppMessage("Не удалось создать PDF дневника");}}else if(requestCode==BACKUP_EXPORT){try{java.io.OutputStream out=getContentResolver().openOutputStream(uri,"wt");if(out==null)throw new Exception();out.write(createBackupJson().getBytes("UTF-8"));out.close();showAppMessage("Резервная копия сохранена ♡");}catch(Exception e){showAppMessage("Не удалось сохранить копию");}}else if(requestCode==BACKUP_IMPORT){try{java.io.InputStream in=getContentResolver().openInputStream(uri);java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();byte[] buffer=new byte[4096];int n;while((n=in.read(buffer))>0)bytes.write(buffer,0,n);in.close();restoreBackupJson(new String(bytes.toByteArray(),"UTF-8"));showAppMessage("Данные восстановлены ♡");loadChapters();showHome();}catch(Exception e){showAppMessage("Файл копии не удалось прочитать");}}}
