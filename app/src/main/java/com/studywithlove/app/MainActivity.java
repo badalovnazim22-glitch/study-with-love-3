@@ -2529,8 +2529,10 @@ public class MainActivity extends Activity {
 
     private void showDiary() {
         currentScreen="diary";
-        base("Дневник успехов ♡","Сохраняй моменты, которыми ты гордишься");
-        TextView diaryTopSearch=text("⌕",27,PINK,true);diaryTopSearch.setGravity(Gravity.CENTER);diaryTopSearch.setContentDescription("Поиск по дневнику");LinearLayout diaryTopRow=new LinearLayout(this);diaryTopRow.setGravity(Gravity.RIGHT|Gravity.CENTER_VERTICAL);diaryTopRow.addView(diaryTopSearch,lp(46,42,0,0,0,4));root.addView(diaryTopRow,lp(-1,44,0,0,0,2));
+        base("","Сохраняй моменты, которыми ты гордишься");
+        LinearLayout diaryTitleRow=new LinearLayout(this);diaryTitleRow.setGravity(Gravity.CENTER_VERTICAL);
+        TextView diaryTitle=text("Дневник успехов ♡",23,DARK,true);diaryTitle.setLetterSpacing(-0.02f);diaryTitleRow.addView(diaryTitle,new LinearLayout.LayoutParams(0,dp(42),1f));
+        TextView diaryTopSearch=text("⌕",27,PINK,true);diaryTopSearch.setGravity(Gravity.CENTER);diaryTopSearch.setContentDescription("Поиск по дневнику");diaryTopSearch.setBackground(shape(0xFFFFF0F5,22,0xFFEEDCE3));diaryTitleRow.addView(diaryTopSearch,lp(42,42,0,0,0,0));root.addView(diaryTitleRow,lp(-1,46,0,0,0,3));
         addText(root,"МАЛЕНЬКАЯ ПОБЕДА СЕГОДНЯ",11,PINK,true);
         EditText note=new EditText(this);note.setHint("Сегодня у меня получилось...");if(prefs.getBoolean("diary_prefill_timer_win",false)){note.setText(g("Я завершила фокус-сессию и уделила время своей цели. ♡","Я завершил фокус-сессию и уделил время своей цели. ♡"));prefs.edit().remove("diary_prefill_timer_win").apply();}note.setTextSize(17);note.setTextColor(DARK);note.setHintTextColor(MUTED);note.setGravity(Gravity.TOP);note.setMinLines(3);note.setPadding(dp(2),dp(10),dp(2),dp(10));note.setBackgroundColor(0x00000000);
         root.addView(note,lp(-1,104,0,0,0,7));
@@ -2830,10 +2832,18 @@ public class MainActivity extends Activity {
         for(String[] v:values)if(Boolean.parseBoolean(v[1])&&!prefs.contains("achievement_date_"+v[0])){e.putString("achievement_date_"+v[0],date);changed=true;}if(changed)e.apply();
     }
 
+    private android.graphics.drawable.Drawable roundedAchievementProgress(int trackColor,int fillColor){
+        GradientDrawable track=new GradientDrawable();track.setColor(trackColor);track.setCornerRadius(dp(20));
+        GradientDrawable fill=new GradientDrawable();fill.setColor(fillColor);fill.setCornerRadius(dp(20));
+        android.graphics.drawable.LayerDrawable layers=new android.graphics.drawable.LayerDrawable(new android.graphics.drawable.Drawable[]{track,new android.graphics.drawable.ClipDrawable(fill,Gravity.LEFT,android.graphics.drawable.ClipDrawable.HORIZONTAL)});
+        layers.setId(0,android.R.id.background);layers.setId(1,android.R.id.progress);
+        return new android.graphics.drawable.InsetDrawable(layers,dp(2),0,dp(2),0);
+    }
+
     private void showAchievements() {
         currentScreen="achievements";base("Коллекция достижений","Каждый маленький шаг достоин похвалы");
         int days=prefs.getStringSet("study_days",new TreeSet<String>()).size(),minutes=totalStudyMinutes(),completed=0;for(List<String> topics:chapters.values())completed+=countCompleted(topics);int sessions=prefs.getInt("done_count",0);
-        String[][] a={{"🌱","Первые шаги","Первый день занятий",String.valueOf(days>=1),"1"},{"🌷","Неделя стараний","7 дней занятий",String.valueOf(days>=7),"7"},{"🌸","Две недели","14 дней занятий",String.valueOf(days>=14),"14"},{"💐","Месяц успеха","30 дней занятий",String.valueOf(days>=30),"30"},{"🏵️","Два месяца","60 дней занятий",String.valueOf(days>=60),"60"},{"🌻","Сто дней","100 дней занятий",String.valueOf(days>=100),"100"},{"📚","Маленький математик","Завершена первая тема",String.valueOf(completed>=1),"1"},{"🧮","Счёт — это просто","Завершено 5 тем",String.valueOf(completed>=5),"5"},{"🎓","Знаток математики","Завершено 10 тем",String.valueOf(completed>=10),"10"},{"🏆","Мастер знаний","Завершены все 41 темы",String.valueOf(completed>=41),"41"},{"⏳","Первый час","60 минут занятий",String.valueOf(minutes>=60),"60"},{"⌛","10 часов учёбы","600 минут занятий",String.valueOf(minutes>=600),"600"},{"🚀","Настойчивость","25 учебных занятий",String.valueOf(sessions>=25),"25"},{"💎","Пятьдесят побед","50 тем или занятий",String.valueOf(completed+sessions>=50),"50"},{"💗","Возвращаюсь к цели","Занятия в 3 разных дня",String.valueOf(days>=3),"3"},{"✨","Ритм учёбы","Занятия в 5 разных дней",String.valueOf(days>=5),"5"}};
+        String[][] a={{"🌱","Первые шаги","Первый день занятий",String.valueOf(days>=1),"1"},{"🌷","Неделя стараний","7 дней занятий",String.valueOf(days>=7),"7"},{"🌸","Две недели","14 дней занятий",String.valueOf(days>=14),"14"},{"💐","Месяц успеха","30 дней занятий",String.valueOf(days>=30),"30"},{"🏵️","Два месяца","60 дней занятий",String.valueOf(days>=60),"60"},{"🌻","Сто дней","100 дней занятий",String.valueOf(days>=100),"100"},{"📚","Маленький математик","Завершена первая тема",String.valueOf(completed>=1),"1"},{"🧮","Счёт — это просто","Завершено 5 тем",String.valueOf(completed>=5),"5"},{"🎓","Знаток математики","Завершено 10 тем",String.valueOf(completed>=10),"10"},{"🌟","Мастер знаний","Завершены все 41 темы",String.valueOf(completed>=41),"41"},{"⏳","Первый час","60 минут занятий",String.valueOf(minutes>=60),"60"},{"⌛","10 часов учёбы","600 минут занятий",String.valueOf(minutes>=600),"600"},{"🚀","Настойчивость","25 учебных занятий",String.valueOf(sessions>=25),"25"},{"💎","Пятьдесят побед","50 тем или занятий",String.valueOf(completed+sessions>=50),"50"},{"💗","Возвращаюсь к цели","Занятия в 3 разных дня",String.valueOf(days>=3),"3"},{"✨","Ритм учёбы","Занятия в 5 разных дней",String.valueOf(days>=5),"5"}};
         int unlocked=0;for(String[] x:a)if(Boolean.parseBoolean(x[3]))unlocked++;
         
         int xp=totalStudyMinutes()*10,level=xp/1000+1,levelProgress=xp%1000;
@@ -2841,10 +2851,10 @@ public class MainActivity extends Activity {
         LinearLayout levelRow=new LinearLayout(this);levelRow.setGravity(Gravity.CENTER_VERTICAL);
         TextView levelNumber=text(String.valueOf(level),34,PINK,true);levelNumber.setGravity(Gravity.CENTER);levelNumber.setBackground(shape(PALE,50,blendColors(PINK,BG,0.35f)));levelRow.addView(levelNumber,lp(64,64,0,0,12,0));
         LinearLayout levelWords=new LinearLayout(this);levelWords.setOrientation(LinearLayout.VERTICAL);addText(levelWords,levelName(level),17,DARK,true);addText(levelWords,xp+" XP · до следующего уровня "+(1000-levelProgress)+" XP",11,MUTED,false);levelRow.addView(levelWords,new LinearLayout.LayoutParams(0,-2,1f));levelCard.addView(levelRow,lp(-1,-2,0,6,0,5));
-        ProgressBar xpBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);xpBar.setMax(1000);xpBar.setProgress(levelProgress);if(Build.VERSION.SDK_INT>=21){xpBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));xpBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(PALE));}levelCard.addView(xpBar,lp(-1,7,0,3,0,0));
+        ProgressBar xpBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);xpBar.setMax(1000);xpBar.setProgress(levelProgress);xpBar.setProgressDrawable(roundedAchievementProgress(PALE,PINK));LinearLayout.LayoutParams xpBarLp=lp(-1,8,0,3,0,0);xpBarLp.leftMargin=dp(5);xpBarLp.rightMargin=dp(5);levelCard.addView(xpBar,xpBarLp);
         addText(levelCard,"За каждую минуту фокус-занятия начисляется 10 XP",10,MUTED,false);root.addView(levelCard,lp(-1,-2,0,0,0,10));
         addText(root,unlocked+" / "+a.length+" открыто",15,DARK,true);
-        ProgressBar overall=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);overall.setMax(a.length);overall.setProgress(unlocked);overall.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));overall.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFE9D4DE));root.addView(overall,lp(-1,10,0,7,0,9));
+        ProgressBar overall=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);overall.setMax(a.length);overall.setProgress(unlocked);overall.setProgressDrawable(roundedAchievementProgress(0xFFE9D4DE,PINK));LinearLayout.LayoutParams overallLp=lp(-1,9,0,7,0,9);overallLp.leftMargin=dp(5);overallLp.rightMargin=dp(5);root.addView(overall,overallLp);
         int nextIndex=-1;for(int i=0;i<a.length;i++)if(!Boolean.parseBoolean(a[i][3])){nextIndex=i;break;}
         if(nextIndex<0)addText(root,"Все достижения открыты — невероятно! ♡",12,PINK,true);else{String nextName=a[nextIndex][1];int target=Integer.parseInt(a[nextIndex][4]);int current=achievementCurrent(nextIndex,days,minutes,completed,sessions);addText(root,"До достижения «"+nextName+"»: осталось "+Math.max(0,target-current)+(nextIndex>=10&&nextIndex<=11?" мин":(nextIndex<=5||nextIndex>=14)?" дней":" шагов"),12,DARK,true);}
         android.widget.GridLayout grid=new android.widget.GridLayout(this);grid.setColumnCount(3);grid.setUseDefaultMargins(false);
