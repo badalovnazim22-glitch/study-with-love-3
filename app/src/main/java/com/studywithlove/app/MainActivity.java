@@ -3461,17 +3461,40 @@ public class MainActivity extends Activity {
         addText(root, "ДНИ НЕДЕЛИ", 12, PINK, true);
         dayChecks.clear();
         Set<String> savedDays = selectedDays();
-        LinearLayout daysRow = new LinearLayout(this); daysRow.setOrientation(LinearLayout.HORIZONTAL); daysRow.setGravity(Gravity.CENTER);
-        String[] dayShort = {"Пн","Вт","Ср","Чт","Пт","Сб","Вс"};
+        LinearLayout daysRow = new LinearLayout(this); daysRow.setOrientation(LinearLayout.HORIZONTAL); daysRow.setGravity(Gravity.CENTER_VERTICAL);
+        String[] dayShort = {"ПН","ВТ","СР","ЧТ","ПТ","СБ","ВС"};
         int[] calendarDays = {2,3,4,5,6,7,1};
         for (int d = 0; d < 7; d++) {
-            CheckBox cb = new CheckBox(this); cb.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK)); cb.setText(dayShort[d]); cb.setSingleLine(true); cb.setMinWidth(0); cb.setTextSize(9); cb.setTypeface(Typeface.DEFAULT,Typeface.BOLD); cb.setTextColor(DARK); cb.setGravity(Gravity.CENTER); cb.setPadding(dp(2),0,dp(2),0); cb.setBackground(shape(PALE,14,0xFFF0DCE4));
+            CheckBox cb = new CheckBox(this);
+            cb.setButtonDrawable((android.graphics.drawable.Drawable) null);
+            cb.setText(dayShort[d]);
+            cb.setSingleLine(true);
+            cb.setMinWidth(0);
+            cb.setMinHeight(dp(48));
+            cb.setTextSize(12);
+            cb.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+            cb.setTextColor(DARK);
+            cb.setGravity(Gravity.CENTER);
+            cb.setIncludeFontPadding(false);
+            cb.setPadding(0, 0, 0, 0);
             cb.setChecked(savedDays.contains(String.valueOf(calendarDays[d])));
-            cb.setBackground(shape(cb.isChecked()?0xFFF7DCE6:PALE,14,cb.isChecked()?PINK:0xFFF0DCE4));
-            cb.setOnCheckedChangeListener((button,checked)->cb.setBackground(shape(checked?0xFFF7DCE6:PALE,14,checked?PINK:0xFFF0DCE4)));
-            dayChecks.add(cb); LinearLayout.LayoutParams dayLp=new LinearLayout.LayoutParams(0,dp(36),1f);dayLp.setMargins(dp(2),0,dp(2),0);daysRow.addView(cb,dayLp);
+            cb.setBackground(shape(cb.isChecked() ? 0xFFF7DCE6 : 0xFFFFFFFF, 13,
+                    cb.isChecked() ? PINK : 0xFFEADDE3));
+            cb.setOnCheckedChangeListener((button, checked) -> {
+                cb.setTextColor(checked ? PINK : DARK);
+                cb.setBackground(shape(checked ? 0xFFF7DCE6 : 0xFFFFFFFF, 13,
+                        checked ? PINK : 0xFFEADDE3));
+            });
+            cb.setTextColor(cb.isChecked() ? PINK : DARK);
+            dayChecks.add(cb);
+            LinearLayout.LayoutParams dayLp = new LinearLayout.LayoutParams(0, dp(48), 1f);
+            dayLp.setMargins(dp(2), 0, dp(2), 0);
+            daysRow.addView(cb, dayLp);
         }
-        LinearLayout daysCard = card(); daysCard.addView(daysRow, lp(-1, 38, 0, 0, 0, 0)); root.addView(daysCard, lp(-1, -2, 0, 2, 0, 6));
+        LinearLayout daysCard = card();
+        daysCard.setPadding(dp(6), dp(6), dp(6), dp(6));
+        daysCard.addView(daysRow, lp(-1, 48, 0, 0, 0, 0));
+        root.addView(daysCard, lp(-1, -2, 0, 4, 0, 8));
         LinearLayout presets=new LinearLayout(this);presets.setGravity(Gravity.CENTER_VERTICAL);
         String[] presetNames={"Каждый день","Будни","Выходные"};
         for(String preset:presetNames){TextView chip=text(preset,10,PINK,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(10),dp(7),dp(10),dp(7));chip.setBackground(shape(0xFFFFF0F4,15,0));presets.addView(chip,lp(-2,48,0,0,5,0));chip.setOnClickListener(v->{for(int k=0;k<dayChecks.size();k++){boolean checked=preset.equals("Каждый день")||(preset.equals("Будни")&&k<5)||(preset.equals("Выходные")&&k>=5);dayChecks.get(k).setChecked(checked);}});}
