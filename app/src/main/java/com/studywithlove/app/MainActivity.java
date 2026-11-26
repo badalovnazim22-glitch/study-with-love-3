@@ -3349,7 +3349,12 @@ public class MainActivity extends Activity {
             row.setGravity(Gravity.CENTER_VERTICAL);
             row.setPadding(dp(18),dp(18),dp(17),dp(18));
             row.setMinimumHeight(dp(112));
-            if(selected)row.setBackground(shape(PALE,22,PINK));
+            int themeAccent=PINK;
+            int selectedSurface=isDarkAppearance()?blendColors(PALE,BG,0.12f):blendColors(PALE,BG,0.08f);
+            int controlSurface=isDarkAppearance()?blendColors(PALE,BG,0.18f):blendColors(PALE,BG,0.12f);
+            int themeOutline=blendColors(themeAccent,BG,isDarkAppearance()?0.30f:0.48f);
+            if(selected)row.setBackground(shape(selectedSurface,22,themeAccent));
+            else row.setBackground(shape(isDarkAppearance()?blendColors(BG,PALE,0.35f):0x00FFFFFF,22,themeOutline));
             if(Build.VERSION.SDK_INT>=21){row.setElevation(0f);row.setTranslationZ(0f);}
             LinearLayout words=new LinearLayout(this);
             words.setOrientation(LinearLayout.VERTICAL);
@@ -3363,12 +3368,12 @@ public class MainActivity extends Activity {
                 words.addView(playing,lp(-1,-2,0,5,0,0));
             }
             row.addView(words,new LinearLayout.LayoutParams(0,-2,1f));
-            TextView control=text(active?"Ⅱ":"▶",active?22:20,selected?0xFFFFFFFF:PINK,true);
+            TextView control=text(active?"Ⅱ":"▶",active?18:17,selected?0xFFFFFFFF:themeAccent,true);
             control.setGravity(Gravity.CENTER);
             control.setIncludeFontPadding(false);
-            control.setBackground(shape(selected?PINK:PALE,30,selected?PINK:0xFFEADDE2));
+            control.setBackground(shape(selected?themeAccent:controlSurface,30,selected?themeAccent:themeOutline));
             control.setContentDescription(active?"Пауза":"Воспроизвести");
-            row.addView(control,lp(54,54,dp(12),0,0,0));
+            row.addView(control,lp(44,44,dp(10),0,0,0));
             row.setContentDescription(n+". "+descriptions[i]+(active?", играет сейчас":", нажми для воспроизведения"));
             row.setOnClickListener(v->{
                 boolean same=prefs.getString("study_atmosphere",names[0]).equals(n);
@@ -3380,7 +3385,7 @@ public class MainActivity extends Activity {
                 }
                 showAtmosphere();
             });
-            root.addView(row,lp(-1,112,0,0,0,12));
+            root.addView(row,lp(-1,112,0,0,0,6));
         }
         android.widget.SeekBar volume=new android.widget.SeekBar(this);
         volume.setMax(100);
