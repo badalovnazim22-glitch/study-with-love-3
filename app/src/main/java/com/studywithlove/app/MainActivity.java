@@ -35,6 +35,7 @@ import android.widget.Toast;
 import android.widget.FrameLayout;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.Calendar;
@@ -3588,6 +3589,7 @@ public class MainActivity extends Activity {
         dailyCard.addView(repeatTitle,lp(-1,-2,0,0,0,2));
         dailyCard.addView(repeatSub,lp(-1,-2,0,0,0,9));
         Set<String> selected=new TreeSet<>(selectedDays());
+        final Runnable[] refreshDaysRef=new Runnable[1];
         LinearLayout presets=new LinearLayout(this);
         presets.setGravity(Gravity.CENTER_VERTICAL);
         presets.setOrientation(LinearLayout.HORIZONTAL);
@@ -3612,7 +3614,7 @@ public class MainActivity extends Activity {
                 if(preset==0){for(int d=1;d<=7;d++)selected.add(String.valueOf(d));}
                 else if(preset==1){for(int d=2;d<=6;d++)selected.add(String.valueOf(d));}
                 else {selected.add("1");selected.add("7");}
-                refreshDays.run();
+                if(refreshDaysRef[0]!=null)refreshDaysRef[0].run();
                 refreshPresets.run();
             });
             presetViews.add(chip);
@@ -3635,6 +3637,7 @@ public class MainActivity extends Activity {
                 b.setBackground(shape(on?accent:BG,40,on?accent:separator));
             }
         };
+        refreshDaysRef[0]=refreshDays;
         for(int i=0;i<7;i++){
             final int index=i;
             TextView day=text(labels[i],12,accent,true);
