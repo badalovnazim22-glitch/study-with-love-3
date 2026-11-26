@@ -2456,7 +2456,7 @@ public class MainActivity extends Activity {
                 canvas.drawLine(148,55,146,49,p);canvas.drawLine(153,55,155,48,p);
                 // question bubble
                 fill(canvas,0xFFEAF1FF);canvas.drawCircle(116,20,12,p);
-                p.setColor(blue);p.setTextSize(17);p.setTypeface(android.graphics.Typeface.create("sans-serif-bold",1));canvas.drawText("?",112,26,p);
+                p.setColor(blue);p.setTextSize(17);p.setTypeface(android.graphics.Typeface.create("sans-serif",android.graphics.Typeface.BOLD));canvas.drawText("?",112,26,p);
                 canvas.restore();
             }
         };
