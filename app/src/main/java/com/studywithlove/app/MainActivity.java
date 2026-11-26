@@ -524,7 +524,24 @@ public class MainActivity extends Activity {
 
     private static int reminderRequestCode(int day, int hour, int minute) { return 5000 + day * 10000 + hour * 100 + minute; }
 
-    private void chooseQuietTime(String key){String value=prefs.getString(key,key.endsWith("start")?"22:00":"08:00");String[] p=value.split(":");int h=22,m=0;try{h=Integer.parseInt(p[0]);m=Integer.parseInt(p[1]);}catch(Exception ignored){}new TimePickerDialog(this,(view,hour,minute)->{String time=String.format(Locale.US,"%02d:%02d",hour,minute);prefs.edit().putString(key,time).apply();scheduleReminders(this);showSettings();},h,m,true).show();}
+    private void showSquareTimePicker(int hour,int minute,TimePickerDialog.OnTimeSetListener listener){
+        android.view.ContextThemeWrapper themed=new android.view.ContextThemeWrapper(this,android.R.style.Theme_Material_Light_Dialog_Alert);
+        LinearLayout panel=new LinearLayout(themed);panel.setOrientation(LinearLayout.VERTICAL);
+        int pad=dp(16);panel.setPadding(pad,pad,pad,pad);panel.setBackground(shape(PALE,24,0x33C97891));
+        TextView heading=text("ВЫБЕРИ ВРЕМЯ",11,PINK,true);heading.setGravity(Gravity.CENTER);heading.setLetterSpacing(0.12f);
+        panel.addView(heading,lp(-1,28,0,0,0,8));
+        FrameLayout clockFrame=new FrameLayout(themed);clockFrame.setBackground(shape(0xFFFFF9F7,22,0x33C97891));
+        TimePicker picker=new TimePicker(themed);picker.setIs24HourView(true);
+        if(Build.VERSION.SDK_INT>=23){picker.setHour(Math.max(0,Math.min(23,hour)));picker.setMinute(Math.max(0,Math.min(59,minute)));}
+        else {picker.setCurrentHour(Math.max(0,Math.min(23,hour)));picker.setCurrentMinute(Math.max(0,Math.min(59,minute)));}
+        clockFrame.addView(picker,new FrameLayout.LayoutParams(-1,-1,Gravity.CENTER));
+        panel.addView(clockFrame,lp(-1,300,0,0,0,0));
+        AlertDialog dialog=new AlertDialog.Builder(this).setView(panel).setNegativeButton("Отмена",null).setPositiveButton("Готово",null).create();
+        dialog.setOnShowListener(v->{dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(PINK);dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(MUTED);dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(b->{if(listener!=null)listener.onTimeSet(picker,picker.getCurrentHour(),picker.getCurrentMinute());dialog.dismiss();});});
+        dialog.show();
+    }
+
+    private void chooseQuietTime(String key){String value=prefs.getString(key,key.endsWith("start")?"22:00":"08:00");String[] p=value.split(":");int h=22,m=0;try{h=Integer.parseInt(p[0]);m=Integer.parseInt(p[1]);}catch(Exception ignored){}showSquareTimePicker(h,m,(view,hour,minute)->{String time=String.format(Locale.US,"%02d:%02d",hour,minute);prefs.edit().putString(key,time).apply();scheduleReminders(this);showSettings();});}
     private static void scheduleEveningRest(Context context,SharedPreferences p,AlarmManager am){
         Intent intent=new Intent(context,ReminderReceiver.class).setAction("study_evening_rest").putExtra("message","На сегодня достаточно. Пора отдохнуть и восстановить силы 🌙").putExtra("id",9810);
         PendingIntent pi=PendingIntent.getBroadcast(context,9810,intent,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
@@ -1062,15 +1079,14 @@ public class MainActivity extends Activity {
 
         LinearLayout reminders=settingsGroup("НАПОМИНАНИЯ");
         reminders.setTag("notifications_sound");
-        CheckBox enabled=new CheckBox(this);styleRoundCheckBox(enabled);enabled.setText(translate("Включить напоминания о занятиях"));enabled.setTextSize(14);enabled.setTextColor(DARK);enabled.setChecked(prefs.getBoolean("notifications_enabled",true));reminders.addView(enabled,lp(-1,48,0,0,0,4));
-        enabled.setOnCheckedChangeListener((buttonView,checked)->{prefs.edit().putBoolean("notifications_enabled",checked).apply();scheduleReminders(this);if(checked&&Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},20);});
-        CheckBox quietToggle=new CheckBox(this);quietToggle.setText("Тихие часы для уведомлений");quietToggle.setTextColor(DARK);styleRoundCheckBox(quietToggle);quietToggle.setChecked(prefs.getBoolean("quiet_hours_enabled",false));reminders.addView(quietToggle,lp(-1, 48,0,4,0,0));quietToggle.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("quiet_hours_enabled",on).apply();scheduleReminders(this);});
+        addSettingsToggle(reminders,"Включить напоминания о занятиях","notifications_enabled",true,()->{scheduleReminders(this);if(prefs.getBoolean("notifications_enabled",true)&&Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},20);});
+        addSettingsToggle(reminders,"Тихие часы для уведомлений","quiet_hours_enabled",false,()->scheduleReminders(this));
         Button quietStart=button("Начало тишины · "+prefs.getString("quiet_hours_start","22:00"),false);Button quietEnd=button("Конец тишины · "+prefs.getString("quiet_hours_end","08:00"),false);quietStart.setOnClickListener(v->chooseQuietTime("quiet_hours_start"));quietEnd.setOnClickListener(v->chooseQuietTime("quiet_hours_end"));reminders.addView(quietStart,lp(-1,48,0,3,0,3));reminders.addView(quietEnd,lp(-1, 48,0,0,0,5));
         Button reminderSettings=button("Настроить дни и время",false);reminderSettings.setOnClickListener(v->showReminderSettings());reminders.addView(reminderSettings,lp(-1, 48,0,0,0,0));addSettingsToggle(reminders,"Недельный отчёт","weekly_report_enabled",true,()->WeeklyReportReceiver.schedule(this));int repeat=prefs.getInt("reminder_repeat_minutes",0);int[] repeats={0,5,10,15,30};String[] repeatNames={"Не повторять","5 минут","10 минут","15 минут","30 минут"};int ri=0;for(int k=0;k<repeats.length;k++)if(repeats[k]==repeat)ri=k;final int[] repeatIndex={ri};Button repeatButton=button("Повтор напоминания · "+repeatNames[ri],false);repeatButton.setOnClickListener(v->{repeatIndex[0]=(repeatIndex[0]+1)%repeats.length;prefs.edit().putInt("reminder_repeat_minutes",repeats[repeatIndex[0]]).apply();repeatButton.setText("Повтор напоминания · "+repeatNames[repeatIndex[0]]);});reminders.addView(repeatButton,lp(-1,42,0,3,0,3));String tone=prefs.getString("reminder_tone","soft");String[] tones={"soft","neutral","strict"},toneNames={"Мягкий","Нейтральный","Строгий"};int ti=0;for(int k=0;k<tones.length;k++)if(tones[k].equals(tone))ti=k;final int[] toneIndex={ti};Button toneButton=button("Тон напоминаний · "+toneNames[ti],false);toneButton.setOnClickListener(v->{toneIndex[0]=(toneIndex[0]+1)%tones.length;prefs.edit().putString("reminder_tone",tones[toneIndex[0]]).apply();toneButton.setText("Тон напоминаний · "+toneNames[toneIndex[0]]);});reminders.addView(toneButton,lp(-1,42,0,2,0,3));addSettingsToggle(reminders,"Напоминания о письмах себе","future_letters_enabled",true,()->rescheduleFutureLetterReminders(this));addSettingsToggle(reminders,"Вечернее напоминание об отдыхе","evening_rest_enabled",false,()->scheduleReminders(this));root.addView(reminders,lp(-1,-2,0,0,0,4));
 
         LinearLayout focus=settingsGroup("РЕЖИМ ФОКУСА");
         focus.setTag("notifications_sound");
-        CheckBox focusToggle=new CheckBox(this);focusToggle.setText("Не отвлекать");focusToggle.setTextColor(DARK);styleRoundCheckBox(focusToggle);focusToggle.setChecked(prefs.getBoolean("do_not_disturb",false));focus.addView(focusToggle,lp(-1, 42,0,0,0,0));focusToggle.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("do_not_disturb",on).apply();scheduleReminders(this);});root.addView(focus,lp(-1,-2,0,0,0,4));
+        addSettingsToggle(focus,"Не отвлекать","do_not_disturb",false,()->scheduleReminders(this));root.addView(focus,lp(-1,-2,0,0,0,4));
         LinearLayout feedbackSettings=settingsGroup("ЗВУК И ОТКЛИК");feedbackSettings.setTag("notifications_sound");addSettingsToggle(feedbackSettings,"Вибрация при действиях","haptics_enabled",true,null);addSettingsToggle(feedbackSettings,"Звук завершения темы","topic_sound_enabled",true,null);addSettingsToggle(feedbackSettings,"Звук окончания Pomodoro","timer_sound_enabled",true,null);addSettingsToggle(feedbackSettings,"Звук правильного ответа","correct_answer_sound_enabled",true,null);addSettingsToggle(feedbackSettings,"Уведомление об окончании таймера","timer_notification_enabled",true,null);addSettingsToggle(feedbackSettings,"Конфетти и праздничные эффекты","celebrations_enabled",true,null);
         addText(feedbackSettings,"ГРОМКОСТЬ СИГНАЛОВ",11,PINK,true);android.widget.SeekBar soundVolume=new android.widget.SeekBar(this);soundVolume.setMax(100);soundVolume.setProgress(prefs.getInt("completion_sound_volume",55));if(Build.VERSION.SDK_INT>=21)soundVolume.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));feedbackSettings.addView(soundVolume,lp(-1,38,0,0,0,5));soundVolume.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener(){public void onProgressChanged(android.widget.SeekBar b,int value,boolean user){if(user)prefs.edit().putInt("completion_sound_volume",value).apply();}public void onStartTrackingTouch(android.widget.SeekBar b){}public void onStopTrackingTouch(android.widget.SeekBar b){}});
         addSettingsToggle(feedbackSettings,"Автовключение выбранной атмосферы при открытии","ambience_autostart",false,null);
@@ -1089,13 +1105,7 @@ public class MainActivity extends Activity {
 
         LinearLayout updates=settingsGroup("ОБНОВЛЕНИЕ ПРИЛОЖЕНИЯ");
         updates.setTag("about");
-        CheckBox reduceMotion = new CheckBox(this);
-        reduceMotion.setText("Меньше анимации");
-        reduceMotion.setTextSize(14); reduceMotion.setTextColor(DARK);
-        styleRoundCheckBox(reduceMotion);
-        reduceMotion.setChecked(prefs.getBoolean("reduce_motion", false));
-        updates.addView(reduceMotion, lp(-1, 42, 0, 1, 0, 3));
-        reduceMotion.setOnCheckedChangeListener((v, checked) -> prefs.edit().putBoolean("reduce_motion", checked).apply());
+        addSettingsToggle(updates,"Меньше анимации","reduce_motion",false,null);
         String installedVersion="—";
         try { installedVersion=getPackageManager().getPackageInfo(getPackageName(),0).versionName; } catch(Exception ignored) {}
         
@@ -1160,7 +1170,7 @@ public class MainActivity extends Activity {
     }
 
     private int parseClockMinutes(String value,int fallback){try{String[] p=value.split(":");return Math.max(0,Math.min(1439,Integer.parseInt(p[0])*60+Integer.parseInt(p[1])));}catch(Exception e){return fallback;}}
-    private void chooseClockPreference(String key,String title,String fallback){String value=prefs.getString(key,fallback);int hour=21,minute=0;try{String[] p=value.split(":");hour=Integer.parseInt(p[0]);minute=Integer.parseInt(p[1]);}catch(Exception ignored){}new TimePickerDialog(this,(view,h,m)->{prefs.edit().putString(key,String.format(Locale.US,"%02d:%02d",h,m)).apply();applySavedTheme();updateSystemBarIcons();showSettings();},hour,minute,true).show();}
+    private void chooseClockPreference(String key,String title,String fallback){String value=prefs.getString(key,fallback);int hour=21,minute=0;try{String[] p=value.split(":");hour=Integer.parseInt(p[0]);minute=Integer.parseInt(p[1]);}catch(Exception ignored){}showSquareTimePicker(hour,minute,(view,h,m)->{prefs.edit().putString(key,String.format(Locale.US,"%02d:%02d",h,m)).apply();applySavedTheme();updateSystemBarIcons();showSettings();});}
     private void applySavedTheme() {
         String theme = prefs == null ? "pink" : prefs.getString("app_theme", "pink");
         if(prefs!=null && prefs.getBoolean("scheduled_dark_enabled",false)){Calendar now=Calendar.getInstance(AppTime.zone());int current=now.get(Calendar.HOUR_OF_DAY)*60+now.get(Calendar.MINUTE);int start=parseClockMinutes(prefs.getString("scheduled_dark_start","21:00"),1260),end=parseClockMinutes(prefs.getString("scheduled_dark_end","07:00"),420);if(start<=end?(current>=start&&current<end):(current>=start||current<end))theme="night";}
@@ -2395,7 +2405,7 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams main=new LinearLayout.LayoutParams(0,dp(52),1f);main.setMargins(dp(4),0,dp(4),0);controls.addView(timerStartButton,main);
         LinearLayout.LayoutParams side=new LinearLayout.LayoutParams(0,dp(52),0.58f);side.setMargins(dp(4),0,dp(4),0);controls.addView(timerPauseButton,side);controls.addView(reset,side);
         screen.addView(controls,lp(-1,dp(58),0,dp(12),0,0));
-        timerDisplay.setOnLongClickListener(v->{if(timerRunning)return true;new TimePickerDialog(this,(picker,hour,minute)->{selectedStudyMinutes=Math.max(1,Math.min(600,hour*60+minute));prefs.edit().putInt("selected_study_minutes",selectedStudyMinutes).apply();if(!timerIsBreak)timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();},selectedStudyMinutes/60,selectedStudyMinutes%60,true).show();return true;});
+        timerDisplay.setOnLongClickListener(v->{if(timerRunning)return true;showSquareTimePicker(selectedStudyMinutes/60,selectedStudyMinutes%60,(picker,hour,minute)->{selectedStudyMinutes=Math.max(1,Math.min(600,hour*60+minute));prefs.edit().putInt("selected_study_minutes",selectedStudyMinutes).apply();if(!timerIsBreak)timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();});return true;});
         root.addView(screen,lp(-1,-2,0,dp(6),0,dp(10)));
         updateTimerRingProgress(timerRemainingMs);
         if(timerRunning){updateTimerDisplay();timerStartButton.setEnabled(false);timerPauseButton.setEnabled(true);if(timerTick==null){timerTick=new Runnable(){public void run(){updateTimerDisplay();long left=FocusTimerController.remainingUntil(timerEndElapsed);if(left<=0)finishTimerPhase();else timerHandler.postDelayed(this,250);}};timerHandler.post(timerTick);}}
@@ -2612,15 +2622,15 @@ public class MainActivity extends Activity {
     private void addExamTopicSelector(){
         LinearLayout section=card();addText(section,"📚  ТЕМЫ ДЛЯ ЭКЗАМЕНА",12,PINK,true);
         addText(section,"Отметь только те темы, которые входят в твой экзамен. При включённом фильтре общий прогресс и планировщик будут учитывать именно их.",12,MUTED,false);
-        CheckBox enabled=new CheckBox(this);enabled.setText("Считать прогресс и план только по отмеченным темам");enabled.setTextColor(DARK);enabled.setButtonTintList(android.content.res.ColorStateList.valueOf(PINK));enabled.setChecked(prefs.getBoolean("exam_topic_filter_enabled",false));section.addView(enabled,lp(-1,-2,0,5,0,6));
-        enabled.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("exam_topic_filter_enabled",on).apply();showAppMessage(on?"Фильтр тем экзамена включён":"Весь учебный план снова учитывается");});
+        boolean filterEnabled=prefs.getBoolean("exam_topic_filter_enabled",false);
+        addSettingsToggle(section,"Считать прогресс и план только по отмеченным темам","exam_topic_filter_enabled",false,()->showAppMessage(prefs.getBoolean("exam_topic_filter_enabled",false)?"Фильтр тем экзамена включён":"Весь учебный план снова учитывается"));
         LinearLayout actions=new LinearLayout(this);Button all=button("Выбрать все",false),none=button("Снять выбор",false);actions.addView(all,new LinearLayout.LayoutParams(0,dp(48),1f));actions.addView(none,new LinearLayout.LayoutParams(0,dp(48),1f));section.addView(actions,lp(-1, 48,0,0,0,6));
         all.setOnClickListener(v->{Set<String> ids=new TreeSet<>();for(Map.Entry<String,List<String>> e:chapters.entrySet())for(String topic:e.getValue())ids.add(examTopicKey(e.getKey(),topic));prefs.edit().putStringSet("exam_topic_ids",ids).apply();showExam();});
         none.setOnClickListener(v->{prefs.edit().putStringSet("exam_topic_ids",new TreeSet<String>()).apply();showExam();});
         Set<String> selected=new TreeSet<>(prefs.getStringSet("exam_topic_ids",new TreeSet<String>()));
         int allTopicCount=0;for(List<String> topics:chapters.values())allTopicCount+=topics.size();final int totalTopicCount=allTopicCount;
         TextView selectionSummary=text("Отмечено тем: "+selected.size()+" из "+totalTopicCount,12,MUTED,false);section.addView(selectionSummary,lp(-1,24,0,0,0,4));
-        if(enabled.isChecked()&&selected.isEmpty())addText(section,"Сначала отметь хотя бы одну тему — иначе экзаменационный прогресс будет равен 0%.",12,PINK,true);
+        if(filterEnabled&&selected.isEmpty())addText(section,"Сначала отметь хотя бы одну тему — иначе экзаменационный прогресс будет равен 0%.",12,PINK,true);
         for(Map.Entry<String,List<String>> entry:chapters.entrySet()){
             addText(section,entry.getKey().replaceFirst("^[^ ]+\\s*",""),13,DARK,true);
             for(String topic:entry.getValue()){
@@ -3601,13 +3611,13 @@ public class MainActivity extends Activity {
             Calendar now=Calendar.getInstance(AppTime.zone());
             int h=20,m=0;
             try{String[] p=reminderTimes.get(0).split(":");h=Integer.parseInt(p[0]);m=Integer.parseInt(p[1]);}catch(Exception ignored){}
-            new TimePickerDialog(this,(picker,hour,minute)->{
+            showSquareTimePicker(h,m,(picker,hour,minute)->{
                 String value=String.format(Locale.US,"%02d:%02d",hour,minute);
                 reminderTimes.clear();
                 reminderTimes.add(value);
                 timeValue.setText(value);
                 hintText.setText("Мы напомним о занятии в "+value+".");
-            },h,m,true).show();
+            });
         };
         timeRow.setOnClickListener(chooseTime);
         timeValue.setOnClickListener(chooseTime);
@@ -3752,10 +3762,10 @@ public class MainActivity extends Activity {
 
     private void editReminderTime(String oldTime,Runnable refresh){
         try{String[] p=oldTime.split(":");int h=Integer.parseInt(p[0]),m=Integer.parseInt(p[1]);
-            new TimePickerDialog(this,(picker,hour,minute)->{String value=String.format(Locale.US,"%02d:%02d",hour,minute);
+            showSquareTimePicker(h,m,(picker,hour,minute)->{String value=String.format(Locale.US,"%02d:%02d",hour,minute);
                 if(!oldTime.equals(value)&&reminderTimes.contains(value)){showAppMessage("Такое время уже добавлено");return;}
                 int index=reminderTimes.indexOf(oldTime);if(index>=0){reminderTimes.set(index,value);java.util.Collections.sort(reminderTimes);refresh.run();}
-            },h,m,true).show();
+            });
         }catch(Exception ignored){showAppMessage("Не удалось изменить время");}
     }
 
@@ -3764,19 +3774,19 @@ public class MainActivity extends Activity {
             LinearLayout tile = card();
             tile.setOrientation(LinearLayout.VERTICAL);
             tile.setGravity(Gravity.CENTER_VERTICAL);
-            tile.setPadding(dp(9), dp(8), dp(8), dp(7));
+            tile.setPadding(dp(8), dp(6), dp(7), dp(5));
             TextView symbol = text(icon, 24, PINK, true);
             symbol.setGravity(Gravity.CENTER);
             symbol.setIncludeFontPadding(false);
             symbol.setBackground(shape(PALE, 15, 0));
-            tile.addView(symbol, lp(32, 32, 0, 0, 0, 5));
-            TextView heading = text(title, 15, DARK, true);
+            tile.addView(symbol, lp(28, 28, 0, 0, 0, 4));
+            TextView heading = text(title, 14, DARK, true);
             heading.setMaxLines(2);
             tile.addView(heading, lp(-1, -2, 0, 0, 0, 4));
-            TextView detail = text(subtitle, 12, MUTED, false);
+            TextView detail = text(subtitle, 11, MUTED, false);
             detail.setMaxLines(2);
             tile.addView(detail, lp(-1, -2, 0, 0, 0, 0));
-            LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, dp(106), 1f);
+            LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, dp(88), 1f);
             p.setMargins(dp(3), 0, dp(3), 0);
             row.addView(tile, p);
             tile.setContentDescription(title + ". " + subtitle);
