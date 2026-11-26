@@ -222,7 +222,7 @@ public final class AppUpdater {
         android.widget.TextView icon=new android.widget.TextView(activity);icon.setText("↓");icon.setTextSize(30);icon.setTextColor(0xFFC97891);icon.setGravity(android.view.Gravity.CENTER);icon.setBackground(roundRect(0xFFFCEEF2,24,0,activity));
         android.widget.LinearLayout.LayoutParams iconLp=new android.widget.LinearLayout.LayoutParams(pad*3,pad*3);iconLp.gravity=android.view.Gravity.CENTER_HORIZONTAL;panel.addView(icon,iconLp);
         android.widget.TextView title=new android.widget.TextView(activity);title.setText("Загружаем обновление");title.setTextColor(0xFF3F3439);title.setTextSize(19);title.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);title.setGravity(android.view.Gravity.CENTER);title.setPadding(0,pad,0,pad/3);panel.addView(title,new android.widget.LinearLayout.LayoutParams(-1,-2));
-        android.widget.TextView status=new android.widget.TextView(activity);status.setText("Подготавливаем новую версию Study with Love…");status.setTextColor(0xFF75666D);status.setTextSize(13);status.setGravity(android.view.Gravity.CENTER);panel.addView(status,new android.widget.LinearLayout.LayoutParams(-1,-2));
+        android.widget.TextView statusText=new android.widget.TextView(activity);statusText.setText("Подготавливаем новую версию Study with Love…");statusText.setTextColor(0xFF75666D);statusText.setTextSize(13);statusText.setGravity(android.view.Gravity.CENTER);panel.addView(statusText,new android.widget.LinearLayout.LayoutParams(-1,-2));
         android.widget.ProgressBar progressBar=new android.widget.ProgressBar(activity,null,android.R.attr.progressBarStyleHorizontal);progressBar.setMax(100);progressBar.setProgress(0);
         if(Build.VERSION.SDK_INT>=21){progressBar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFFC97891));progressBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF1DCE4));}
         android.widget.LinearLayout.LayoutParams barLp=new android.widget.LinearLayout.LayoutParams(-1,(int)(8*activity.getResources().getDisplayMetrics().density));barLp.topMargin=pad;barLp.bottomMargin=pad/2;panel.addView(progressBar,barLp);
@@ -261,7 +261,7 @@ public final class AppUpdater {
                         out.write(buffer, 0, count);
                         if (total > 0) {
                             int value = (int) Math.min(100, copied * 100 / total);
-                            MAIN.post(() -> {progressBar.setProgress(value);percent.setText(value+"%");status.setText("Скачиваем файл обновления…");});
+                            MAIN.post(() -> {progressBar.setProgress(value);percent.setText(value+"%");statusText.setText("Скачиваем файл обновления…");});
                         }
                     }
                     out.getFD().sync();
