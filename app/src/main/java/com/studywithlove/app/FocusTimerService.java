@@ -44,7 +44,7 @@ public class FocusTimerService extends Service {
         }
         startForeground(920,build(tr("Таймер работает","Timer is running","Taymer işləyir"),tr("Осталось ","Remaining ","Qalıb ")+format(Math.max(0,endAt-System.currentTimeMillis())),false));
         if(tick!=null)handler.removeCallbacks(tick);
-        tick=new Runnable(){public void run(){long left=endAt-System.currentTimeMillis();if(left<=0){finish(currentBreak);return;}nm.notify(920,build(tr("Таймер работает","Timer is running","Taymer işləyir"),tr("Осталось ","Remaining ")+format(left),false));handler.postDelayed(this,1000);}};
+        tick=new Runnable(){public void run(){long left=endAt-System.currentTimeMillis();if(left<=0){finish(currentBreak);return;}nm.notify(920,build(tr("Таймер работает","Timer is running","Taymer işləyir"),tr("Осталось ","Remaining ","Qalıb ")+format(left),false));handler.postDelayed(this,1000);}};
         if(endAt<=System.currentTimeMillis())finish(currentBreak);else handler.post(tick);
         return START_STICKY;
     }
