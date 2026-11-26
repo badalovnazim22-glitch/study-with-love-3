@@ -763,7 +763,7 @@ public class MainActivity extends Activity {
         bar.setPadding(dp(5),dp(4),dp(5),dp(4));
         GradientDrawable navBg=new GradientDrawable();
         navBg.setColor(isDarkAppearance()?0xF5211E29:0xF5FFFFFF);
-        navBg.setCornerRadius(dp(31));
+        navBg.setCornerRadius(0f);
         navBg.setStroke(dp(1),isDarkAppearance()?0x55393442:0x55ECEAF2);
         bar.setBackground(navBg);
         bar.setElevation(dp(10));
@@ -871,7 +871,7 @@ public class MainActivity extends Activity {
         box.setOnTouchListener((v,event)->{if(event.getAction()==android.view.MotionEvent.ACTION_DOWN){v.animate().cancel();v.animate().scaleX(0.985f).scaleY(0.985f).setDuration(75).start();}else if(event.getAction()==android.view.MotionEvent.ACTION_UP||event.getAction()==android.view.MotionEvent.ACTION_CANCEL){v.animate().cancel();v.animate().scaleX(1f).scaleY(1f).setDuration(180).setInterpolator(new android.view.animation.OvershootInterpolator(1.15f)).start();}return false;});
         if(Build.VERSION.SDK_INT>=21){
             android.graphics.drawable.GradientDrawable rippleMask=new android.graphics.drawable.GradientDrawable();
-            rippleMask.setColor(0xFFFFFFFF);rippleMask.setCornerRadius(dp(13));
+            rippleMask.setColor(0xFFFFFFFF);rippleMask.setCornerRadius(0f);
             box.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x18C97891),null,rippleMask));
         }
     }
@@ -963,60 +963,23 @@ public class MainActivity extends Activity {
         String[] names={"Лавандовая","Сиреневая","Мятная","Ночная","Белая","Кофейная","Золотая","Люкс","Небесная","Персиковая","Красная","LV"};
         String[] keys={"pink","lavender","mint","night","white","brown","gold","luxury","sky","peach","red","lv"};
         int[] colors={0xFF8070A8,0xFF8979B8,0xFF659B86,0xFF302735,0xFFFFFFFF,0xFF8B6046,0xFFC49318,0xFF30251F,0xFF5D91B5,0xFFD88968,0xFFB32635,0xFFD9C19A};
-        LinearLayout preview = card();
-        preview.setPadding(dp(14), dp(12), dp(14), dp(12));
-        preview.setBackground(shape(PALE,18,blendColors(PINK,BG,isDarkAppearance()?0.42f:0.68f)));
-        addText(preview, "ПРЕДПРОСМОТР ТЕМЫ", 12, PINK, true);
-        TextView previewText = text("Твой прогресс  ·  65%", 16, DARK, true);
-        previewText.setTypeface(Typeface.create(selectedFontFamily(),Typeface.BOLD));
-        preview.addView(previewText, lp(-1, 30, 0, 4, 0, 5));
-        TextView previewCaption=text("Каждый шаг приближает к цели",12,MUTED,false);
-        previewCaption.setTypeface(Typeface.create(selectedFontFamily(),Typeface.NORMAL));
-        preview.addView(previewCaption,lp(-1,-2,0,0,0,7));
-        ProgressBar previewBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-        previewBar.setMax(100); previewBar.setProgress(65);
-        if (Build.VERSION.SDK_INT >= 21) previewBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
-        preview.addView(previewBar, lp(-1, 8, 0, 0, 0, 4));
-        Button previewButton = button("Продолжить", true);previewButton.setTypeface(Typeface.create(selectedFontFamily(),Typeface.BOLD));previewButton.setBackground(shape(PINK,12,0));
-        preview.addView(previewButton, lp(-1, 42, 0, 5, 0, 0));
-        appearance.addView(preview, lp(-1, -2, 0, 7, 0, 8));
         int paletteColumns = getResources().getConfiguration().screenWidthDp < 380 ? 2 : 3;
         android.widget.GridLayout palette=new android.widget.GridLayout(this);palette.setColumnCount(paletteColumns);
         String activeTheme=prefs.getString("app_theme","pink");
         for(int i=0;i<keys.length;i++){final String key=keys[i];final int color=colors[i];final String label=names[i];LinearLayout option=new LinearLayout(this);option.setGravity(Gravity.CENTER_VERTICAL);option.setPadding(dp(8),dp(7),dp(5),dp(7));option.setBackground(shape(activeTheme.equals(key)?blendColors(PALE,BG,0.18f):0x00FFFFFF,13,activeTheme.equals(key)?PINK:blendColors(PALE,BG,0.15f)));
-            TextView swatch=text(activeTheme.equals(key)?"✓":"",12,onAccentTextColor(color),true);swatch.setGravity(Gravity.CENTER);GradientDrawable swatchBg=new GradientDrawable();swatchBg.setColor(color);swatchBg.setCornerRadius(dp(30));if(activeTheme.equals(key))swatchBg.setStroke(dp(2),PINK);swatch.setBackground(swatchBg);option.addView(swatch,lp(28,28,0,0,7,0));TextView labelView=text(label,11,DARK,true);option.addView(labelView,new LinearLayout.LayoutParams(0,dp(30),1f));
+            TextView swatch=text(activeTheme.equals(key)?"✓":"",12,onAccentTextColor(color),true);swatch.setGravity(Gravity.CENTER);GradientDrawable swatchBg=new GradientDrawable();swatchBg.setColor(color);swatchBg.setCornerRadius(0f);if(activeTheme.equals(key))swatchBg.setStroke(dp(2),PINK);swatch.setBackground(swatchBg);option.addView(swatch,lp(28,28,0,0,7,0));TextView labelView=text(label,11,DARK,true);option.addView(labelView,new LinearLayout.LayoutParams(0,dp(30),1f));
             android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(48);gp.columnSpec=android.widget.GridLayout.spec(i%paletteColumns,1f);gp.setMargins(dp(2),dp(3),dp(2),dp(3));palette.addView(option,gp);
             option.setOnClickListener(v->{prefs.edit().putString("app_theme",key).remove("app_accent_color").apply();applySavedTheme();showSettings();});
         }
         appearance.addView(palette,lp(-1,-2,0,7,0,5));
-        LinearLayout customTheme=card();customTheme.setOrientation(LinearLayout.VERTICAL);customTheme.setPadding(dp(12),dp(12),dp(12),dp(12));
-        LinearLayout customHeading=new LinearLayout(this);customHeading.setGravity(Gravity.CENTER_VERTICAL);
-        TextView customSwatch=text("✦",18,0xFFFFFFFF,true);customSwatch.setGravity(Gravity.CENTER);GradientDrawable customSwatchBg=new GradientDrawable();customSwatchBg.setColor(prefs.getInt("app_accent_color",PINK));customSwatchBg.setShape(GradientDrawable.OVAL);customSwatch.setBackground(customSwatchBg);customHeading.addView(customSwatch,lp(36,36,0,0,10,0));
-        LinearLayout customWords=new LinearLayout(this);customWords.setOrientation(LinearLayout.VERTICAL);addText(customWords,"Своя тема",14,DARK,true);addText(customWords,"Настрой цвета — результат сразу виден в превью выше",11,MUTED,false);customHeading.addView(customWords,new LinearLayout.LayoutParams(0,-2,1f));customTheme.addView(customHeading,lp(-1,-2,0,0,0,10));
-        addText(customTheme,"ЦВЕТ АКЦЕНТА",10,PINK,true);
-        int[] customAccents={0xFFC97891,0xFF8979B8,0xFF659B86,0xFF5D91B5,0xFFD88968,0xFFB32635,0xFFC49318,0xFF65758B};
-        String[] customAccentNames={"Розовый","Лавандовый","Мятный","Голубой","Персиковый","Красный","Золотой","Графитовый"};
-        android.widget.GridLayout customAccentGrid=new android.widget.GridLayout(this);customAccentGrid.setColumnCount(4);
-        int currentCustomAccent=prefs.getInt("app_accent_color",PINK);
-        for(int ci=0;ci<customAccents.length;ci++){final int accent=customAccents[ci];LinearLayout swatchItem=new LinearLayout(this);swatchItem.setOrientation(LinearLayout.VERTICAL);swatchItem.setGravity(Gravity.CENTER);TextView dot=text(currentCustomAccent==accent?"✓":"",14,onAccentTextColor(accent),true);dot.setGravity(Gravity.CENTER);GradientDrawable dotBg=new GradientDrawable();dotBg.setColor(accent);dotBg.setShape(GradientDrawable.OVAL);if(currentCustomAccent==accent)dotBg.setStroke(dp(2),DARK);dot.setBackground(dotBg);swatchItem.addView(dot,lp(32,32,0,0,0,3));TextView swatchName=text(translate(customAccentNames[ci]),9,DARK,false);swatchName.setGravity(Gravity.CENTER);swatchName.setMaxLines(1);swatchItem.addView(swatchName,lp(-1,20,0,0,0,0));android.widget.GridLayout.LayoutParams cgp=new android.widget.GridLayout.LayoutParams();cgp.width=0;cgp.height=dp(56);cgp.columnSpec=android.widget.GridLayout.spec(ci%4,1f);cgp.setMargins(dp(2),dp(3),dp(2),dp(3));customAccentGrid.addView(swatchItem,cgp);swatchItem.setOnClickListener(v->{prefs.edit().putString("app_theme","custom").putInt("app_accent_color",accent).apply();applySavedTheme();updateSystemBarIcons();showSettings();});}
-        customTheme.addView(customAccentGrid,lp(-1,-2,0,3,0,8));
-        addText(customTheme,"ЦВЕТ ФОНА",10,PINK,true);
-        String[] bgKeys={"light","dark","black"};String[] bgNames={"Светлый","Тёмно-серый","Чёрный"};int[] bgColors={0xFFF7F8FA,0xFF292B30,0xFF101114};String activeBg=prefs.getString("custom_theme_background","light");LinearLayout bgRow=new LinearLayout(this);bgRow.setOrientation(LinearLayout.HORIZONTAL);
-        for(int bi=0;bi<bgKeys.length;bi++){final String bgKey=bgKeys[bi];boolean selectedBg=activeBg.equals(bgKey);LinearLayout bgChoice=new LinearLayout(this);bgChoice.setOrientation(LinearLayout.VERTICAL);bgChoice.setGravity(Gravity.CENTER);bgChoice.setPadding(dp(4),dp(5),dp(4),dp(5));bgChoice.setBackground(shape(selectedBg?PALE:BG,12,selectedBg?PINK:blendColors(PALE,BG,0.3f)));View bgSample=new View(this);GradientDrawable bgSampleDrawable=new GradientDrawable();bgSampleDrawable.setColor(bgColors[bi]);bgSampleDrawable.setCornerRadius(dp(7));bgSample.setBackground(bgSampleDrawable);bgChoice.addView(bgSample,lp(-1,22,0,0,0,4));TextView bgName=text(translate(bgNames[bi]),10,DARK,selectedBg);bgName.setGravity(Gravity.CENTER);bgChoice.addView(bgName,lp(-1,20,0,0,0,0));LinearLayout.LayoutParams bgLp=new LinearLayout.LayoutParams(0,dp(58),1f);bgLp.setMargins(dp(3),dp(3),dp(3),dp(2));bgRow.addView(bgChoice,bgLp);bgChoice.setOnClickListener(v->{prefs.edit().putString("app_theme","custom").putString("custom_theme_background",bgKey).apply();applySavedTheme();updateSystemBarIcons();showSettings();});}
-        customTheme.addView(bgRow,lp(-1,-2,0,3,0,0));appearance.addView(customTheme,lp(-1,-2,0,0,0,8));
         LinearLayout fontGroup=settingsGroup("ШРИФТ ПРИЛОЖЕНИЯ");
         
         String[] fontNames={"Современный","Округлый","С засечками","Моноширинный","Узкий","Средний"};
         String[] fontKeys={"sans","rounded","serif","mono","condensed","medium"};
         String[] fontFamilies={"sans-serif","sans-serif-rounded","serif","monospace","sans-serif-condensed","sans-serif-medium"};
         String activeFont=prefs.getString("app_font","sans");
-        LinearLayout fontPreview=card();fontPreview.setPadding(dp(13),dp(10),dp(13),dp(10));fontPreview.setBackground(shape(PALE,16,blendColors(PINK,BG,isDarkAppearance()?0.5f:0.75f)));
-        TextView fontPreviewTitle=text("Твой прогресс",18,DARK,true);fontPreviewTitle.setTypeface(Typeface.create(selectedFontFamily(),Typeface.BOLD));fontPreview.addView(fontPreviewTitle,lp(-1,-2,0,0,0,3));
-        TextView fontPreviewBody=text("Каждый шаг приближает к цели",12,MUTED,false);fontPreviewBody.setTypeface(Typeface.create(selectedFontFamily(),Typeface.NORMAL));fontPreview.addView(fontPreviewBody,lp(-1,-2,0,0,0,7));
-        ProgressBar fontPreviewProgress=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);fontPreviewProgress.setMax(100);fontPreviewProgress.setProgress(65);if(Build.VERSION.SDK_INT>=21)fontPreviewProgress.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));fontPreview.addView(fontPreviewProgress,lp(-1,7,0,0,0,0));
-        fontGroup.addView(fontPreview,lp(-1,-2,0,5,0,6));
         android.widget.GridLayout fontGrid=new android.widget.GridLayout(this);fontGrid.setColumnCount(2);
-        for(int i=0;i<fontKeys.length;i++){final String key=fontKeys[i],family=fontFamilies[i];Button choice=button((activeFont.equals(key)?"✓  ":"")+translate(fontNames[i]),activeFont.equals(key));choice.setTypeface(Typeface.create(family,Typeface.BOLD));if(activeFont.equals(key)){GradientDrawable selectedFontBg=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{adjustColor(PINK,0.92f),adjustColor(PINK,0.78f)});selectedFontBg.setCornerRadius(dp(14));choice.setBackground(selectedFontBg);}else choice.setBackground(shape(isDarkAppearance()?blendColors(PALE,BG,0.18f):0xCCFFFFFF,13,blendColors(PINK,BG,isDarkAppearance()?0.42f:0.68f)));android.widget.GridLayout.LayoutParams fp=new android.widget.GridLayout.LayoutParams();fp.width=0;fp.height=dp(44);fp.columnSpec=android.widget.GridLayout.spec(i%2,1f);fp.setMargins(dp(3),dp(3),dp(3),dp(3));fontGrid.addView(choice,fp);choice.setOnClickListener(v->{prefs.edit().putString("app_font",key).apply();showSettings();});}
+        for(int i=0;i<fontKeys.length;i++){final String key=fontKeys[i],family=fontFamilies[i];Button choice=button((activeFont.equals(key)?"✓  ":"")+translate(fontNames[i]),activeFont.equals(key));choice.setTypeface(Typeface.create(family,Typeface.BOLD));if(activeFont.equals(key)){GradientDrawable selectedFontBg=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{adjustColor(PINK,0.92f),adjustColor(PINK,0.78f)});selectedFontBg.setCornerRadius(0f);choice.setBackground(selectedFontBg);}else choice.setBackground(shape(isDarkAppearance()?blendColors(PALE,BG,0.18f):0xCCFFFFFF,13,blendColors(PINK,BG,isDarkAppearance()?0.42f:0.68f)));android.widget.GridLayout.LayoutParams fp=new android.widget.GridLayout.LayoutParams();fp.width=0;fp.height=dp(44);fp.columnSpec=android.widget.GridLayout.spec(i%2,1f);fp.setMargins(dp(3),dp(3),dp(3),dp(3));fontGrid.addView(choice,fp);choice.setOnClickListener(v->{prefs.edit().putString("app_font",key).apply();showSettings();});}
         fontGroup.addView(fontGrid,lp(-1,-2,0,4,0,0));appearance.addView(fontGroup,lp(-1,-2,0,4,0,6));
         LinearLayout fontSizeGroup=settingsGroup("РАЗМЕР ТЕКСТА");
         fontSizeGroup.setTag("appearance");
@@ -1038,7 +1001,7 @@ public class MainActivity extends Activity {
             choice.setSingleLine(true);
             choice.setIncludeFontPadding(false);
             choice.setPadding(dp(2),dp(9),dp(2),dp(9));
-            if(selected){GradientDrawable activeSegment=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{adjustColor(PINK,1.12f),adjustColor(PINK,0.78f)});activeSegment.setCornerRadius(dp(10));activeSegment.setStroke(dp(1),adjustColor(PINK,0.78f));choice.setBackground(activeSegment);}else choice.setBackground(shape(isDarkAppearance()?0xFF292530:0x00FFFFFF,10,0));
+            if(selected){GradientDrawable activeSegment=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{adjustColor(PINK,1.12f),adjustColor(PINK,0.78f)});activeSegment.setCornerRadius(0f);activeSegment.setStroke(dp(1),adjustColor(PINK,0.78f));choice.setBackground(activeSegment);}else choice.setBackground(shape(isDarkAppearance()?0xFF292530:0x00FFFFFF,10,0));
             LinearLayout.LayoutParams scaleLp=new LinearLayout.LayoutParams(0,dp(42),1f);
             scaleLp.setMargins(dp(1),0,dp(1),0);
             scaleStrip.addView(choice,scaleLp);
@@ -1046,12 +1009,19 @@ public class MainActivity extends Activity {
         }
         fontSizeGroup.addView(scaleStrip,lp(-1,-2,0,5,0,0));
         appearance.addView(fontSizeGroup,lp(-1,-2,0,4,0,6));
-        LinearLayout appearanceExtras=settingsGroup("ДОПОЛНИТЕЛЬНАЯ НАСТРОЙКА ВИДА");appearanceExtras.setTag("appearance");
-        addSettingsToggle(appearanceExtras,"Автоматическая тёмная тема по расписанию","scheduled_dark_enabled",false,()->{applySavedTheme();updateSystemBarIcons();showSettings();});
-        Button darkStart=button("Начало ночной темы · "+prefs.getString("scheduled_dark_start","21:00"),false),darkEnd=button("Конец ночной темы · "+prefs.getString("scheduled_dark_end","07:00"),false);darkStart.setOnClickListener(v->chooseClockPreference("scheduled_dark_start","Начало тёмной темы","21:00"));darkEnd.setOnClickListener(v->chooseClockPreference("scheduled_dark_end","Конец тёмной темы","07:00"));appearanceExtras.addView(darkStart,lp(-1,42,0,3,0,2));appearanceExtras.addView(darkEnd,lp(-1,42,0,2,0,5));
-        addText(appearanceExtras,"СКРУГЛЕНИЕ УГЛОВ",11,PINK,true);LinearLayout corners=new LinearLayout(this);String corner=prefs.getString("corner_style","round");String[] cornerKeys={"sharp","normal","round"},cornerNames={"Острые","Обычные","Круглые"};for(int i=0;i<3;i++){final String key=cornerKeys[i];Button b=button(cornerNames[i],corner.equals(key));LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(42),1f);cp.setMargins(dp(2),dp(3),dp(2),dp(3));corners.addView(b,cp);b.setOnClickListener(v->{prefs.edit().putString("corner_style",key).apply();showSettings();});}appearanceExtras.addView(corners,lp(-1,46,0,2,0,7));
-        Button orderHome=button("↕  Изменить порядок блоков",false);orderHome.setOnClickListener(v->showHomeBlockOrderDialog());appearanceExtras.addView(orderHome,lp(-1,44,0,2,0,7));
-        addText(appearanceExtras,"БЛОКИ ГЛАВНОГО ЭКРАНА",11,PINK,true);addSettingsToggle(appearanceExtras,"Настроение","home_show_mood",true,null);addSettingsToggle(appearanceExtras,"Статистика","home_show_stats",true,null);addSettingsToggle(appearanceExtras,"Недельная цель","home_show_weekly",true,null);addSettingsToggle(appearanceExtras,"Карточка ИИ","home_show_ai",true,null);addSettingsToggle(appearanceExtras,"Плитки эмоций","home_show_emotions",true,null);addSettingsToggle(appearanceExtras,"Напоминания","home_show_reminders",true,null);root.addView(appearanceExtras,lp(-1,-2,0,0,0,4));
+        addSettingsToggle(appearance,"Меньше анимации","reduce_motion",false,null);
+        addSettingsToggle(appearance,"Автоматическая тёмная тема по расписанию","scheduled_dark_enabled",false,()->{applySavedTheme();updateSystemBarIcons();showSettings();});
+        LinearLayout darkSchedule=new LinearLayout(this);darkSchedule.setOrientation(LinearLayout.HORIZONTAL);darkSchedule.setGravity(Gravity.CENTER_VERTICAL);darkSchedule.setPadding(dp(2),dp(3),dp(2),dp(3));
+        TextView darkClock=text("◷",22,PINK,true);darkClock.setGravity(Gravity.CENTER);darkSchedule.addView(darkClock,lp(34,40,0,0,8,0));
+        LinearLayout darkTimes=new LinearLayout(this);darkTimes.setOrientation(LinearLayout.HORIZONTAL);darkTimes.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout darkStartBox=new LinearLayout(this);darkStartBox.setOrientation(LinearLayout.VERTICAL);darkStartBox.setGravity(Gravity.CENTER_VERTICAL);TextView darkStartCaption=text("Начало",10,MUTED,false);darkStartBox.addView(darkStartCaption,lp(-1,-2,0,0,0,1));TextView darkStartValue=text(prefs.getString("scheduled_dark_start","21:00"),15,DARK,true);darkStartBox.addView(darkStartValue,lp(-1,-2,0,0,0,0));
+        TextView darkArrow=text("—",14,MUTED,true);darkArrow.setGravity(Gravity.CENTER);
+        LinearLayout darkEndBox=new LinearLayout(this);darkEndBox.setOrientation(LinearLayout.VERTICAL);darkEndBox.setGravity(Gravity.CENTER_VERTICAL);TextView darkEndCaption=text("Конец",10,MUTED,false);darkEndBox.addView(darkEndCaption,lp(-1,-2,0,0,0,1));TextView darkEndValue=text(prefs.getString("scheduled_dark_end","07:00"),15,DARK,true);darkEndBox.addView(darkEndValue,lp(-1,-2,0,0,0,0));
+        darkTimes.addView(darkStartBox,new LinearLayout.LayoutParams(0,-2,1f));darkTimes.addView(darkArrow,lp(28,40,0,0,0,0));darkTimes.addView(darkEndBox,new LinearLayout.LayoutParams(0,-2,1f));darkSchedule.addView(darkTimes,new LinearLayout.LayoutParams(0,-2,1f));
+        darkStartBox.setOnClickListener(v->chooseClockPreference("scheduled_dark_start","Начало тёмной темы","21:00"));darkEndBox.setOnClickListener(v->chooseClockPreference("scheduled_dark_end","Конец тёмной темы","07:00"));darkClock.setOnClickListener(v->chooseClockPreference("scheduled_dark_start","Начало тёмной темы","21:00"));darkSchedule.setOnClickListener(v->chooseClockPreference("scheduled_dark_end","Конец тёмной темы","07:00"));
+        appearance.addView(darkSchedule,lp(-1,48,0,0,0,8));
+        Button orderHome=button("↕  Изменить порядок блоков",false);orderHome.setOnClickListener(v->showHomeBlockOrderDialog());appearance.addView(orderHome,lp(-1,44,0,4,0,7));
+        root.addView(appearance,lp(-1,-2,0,0,0,4));
         LinearLayout appearanceActions=card();
         appearanceActions.setPadding(dp(12),dp(5),dp(12),dp(5));
         Button systemTheme=button("Цвета и тёмная тема — как в системе   ›","system".equals(activeTheme));systemTheme.setCompoundDrawablesRelative(settingsIcon(0),null,null,null);systemTheme.setCompoundDrawablePadding(dp(10));systemTheme.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);systemTheme.setBackground(shape(isDarkAppearance()?0xFF25212B:0xFFFFFFFF,12,0));systemTheme.setOnClickListener(v->{prefs.edit().putString("app_theme","system").remove("app_accent_color").apply();applySavedTheme();showSettings();});appearanceActions.addView(systemTheme,lp(-1,42,0,2,0,2));
@@ -1114,7 +1084,7 @@ public class MainActivity extends Activity {
         LinearLayout updates=card();
         updates.setTag("about");
         updates.setPadding(dp(18),dp(15),dp(18),dp(10));
-        addSettingsToggle(updates,"Меньше анимации","reduce_motion",false,null);
+
         String installedVersion="—";
         try { installedVersion=getPackageManager().getPackageInfo(getPackageName(),0).versionName; } catch(Exception ignored) {}
 
@@ -1523,16 +1493,47 @@ public class MainActivity extends Activity {
     }
 
     private void reorderHomeBlocks(){
-        if(root==null)return;String[] defaults={"stats","weekly","ai","emotions","planner","reminders"};String saved=prefs.getString("home_block_order","stats,weekly,ai,emotions,planner,reminders");List<String> order=new ArrayList<>();for(String key:saved.split(","))if(java.util.Arrays.asList(defaults).contains(key)&&!order.contains(key))order.add(key);for(String key:defaults)if(!order.contains(key))order.add(key);order.remove("reminders");order.add("reminders");Map<String,List<View>> groups=new LinkedHashMap<>();for(String key:defaults)groups.put(key,new ArrayList<View>());int first=-1;for(int i=0;i<root.getChildCount();i++){Object tag=root.getChildAt(i).getTag();if(tag instanceof String&&((String)tag).startsWith("home_")){String key=((String)tag).substring(5);if(groups.containsKey(key)){if(first<0)first=i;groups.get(key).add(root.getChildAt(i));}}}if(first<0)return;for(List<View> group:groups.values())for(View v:group)root.removeView(v);int at=Math.min(first,root.getChildCount());for(String key:order)for(View v:groups.get(key))root.addView(v,at++);
+        if(root==null)return;String[] defaults={"mood","stats","weekly","ai","emotions","planner","reminders"};String saved=prefs.getString("home_block_order","mood,stats,weekly,ai,emotions,planner,reminders");List<String> order=new ArrayList<>();for(String key:saved.split(","))if(java.util.Arrays.asList(defaults).contains(key)&&!order.contains(key))order.add(key);for(String key:defaults)if(!order.contains(key))order.add(key);order.remove("reminders");order.add("reminders");Map<String,List<View>> groups=new LinkedHashMap<>();for(String key:defaults)groups.put(key,new ArrayList<View>());int first=-1;for(int i=0;i<root.getChildCount();i++){Object tag=root.getChildAt(i).getTag();if(tag instanceof String&&((String)tag).startsWith("home_")){String key=((String)tag).substring(5);if(groups.containsKey(key)){if(first<0)first=i;groups.get(key).add(root.getChildAt(i));}}}if(first<0)return;for(List<View> group:groups.values())for(View v:group)root.removeView(v);int at=Math.min(first,root.getChildCount());for(String key:order)for(View v:groups.get(key))root.addView(v,at++);
     }
     private void showHomeBlockOrderDialog(){
-        final String[] keys={"stats","weekly","ai","emotions","reminders"};final String[] names={"Статистика","Недельная цель","Карточка ИИ","Плитки эмоций","Напоминания"};List<String> order=new ArrayList<>();for(String k:prefs.getString("home_block_order","stats,weekly,ai,emotions,reminders").split(","))if(java.util.Arrays.asList(keys).contains(k)&&!order.contains(k))order.add(k);for(String k:keys)if(!order.contains(k))order.add(k);
-        LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(dp(12),dp(8),dp(12),dp(8));android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("Порядок главной страницы").setView(body).setNegativeButton("Закрыть",null).setPositiveButton("Сохранить",(d,w)->{prefs.edit().putString("home_block_order",android.text.TextUtils.join(",",order)).apply();showHome();}).create();Runnable[] render={null};render[0]=()->{body.removeAllViews();for(int i=0;i<order.size();i++){final int index=i;String key=order.get(i);int pos=java.util.Arrays.asList(keys).indexOf(key);LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);TextView label=text((i+1)+". "+names[pos],14,DARK,true);row.addView(label,new LinearLayout.LayoutParams(0,dp(44),1f));Button up=button("↑",false),down=button("↓",false);up.setEnabled(index>0);down.setEnabled(index<order.size()-1);row.addView(up,lp(42,40,2,0,2,0));row.addView(down,lp(42,40,2,0,0,0));up.setOnClickListener(v->{java.util.Collections.swap(order,index,index-1);render[0].run();});down.setOnClickListener(v->{java.util.Collections.swap(order,index,index+1);render[0].run();});body.addView(row,lp(-1,46,0,1,0,1));}};render[0].run();dialog.show();polishDialog(dialog);
+        final String[] keys={"mood","stats","weekly","ai","emotions","planner","reminders"};
+        final String[] names={"Настроение","Статистика","Недельная цель","Карточка ИИ","Плитки эмоций","План на день","Напоминания"};
+        final String[] prefKeys={"home_show_mood","home_show_stats","home_show_weekly","home_show_ai","home_show_emotions","home_show_planner","home_show_reminders"};
+        List<String> order=new ArrayList<>();
+        for(String key:prefs.getString("home_block_order","mood,stats,weekly,ai,emotions,planner,reminders").split(","))if(java.util.Arrays.asList(keys).contains(key)&&!order.contains(key))order.add(key);
+        for(String key:keys)if(!order.contains(key))order.add(key);
+        Map<String,Boolean> visibility=new HashMap<>();
+        for(int i=0;i<keys.length;i++)visibility.put(keys[i],prefs.getBoolean(prefKeys[i],true));
+        LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(dp(12),dp(8),dp(12),dp(8));
+        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("Блоки главного экрана").setView(body).setNegativeButton("Закрыть",null).setPositiveButton("Сохранить",(d,w)->{
+            SharedPreferences.Editor edit=prefs.edit().putString("home_block_order",android.text.TextUtils.join(",",order));
+            for(int i=0;i<keys.length;i++)edit.putBoolean(prefKeys[i],visibility.get(keys[i]));
+            edit.apply();showHome();
+        }).create();
+        Runnable[] render={null};
+        render[0]=()->{
+            body.removeAllViews();
+            for(int i=0;i<order.size();i++){
+                final int index=i;String key=order.get(i);int pos=java.util.Arrays.asList(keys).indexOf(key);
+                LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);row.setPadding(0,dp(2),0,dp(2));
+                TextView label=text(names[pos],13,DARK,true);row.addView(label,new LinearLayout.LayoutParams(0,dp(42),1f));
+                android.widget.Switch toggle=new android.widget.Switch(this);toggle.setShowText(false);toggle.setChecked(visibility.get(key));
+                if(Build.VERSION.SDK_INT>=21){toggle.setThumbTintList(new android.content.res.ColorStateList(new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},new int[]{PINK,0xFFE3E3E8}));toggle.setTrackTintList(new android.content.res.ColorStateList(new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},new int[]{0x66C97891,0x33777777}));}
+                toggle.setOnCheckedChangeListener((button,checked)->visibility.put(key,checked));
+                row.addView(toggle,lp(52,40,dp(4),0,dp(4),0));
+                Button up=button("↑",false),down=button("↓",false);up.setEnabled(index>0);down.setEnabled(index<order.size()-1);
+                row.addView(up,lp(34,38,2,0,2,0));row.addView(down,lp(34,38,2,0,0,0));
+                up.setOnClickListener(v->{java.util.Collections.swap(order,index,index-1);render[0].run();});
+                down.setOnClickListener(v->{java.util.Collections.swap(order,index,index+1);render[0].run();});
+                body.addView(row,lp(-1,44,0,1,0,1));
+            }
+        };
+        render[0].run();dialog.show();polishDialog(dialog);
     }
     private void applyHomeBlockVisibility(){
         if(root==null)return;
-        String[] keys={"home_mood","home_stats","home_weekly","home_ai","home_emotions","home_reminders"};
-        String[] prefsKeys={"home_show_mood","home_show_stats","home_show_weekly","home_show_ai","home_show_emotions","home_show_reminders"};
+        String[] keys={"home_mood","home_stats","home_weekly","home_ai","home_emotions","home_planner","home_reminders"};
+        String[] prefsKeys={"home_show_mood","home_show_stats","home_show_weekly","home_show_ai","home_show_emotions","home_show_planner","home_show_reminders"};
         for(int i=0;i<keys.length;i++)for(int j=0;j<root.getChildCount();j++){View child=root.getChildAt(j);if(keys[i].equals(child.getTag()))child.setVisibility(prefs.getBoolean(prefsKeys[i],true)?View.VISIBLE:View.GONE);}
     }
 
@@ -3036,8 +3037,8 @@ public class MainActivity extends Activity {
     }
 
     private android.graphics.drawable.Drawable roundedAchievementProgress(int trackColor,int fillColor){
-        GradientDrawable track=new GradientDrawable();track.setColor(trackColor);track.setCornerRadius(dp(20));
-        GradientDrawable fill=new GradientDrawable();fill.setColor(fillColor);fill.setCornerRadius(dp(20));
+        GradientDrawable track=new GradientDrawable();track.setColor(trackColor);track.setCornerRadius(0f);
+        GradientDrawable fill=new GradientDrawable();fill.setColor(fillColor);fill.setCornerRadius(0f);
         android.graphics.drawable.LayerDrawable layers=new android.graphics.drawable.LayerDrawable(new android.graphics.drawable.Drawable[]{track,new android.graphics.drawable.ClipDrawable(fill,Gravity.LEFT,android.graphics.drawable.ClipDrawable.HORIZONTAL)});
         layers.setId(0,android.R.id.background);layers.setId(1,android.R.id.progress);
         return new android.graphics.drawable.InsetDrawable(layers,dp(2),0,dp(2),0);
@@ -3694,8 +3695,8 @@ public class MainActivity extends Activity {
         ProgressBar bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         bar.setMax(100);
         bar.setProgress(Math.max(0, Math.min(100, percent)));
-        GradientDrawable track=new GradientDrawable();track.setColor(isDarkAppearance()?0xFF514650:0xFFFFE6ED);track.setCornerRadius(dp(20));
-        GradientDrawable fill=new GradientDrawable();fill.setColor(PINK);fill.setCornerRadius(dp(20));
+        GradientDrawable track=new GradientDrawable();track.setColor(isDarkAppearance()?0xFF514650:0xFFFFE6ED);track.setCornerRadius(0f);
+        GradientDrawable fill=new GradientDrawable();fill.setColor(PINK);fill.setCornerRadius(0f);
         android.graphics.drawable.ClipDrawable clipped=new android.graphics.drawable.ClipDrawable(fill,Gravity.LEFT,android.graphics.drawable.ClipDrawable.HORIZONTAL);
         bar.setProgressDrawable(new android.graphics.drawable.LayerDrawable(new android.graphics.drawable.Drawable[]{track,clipped}){{setId(0,android.R.id.background);setId(1,android.R.id.progress);}});
         parent.addView(bar, lp(-1, 9, 0, 0, 0, 6));
@@ -4223,13 +4224,13 @@ public class MainActivity extends Activity {
         if(primary){
             GradientDrawable gradient=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
                     new int[]{adjustColor(accent,0.92f),accentDeep});
-            gradient.setCornerRadius(dp(18));
+            gradient.setCornerRadius(0f);
             gradient.setStroke(dp(0),accentDeep);
             bg=gradient;
         }else{
             GradientDrawable inactive=new GradientDrawable();
             inactive.setColor(isDarkAppearance()?blendColors(PALE,BG,0.22f):0xBFFFFFFF);
-            inactive.setCornerRadius(dp(18));
+            inactive.setCornerRadius(0f);
             inactive.setStroke(dp(1),isDarkAppearance()?0xFF4B4558:0xFFE7E3F0);
             bg=inactive;
         }
@@ -5004,7 +5005,7 @@ public class MainActivity extends Activity {
 
     private interface OnAction { void go(); }
     private GradientDrawable shape(int color, int radius, int stroke) {
-        if(prefs!=null){String corner=prefs.getString("corner_style","round");if("sharp".equals(corner))radius=Math.min(radius,8);else if("normal".equals(corner))radius=Math.max(10,Math.min(radius,16));else radius=Math.max(radius,24);}
+        radius=0;
         String theme = prefs == null ? "pink" : prefs.getString("app_theme", "pink");
         if(isThemeAccentColor(color))color=PINK;
         if(isThemeAccentColor(stroke))stroke=PINK;
@@ -5053,7 +5054,7 @@ public class MainActivity extends Activity {
             if (white) color = color == 0xFFFFF9F7 ? 0xFFFFF5EF : 0xFFFFFCF9; else if (soft || pale) color = 0xFFFBE5D9;
             if (border) stroke = 0xFFF0D2C4;
         }
-        GradientDrawable d = new GradientDrawable(); d.setColor(color); d.setCornerRadius(dp(radius)); if (stroke != 0) d.setStroke(dp(1), stroke); return d;
+        GradientDrawable d = new GradientDrawable(); d.setColor(color); d.setCornerRadius(0f); if (stroke != 0) d.setStroke(dp(1), stroke); return d;
     }
     private LinearLayout.LayoutParams lp(int w, int h, int l, int t, int r, int b) { LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(w < 0 ? w : dp(w), h < 0 ? h : dp(h)); p.setMargins(dp(l), dp(t), dp(r), dp(b)); return p; }
     private int dp(int x) { return (int)(x * getResources().getDisplayMetrics().density + 0.5f); }
