@@ -11,6 +11,7 @@ import android.os.Build;
 
 public class ReminderReceiver extends BroadcastReceiver {
     public static final String CHANNEL = "study_reminders";
+    private static String tr(String lang,String ru,String en,String az){return "en".equals(lang)?en:("az".equals(lang)?az:ru);}
     @Override public void onReceive(Context context, Intent intent) {
         String message = intent.getStringExtra("message");
         String action=intent.getAction()==null?"":intent.getAction();
@@ -24,12 +25,12 @@ public class ReminderReceiver extends BroadcastReceiver {
         if(studyReminder&&!retry){
             int repeat=prefs.getInt("reminder_repeat_minutes",0);
             if(repeat>0){Intent again=new Intent(context,ReminderReceiver.class).setAction("study_reminder_retry_"+notificationId).putExtra("id",notificationId).putExtra("message",message).putExtra("repeat_retry",true).putExtra("scheduled_at",scheduledAt);PendingIntent retryPi=PendingIntent.getBroadcast(context,notificationId+200000,again,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);AlarmManager alarms=(AlarmManager)context.getSystemService(Context.ALARM_SERVICE);long at=System.currentTimeMillis()+repeat*60000L;if(Build.VERSION.SDK_INT>=23)alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,at,retryPi);else alarms.set(AlarmManager.RTC_WAKEUP,at,retryPi);}
-            String tone=prefs.getString("reminder_tone","soft");message="strict".equals(tone)?"Пора открыть приложение и выполнить запланированное занятие.":"neutral".equals(tone)?"Напоминание об учёбе: можно начать запланированное занятие.":"Небольшое напоминание 🌸 Если удобно, удели время учёбе.";
+            String tone=prefs.getString("reminder_tone","soft");String lang=prefs.getString("app_language","ru");message="strict".equals(tone)?tr(lang,"Пора открыть приложение и выполнить запланированное занятие.","Open the app and complete your planned study session.","Açıq tətbiqi və planlaşdırdığın dərs məşğələsini yerinə yetir."): "neutral".equals(tone)?tr(lang,"Напоминание об учёбе: можно начать запланированное занятие.","Study reminder: you can start your planned session.","Dərs xatırlatması: planlaşdırdığın məşğələyə başlaya bilərsən."):tr(lang,"Небольшое напоминание 🌸 Если удобно, удели время учёбе.","A gentle reminder 🌸 If it works for you, spend a little time studying.","Kiçik xatırlatma 🌸 Uyğundursa, bir az dərsə vaxt ayır.");
         }
         if(MainActivity.showForegroundReminder(message)) { MainActivity.scheduleReminders(context); return; }
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= 26) {
-            manager.createNotificationChannel(new NotificationChannel(CHANNEL, "Напоминания об учёбе", NotificationManager.IMPORTANCE_DEFAULT));
+            manager.createNotificationChannel(new NotificationChannel(CHANNEL, tr(prefs.getString("app_language","ru"),"Напоминания об учёбе","Study reminders","Dərs xatırlatmaları"), NotificationManager.IMPORTANCE_DEFAULT));
         }
         Intent open = new Intent(context, MainActivity.class);if(studyReminder)open.putExtra("opened_reminder_id",notificationId);
         PendingIntent pi = PendingIntent.getActivity(context, 0, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
@@ -37,7 +38,7 @@ public class ReminderReceiver extends BroadcastReceiver {
                 ? new android.app.Notification.Builder(context, CHANNEL)
                 : new android.app.Notification.Builder(context);
         builder.setSmallIcon(R.drawable.ic_notification).setContentTitle("Study with Love 🌸")
-                .setContentText(message == null ? "Пора немного позаниматься!" : message)
+                .setContentText(message == null ? tr(prefs.getString("app_language","ru"),"Пора немного позаниматься!","Time for a little study session!","Bir az dərs vaxtıdır!") : message)
                 .setAutoCancel(true).setContentIntent(pi);
         manager.notify(notificationId, builder.build());
         MainActivity.scheduleReminders(context);
