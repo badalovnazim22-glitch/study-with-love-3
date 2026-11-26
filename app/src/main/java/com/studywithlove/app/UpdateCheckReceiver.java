@@ -6,6 +6,7 @@ import android.content.Intent;
 
 public class UpdateCheckReceiver extends BroadcastReceiver {
     @Override public void onReceive(Context context, Intent intent) {
-        AppUpdater.checkAndNotify(context.getApplicationContext());
+        PendingResult pendingResult=goAsync();
+        AppUpdater.checkAndNotify(context.getApplicationContext(),pendingResult::finish);
     }
 }
