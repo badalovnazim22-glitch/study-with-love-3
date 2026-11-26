@@ -3462,106 +3462,85 @@ public class MainActivity extends Activity {
 
     private void showReminderSettings() {
         currentScreen = "reminders";
-        base("Напоминания 🔔", "Выбери дни и время. Часовой пояс устройства.");
-        addText(root, "ДНИ НЕДЕЛИ", 12, PINK, true);
-        dayChecks.clear();
-        Set<String> savedDays = selectedDays();
-        LinearLayout daysRow = new LinearLayout(this); daysRow.setOrientation(LinearLayout.HORIZONTAL); daysRow.setGravity(Gravity.CENTER_VERTICAL);
-        String[] dayShort = {"ПН","ВТ","СР","ЧТ","ПТ","СБ","ВС"};
-        int[] calendarDays = {2,3,4,5,6,7,1};
-        for (int d = 0; d < 7; d++) {
-            CheckBox cb = new CheckBox(this);
-            cb.setButtonDrawable((android.graphics.drawable.Drawable) null);
-            cb.setText(dayShort[d]);
-            cb.setSingleLine(true);
-            cb.setMinWidth(0);
-            cb.setMinHeight(dp(48));
-            cb.setTextSize(12);
-            cb.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-            cb.setTextColor(DARK);
-            cb.setGravity(Gravity.CENTER);
-            cb.setIncludeFontPadding(false);
-            cb.setPadding(0, 0, 0, 0);
-            cb.setChecked(savedDays.contains(String.valueOf(calendarDays[d])));
-            cb.setBackground(shape(cb.isChecked() ? 0xFFF7DCE6 : 0xFFFFFFFF, 13,
-                    cb.isChecked() ? PINK : 0xFFEADDE3));
-            cb.setOnCheckedChangeListener((button, checked) -> {
-                cb.setTextColor(checked ? PINK : DARK);
-                cb.setBackground(shape(checked ? 0xFFF7DCE6 : 0xFFFFFFFF, 13,
-                        checked ? PINK : 0xFFEADDE3));
-            });
-            cb.setTextColor(cb.isChecked() ? PINK : DARK);
-            dayChecks.add(cb);
-            LinearLayout.LayoutParams dayLp = new LinearLayout.LayoutParams(0, dp(48), 1f);
-            dayLp.setMargins(dp(2), 0, dp(2), 0);
-            daysRow.addView(cb, dayLp);
-        }
-        LinearLayout daysCard = card();
-        daysCard.setPadding(dp(6), dp(6), dp(6), dp(6));
-        daysCard.addView(daysRow, lp(-1, 48, 0, 0, 0, 0));
-        root.addView(daysCard, lp(-1, -2, 0, 4, 0, 8));
-        LinearLayout presets=new LinearLayout(this);presets.setGravity(Gravity.CENTER_VERTICAL);
-        String[] presetNames={"Каждый день","Будни","Выходные"};
-        for(String preset:presetNames){TextView chip=text(preset,10,PINK,true);chip.setGravity(Gravity.CENTER);chip.setPadding(dp(10),dp(7),dp(10),dp(7));chip.setBackground(shape(0xFFFFF0F4,15,0));presets.addView(chip,lp(-2,48,0,0,5,0));chip.setOnClickListener(v->{for(int k=0;k<dayChecks.size();k++){boolean checked=preset.equals("Каждый день")||(preset.equals("Будни")&&k<5)||(preset.equals("Выходные")&&k>=5);dayChecks.get(k).setChecked(checked);}});}
-        root.addView(presets,lp(-1,36,0,0,0,8));
-        addText(root, "ВРЕМЯ НАПОМИНАНИЙ", 12, PINK, true);
-        reminderTimes.clear(); reminderTimes.addAll(getSavedTimes());
-        LinearLayout timeList = new LinearLayout(this); timeList.setOrientation(LinearLayout.VERTICAL); root.addView(timeList, lp(-1, -2, 0, 4, 0, 8));
-        final Runnable[] renderTimes = new Runnable[1];
-        renderTimes[0] = () -> {
-            timeList.removeAllViews();
-            if (reminderTimes.isEmpty()) addText(timeList, "Время не выбрано — напоминания выключены", 14, MUTED, false);
-            for (String time : new ArrayList<>(reminderTimes)) {
-                LinearLayout row = new LinearLayout(this); row.setGravity(Gravity.CENTER_VERTICAL);
-                row.setBackground(shape(0xFFFFFFFF, 18, 0xFFEEDDE4)); row.setPadding(dp(12),dp(5),dp(7),dp(5));
-                LinearLayout clockBadge=new LinearLayout(this);clockBadge.setGravity(Gravity.CENTER);
-                clockBadge.setBackground(shape(0xFFFFF0F4,15,0));TextView clock=text("◷",21,PINK,true);
-                clockBadge.addView(clock,lp(42,42,0,0,0,0));row.addView(clockBadge,lp(46,46,0,0,10,0));
-                LinearLayout timeInfo=new LinearLayout(this);timeInfo.setOrientation(LinearLayout.VERTICAL);timeInfo.setGravity(Gravity.CENTER_VERTICAL);
-                TextView label = text(time, 22, DARK, true);timeInfo.addView(label,lp(-1,29,0,0,0,0)); label.setOnClickListener(v->editReminderTime(time,renderTimes[0]));
-                int hour=0;try{hour=Integer.parseInt(time.substring(0,2));}catch(Exception ignored){}
-                String slot=hour<12?"Утреннее напоминание":hour<17?"Дневное напоминание":hour<21?"Вечернее напоминание":"Напоминание перед сном";
-                TextView sub=text(slot,11,MUTED,false);timeInfo.addView(sub,lp(-1,19,0,0,0,0));row.addView(timeInfo,new LinearLayout.LayoutParams(0,dp(50),1));
-                TextView edit=text("Изменить",11,PINK,true);edit.setGravity(Gravity.CENTER);edit.setContentDescription(translate("Изменить время напоминания"));edit.setOnClickListener(v->editReminderTime(time,renderTimes[0]));
-                TextView remove=text("×",22,MUTED,false);remove.setGravity(Gravity.CENTER);remove.setContentDescription(translate("Удалить время напоминания"));remove.setOnClickListener(v->{reminderTimes.remove(time);renderTimes[0].run();});
-                row.addView(edit,lp(62,48,2,0,2,0));row.addView(remove,lp(34,48,0,0,0,0));
-                timeList.addView(row,lp(-1,66,0,4,0,4));
-            }
-        };
-        renderTimes[0].run();
-        Button addTime = button("＋  Добавить время", false);
-        addTime.setOnClickListener(v -> {
-            Calendar now = Calendar.getInstance(AppTime.zone());
-            new TimePickerDialog(this, (TimePicker picker, int hour, int minute) -> {
-                String value = String.format(Locale.US, "%02d:%02d", hour, minute);
-                if (!reminderTimes.contains(value)) { reminderTimes.add(value); java.util.Collections.sort(reminderTimes); renderTimes[0].run(); }
-            }, now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE), true).show();
-        });
-        root.addView(addTime, lp(-1, 48, 0, 4, 0, 14));
-        TextView summary=text(selectedDays().size()+" дней · "+reminderTimes.size()+" напоминания в день",11,MUTED,true);summary.setGravity(Gravity.CENTER);root.addView(summary,lp(-1,28,0,2,0,2));
-        Runnable updateReminderSummary=()->{int count=0;for(CheckBox cb:dayChecks)if(cb.isChecked())count++;summary.setText(count+" "+dayWord(count)+" · "+reminderTimes.size()+" напоминаний в день");};
-        for(CheckBox cb:dayChecks)cb.setOnCheckedChangeListener((button,checked)->{cb.setBackground(shape(checked?0xFFF7DCE6:PALE,14,checked?PINK:0xFFF0DCE4));updateReminderSummary.run();});
-        Button save = button("💗  Сохранить расписание", true);
-        save.setOnClickListener(v -> {
-            Set<String> days = new TreeSet<>();
-            for (int i = 0; i < dayChecks.size(); i++) if (dayChecks.get(i).isChecked()) days.add(String.valueOf(i == 6 ? 1 : i + 2));
-            Set<String> times = new TreeSet<>(reminderTimes);
-            SharedPreferences.Editor e = prefs.edit().putStringSet("reminder_days", days).putStringSet("reminder_times", times);
-            for (int d = 1; d <= 7; d++) e.putBoolean("day_" + d, days.contains(String.valueOf(d)));
-            e.apply(); scheduleReminders(this);
-            if (!days.isEmpty() && !times.isEmpty() && Build.VERSION.SDK_INT >= 31) {
-                AlarmManager alarms=(AlarmManager)getSystemService(ALARM_SERVICE);
-                if (!alarms.canScheduleExactAlarms()) {
-                    try { startActivity(new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, android.net.Uri.parse("package:"+getPackageName()))); }
-                    catch (Exception ignored) { }
-                }
-            }
-            showAppMessage(days.isEmpty() || times.isEmpty() ? "Расписание очищено. Напоминания выключены." : "Готово! Расписание сохранено по местному времени. Разреши точные будильники и уведомления, чтобы получать напоминания без системной задержки.");
-            showHome();
-        });
-        root.addView(save, lp(-1, 54, 0, 4, 0, 8));
+        base("Уведомления", "");
+        final int blue=0xFF1677F8, paleBlue=0xFFEAF3FF, line=0xFFE7ECF4, muted=0xFF697386, ink=0xFF171B24;
+        TextView back=text("‹",34,ink,false);back.setGravity(Gravity.CENTER);back.setContentDescription("Назад");
+        back.setOnClickListener(v->showSettings());
+        root.addView(back,lp(48,42,0,0,0,12));
+        TextView daily=text("ЕЖЕДНЕВНОЕ НАПОМИНАНИЕ",12,muted,true);daily.setLetterSpacing(0.07f);
+        root.addView(daily,lp(-1,24,4,0,0,8));
 
+        LinearLayout dailyCard=new LinearLayout(this);dailyCard.setOrientation(LinearLayout.VERTICAL);
+        dailyCard.setPadding(dp(17),dp(12),dp(17),dp(12));dailyCard.setBackground(shape(0xFFFFFFFF,24,0xFFE9EEF7));dailyCard.setElevation(dp(3));
+        CheckBox enabled=new CheckBox(this);enabled.setButtonDrawable((Drawable)null);enabled.setText("Напоминания об учёбе");
+        enabled.setTextColor(ink);enabled.setTextSize(16);enabled.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
+        enabled.setChecked(prefs.getBoolean("notifications_enabled",true));enabled.setPadding(0,0,0,0);
+        TextView enabledSub=text("Напоминание каждый день в выбранное время",12,muted,false);
+        android.widget.Switch dailySwitch=new android.widget.Switch(this);dailySwitch.setShowText(false);dailySwitch.setChecked(enabled.isChecked());
+        if(Build.VERSION.SDK_INT>=21){dailySwitch.setThumbTintList(new android.content.res.ColorStateList(new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},new int[]{blue,0xFFE3E7EE}));dailySwitch.setTrackTintList(new android.content.res.ColorStateList(new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},new int[]{0xFF9CC7FF,0xFFD7DCE5}));}
+        LinearLayout firstRow=new LinearLayout(this);firstRow.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout firstText=new LinearLayout(this);firstText.setOrientation(LinearLayout.VERTICAL);firstText.addView(enabled,lp(-1,-2,0,0,0,3));firstText.addView(enabledSub,lp(-1,-2,0,0,0,0));
+        firstRow.addView(firstText,new LinearLayout.LayoutParams(0,-2,1f));firstRow.addView(dailySwitch,lp(58,42,8,0,0,0));dailyCard.addView(firstRow,lp(-1,-2,0,4,0,12));
+        View sep1=new View(this);sep1.setBackgroundColor(line);dailyCard.addView(sep1,lp(-1,1,0,0,0,10));
+
+        reminderTimes.clear();reminderTimes.addAll(getSavedTimes());
+        if(reminderTimes.isEmpty())reminderTimes.add("20:00");
+        TextView timeTitle=text("Время напоминания",16,ink,true);
+        TextView timeSub=text("Когда присылать ежедневное напоминание",12,muted,false);
+        LinearLayout timeText=new LinearLayout(this);timeText.setOrientation(LinearLayout.VERTICAL);timeText.addView(timeTitle);timeText.addView(timeSub);
+        TextView timeValue=text(reminderTimes.get(0),20,blue,true);timeValue.setGravity(Gravity.CENTER);
+        TextView chevron=text("›",30,muted,false);chevron.setGravity(Gravity.CENTER);
+        LinearLayout timeRow=new LinearLayout(this);timeRow.setGravity(Gravity.CENTER_VERTICAL);
+        timeRow.addView(timeText,new LinearLayout.LayoutParams(0,-2,1f));timeRow.addView(timeValue,lp(76,48,0,0,0,0));timeRow.addView(chevron,lp(24,48,0,0,0,0));
+        View.OnClickListener chooseTime=v->{Calendar now=Calendar.getInstance(AppTime.zone());int h=20,m=0;try{String[] p=reminderTimes.get(0).split(":");h=Integer.parseInt(p[0]);m=Integer.parseInt(p[1]);}catch(Exception ignored){}new TimePickerDialog(this,(picker,hour,minute)->{String value=String.format(Locale.US,"%02d:%02d",hour,minute);reminderTimes.clear();reminderTimes.add(value);timeValue.setText(value);},h,m,true).show();};
+        timeRow.setOnClickListener(chooseTime);timeValue.setOnClickListener(chooseTime);chevron.setOnClickListener(chooseTime);
+        dailyCard.addView(timeRow,lp(-1,-2,0,0,0,12));
+        View sep2=new View(this);sep2.setBackgroundColor(line);dailyCard.addView(sep2,lp(-1,1,0,0,0,10));
+
+        TextView repeatTitle=text("Повтор",16,ink,true);TextView repeatSub=text("Дни, в которые приходит напоминание",12,muted,false);
+        dailyCard.addView(repeatTitle,lp(-1,-2,0,0,0,2));dailyCard.addView(repeatSub,lp(-1,-2,0,0,0,10));
+        Set<String> selected=new TreeSet<>(selectedDays());String[] labels={"Пн","Вт","Ср","Чт","Пт","Сб","Вс"};int[] dayIds={2,3,4,5,6,7,1};
+        LinearLayout days=new LinearLayout(this);days.setGravity(Gravity.CENTER);days.setOrientation(LinearLayout.HORIZONTAL);
+        List<TextView> dayViews=new ArrayList<>();
+        Runnable refreshDays=()->{for(int i=0;i<dayViews.size();i++){boolean on=selected.contains(String.valueOf(dayIds[i]));TextView b=dayViews.get(i);b.setTextColor(on?0xFFFFFFFF:blue);b.setBackground(shape(on?blue:0xFFFFFFFF,40,on?blue:0xFFD8E4F5));}};
+        for(int i=0;i<7;i++){final int index=i;TextView day=text(labels[i],12,blue,true);day.setGravity(Gravity.CENTER);day.setIncludeFontPadding(false);day.setOnClickListener(v->{String key=String.valueOf(dayIds[index]);if(selected.contains(key))selected.remove(key);else selected.add(key);refreshDays.run();});dayViews.add(day);LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(42),1f);p.setMargins(dp(2),0,dp(2),0);days.addView(day,p);}
+        refreshDays.run();dailyCard.addView(days,lp(-1,44,0,0,0,2));
+        root.addView(dailyCard,lp(-1,-2,0,0,0,22));
+
+        TextView streakHead=text("НЕ СБИТЬСЯ С КУРСА",12,muted,true);streakHead.setLetterSpacing(0.07f);
+        root.addView(streakHead,lp(-1,24,4,0,0,8));
+        LinearLayout extraCard=new LinearLayout(this);extraCard.setOrientation(LinearLayout.VERTICAL);extraCard.setPadding(dp(17),dp(8),dp(17),dp(8));extraCard.setBackground(shape(0xFFFFFFFF,24,0xFFE9EEF7));extraCard.setElevation(dp(2));
+        Runnable unused=null;
+        addNotificationOption(extraCard,"Защита серии","Вечернее напоминание, когда серия вот-вот прервётся","streak_protection_enabled",true,blue,muted,ink,line);
+        View extraSep=new View(this);extraSep.setBackgroundColor(line);extraCard.addView(extraSep,lp(-1,1,0,0,0,0));
+        addNotificationOption(extraCard,"Напоминания вернуться","Иногда напоминаем, если тебя давно не было","return_reminders_enabled",true,blue,muted,ink,line);
+        root.addView(extraCard,lp(-1,-2,0,0,0,20));
+
+        LinearLayout banner=new LinearLayout(this);banner.setGravity(Gravity.CENTER_VERTICAL);banner.setPadding(dp(14),dp(13),dp(14),dp(13));banner.setBackground(shape(paleBlue,20,blue));
+        TextView bell=text("♧",27,blue,true);bell.setGravity(Gravity.CENTER);banner.addView(bell,lp(48,52,0,0,10,0));
+        View divider=new View(this);divider.setBackgroundColor(blue);banner.addView(divider,lp(1,44,0,0,12,0));
+        String bannerTime=reminderTimes.isEmpty()?"20:00":reminderTimes.get(0);
+        TextView bannerText=text("Всё готово — напомним об учёбе в "+bannerTime+".",14,ink,true);bannerText.setMaxLines(3);banner.addView(bannerText,new LinearLayout.LayoutParams(0,-2,1f));
+        root.addView(banner,lp(-1,-2,0,0,0,18));
+
+        enabled.setOnCheckedChangeListener((button,checked)->{dailySwitch.setChecked(checked);});
+        dailySwitch.setOnCheckedChangeListener((button,checked)->{enabled.setChecked(checked);prefs.edit().putBoolean("notifications_enabled",checked).apply();scheduleReminders(this);});
+        Button save=button("Сохранить",true);save.setBackground(shape(blue,18,0));save.setTextColor(0xFFFFFFFF);
+        save.setOnClickListener(v->{Set<String> times=new TreeSet<>(reminderTimes);Set<String> daysSaved=new TreeSet<>(selected);SharedPreferences.Editor e=prefs.edit().putStringSet("reminder_days",daysSaved).putStringSet("reminder_times",times);for(int d=1;d<=7;d++)e.putBoolean("day_"+d,daysSaved.contains(String.valueOf(d)));e.apply();scheduleReminders(this);showAppMessage("Настройки уведомлений сохранены");});
+        root.addView(save,lp(-1,50,0,0,0,12));
     }
+
+    private void addNotificationOption(LinearLayout host,String title,String subtitle,String key,boolean defaultValue,int blue,int muted,int ink,int line){
+        LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);row.setPadding(0,dp(11),0,dp(11));
+        LinearLayout copy=new LinearLayout(this);copy.setOrientation(LinearLayout.VERTICAL);
+        TextView heading=text(title,16,ink,true);TextView detail=text(subtitle,12,muted,false);detail.setMaxLines(2);
+        copy.addView(heading,lp(-1,-2,0,0,0,4));copy.addView(detail,lp(-1,-2,0,0,0,0));
+        android.widget.Switch toggle=new android.widget.Switch(this);toggle.setChecked(prefs.getBoolean(key,defaultValue));
+        if(Build.VERSION.SDK_INT>=21){toggle.setThumbTintList(new android.content.res.ColorStateList(new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},new int[]{blue,0xFFE3E7EE}));toggle.setTrackTintList(new android.content.res.ColorStateList(new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},new int[]{0xFF9CC7FF,0xFFD7DCE5}));}
+        toggle.setOnCheckedChangeListener((button,checked)->prefs.edit().putBoolean(key,checked).apply());
+        row.addView(copy,new LinearLayout.LayoutParams(0,-2,1f));row.addView(toggle,lp(58,42,8,0,0,0));host.addView(row,lp(-1,-2,0,0,0,0));
+    }
+
     private void editReminderTime(String oldTime,Runnable refresh){
         try{String[] p=oldTime.split(":");int h=Integer.parseInt(p[0]),m=Integer.parseInt(p[1]);
             new TimePickerDialog(this,(picker,hour,minute)->{String value=String.format(Locale.US,"%02d:%02d",hour,minute);
