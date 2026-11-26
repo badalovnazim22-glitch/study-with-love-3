@@ -1357,11 +1357,11 @@ public class MainActivity extends Activity {
 
         // Compact motivational progress card: consistent small vertical rhythm.
         LinearLayout continueCard = card();
-        continueCard.setPadding(dp(16), dp(16), dp(16), dp(16));
+        continueCard.setPadding(dp(19), dp(18), dp(19), dp(18));
         continueCard.setBackground(shape(0xFFF8E8EE, 24, 0));
         TextView progressCaption=text("ТВОЙ ПРОГРЕСС",13,PINK,true);
         continueCard.addView(progressCaption,lp(-1,-2,0,0,0,2));
-        TextView encouragement=text("Ты справляешься.\nПродолжай в своём темпе.",22,DARK,true);
+        TextView encouragement=text("Ты справляешься.\nПродолжай в своём темпе.",23,DARK,true);
         encouragement.setLineSpacing(dp(2),1.02f);
         continueCard.addView(encouragement,lp(-1,-2,0,0,0,2));
         TextView praise=text("✧  Ты отлично справляешься! ❤️",14,PINK,true);
@@ -1371,7 +1371,7 @@ public class MainActivity extends Activity {
         overallHead.addView(text("Учебный план", 15, DARK, true),
                 new LinearLayout.LayoutParams(0, dp(22), 1f));
         overallHead.addView(text(overall + "%", 20, PINK, true));
-        continueCard.addView(overallHead, lp(-1, 28, 0, 5, 0, 2));
+        continueCard.addView(overallHead, lp(-1, 30, 0, 6, 0, 3));
         ProgressBar overallBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         overallBar.setMax(100);
         overallBar.setProgress(overall);
@@ -1379,7 +1379,7 @@ public class MainActivity extends Activity {
             overallBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
             overallBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFDCE6));
         }
-        continueCard.addView(overallBar, lp(-1, 5, 0, 0, 0, 4));
+        continueCard.addView(overallBar, lp(-1, 6, 0, 0, 0, 5));
         TextView completedLabel=text(completedTopics + " из " + totalTopics + " тем завершено",13,MUTED,false);
         continueCard.addView(completedLabel,lp(-1,-2,0,0,0,0));
         root.addView(continueCard, lp(-1, -2, 0, 1, 0, 6));
@@ -1394,11 +1394,13 @@ public class MainActivity extends Activity {
         int[] statValues = {streak, done, prefs.getInt("longest_streak", streak)};
         String[] statLabels = {"дней подряд", "уроков", "личный рекорд"};
         for (int statIndex = 0; statIndex < statValues.length; statIndex++) {
-            LinearLayout statCard = card();
+            LinearLayout statCard = new LinearLayout(this);
             statCard.setOrientation(LinearLayout.VERTICAL);
             statCard.setGravity(Gravity.CENTER);
             statCard.setPadding(dp(4), dp(8), dp(4), dp(8));
             statCard.setBackground(shape(PALE, 16, 0));
+            statCard.setForeground(null);
+            statCard.setElevation(0f);
             TextView statValue = text(String.valueOf(statValues[statIndex]), 22, DARK, true);
             statValue.setGravity(Gravity.CENTER);
             statCard.addView(statValue, lp(-1, 30, 0, 0, 0, 3));
