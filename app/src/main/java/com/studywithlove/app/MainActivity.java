@@ -1087,22 +1087,39 @@ public class MainActivity extends Activity {
             .setMessage("Текущие данные приложения будут заменены содержимым выбранной копии. Перед продолжением убедись, что у тебя есть актуальная резервная копия.")
             .setNegativeButton("Отмена",null).setPositiveButton("Продолжить",(dialog,which)->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");startActivityForResult(i,BACKUP_IMPORT);}).show());backup.addView(restore,lp(-1,48,0,0,0,0));addSettingsToggle(backup,"Автоматическая копия каждое воскресенье","weekly_backup_enabled",false,()->WeeklyBackupReceiver.schedule(this));Button chooseBackupFolder=button(prefs.getString("weekly_backup_tree_uri","").isEmpty()?"Выбрать папку для копий":"Изменить папку для копий",false);chooseBackupFolder.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,WEEKLY_BACKUP_FOLDER);});backup.addView(chooseBackupFolder,lp(-1,44,0,3,0,5));long backupAt=prefs.getLong("weekly_backup_last_success",0L);addSettingsToggle(backup,"Скрывать содержимое в списке недавних приложений","hide_recent_preview",false,()->{if(prefs.getBoolean("hide_recent_preview",false))getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);else getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);});Button pinButton=button(prefs.getString("app_pin_hash","").isEmpty()?"Установить PIN-код":"Изменить или отключить PIN-код",false);pinButton.setOnClickListener(v->showPinSetupDialog());backup.addView(pinButton,lp(-1,46,0,6,0,0));root.addView(backup,lp(-1,-2,0,0,0,4));
 
-        LinearLayout updates=settingsGroup("ОБНОВЛЕНИЕ ПРИЛОЖЕНИЯ");
+        LinearLayout updates=card();
         updates.setTag("about");
+        updates.setPadding(dp(18),dp(15),dp(18),dp(10));
         addSettingsToggle(updates,"Меньше анимации","reduce_motion",false,null);
         String installedVersion="—";
         try { installedVersion=getPackageManager().getPackageInfo(getPackageName(),0).versionName; } catch(Exception ignored) {}
-        
-        
-        TextView versionLabel=text("Версия приложения  ·  "+installedVersion,13,MUTED,false);
-        versionLabel.setGravity(Gravity.CENTER_VERTICAL);
-        updates.addView(versionLabel,lp(-1,34,0,5,0,2));
+
+        LinearLayout updateInfo=new LinearLayout(this);
+        updateInfo.setOrientation(LinearLayout.HORIZONTAL);
+        updateInfo.setGravity(Gravity.CENTER_VERTICAL);
+        TextView updateIcon=text("↻",28,PINK,true);
+        updateIcon.setGravity(Gravity.CENTER);
+        updateIcon.setBackground(shape(isDarkAppearance()?0xFF403541:0xFFFBEAF0,16,0));
+        updateInfo.addView(updateIcon,lp(48,48,0,0,13,0));
+        LinearLayout updateText=new LinearLayout(this);
+        updateText.setOrientation(LinearLayout.VERTICAL);
+        TextView updateTitle=text("Следи за новыми возможностями",15,DARK,true);
+        updateText.addView(updateTitle,lp(-1,-2,0,0,0,3));
+        TextView versionLabel=text("Установленная версия · "+installedVersion,12,MUTED,false);
+        updateText.addView(versionLabel,lp(-1,-2,0,0,0,0));
+        updateInfo.addView(updateText,new LinearLayout.LayoutParams(0,-2,1f));
+        updates.addView(updateInfo,lp(-1,-2,0,0,0,5));
+
         Button checkUpdates=button("Проверить обновления",false);
-        checkUpdates.setBackgroundColor(android.graphics.Color.TRANSPARENT);
-        checkUpdates.setTextColor(DARK);
+        checkUpdates.setBackground(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        if(Build.VERSION.SDK_INT>=21)checkUpdates.setBackgroundTintList(null);
+        checkUpdates.setTextColor(PINK);
         checkUpdates.setElevation(0f);
+        checkUpdates.setTranslationZ(0f);
+        if(Build.VERSION.SDK_INT>=21)checkUpdates.setStateListAnimator(null);
+        checkUpdates.setAllCaps(false);
         checkUpdates.setOnClickListener(v->AppUpdater.checkAndOffer(this));
-        updates.addView(checkUpdates,lp(-1,48,0,7,0,0));
+        updates.addView(checkUpdates,lp(-1,44,0,3,0,0));
         root.addView(updates,lp(-1,-2,0,0,0,4));
 
         for (int i = 0; i < root.getChildCount(); i++) {
