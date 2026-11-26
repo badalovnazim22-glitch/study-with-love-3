@@ -3379,7 +3379,7 @@ public class MainActivity extends Activity {
             TextView icon=text(symbol,17,selected?themeAccent:MUTED,true);
             icon.setGravity(Gravity.CENTER);
             icon.setIncludeFontPadding(false);
-            icon.setBackground(shape(selected?controlTint(themeAccent):blendColors(PALE,BG,isDarkAppearance()?0.22f:0.18f),12,0));
+            icon.setBackground(shape(selected?blendColors(themeAccent,BG,isDarkAppearance()?0.78f:0.88f):blendColors(PALE,BG,isDarkAppearance()?0.22f:0.18f),12,0));
             row.addView(icon,lp(38,38,0,0,10,0));
             
             LinearLayout words=new LinearLayout(this);
