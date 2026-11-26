@@ -21,9 +21,9 @@ android {
         applicationId 'com.studywithlove.app'
         minSdk 23
         targetSdk 35
-        versionCode 160
-        versionName '5.51'
-        // Rollback: timer interface restored from 5.49; build version 5.51
+        versionCode 161
+        versionName '5.52'
+        // UI update: compact atmosphere volume and timer controls
         // Compile fix: updater progress label
     }
 
