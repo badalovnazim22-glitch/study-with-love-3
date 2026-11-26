@@ -3538,14 +3538,54 @@ public class MainActivity extends Activity {
             });
             root.addView(row,lp(-1,66,0,0,0,5));
         }
+        LinearLayout volumeCard=new LinearLayout(this);
+        volumeCard.setOrientation(LinearLayout.VERTICAL);
+        volumeCard.setPadding(dp(14),dp(12),dp(14),dp(10));
+        volumeCard.setBackground(shape(isDarkAppearance()?0xFF292431:0xFFFFF7FA,18,isDarkAppearance()?0xFF514454:0xFFF0DCE4));
+        LinearLayout volumeHeading=new LinearLayout(this);
+        volumeHeading.setGravity(Gravity.CENTER_VERTICAL);
+        TextView volumeIcon=text("♫",19,PINK,true);
+        volumeIcon.setGravity(Gravity.CENTER);
+        volumeIcon.setBackground(shape(isDarkAppearance()?0xFF493344:0xFFFFE8F0,13,0));
+        volumeHeading.addView(volumeIcon,lp(36,36,0,0,10,0));
+        LinearLayout volumeWords=new LinearLayout(this);
+        volumeWords.setOrientation(LinearLayout.VERTICAL);
+        addText(volumeWords,"ГРОМКОСТЬ ЗВУКА",10,PINK,true);
+        addText(volumeWords,"Настрой комфортный уровень",10,MUTED,false);
+        volumeHeading.addView(volumeWords,new LinearLayout.LayoutParams(0,-2,1f));
+        int savedVolume=Math.max(0,Math.min(100,prefs.getInt("ambience_volume",35)));
+        TextView volumeValue=text(savedVolume+"%",15,DARK,true);
+        volumeValue.setGravity(Gravity.CENTER);
+        volumeValue.setMinWidth(dp(48));
+        volumeValue.setBackground(shape(isDarkAppearance()?0xFF3A303D:0xFFFFEEF3,14,0));
+        volumeHeading.addView(volumeValue,lp(-2,32,5,0,0,0));
+        volumeCard.addView(volumeHeading,lp(-1,-2,0,0,0,5));
         android.widget.SeekBar volume=new android.widget.SeekBar(this);
         volume.setMax(100);
-        volume.setProgress(prefs.getInt("ambience_volume",35));
-        if(Build.VERSION.SDK_INT>=21)volume.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
-        addText(root,"ГРОМКОСТЬ",11,PINK,true);
-        root.addView(volume,lp(-1,34,0,4,0,4));
+        volume.setProgress(savedVolume);
+        volume.setPadding(dp(2),0,dp(2),0);
+        if(Build.VERSION.SDK_INT>=21){
+            volume.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
+            volume.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(isDarkAppearance()?0xFF514650:0xFFEADDE4));
+            volume.setThumbTintList(android.content.res.ColorStateList.valueOf(PINK));
+        }
+        volumeCard.addView(volume,lp(-1,38,0,0,0,0));
+        LinearLayout volumeScale=new LinearLayout(this);
+        volumeScale.setGravity(Gravity.CENTER_VERTICAL);
+        TextView quiet=text("МИНИМУМ",9,MUTED,true);
+        TextView loud=text("МАКСИМУМ",9,MUTED,true);
+        volumeScale.addView(quiet,new LinearLayout.LayoutParams(0,-2,1f));
+        volumeScale.addView(loud);
+        volumeCard.addView(volumeScale,lp(-1,-2,0,0,0,0));
+        root.addView(volumeCard,lp(-1,-2,0,10,0,10));
         volume.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener(){
-            public void onProgressChanged(android.widget.SeekBar b,int value,boolean user){if(user){prefs.edit().putInt("ambience_volume",value).apply();if(ambiencePlayer!=null)ambiencePlayer.setVolume(value/100f,value/100f);}}
+            public void onProgressChanged(android.widget.SeekBar b,int value,boolean user){
+                volumeValue.setText(value+"%");
+                if(user){
+                    prefs.edit().putInt("ambience_volume",value).apply();
+                    if(ambiencePlayer!=null)try{ambiencePlayer.setVolume(value/100f,value/100f);}catch(Exception ignored){}
+                }
+            }
             public void onStartTrackingTouch(android.widget.SeekBar b){}
             public void onStopTrackingTouch(android.widget.SeekBar b){}
         });
