@@ -3336,7 +3336,7 @@ public class MainActivity extends Activity {
     private void showAtmosphere() {
         currentScreen = "atmosphere";
         if(prefs.getBoolean("ambience_autostart",false)&&!ambiencePlaying&&!ambienceLoading)startAmbience();
-        base("Атмосфера учёбы", "Выбери звук, который поможет сосредоточиться");
+        base("Атмосфера учёбы", "");
         String[] names={"🌧️  Дождь за окном","☕  Уютное кафе","🌿  Звуки природы","📚  Тихая библиотека"};
         String[] descriptions={"Мягкий дождливый настрой","Тёплая атмосфера кофейни","Спокойствие и свежесть","Минимум отвлечений"};
         String chosen=prefs.getString("study_atmosphere",names[0]);
@@ -3347,12 +3347,13 @@ public class MainActivity extends Activity {
             LinearLayout row=card();
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
-            row.setPadding(dp(15),dp(13),dp(13),dp(13));
+            row.setPadding(dp(18),dp(18),dp(17),dp(18));
+            row.setMinimumHeight(dp(112));
             if(selected)row.setBackground(shape(PALE,22,PINK));
-            if(Build.VERSION.SDK_INT>=21)row.setElevation(dp(selected?4:2));
+            if(Build.VERSION.SDK_INT>=21){row.setElevation(0f);row.setTranslationZ(0f);}
             LinearLayout words=new LinearLayout(this);
             words.setOrientation(LinearLayout.VERTICAL);
-            TextView title=text(n,17,selected?PINK:DARK,selected);
+            TextView title=text(n,18,selected?PINK:DARK,selected);
             title.setMaxLines(1);
             words.addView(title,lp(-1,-2,0,0,0,4));
             words.addView(text(descriptions[i],12,MUTED,false),lp(-1,-2,0,0,0,0));
@@ -3362,12 +3363,12 @@ public class MainActivity extends Activity {
                 words.addView(playing,lp(-1,-2,0,5,0,0));
             }
             row.addView(words,new LinearLayout.LayoutParams(0,-2,1f));
-            TextView control=text(active?"Ⅱ":"▶",active?21:19,selected?0xFFFFFFFF:PINK,true);
+            TextView control=text(active?"Ⅱ":"▶",active?22:20,selected?0xFFFFFFFF:PINK,true);
             control.setGravity(Gravity.CENTER);
             control.setIncludeFontPadding(false);
             control.setBackground(shape(selected?PINK:PALE,30,selected?PINK:0xFFEADDE2));
             control.setContentDescription(active?"Пауза":"Воспроизвести");
-            row.addView(control,lp(48,48,dp(10),0,0,0));
+            row.addView(control,lp(54,54,dp(12),0,0,0));
             row.setContentDescription(n+". "+descriptions[i]+(active?", играет сейчас":", нажми для воспроизведения"));
             row.setOnClickListener(v->{
                 boolean same=prefs.getString("study_atmosphere",names[0]).equals(n);
@@ -3379,7 +3380,7 @@ public class MainActivity extends Activity {
                 }
                 showAtmosphere();
             });
-            root.addView(row,lp(-1,-2,0,0,0,10));
+            root.addView(row,lp(-1,112,0,0,0,12));
         }
         android.widget.SeekBar volume=new android.widget.SeekBar(this);
         volume.setMax(100);
