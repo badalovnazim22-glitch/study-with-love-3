@@ -1010,17 +1010,16 @@ public class MainActivity extends Activity {
         fontSizeGroup.addView(scaleStrip,lp(-1,-2,0,5,0,0));
         appearance.addView(fontSizeGroup,lp(-1,-2,0,4,0,6));
         addSettingsToggle(appearance,"Меньше анимации","reduce_motion",false,null);
-        LinearLayout darkThemeRow=new LinearLayout(this);darkThemeRow.setOrientation(LinearLayout.HORIZONTAL);darkThemeRow.setGravity(Gravity.CENTER_VERTICAL);darkThemeRow.setPadding(dp(2),dp(2),dp(2),dp(2));
-        TextView darkThemeLabel=text("Автоматическая тёмная тема по расписанию",14,DARK,false);darkThemeRow.addView(darkThemeLabel,new LinearLayout.LayoutParams(0,dp(44),1f));
-        android.widget.Switch darkThemeToggle=new android.widget.Switch(this);darkThemeToggle.setShowText(false);darkThemeToggle.setChecked(prefs.getBoolean("scheduled_dark_enabled",false));
-        if(Build.VERSION.SDK_INT>=21){darkThemeToggle.setThumbTintList(new android.content.res.ColorStateList(new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},new int[]{PINK,0xFFE3E3E8}));darkThemeToggle.setTrackTintList(new android.content.res.ColorStateList(new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},new int[]{0x66C97891,0x33777777}));}
-        darkThemeRow.addView(darkThemeToggle,lp(54,42,dp(5),0,dp(3),0));
-        TextView darkClock=text("◷",21,PINK,true);darkClock.setGravity(Gravity.CENTER);darkClock.setContentDescription(translate("Выбрать время тёмной темы"));darkThemeRow.addView(darkClock,lp(40,42,dp(3),0,0,0));
-        darkThemeToggle.setOnCheckedChangeListener((button,checked)->{prefs.edit().putBoolean("scheduled_dark_enabled",checked).apply();applySavedTheme();updateSystemBarIcons();showSettings();});
-        darkThemeRow.setOnClickListener(v->darkThemeToggle.setChecked(!darkThemeToggle.isChecked()));
-        darkThemeLabel.setOnClickListener(v->darkThemeToggle.setChecked(!darkThemeToggle.isChecked()));
-        darkClock.setOnClickListener(v->new android.app.AlertDialog.Builder(this).setTitle(translate("Время тёмной темы")).setItems(new String[]{translate("Начало")+" · "+prefs.getString("scheduled_dark_start","21:00"),translate("Конец")+" · "+prefs.getString("scheduled_dark_end","07:00")},(dialog,which)->{if(which==0)chooseClockPreference("scheduled_dark_start","Начало тёмной темы","21:00");else chooseClockPreference("scheduled_dark_end","Конец тёмной темы","07:00");}).setNegativeButton(translate("Отмена"),null).show());
-        appearance.addView(darkThemeRow,lp(-1,46,0,0,0,4));
+        addSettingsToggle(appearance,"Автоматическая тёмная тема по расписанию","scheduled_dark_enabled",false,()->{applySavedTheme();updateSystemBarIcons();showSettings();});
+        LinearLayout darkSchedule=new LinearLayout(this);darkSchedule.setOrientation(LinearLayout.HORIZONTAL);darkSchedule.setGravity(Gravity.CENTER_VERTICAL);darkSchedule.setPadding(dp(2),dp(3),dp(2),dp(3));
+        TextView darkClock=text("◷",22,PINK,true);darkClock.setGravity(Gravity.CENTER);darkSchedule.addView(darkClock,lp(34,40,0,0,8,0));
+        LinearLayout darkTimes=new LinearLayout(this);darkTimes.setOrientation(LinearLayout.HORIZONTAL);darkTimes.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout darkStartBox=new LinearLayout(this);darkStartBox.setOrientation(LinearLayout.VERTICAL);darkStartBox.setGravity(Gravity.CENTER_VERTICAL);TextView darkStartCaption=text("Начало",10,MUTED,false);darkStartBox.addView(darkStartCaption,lp(-1,-2,0,0,0,1));TextView darkStartValue=text(prefs.getString("scheduled_dark_start","21:00"),15,DARK,true);darkStartBox.addView(darkStartValue,lp(-1,-2,0,0,0,0));
+        TextView darkArrow=text("—",14,MUTED,true);darkArrow.setGravity(Gravity.CENTER);
+        LinearLayout darkEndBox=new LinearLayout(this);darkEndBox.setOrientation(LinearLayout.VERTICAL);darkEndBox.setGravity(Gravity.CENTER_VERTICAL);TextView darkEndCaption=text("Конец",10,MUTED,false);darkEndBox.addView(darkEndCaption,lp(-1,-2,0,0,0,1));TextView darkEndValue=text(prefs.getString("scheduled_dark_end","07:00"),15,DARK,true);darkEndBox.addView(darkEndValue,lp(-1,-2,0,0,0,0));
+        darkTimes.addView(darkStartBox,new LinearLayout.LayoutParams(0,-2,1f));darkTimes.addView(darkArrow,lp(28,40,0,0,0,0));darkTimes.addView(darkEndBox,new LinearLayout.LayoutParams(0,-2,1f));darkSchedule.addView(darkTimes,new LinearLayout.LayoutParams(0,-2,1f));
+        darkStartBox.setOnClickListener(v->chooseClockPreference("scheduled_dark_start","Начало тёмной темы","21:00"));darkEndBox.setOnClickListener(v->chooseClockPreference("scheduled_dark_end","Конец тёмной темы","07:00"));darkClock.setOnClickListener(v->chooseClockPreference("scheduled_dark_start","Начало тёмной темы","21:00"));darkSchedule.setOnClickListener(v->chooseClockPreference("scheduled_dark_end","Конец тёмной темы","07:00"));
+        appearance.addView(darkSchedule,lp(-1,48,0,0,0,8));
         LinearLayout orderCard=card();orderCard.setPadding(dp(10),dp(5),dp(10),dp(5));Button orderHome=button("↕  Изменить порядок блоков",false);orderHome.setBackgroundColor(android.graphics.Color.TRANSPARENT);orderHome.setOnClickListener(v->showHomeBlockOrderDialog());orderCard.addView(orderHome,lp(-1,44,0,0,0,0));appearance.addView(orderCard,lp(-1,-2,0,4,0,7));
         root.addView(appearance,lp(-1,-2,0,0,0,4));
         LinearLayout appearanceActions=card();
