@@ -127,7 +127,7 @@ public final class AppUpdater {
                 if(failure!=null){if(manual)Toast.makeText(activity,failure,Toast.LENGTH_LONG).show();return;}
                 String current=installedVersion(activity);
                 if(compareVersions(foundVersion,current)<=0){
-                    if(manual)new AlertDialog.Builder(activity).setTitle("Обновлений пока нет").setMessage("Установлена последняя версия "+current+" ♡").setPositiveButton("Хорошо",null).show();
+                    if(manual)showNoUpdatesDialog(activity,current);
                     return;
                 }
                 android.content.SharedPreferences p=activity.getSharedPreferences(PREFS,Activity.MODE_PRIVATE);
@@ -151,6 +151,32 @@ public final class AppUpdater {
         android.widget.TextView notes=new android.widget.TextView(activity);String note=latestReleaseNotes==null?"":latestReleaseNotes.trim();if(note.isEmpty())note="Новые улучшения, более удобные функции и исправления для комфортной учёбы.";notes.setText(note);notes.setTextColor(0xFF75666D);notes.setTextSize(14);notes.setGravity(android.view.Gravity.CENTER);notes.setPadding(0,pad,0,pad/2);panel.addView(notes,new android.widget.LinearLayout.LayoutParams(-1,-2));
         android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(activity).setView(panel).setNegativeButton("Позже",null).setPositiveButton("Обновить",null).create();
         dialog.setOnShowListener(v->{android.widget.Button positive=dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE);positive.setTextColor(0xFFC97891);positive.setOnClickListener(b->{dialog.dismiss();download(activity);});});
+        dialog.show();
+    }
+
+    private static void showNoUpdatesDialog(Activity activity,String version){
+        int pad=(int)(activity.getResources().getDisplayMetrics().density*18);
+        android.widget.LinearLayout panel=new android.widget.LinearLayout(activity);
+        panel.setOrientation(android.widget.LinearLayout.VERTICAL);
+        panel.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
+        panel.setPadding(pad,pad,pad,pad);
+        panel.setBackground(roundRect(0xFFFFF9F7,26,0xFFF0DCE4,activity));
+        android.widget.TextView icon=new android.widget.TextView(activity);
+        icon.setText("✓");icon.setTextSize(27);icon.setTextColor(0xFFFFFFFF);icon.setGravity(android.view.Gravity.CENTER);
+        icon.setBackground(roundRect(0xFFC97891,30,0,activity));
+        android.widget.LinearLayout.LayoutParams iconLp=new android.widget.LinearLayout.LayoutParams(pad*3,pad*3);
+        iconLp.gravity=android.view.Gravity.CENTER_HORIZONTAL;panel.addView(icon,iconLp);
+        android.widget.TextView title=new android.widget.TextView(activity);
+        title.setText("Обновлений пока нет");title.setTextColor(0xFF3F3439);title.setTextSize(20);
+        title.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);
+        title.setGravity(android.view.Gravity.CENTER);title.setPadding(0,pad,0,pad/3);
+        panel.addView(title,new android.widget.LinearLayout.LayoutParams(-1,-2));
+        android.widget.TextView message=new android.widget.TextView(activity);
+        message.setText("Установлена последняя версия "+version+" ♡");message.setTextColor(0xFF75666D);
+        message.setTextSize(14);message.setGravity(android.view.Gravity.CENTER);
+        message.setPadding(0,0,0,pad/3);panel.addView(message,new android.widget.LinearLayout.LayoutParams(-1,-2));
+        AlertDialog dialog=new AlertDialog.Builder(activity).setView(panel).setPositiveButton("Хорошо",null).create();
+        dialog.setOnShowListener(v->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(0xFFC97891));
         dialog.show();
     }
 
