@@ -33,6 +33,7 @@
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /><action android:name="android.intent.action.DATE_CHANGED" /><action android:name="android.intent.action.TIME_SET" /><action android:name="android.intent.action.TIMEZONE_CHANGED" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/study_widget_info" />
         </receiver>
+        <receiver android:name=".UpdateCheckReceiver" android:enabled="true" android:exported="false" />
         <receiver android:name=".WeeklyReportReceiver" android:exported="false" />
         <receiver android:name=".WeeklyBackupReceiver" android:exported="false" />
         <receiver android:name=".ReminderReceiver" android:exported="false" />
