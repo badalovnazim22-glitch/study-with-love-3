@@ -15,7 +15,8 @@ public class FocusTimerService extends Service {
     private Runnable tick;
     private NotificationManager nm;
     private static final String PREFS="study_progress";
-    @Override public void onCreate(){super.onCreate();nm=(NotificationManager)getSystemService(NOTIFICATION_SERVICE);if(Build.VERSION.SDK_INT>=26){nm.createNotificationChannel(new NotificationChannel(CHANNEL,"Таймер Study with Love",NotificationManager.IMPORTANCE_LOW));android.content.SharedPreferences p=getSharedPreferences(PREFS,MODE_PRIVATE);for(boolean vibrate:new boolean[]{true,false}){String finishId=FINISH_CHANNEL+(vibrate?"_v":"_silent");NotificationChannel finish=new NotificationChannel(finishId,"Окончание фокус-сессии",NotificationManager.IMPORTANCE_HIGH);finish.setSound(null,null);finish.enableVibration(vibrate);nm.createNotificationChannel(finish);}}}
+    private String tr(String ru,String en,String az){String l=getSharedPreferences(PREFS,MODE_PRIVATE).getString("app_language","ru");return "en".equals(l)?en:("az".equals(l)?az:ru);}
+    @Override public void onCreate(){super.onCreate();nm=(NotificationManager)getSystemService(NOTIFICATION_SERVICE);if(Build.VERSION.SDK_INT>=26){nm.createNotificationChannel(new NotificationChannel(CHANNEL,tr("Таймер Study with Love","Study with Love timer","Study with Love taymeri"),NotificationManager.IMPORTANCE_LOW));android.content.SharedPreferences p=getSharedPreferences(PREFS,MODE_PRIVATE);for(boolean vibrate:new boolean[]{true,false}){String finishId=FINISH_CHANNEL+(vibrate?"_v":"_silent");NotificationChannel finish=new NotificationChannel(finishId,tr("Окончание фокус-сессии","Focus session finished","Fokus sessiyası bitdi"),NotificationManager.IMPORTANCE_HIGH);finish.setSound(null,null);finish.enableVibration(vibrate);nm.createNotificationChannel(finish);}}}
     @Override public int onStartCommand(Intent intent,int flags,int startId){
         if(intent!=null&&ACTION_STOP.equals(intent.getAction())){if(!intent.getBooleanExtra("break",false))recordFocus(intent.getLongExtra("elapsed_ms",0),dateKey(System.currentTimeMillis()));FocusTimerController.clearIfMatches(this,intent.getLongExtra("expected_end_wall",0L));stopForeground(true);stopSelf();return START_NOT_STICKY;}
         if(intent!=null&&ACTION_PAUSE.equals(intent.getAction())){if(!intent.getBooleanExtra("break",false)){long elapsed=Math.max(0,intent.getLongExtra("elapsed_ms",0));recordFocus(elapsed,dateKey(System.currentTimeMillis()));recordPause(elapsed);}FocusTimerController.clearIfMatches(this,intent.getLongExtra("expected_end_wall",0L));stopForeground(true);stopSelf();return START_NOT_STICKY;}
@@ -41,9 +42,9 @@ public class FocusTimerService extends Service {
                 if(endAt<=0L)return START_NOT_STICKY;
             }
         }
-        startForeground(920,build("Таймер работает","Осталось "+format(Math.max(0,endAt-System.currentTimeMillis())),false));
+        startForeground(920,build(tr("Таймер работает","Timer is running","Taymer işləyir"),tr("Осталось ","Remaining ")+format(Math.max(0,endAt-System.currentTimeMillis())),false));
         if(tick!=null)handler.removeCallbacks(tick);
-        tick=new Runnable(){public void run(){long left=endAt-System.currentTimeMillis();if(left<=0){finish(currentBreak);return;}nm.notify(920,build("Таймер работает","Осталось "+format(left),false));handler.postDelayed(this,1000);}};
+        tick=new Runnable(){public void run(){long left=endAt-System.currentTimeMillis();if(left<=0){finish(currentBreak);return;}nm.notify(920,build(tr("Таймер работает","Timer is running","Taymer işləyir"),tr("Осталось ","Remaining ")+format(left),false));handler.postDelayed(this,1000);}};
         if(endAt<=System.currentTimeMillis())finish(currentBreak);else handler.post(tick);
         return START_STICKY;
     }
@@ -54,8 +55,8 @@ public class FocusTimerService extends Service {
         android.content.SharedPreferences settings=getSharedPreferences(PREFS,MODE_PRIVATE);if(settings.getBoolean("haptics_enabled",true)&&!MainActivity.activityVisible){try{android.os.Vibrator vibrator=(android.os.Vibrator)getSystemService(VIBRATOR_SERVICE);if(Build.VERSION.SDK_INT>=26)vibrator.vibrate(VibrationEffect.createWaveform(new long[]{0,350,180,550},-1));else vibrator.vibrate(new long[]{0,350,180,550},-1);}catch(Exception ignored){}}
         Uri sound=null;
         String finishChannel=FINISH_CHANNEL+(settings.getBoolean("haptics_enabled",true)?"_v":"_silent");Notification.Builder b=Build.VERSION.SDK_INT>=26?new Notification.Builder(this,finishChannel):new Notification.Builder(this);
-        b.setSmallIcon(R.drawable.ic_notification).setContentTitle(rest?"Перерыв окончен":"Фокус-сессия завершена")
-          .setContentText(rest?"Можно возвращаться к занятиям":"Отличная работа! Запиши маленькую победу в дневник.")
+        b.setSmallIcon(R.drawable.ic_notification).setContentTitle(rest?tr("Перерыв окончен","Break finished","Fasilə bitdi"):tr("Фокус-сессия завершена","Focus session finished","Fokus sessiyası bitdi"))
+          .setContentText(rest?tr("Можно возвращаться к занятиям","You can get back to studying","Dərsə qayıda bilərsən"):tr("Отличная работа! Запиши маленькую победу в дневник.","Great work! Save this little win in your diary.","Əla iş! Bu kiçik uğuru gündəliyinə yaz."))
           .setAutoCancel(true).setVibrate(settings.getBoolean("haptics_enabled",true)?new long[]{0,350,180,550}:new long[]{0})
           .setContentIntent(PendingIntent.getActivity(this,921,new Intent(this,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE));
         if(settings.getBoolean("timer_notification_enabled",true)&&!MainActivity.activityVisible)nm.notify(921,b.build());
