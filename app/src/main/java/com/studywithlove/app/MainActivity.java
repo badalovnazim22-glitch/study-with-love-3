@@ -968,12 +968,16 @@ public class MainActivity extends Activity {
         preview.setBackground(shape(PALE,18,blendColors(PINK,BG,isDarkAppearance()?0.42f:0.68f)));
         addText(preview, "ПРЕДПРОСМОТР ТЕМЫ", 12, PINK, true);
         TextView previewText = text("Твой прогресс  ·  65%", 16, DARK, true);
+        previewText.setTypeface(Typeface.create(selectedFontFamily(),Typeface.BOLD));
         preview.addView(previewText, lp(-1, 30, 0, 4, 0, 5));
+        TextView previewCaption=text("Каждый шаг приближает к цели",12,MUTED,false);
+        previewCaption.setTypeface(Typeface.create(selectedFontFamily(),Typeface.NORMAL));
+        preview.addView(previewCaption,lp(-1,-2,0,0,0,7));
         ProgressBar previewBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         previewBar.setMax(100); previewBar.setProgress(65);
         if (Build.VERSION.SDK_INT >= 21) previewBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
         preview.addView(previewBar, lp(-1, 8, 0, 0, 0, 4));
-        Button previewButton = button("Продолжить", true);previewButton.setBackground(shape(PINK,12,0));
+        Button previewButton = button("Продолжить", true);previewButton.setTypeface(Typeface.create(selectedFontFamily(),Typeface.BOLD));previewButton.setBackground(shape(PINK,12,0));
         preview.addView(previewButton, lp(-1, 42, 0, 5, 0, 0));
         appearance.addView(preview, lp(-1, -2, 0, 7, 0, 8));
         int paletteColumns = getResources().getConfiguration().screenWidthDp < 380 ? 2 : 3;
@@ -985,9 +989,21 @@ public class MainActivity extends Activity {
             option.setOnClickListener(v->{prefs.edit().putString("app_theme",key).remove("app_accent_color").apply();applySavedTheme();showSettings();});
         }
         appearance.addView(palette,lp(-1,-2,0,7,0,5));
-        LinearLayout customTheme=card();customTheme.setOrientation(LinearLayout.HORIZONTAL);customTheme.setGravity(Gravity.CENTER_VERTICAL);customTheme.setPadding(dp(12),dp(8),dp(12),dp(8));
-        TextView customSwatch=text("✦",20,0xFFFFFFFF,true);customSwatch.setGravity(Gravity.CENTER);GradientDrawable customSwatchBg=new GradientDrawable(GradientDrawable.Orientation.TL_BR,new int[]{PINK,adjustColor(PINK,0.68f)});customSwatchBg.setShape(GradientDrawable.OVAL);customSwatch.setBackground(customSwatchBg);customTheme.addView(customSwatch,lp(38,38,0,0,10,0));
-        LinearLayout customWords=new LinearLayout(this);customWords.setOrientation(LinearLayout.VERTICAL);addText(customWords,"Своя тема",14,DARK,true);addText(customWords,"Выбери акцент и цвет фона",11,MUTED,false);customTheme.addView(customWords,new LinearLayout.LayoutParams(0,-2,1f));customTheme.addView(text("›",24,PINK,true));customTheme.setOnClickListener(v->showCustomThemeAccentPicker());appearance.addView(customTheme,lp(-1,-2,0,0,0,8));
+        LinearLayout customTheme=card();customTheme.setOrientation(LinearLayout.VERTICAL);customTheme.setPadding(dp(12),dp(12),dp(12),dp(12));
+        LinearLayout customHeading=new LinearLayout(this);customHeading.setGravity(Gravity.CENTER_VERTICAL);
+        TextView customSwatch=text("✦",18,0xFFFFFFFF,true);customSwatch.setGravity(Gravity.CENTER);GradientDrawable customSwatchBg=new GradientDrawable();customSwatchBg.setColor(prefs.getInt("app_accent_color",PINK));customSwatchBg.setShape(GradientDrawable.OVAL);customSwatch.setBackground(customSwatchBg);customHeading.addView(customSwatch,lp(36,36,0,0,10,0));
+        LinearLayout customWords=new LinearLayout(this);customWords.setOrientation(LinearLayout.VERTICAL);addText(customWords,"Своя тема",14,DARK,true);addText(customWords,"Настрой цвета — результат сразу виден в превью выше",11,MUTED,false);customHeading.addView(customWords,new LinearLayout.LayoutParams(0,-2,1f));customTheme.addView(customHeading,lp(-1,-2,0,0,0,10));
+        addText(customTheme,"ЦВЕТ АКЦЕНТА",10,PINK,true);
+        int[] customAccents={0xFFC97891,0xFF8979B8,0xFF659B86,0xFF5D91B5,0xFFD88968,0xFFB32635,0xFFC49318,0xFF65758B};
+        String[] customAccentNames={"Розовый","Лавандовый","Мятный","Голубой","Персиковый","Красный","Золотой","Графитовый"};
+        android.widget.GridLayout customAccentGrid=new android.widget.GridLayout(this);customAccentGrid.setColumnCount(4);
+        int currentCustomAccent=prefs.getInt("app_accent_color",PINK);
+        for(int ci=0;ci<customAccents.length;ci++){final int accent=customAccents[ci];LinearLayout swatchItem=new LinearLayout(this);swatchItem.setOrientation(LinearLayout.VERTICAL);swatchItem.setGravity(Gravity.CENTER);TextView dot=text(currentCustomAccent==accent?"✓":"",14,onAccentTextColor(accent),true);dot.setGravity(Gravity.CENTER);GradientDrawable dotBg=new GradientDrawable();dotBg.setColor(accent);dotBg.setShape(GradientDrawable.OVAL);if(currentCustomAccent==accent)dotBg.setStroke(dp(2),DARK);dot.setBackground(dotBg);swatchItem.addView(dot,lp(32,32,0,0,0,3));TextView swatchName=text(translate(customAccentNames[ci]),9,DARK,false);swatchName.setGravity(Gravity.CENTER);swatchName.setMaxLines(1);swatchItem.addView(swatchName,lp(-1,20,0,0,0,0));android.widget.GridLayout.LayoutParams cgp=new android.widget.GridLayout.LayoutParams();cgp.width=0;cgp.height=dp(56);cgp.columnSpec=android.widget.GridLayout.spec(ci%4,1f);cgp.setMargins(dp(2),dp(3),dp(2),dp(3));customAccentGrid.addView(swatchItem,cgp);swatchItem.setOnClickListener(v->{prefs.edit().putString("app_theme","custom").putInt("app_accent_color",accent).apply();applySavedTheme();updateSystemBarIcons();showSettings();});}
+        customTheme.addView(customAccentGrid,lp(-1,-2,0,3,0,8));
+        addText(customTheme,"ЦВЕТ ФОНА",10,PINK,true);
+        String[] bgKeys={"light","dark","black"};String[] bgNames={"Светлый","Тёмно-серый","Чёрный"};int[] bgColors={0xFFF7F8FA,0xFF292B30,0xFF101114};String activeBg=prefs.getString("custom_theme_background","light");LinearLayout bgRow=new LinearLayout(this);bgRow.setOrientation(LinearLayout.HORIZONTAL);
+        for(int bi=0;bi<bgKeys.length;bi++){final String bgKey=bgKeys[bi];boolean selectedBg=activeBg.equals(bgKey);LinearLayout bgChoice=new LinearLayout(this);bgChoice.setOrientation(LinearLayout.VERTICAL);bgChoice.setGravity(Gravity.CENTER);bgChoice.setPadding(dp(4),dp(5),dp(4),dp(5));bgChoice.setBackground(shape(selectedBg?PALE:BG,12,selectedBg?PINK:blendColors(PALE,BG,0.3f)));View bgSample=new View(this);GradientDrawable bgSampleDrawable=new GradientDrawable();bgSampleDrawable.setColor(bgColors[bi]);bgSampleDrawable.setCornerRadius(dp(7));bgSample.setBackground(bgSampleDrawable);bgChoice.addView(bgSample,lp(-1,22,0,0,0,4));TextView bgName=text(translate(bgNames[bi]),10,DARK,selectedBg);bgName.setGravity(Gravity.CENTER);bgChoice.addView(bgName,lp(-1,20,0,0,0,0));LinearLayout.LayoutParams bgLp=new LinearLayout.LayoutParams(0,dp(58),1f);bgLp.setMargins(dp(3),dp(3),dp(3),dp(2));bgRow.addView(bgChoice,bgLp);bgChoice.setOnClickListener(v->{prefs.edit().putString("app_theme","custom").putString("custom_theme_background",bgKey).apply();applySavedTheme();updateSystemBarIcons();showSettings();});}
+        customTheme.addView(bgRow,lp(-1,-2,0,3,0,0));appearance.addView(customTheme,lp(-1,-2,0,0,0,8));
         LinearLayout fontGroup=settingsGroup("ШРИФТ ПРИЛОЖЕНИЯ");
         
         String[] fontNames={"Современный","Округлый","С засечками","Моноширинный","Узкий","Средний"};
@@ -995,12 +1011,12 @@ public class MainActivity extends Activity {
         String[] fontFamilies={"sans-serif","sans-serif-rounded","serif","monospace","sans-serif-condensed","sans-serif-medium"};
         String activeFont=prefs.getString("app_font","sans");
         LinearLayout fontPreview=card();fontPreview.setPadding(dp(13),dp(10),dp(13),dp(10));fontPreview.setBackground(shape(PALE,16,blendColors(PINK,BG,isDarkAppearance()?0.5f:0.75f)));
-        TextView fontPreviewTitle=text("Твой прогресс",17,DARK,true);fontPreviewTitle.setTypeface(Typeface.create(selectedFontFamily(),Typeface.BOLD));fontPreview.addView(fontPreviewTitle,lp(-1,-2,0,0,0,3));
+        TextView fontPreviewTitle=text("Твой прогресс",18,DARK,true);fontPreviewTitle.setTypeface(Typeface.create(selectedFontFamily(),Typeface.BOLD));fontPreview.addView(fontPreviewTitle,lp(-1,-2,0,0,0,3));
         TextView fontPreviewBody=text("Каждый шаг приближает к цели",12,MUTED,false);fontPreviewBody.setTypeface(Typeface.create(selectedFontFamily(),Typeface.NORMAL));fontPreview.addView(fontPreviewBody,lp(-1,-2,0,0,0,7));
         ProgressBar fontPreviewProgress=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);fontPreviewProgress.setMax(100);fontPreviewProgress.setProgress(65);if(Build.VERSION.SDK_INT>=21)fontPreviewProgress.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));fontPreview.addView(fontPreviewProgress,lp(-1,7,0,0,0,0));
         fontGroup.addView(fontPreview,lp(-1,-2,0,5,0,6));
         android.widget.GridLayout fontGrid=new android.widget.GridLayout(this);fontGrid.setColumnCount(2);
-        for(int i=0;i<fontKeys.length;i++){final String key=fontKeys[i],family=fontFamilies[i];Button choice=button((activeFont.equals(key)?"✓  ":"")+fontNames[i],activeFont.equals(key));choice.setTypeface(Typeface.create(family,Typeface.BOLD));if(activeFont.equals(key)){GradientDrawable selectedFontBg=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{adjustColor(PINK,0.92f),adjustColor(PINK,0.78f)});selectedFontBg.setCornerRadius(dp(14));choice.setBackground(selectedFontBg);}else choice.setBackground(shape(isDarkAppearance()?blendColors(PALE,BG,0.18f):0xCCFFFFFF,13,blendColors(PINK,BG,isDarkAppearance()?0.42f:0.68f)));android.widget.GridLayout.LayoutParams fp=new android.widget.GridLayout.LayoutParams();fp.width=0;fp.height=dp(44);fp.columnSpec=android.widget.GridLayout.spec(i%2,1f);fp.setMargins(dp(3),dp(3),dp(3),dp(3));fontGrid.addView(choice,fp);choice.setOnClickListener(v->{prefs.edit().putString("app_font",key).apply();showSettings();});}
+        for(int i=0;i<fontKeys.length;i++){final String key=fontKeys[i],family=fontFamilies[i];Button choice=button((activeFont.equals(key)?"✓  ":"")+translate(fontNames[i]),activeFont.equals(key));choice.setTypeface(Typeface.create(family,Typeface.BOLD));if(activeFont.equals(key)){GradientDrawable selectedFontBg=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{adjustColor(PINK,0.92f),adjustColor(PINK,0.78f)});selectedFontBg.setCornerRadius(dp(14));choice.setBackground(selectedFontBg);}else choice.setBackground(shape(isDarkAppearance()?blendColors(PALE,BG,0.18f):0xCCFFFFFF,13,blendColors(PINK,BG,isDarkAppearance()?0.42f:0.68f)));android.widget.GridLayout.LayoutParams fp=new android.widget.GridLayout.LayoutParams();fp.width=0;fp.height=dp(44);fp.columnSpec=android.widget.GridLayout.spec(i%2,1f);fp.setMargins(dp(3),dp(3),dp(3),dp(3));fontGrid.addView(choice,fp);choice.setOnClickListener(v->{prefs.edit().putString("app_font",key).apply();showSettings();});}
         fontGroup.addView(fontGrid,lp(-1,-2,0,4,0,0));appearance.addView(fontGroup,lp(-1,-2,0,4,0,6));
         LinearLayout fontSizeGroup=settingsGroup("РАЗМЕР ТЕКСТА");
         fontSizeGroup.setTag("appearance");
@@ -1073,7 +1089,7 @@ public class MainActivity extends Activity {
         reminders.setTag("notifications_sound");
         addSettingsToggle(reminders,"Включить напоминания о занятиях","notifications_enabled",true,()->{scheduleReminders(this);if(prefs.getBoolean("notifications_enabled",true)&&Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},20);});
         addSettingsToggle(reminders,"Тихие часы для уведомлений","quiet_hours_enabled",false,()->scheduleReminders(this));
-        LinearLayout quietRange=card();quietRange.setPadding(dp(10),dp(9),dp(10),dp(9));addText(quietRange,"ВРЕМЕННОЙ ДИАПАЗОН",10,PINK,true);LinearLayout quietTimes=new LinearLayout(this);quietTimes.setOrientation(LinearLayout.HORIZONTAL);Button quietStart=button("Начало\n"+prefs.getString("quiet_hours_start","22:00"),false);Button quietEnd=button("Конец\n"+prefs.getString("quiet_hours_end","08:00"),false);quietStart.setMinHeight(dp(54));quietEnd.setMinHeight(dp(54));quietStart.setOnClickListener(v->chooseQuietTime("quiet_hours_start"));quietEnd.setOnClickListener(v->chooseQuietTime("quiet_hours_end"));LinearLayout.LayoutParams quietLp=new LinearLayout.LayoutParams(0,dp(54),1f);quietLp.setMargins(dp(2),dp(3),dp(4),dp(2));quietTimes.addView(quietStart,quietLp);LinearLayout.LayoutParams quietEndLp=new LinearLayout.LayoutParams(0,dp(54),1f);quietEndLp.setMargins(dp(4),dp(3),dp(2),dp(2));quietTimes.addView(quietEnd,quietEndLp);quietRange.addView(quietTimes,lp(-1,58,0,2,0,0));reminders.addView(quietRange,lp(-1,-2,0,4,0,6));
+        LinearLayout quietRange=card();quietRange.setPadding(dp(12),dp(11),dp(12),dp(11));addText(quietRange,"ТИХИЕ ЧАСЫ",10,PINK,true);TextView quietHint=text("Уведомления будут отключены в выбранный период",11,MUTED,false);quietRange.addView(quietHint,lp(-1,-2,0,3,0,8));LinearLayout quietTimes=new LinearLayout(this);quietTimes.setOrientation(LinearLayout.HORIZONTAL);quietTimes.setGravity(Gravity.CENTER_VERTICAL);LinearLayout quietStartBox=new LinearLayout(this);quietStartBox.setOrientation(LinearLayout.VERTICAL);quietStartBox.setGravity(Gravity.CENTER);quietStartBox.setPadding(dp(8),dp(7),dp(8),dp(7));quietStartBox.setBackground(shape(BG,12,blendColors(PINK,BG,0.5f)));addText(quietStartBox,"НАЧАЛО",9,MUTED,true);TextView quietStartValue=text(prefs.getString("quiet_hours_start","22:00"),20,DARK,true);quietStartBox.addView(quietStartValue,lp(-1,30,0,2,0,0));LinearLayout quietMiddle=new LinearLayout(this);quietMiddle.setGravity(Gravity.CENTER);TextView quietArrow=text("→",20,PINK,true);quietMiddle.addView(quietArrow);quietTimes.addView(quietStartBox,new LinearLayout.LayoutParams(0,dp(62),1f));quietTimes.addView(quietMiddle,new LinearLayout.LayoutParams(dp(34),dp(62)));LinearLayout quietEndBox=new LinearLayout(this);quietEndBox.setOrientation(LinearLayout.VERTICAL);quietEndBox.setGravity(Gravity.CENTER);quietEndBox.setPadding(dp(8),dp(7),dp(8),dp(7));quietEndBox.setBackground(shape(BG,12,blendColors(PINK,BG,0.5f)));addText(quietEndBox,"КОНЕЦ",9,MUTED,true);TextView quietEndValue=text(prefs.getString("quiet_hours_end","08:00"),20,DARK,true);quietEndBox.addView(quietEndValue,lp(-1,30,0,2,0,0));quietTimes.addView(quietEndBox,new LinearLayout.LayoutParams(0,dp(62),1f));quietRange.addView(quietTimes,lp(-1,-2,0,0,0,0));quietStartBox.setOnClickListener(v->chooseQuietTime("quiet_hours_start"));quietEndBox.setOnClickListener(v->chooseQuietTime("quiet_hours_end"));quietStartBox.setContentDescription(translate("Начало"));quietEndBox.setContentDescription(translate("Конец"));reminders.addView(quietRange,lp(-1,-2,0,4,0,6));
         Button reminderSettings=button("Настроить дни и время",false);reminderSettings.setOnClickListener(v->showReminderSettings());reminders.addView(reminderSettings,lp(-1, 48,0,0,0,0));addSettingsToggle(reminders,"Недельный отчёт","weekly_report_enabled",true,()->WeeklyReportReceiver.schedule(this));int repeat=prefs.getInt("reminder_repeat_minutes",0);int[] repeats={0,5,10,15,30};String[] repeatNames={"Не повторять","5 минут","10 минут","15 минут","30 минут"};int ri=0;for(int k=0;k<repeats.length;k++)if(repeats[k]==repeat)ri=k;final int[] repeatIndex={ri};Button repeatButton=button("Повтор напоминания · "+repeatNames[ri],false);repeatButton.setOnClickListener(v->{repeatIndex[0]=(repeatIndex[0]+1)%repeats.length;prefs.edit().putInt("reminder_repeat_minutes",repeats[repeatIndex[0]]).apply();repeatButton.setText("Повтор напоминания · "+repeatNames[repeatIndex[0]]);});reminders.addView(repeatButton,lp(-1,42,0,3,0,3));String tone=prefs.getString("reminder_tone","soft");String[] tones={"soft","neutral","strict"},toneNames={"Мягкий","Нейтральный","Строгий"};int ti=0;for(int k=0;k<tones.length;k++)if(tones[k].equals(tone))ti=k;final int[] toneIndex={ti};Button toneButton=button("Тон напоминаний · "+toneNames[ti],false);toneButton.setOnClickListener(v->{toneIndex[0]=(toneIndex[0]+1)%tones.length;prefs.edit().putString("reminder_tone",tones[toneIndex[0]]).apply();toneButton.setText("Тон напоминаний · "+toneNames[toneIndex[0]]);});reminders.addView(toneButton,lp(-1,42,0,2,0,3));addSettingsToggle(reminders,"Напоминания о письмах себе","future_letters_enabled",true,()->rescheduleFutureLetterReminders(this));addSettingsToggle(reminders,"Вечернее напоминание об отдыхе","evening_rest_enabled",false,()->scheduleReminders(this));root.addView(reminders,lp(-1,-2,0,0,0,4));
 
         LinearLayout focus=settingsGroup("РЕЖИМ ФОКУСА");
@@ -1102,21 +1118,13 @@ public class MainActivity extends Activity {
         String installedVersion="—";
         try { installedVersion=getPackageManager().getPackageInfo(getPackageName(),0).versionName; } catch(Exception ignored) {}
 
-        LinearLayout updateStatus=new LinearLayout(this);
-        updateStatus.setOrientation(LinearLayout.VERTICAL);
-        updateStatus.setGravity(Gravity.CENTER);
-        updateStatus.setPadding(dp(14),dp(16),dp(14),dp(14));
-        updateStatus.setBackground(shape(PALE,18,blendColors(PINK,BG,isDarkAppearance()?0.48f:0.76f)));
-        TextView updateIcon=text("✓",24,0xFFFFFFFF,true);
-        updateIcon.setGravity(Gravity.CENTER);
-        GradientDrawable updateIconBg=new GradientDrawable();updateIconBg.setColor(PINK);updateIconBg.setShape(GradientDrawable.OVAL);updateIcon.setBackground(updateIconBg);
-        updateStatus.addView(updateIcon,lp(48,48,0,0,0,8));
-        TextView updateTitle=text("Обновлений пока нет",16,DARK,true);updateTitle.setGravity(Gravity.CENTER);
-        updateStatus.addView(updateTitle,lp(-1,-2,0,0,0,4));
-        TextView updateSubtitle=text("Установлена последняя версия",12,MUTED,false);updateSubtitle.setGravity(Gravity.CENTER);
-        updateStatus.addView(updateSubtitle,lp(-1,-2,0,0,0,8));
-        TextView versionLabel=text("Версия · "+installedVersion,11,MUTED,false);versionLabel.setGravity(Gravity.CENTER);
-        updateStatus.addView(versionLabel,lp(-1,-2,0,0,0,0));
+        LinearLayout updateStatus=new LinearLayout(this);updateStatus.setOrientation(LinearLayout.VERTICAL);updateStatus.setPadding(dp(14),dp(13),dp(14),dp(13));updateStatus.setBackground(shape(PALE,18,blendColors(PINK,BG,isDarkAppearance()?0.48f:0.76f)));
+        LinearLayout updateTop=new LinearLayout(this);updateTop.setGravity(Gravity.CENTER_VERTICAL);
+        TextView updateIcon=text("✓",22,0xFFFFFFFF,true);updateIcon.setGravity(Gravity.CENTER);GradientDrawable updateIconBg=new GradientDrawable();updateIconBg.setColor(PINK);updateIconBg.setShape(GradientDrawable.OVAL);updateIcon.setBackground(updateIconBg);updateTop.addView(updateIcon,lp(42,42,0,0,11,0));
+        LinearLayout updateWords=new LinearLayout(this);updateWords.setOrientation(LinearLayout.VERTICAL);TextView updateTitle=text(translate("Обновлений пока нет"),15,DARK,true);updateWords.addView(updateTitle,lp(-1,-2,0,0,0,3));TextView updateSubtitle=text(translate("Установлена последняя версия"),12,MUTED,false);updateWords.addView(updateSubtitle,lp(-1,-2,0,0,0,0));updateTop.addView(updateWords,new LinearLayout.LayoutParams(0,-2,1f));
+        TextView currentBadge=text(translate("АКТУАЛЬНО"),9,PINK,true);currentBadge.setGravity(Gravity.CENTER);currentBadge.setPadding(dp(8),dp(5),dp(8),dp(5));currentBadge.setBackground(shape(BG,10,0));updateTop.addView(currentBadge,lp(-2,-2,0,0,0,0));updateStatus.addView(updateTop,lp(-1,-2,0,0,0,9));
+        View updateDivider=new View(this);updateDivider.setBackgroundColor(blendColors(PINK,BG,isDarkAppearance()?0.38f:0.72f));updateStatus.addView(updateDivider,lp(-1,1,0,0,0,7));
+        TextView versionLabel=text(translate("Версия · ")+installedVersion,11,MUTED,false);updateStatus.addView(versionLabel,lp(-1,-2,0,0,0,0));
         updates.addView(updateStatus,lp(-1,-2,0,7,0,5));
 
         Button checkUpdates=button("Проверить обновления",false);
@@ -4950,6 +4958,21 @@ public class MainActivity extends Activity {
             {"📚  ТЕМЫ ДЛЯ ЭКЗАМЕНА","📚  EXAM TOPICS","📚  İMTAHAN MÖVZULARI"},
             {"Выбрать все","Select all","Hamısını seç"},
             {"Снять выбор","Clear selection","Seçimi ləğv et"},
+            {"Обновлений пока нет","No updates yet","Hələ yeniləmə yoxdur"},
+            {"Установлена последняя версия","You're on the latest version","Ən son versiya quraşdırılıb"},
+            {"АКТУАЛЬНО","UP TO DATE","GÜNCƏL"},
+            {"Версия · ","Version · ","Versiya · "},
+            {"Своя тема","Custom theme","Öz teman"},
+            {"Настрой цвета — результат сразу виден в превью выше","Adjust the colors — see the preview above update instantly","Rəngləri dəyiş — nəticəni yuxarıdakı önizləmədə dərhal gör"},
+            {"ЦВЕТ АКЦЕНТА","ACCENT COLOR","VURĞU RƏNGİ"},
+            {"ЦВЕТ ФОНА","BACKGROUND COLOR","FON RƏNGİ"},
+            {"Розовый","Pink","Çəhrayı"},{"Лавандовый","Lavender","Lavanda"},{"Мятный","Mint","Nanə"},{"Голубой","Blue","Mavi"},{"Персиковый","Peach","Şaftalı"},{"Красный","Red","Qırmızı"},{"Золотой","Gold","Qızılı"},{"Графитовый","Graphite","Qrafit"},
+            {"Светлый","Light","Açıq"},{"Тёмно-серый","Dark gray","Tünd boz"},{"Чёрный","Black","Qara"},
+            {"ТИХИЕ ЧАСЫ","QUIET HOURS","SƏSSİZ SAATLAR"},
+            {"Уведомления будут отключены в выбранный период","Notifications will be muted during this period","Bildirişlər seçilmiş müddətdə susdurulacaq"},
+            {"НАЧАЛО","START","BAŞLANĞIC"},{"КОНЕЦ","END","SON"},
+            {"Современный","Modern","Müasir"},{"Округлый","Rounded","Dairəvi"},{"С засечками","Serif","Serif"},{"Моноширинный","Monospace","Monospace"},{"Узкий","Condensed","Dar"},{"Средний","Medium","Orta"},
+            {"Твой прогресс","Your progress","Sənin irəliləyişin"},{"Каждый шаг приближает к цели","Every step brings you closer to your goal","Hər addım səni məqsədinə yaxınlaşdırır"},
             {"Своя тема","Custom theme","Öz teman"},
             {"Выбери акцент и цвет фона","Choose an accent and background","Vurğu və fon rəngini seç"},
             {"Цвет акцента","Accent color","Vurğu rəngi"},
