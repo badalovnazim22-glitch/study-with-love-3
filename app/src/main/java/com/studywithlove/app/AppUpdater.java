@@ -36,6 +36,63 @@ public final class AppUpdater {
     private static final int MAX_APK_BYTES = 100 * 1024 * 1024;
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
 
+    private static final String UPDATE_CHANNEL = "app_updates";
+    private static final String UPDATE_ACTION = "com.studywithlove.app.CHECK_UPDATES";
+    private static final String LAST_NOTIFIED_VERSION = "last_notified_version";
+
+    public static void scheduleAutomaticChecks(android.content.Context context) {
+        try {
+            android.app.AlarmManager alarm=(android.app.AlarmManager)context.getSystemService(android.content.Context.ALARM_SERVICE);
+            if(alarm==null)return;
+            Intent intent=new Intent(context,UpdateCheckReceiver.class).setAction(UPDATE_ACTION);
+            int flags=PendingIntent.FLAG_UPDATE_CURRENT;
+            if(Build.VERSION.SDK_INT>=23)flags|=PendingIntent.FLAG_IMMUTABLE;
+            PendingIntent pending=PendingIntent.getBroadcast(context,7732,intent,flags);
+            alarm.setInexactRepeating(android.app.AlarmManager.RTC_WAKEUP,System.currentTimeMillis()+android.app.AlarmManager.INTERVAL_HALF_DAY,android.app.AlarmManager.INTERVAL_HALF_DAY,pending);
+        } catch(Exception ignored) {}
+    }
+
+    public static void checkAndNotify(android.content.Context context) {
+        if(context==null)return;
+        new Thread(()->{
+            try {
+                String latest=fetchLatestVersion();
+                android.content.pm.PackageInfo info=context.getPackageManager().getPackageInfo(context.getPackageName(),0);
+                String current=info.versionName==null?"0":info.versionName;
+                if(compareVersions(latest,current)<=0)return;
+                android.content.SharedPreferences p=context.getSharedPreferences(PREFS,android.content.Context.MODE_PRIVATE);
+                if(latest.equals(p.getString(LAST_NOTIFIED_VERSION,"")))return;
+                if(Build.VERSION.SDK_INT>=33 && context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)!=android.content.pm.PackageManager.PERMISSION_GRANTED)return;
+                android.app.NotificationManager manager=(android.app.NotificationManager)context.getSystemService(android.content.Context.NOTIFICATION_SERVICE);
+                if(manager==null)return;
+                if(Build.VERSION.SDK_INT>=26){
+                    android.app.NotificationChannel channel=new android.app.NotificationChannel(UPDATE_CHANNEL,"Обновления приложения",android.app.NotificationManager.IMPORTANCE_DEFAULT);
+                    channel.setDescription("Сообщения о новых версиях Study with Love");
+                    manager.createNotificationChannel(channel);
+                }
+                Intent open=new Intent(context,MainActivity.class);
+                open.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_NEW_TASK);
+                open.putExtra("show_update_prompt",true);
+                int piFlags=PendingIntent.FLAG_UPDATE_CURRENT;
+                if(Build.VERSION.SDK_INT>=23)piFlags|=PendingIntent.FLAG_IMMUTABLE;
+                PendingIntent tap=PendingIntent.getActivity(context,7733,open,piFlags);
+                String note=latestReleaseNotes==null?"":latestReleaseNotes.trim();
+                if(note.length()>120)note=note.substring(0,117)+"…";
+                if(note.isEmpty())note="Установи последнюю версию с новыми улучшениями.";
+                androidx.core.app.NotificationCompat.Builder builder=new androidx.core.app.NotificationCompat.Builder(context,UPDATE_CHANNEL)
+                    .setSmallIcon(R.drawable.ic_notification)
+                    .setContentTitle("Доступна новая версия Study with Love")
+                    .setContentText("Версия "+latest+" · "+note)
+                    .setStyle(new androidx.core.app.NotificationCompat.BigTextStyle().bigText("Версия "+latest+". "+note))
+                    .setPriority(androidx.core.app.NotificationCompat.PRIORITY_DEFAULT)
+                    .setAutoCancel(true)
+                    .setContentIntent(tap);
+                manager.notify(7732,builder.build());
+                p.edit().putString(LAST_NOTIFIED_VERSION,latest).apply();
+            } catch(Exception ignored) {}
+        },"app-update-notification-check").start();
+    }
+
     private AppUpdater() {}
 
     public static void checkAndOffer(Activity activity) { check(activity, true); }
