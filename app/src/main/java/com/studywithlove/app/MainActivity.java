@@ -3364,8 +3364,8 @@ public class MainActivity extends Activity {
             LinearLayout row=card();
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
-            row.setPadding(dp(18),dp(18),dp(17),dp(18));
-            row.setMinimumHeight(dp(112));
+            row.setPadding(dp(15),dp(12),dp(14),dp(12));
+            row.setMinimumHeight(dp(88));
             int themeAccent=PINK;
             int selectedSurface=isDarkAppearance()?blendColors(PALE,BG,0.12f):blendColors(PALE,BG,0.08f);
             int controlSurface=isDarkAppearance()?blendColors(PALE,BG,0.18f):blendColors(PALE,BG,0.12f);
@@ -3375,14 +3375,14 @@ public class MainActivity extends Activity {
             if(Build.VERSION.SDK_INT>=21){row.setElevation(0f);row.setTranslationZ(0f);}
             LinearLayout words=new LinearLayout(this);
             words.setOrientation(LinearLayout.VERTICAL);
-            TextView title=text(n,18,selected?PINK:DARK,selected);
+            TextView title=text(n,16,selected?PINK:DARK,selected);
             title.setMaxLines(1);
-            words.addView(title,lp(-1,-2,0,0,0,4));
-            words.addView(text(descriptions[i],12,MUTED,false),lp(-1,-2,0,0,0,0));
+            words.addView(title,lp(-1,-2,0,0,0,2));
+            words.addView(text(descriptions[i],11,MUTED,false),lp(-1,-2,0,0,0,0));
             if(active){
                 TextView playing=text(ambienceLoading?"ЗАГРУЗКА…":"ИГРАЕТ СЕЙЧАС  •  ✓",10,PINK,true);
                 playing.setLetterSpacing(0.06f);
-                words.addView(playing,lp(-1,-2,0,5,0,0));
+                words.addView(playing,lp(-1,-2,0,3,0,0));
             }
             row.addView(words,new LinearLayout.LayoutParams(0,-2,1f));
             TextView control=text(active?"Ⅱ":"▶",active?18:17,selected?0xFFFFFFFF:themeAccent,true);
@@ -3390,7 +3390,7 @@ public class MainActivity extends Activity {
             control.setIncludeFontPadding(false);
             control.setBackground(shape(selected?themeAccent:controlSurface,30,selected?themeAccent:themeOutline));
             control.setContentDescription(active?"Пауза":"Воспроизвести");
-            row.addView(control,lp(44,44,dp(10),0,0,0));
+            row.addView(control,lp(40,40,dp(8),0,0,0));
             row.setContentDescription(n+". "+descriptions[i]+(active?", играет сейчас":", нажми для воспроизведения"));
             row.setOnClickListener(v->{
                 boolean same=prefs.getString("study_atmosphere",names[0]).equals(n);
@@ -3402,7 +3402,7 @@ public class MainActivity extends Activity {
                 }
                 showAtmosphere();
             });
-            root.addView(row,lp(-1,112,0,0,0,6));
+            root.addView(row,lp(-1,88,0,0,0,4));
         }
         android.widget.SeekBar volume=new android.widget.SeekBar(this);
         volume.setMax(100);
