@@ -104,7 +104,6 @@ public final class AppUpdater {
         android.content.SharedPreferences p=activity.getSharedPreferences(PREFS,Activity.MODE_PRIVATE);
         long last=p.getLong(LAST_AUTO_CHECK,0L);
         if(System.currentTimeMillis()-last<12L*60L*60L*1000L)return;
-        p.edit().putLong(LAST_AUTO_CHECK,System.currentTimeMillis()).apply();
         check(activity,false);
     }
 
@@ -120,6 +119,7 @@ public final class AppUpdater {
                 if(latestVersion==null || latestVersion.trim().isEmpty())throw new Exception("Latest release version is empty");
             } catch(Exception e){error="Не удалось проверить обновления. Проверь подключение к интернету и попробуй ещё раз.";}
             final String foundVersion=latestVersion;final String failure=error;
+            if(failure==null && !manual) activity.getSharedPreferences(PREFS,Activity.MODE_PRIVATE).edit().putLong(LAST_AUTO_CHECK,System.currentTimeMillis()).apply();
             MAIN.post(()->{
                 if(activity.isFinishing() || (Build.VERSION.SDK_INT>=17 && activity.isDestroyed()))return;
                 if(shownProgress!=null)shownProgress.dismiss();
