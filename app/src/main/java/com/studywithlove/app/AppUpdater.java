@@ -71,7 +71,7 @@ public final class AppUpdater {
                     manager.createNotificationChannel(channel);
                 }
                 Intent open=new Intent(context,MainActivity.class);
-                open.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_NEW_TASK);
+                open.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NEW_TASK);
                 open.putExtra("show_update_prompt",true);
                 int piFlags=PendingIntent.FLAG_UPDATE_CURRENT;
                 if(Build.VERSION.SDK_INT>=23)piFlags|=PendingIntent.FLAG_IMMUTABLE;
