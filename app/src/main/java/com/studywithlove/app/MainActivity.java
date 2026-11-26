@@ -2411,7 +2411,7 @@ public class MainActivity extends Activity {
                 }).show();
         });
         HorizontalScrollView tagScroll=new HorizontalScrollView(this);tagScroll.setHorizontalScrollBarEnabled(false);tagScroll.addView(tags);
-        screen.addView(tagScroll,lp(-1,dp(46)));
+        screen.addView(tagScroll,lp(-1,dp(46),0,0,0,0));
 
         // Main circular timer
         int diameter=Math.min(dp(318),Math.max(dp(260),getResources().getDisplayMetrics().widthPixels-dp(64)));
@@ -2467,7 +2467,7 @@ public class MainActivity extends Activity {
         center.addView(timerDisplay,lp(-1,-2,0,0,0,dp(2)));
         TextView focusLabel=text("Ф О К У С   З А   С Е Г О Д Н Я",9,grey,true);
         focusLabel.setGravity(Gravity.CENTER);
-        center.addView(focusLabel,lp(-1,dp(20)));
+        center.addView(focusLabel,lp(-1,dp(20),0,0,0,0));
         dial.addView(center,new FrameLayout.LayoutParams(-1,-1));
         screen.addView(dial,new LinearLayout.LayoutParams(diameter,diameter));
 
@@ -2504,7 +2504,7 @@ public class MainActivity extends Activity {
         TextView breakChip=text("Перерыв: "+selectedBreakMinutes+" мин",11,grey,true);breakChip.setGravity(Gravity.CENTER);breakChip.setPadding(dp(10),dp(7),dp(10),dp(7));breakChip.setBackground(shape(white,16,0xFFE7EAF0));
         extra.addView(breakChip,lp(-2,dp(32),0,0,dp(6),0));
         breakChip.setOnClickListener(v->{String[] choices={"3 минуты","5 минут","10 минут"};new AlertDialog.Builder(this).setTitle("Длительность перерыва").setItems(choices,(d,w)->{selectedBreakMinutes=new int[]{3,5,10}[w];prefs.edit().putInt("selected_break_minutes",selectedBreakMinutes).apply();if(timerIsBreak)timerRemainingMs=selectedBreakMinutes*60000L;showPomodoro();}).show();});
-        TextView reset=text("Сбросить",11,grey,true);reset.setGravity(Gravity.CENTER);reset.setPadding(dp(12),dp(7),dp(12),dp(7));reset.setBackground(shape(white,16,0xFFE7EAF0));extra.addView(reset,lp(-2,dp(32)));
+        TextView reset=text("Сбросить",11,grey,true);reset.setGravity(Gravity.CENTER);reset.setPadding(dp(12),dp(7),dp(12),dp(7));reset.setBackground(shape(white,16,0xFFE7EAF0));extra.addView(reset,lp(-2,dp(32),0,0,0,0));
         reset.setOnClickListener(v->{
             long elapsed=timerRunning&&!timerIsBreak?Math.max(0,System.currentTimeMillis()-timerSessionStarted):0;
             FocusTimerController.clearIfMatches(this,timerEndElapsed);
