@@ -4093,6 +4093,7 @@ public class MainActivity extends Activity {
         boolean night=isDarkAppearance();
         int surface,border;
         switch(theme){
+            case "system": surface=isDarkAppearance()?blendColors(PALE,BG,0.28f):0xFFFFFFFF;border=blendColors(PINK,BG,isDarkAppearance()?0.55f:0.82f);break;
             case "night": surface=0xFF25212B;border=0xFF403541;break;
             case "luxury": surface=0xFF30251F;border=0xFF78613D;break;
             case "lavender": surface=night?0xFF25212B:0xFFFFFFFF;border=night?0xFF403541:0xFFE5E1EF;break;
