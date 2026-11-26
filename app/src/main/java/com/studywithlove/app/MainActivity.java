@@ -624,7 +624,7 @@ public class MainActivity extends Activity {
         activeScrollView = scroll;
         scroll.setFillViewport(true); scroll.setClipToPadding(false);
         root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(15), dp(12), dp(15), dp(28)); root.setBackgroundColor(BG);
+        root.setPadding(dp(15), dp(12), dp(15), dp(104)); root.setBackgroundColor(BG); // Keep the final home cards clear of the floating navigation.
         installThemeFontListener(root);
         String customBg=prefs.getString("custom_background_uri","");
         if(!customBg.isEmpty()){try{if(!customBg.equals(cachedBackgroundUri)||cachedBackgroundBitmap==null){java.io.InputStream in=getContentResolver().openInputStream(android.net.Uri.parse(customBg));if(in!=null){android.graphics.Bitmap decoded=android.graphics.BitmapFactory.decodeStream(in);in.close();cachedBackgroundBitmap=decoded;cachedBackgroundUri=customBg;}}if(cachedBackgroundBitmap!=null){Drawable photo=new android.graphics.drawable.BitmapDrawable(getResources(),cachedBackgroundBitmap);photo.setAlpha(42);root.setBackground(photo);}}catch(Exception ignored){}}
@@ -782,7 +782,7 @@ public class MainActivity extends Activity {
             // Иконка и подпись собраны в одну высокую мягкую капсулу активной вкладки.
             android.widget.FrameLayout iconSlot=new android.widget.FrameLayout(this);
             iconSlot.setBackgroundColor(android.graphics.Color.TRANSPARENT);
-            NavigationIconView icon=new NavigationIconView(this,i,selected?0xFFFFFFFF:MUTED);
+            NavigationIconView icon=new NavigationIconView(this,i,selected?0xFFFFFFFF:MUTED);icon.setContentDescription(translate(labels[i]));
             android.widget.FrameLayout.LayoutParams iconParams=
                 new android.widget.FrameLayout.LayoutParams(dp(22),dp(22),Gravity.CENTER);
             iconSlot.addView(icon,iconParams);
@@ -3707,8 +3707,8 @@ public class MainActivity extends Activity {
         List<String> times = getSavedTimes();
         if (times.isEmpty() || days.isEmpty()) return "Напоминания выключены. Открой настройки, чтобы включить.";
         List<String> labels = new ArrayList<>();
-        for (String day : days) { int index = Integer.parseInt(day) - 1; labels.add(new String[]{"Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"}[index]); }
-        return android.text.TextUtils.join(", ", labels) + "  ·  " + android.text.TextUtils.join(", ", times) + " (местное время)";
+        for (String day : days) { int index = Integer.parseInt(day) - 1; labels.add(translate(new String[]{"Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"}[index])); }
+        return android.text.TextUtils.join(", ", labels) + "  ·  " + android.text.TextUtils.join(", ", times) + " (" + translate("местное время") + ")";
     }
 
     private void showReminderSettings() {
@@ -4917,7 +4917,21 @@ public class MainActivity extends Activity {
             {"←  Назад к экзамену","←  Back to exam","←  İmtahana qayıt"},
             {"📚  ТЕМЫ ДЛЯ ЭКЗАМЕНА","📚  EXAM TOPICS","📚  İMTAHAN MÖVZULARI"},
             {"Выбрать все","Select all","Hamısını seç"},
-            {"Снять выбор","Clear selection","Seçimi ləğv et"}
+            {"Снять выбор","Clear selection","Seçimi ləğv et"},
+            {"Сделано с любовью ♡","Made with love ♡","Sevgi ilə hazırlanıb ♡"},
+            {"местное время","local time","yerli vaxt"},
+            {"Вс","Sun","Baz"}, {"Пн","Mon","B.e."}, {"Вт","Tue","Ç.a."}, {"Ср","Wed","Ç."}, {"Чт","Thu","C.a."}, {"Пт","Fri","C."}, {"Сб","Sat","Ş."},
+            {"ЦЕЛЬ НЕДЕЛИ","WEEKLY GOAL","HƏFTƏLİK HƏDƏF"},
+            {"Твой недельный результат","Your weekly result","Həftəlik nəticən"},
+            {"Есть вопросы по теме?","Questions about a topic?","Mövzu ilə bağlı sualın var?"},
+            {"Спроси ИИ-помощника","Ask the AI assistant","Süni intellekt köməkçisinə soruş"},
+            {"ЭМОЦИИ И МОТИВАЦИЯ","MOOD & MOTIVATION","ƏHVAL VƏ MOTİVASİYA"},
+            {"Цветочек","Little flower","Balaca çiçək"}, {"Растёт с тобой","Growing with you","Səninlə böyüyür"},
+            {"Атмосфера","Study atmosphere","Dərs atmosferi"}, {"Звуки для учёбы","Study sounds","Dərs səsləri"},
+            {"Планировщик","Planner","Planlayıcı"}, {"План на день","Daily plan","Günlük plan"},
+            {"Достижения","Achievements","Nailiyyətlər"}, {"Твои награды","Your rewards","Mükafatların"},
+            {"Напарник","Study buddy","Təhsil yoldaşı"}, {"Общая цель","Shared goal","Ortaq məqsəd"},
+            {"Напоминания выключены. Открой настройки, чтобы включить.","Reminders are off. Open settings to turn them on.","Xatırlatmalar sönülüdür. Aktivləşdirmək üçün parametrləri aç."}
         };
         for(String[] p:pairs){String from=p[0],to="en".equals(lang)?p[1]:p[2];if(value.equals(from))return to;if(value.startsWith(from+" "))return to+value.substring(from.length());}
         return value;
