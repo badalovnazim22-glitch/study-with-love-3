@@ -248,6 +248,11 @@ public class MainActivity extends Activity {
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 20);
         if (!prefs.getBoolean("welcome_done", false)) showWelcome(); else { showHome(); handleQuickAction(getIntent()); }
         if(!prefs.getString("app_pin_hash","").isEmpty())showPinLockDialog();
+        if(prefs.getBoolean("welcome_done",false) && prefs.getString("app_pin_hash","").isEmpty()){
+            new Handler(Looper.getMainLooper()).postDelayed(()->{
+                if(!isFinishing() && !isDestroyed()) AppUpdater.checkAutomatically(this);
+            },2800);
+        }
     }
 
     private void setupDynamicShortcuts(){
@@ -3507,14 +3512,20 @@ public class MainActivity extends Activity {
             timeList.removeAllViews();
             if (reminderTimes.isEmpty()) addText(timeList, "Время не выбрано — напоминания выключены", 14, MUTED, false);
             for (String time : new ArrayList<>(reminderTimes)) {
-                LinearLayout row = new LinearLayout(this); row.setGravity(Gravity.CENTER_VERTICAL); row.setBackground(shape(PALE, 16, 0)); row.setPadding(dp(12),0,dp(6),0);
+                LinearLayout row = new LinearLayout(this); row.setGravity(Gravity.CENTER_VERTICAL);
+                row.setBackground(shape(0xFFFFFFFF, 18, 0xFFEEDDE4)); row.setPadding(dp(12),dp(5),dp(7),dp(5));
+                LinearLayout clockBadge=new LinearLayout(this);clockBadge.setGravity(Gravity.CENTER);
+                clockBadge.setBackground(shape(0xFFFFF0F4,15,0));TextView clock=text("◷",21,PINK,true);
+                clockBadge.addView(clock,lp(42,42,0,0,0,0));row.addView(clockBadge,lp(46,46,0,0,10,0));
                 LinearLayout timeInfo=new LinearLayout(this);timeInfo.setOrientation(LinearLayout.VERTICAL);timeInfo.setGravity(Gravity.CENTER_VERTICAL);
-                TextView label = text("◷  " + time, 16, DARK, true);timeInfo.addView(label,lp(-1,24,0,0,0,0)); label.setOnClickListener(v->editReminderTime(time,renderTimes[0]));
-                String slot=time.startsWith("10:")?"Утро":time.startsWith("15:")?"День":time.startsWith("19:")?"Вечер":time.startsWith("21:")?"Перед сном":"Напоминание";
-                TextView sub=text(slot,10,MUTED,false);timeInfo.addView(sub,lp(-1,16,0,0,0,0));row.addView(timeInfo,new LinearLayout.LayoutParams(0,dp(46),1));
-                Button edit = button("✎", false); edit.setContentDescription(translate("Изменить время напоминания")); edit.setTextSize(14); edit.setMinWidth(dp(48)); edit.setPadding(0,0,0,0); edit.setOnClickListener(v -> editReminderTime(time,renderTimes[0]));
-                Button remove = button("×", false); remove.setContentDescription(translate("Удалить время напоминания")); remove.setTextSize(16); remove.setMinWidth(dp(48)); remove.setPadding(0,0,0,0); remove.setOnClickListener(v -> { reminderTimes.remove(time); renderTimes[0].run(); });
-                row.addView(edit,lp(48,48,2,0,2,0)); row.addView(remove,lp(48,48,2,0,0,0)); timeList.addView(row, lp(-1, 56, 0, 3, 0, 3));
+                TextView label = text(time, 22, DARK, true);timeInfo.addView(label,lp(-1,29,0,0,0,0)); label.setOnClickListener(v->editReminderTime(time,renderTimes[0]));
+                int hour=0;try{hour=Integer.parseInt(time.substring(0,2));}catch(Exception ignored){}
+                String slot=hour<12?"Утреннее напоминание":hour<17?"Дневное напоминание":hour<21?"Вечернее напоминание":"Напоминание перед сном";
+                TextView sub=text(slot,11,MUTED,false);timeInfo.addView(sub,lp(-1,19,0,0,0,0));row.addView(timeInfo,new LinearLayout.LayoutParams(0,dp(50),1));
+                TextView edit=text("Изменить",11,PINK,true);edit.setGravity(Gravity.CENTER);edit.setContentDescription(translate("Изменить время напоминания"));edit.setOnClickListener(v->editReminderTime(time,renderTimes[0]));
+                TextView remove=text("×",22,MUTED,false);remove.setGravity(Gravity.CENTER);remove.setContentDescription(translate("Удалить время напоминания"));remove.setOnClickListener(v->{reminderTimes.remove(time);renderTimes[0].run();});
+                row.addView(edit,lp(62,48,2,0,2,0));row.addView(remove,lp(34,48,0,0,0,0));
+                timeList.addView(row,lp(-1,66,0,4,0,4));
             }
         };
         renderTimes[0].run();
