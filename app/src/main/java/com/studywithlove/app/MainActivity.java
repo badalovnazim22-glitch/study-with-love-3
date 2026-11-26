@@ -3333,7 +3333,7 @@ public class MainActivity extends Activity {
         LinearLayout overview=card();overview.setBackground(shape(0xFFFFF7FA,20,0xFFF0DCE4));overview.setElevation(dp(2));overview.setPadding(dp(16),dp(14),dp(16),dp(14));
         addText(overview,"ТВОЙ ПЛАН НА ДЕНЬ",10,PINK,true);
         TextView overviewDate=text("Сегодня",18,DARK,true);overview.addView(overviewDate,lp(-1,28,0,3,0,2));
-        TextView overviewStats=text("0 выполнено · 0 осталось",12,MUTED,false);overview.addView(overviewStats,lp(-1,22));
+        TextView overviewStats=text("0 выполнено · 0 осталось",12,MUTED,false);overview.addView(overviewStats,lp(-1,22,0,0,0,0));
         android.widget.ProgressBar dayProgress=new android.widget.ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);dayProgress.setMax(100);dayProgress.setProgress(0);dayProgress.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));dayProgress.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFEEDFE5));dayProgress.setIndeterminate(false);overview.addView(dayProgress,lp(-1,7,0,8,0,0));
         root.addView(overview,lp(-1,-2,0,0,0,12));
         addSpacedRepetitionSection();
