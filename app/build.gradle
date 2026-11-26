@@ -21,7 +21,7 @@ android {
         applicationId 'com.studywithlove.app'
         minSdk 23
         targetSdk 35
-        versionCode 147
+        versionCode 148
         versionName '5.38'
         // UI refresh: compact home, square time picker and refined updater
         // Compile fix: updater progress label
