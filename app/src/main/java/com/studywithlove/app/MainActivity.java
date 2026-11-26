@@ -1357,8 +1357,7 @@ public class MainActivity extends Activity {
 
         // Compact motivational progress card: consistent small vertical rhythm.
         LinearLayout continueCard = card();
-        continueCard.setPadding(dp(19), dp(18), dp(19), dp(18));
-        continueCard.setBackground(shape(0xFFF8E8EE, 24, 0));
+        continueCard.setPadding(dp(20), dp(19), dp(20), dp(19));
         TextView progressCaption=text("ТВОЙ ПРОГРЕСС",13,PINK,true);
         continueCard.addView(progressCaption,lp(-1,-2,0,0,0,2));
         TextView encouragement=text("Ты справляешься.\nПродолжай в своём темпе.",23,DARK,true);
@@ -1377,7 +1376,7 @@ public class MainActivity extends Activity {
         overallBar.setProgress(overall);
         if (Build.VERSION.SDK_INT >= 21) {
             overallBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
-            overallBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFDCE6));
+            overallBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(blendColors(PALE, BG, 0.28f)));
         }
         continueCard.addView(overallBar, lp(-1, 6, 0, 0, 0, 5));
         TextView completedLabel=text(completedTopics + " из " + totalTopics + " тем завершено",13,MUTED,false);
