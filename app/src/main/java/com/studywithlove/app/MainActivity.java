@@ -171,9 +171,36 @@ public class MainActivity extends Activity {
         private float progress=0f,pulse=1f;
         private android.animation.ValueAnimator progressAnimator,pulseAnimator;
         TimerRingView(Context c,int fill,int track,int accent){super(c);fillColor=fill;trackColor=track;progressColor=accent;setLayerType(View.LAYER_TYPE_SOFTWARE,null);}
-        void setProgress(float value){float target=Math.max(0f,Math.min(1f,value));if(progressAnimator!=null)progressAnimator.cancel();progressAnimator=android.animation.ValueAnimator.ofFloat(progress,target);progressAnimator.setDuration(280);progressAnimator.setInterpolator(new android.view.animation.DecelerateInterpolator());progressAnimator.addUpdateListener(a->{progress=(float)a.getAnimatedValue();invalidate();});progressAnimator.start();}
-        void setRunning(boolean running){if(pulseAnimator!=null){pulseAnimator.cancel();pulseAnimator=null;}if(!running){pulse=1f;invalidate();return;}pulseAnimator=android.animation.ValueAnimator.ofFloat(1f,1.018f);pulseAnimator.setDuration(1350);pulseAnimator.setRepeatMode(android.animation.ValueAnimator.REVERSE);pulseAnimator.setRepeatCount(android.animation.ValueAnimator.INFINITE);pulseAnimator.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());pulseAnimator.addUpdateListener(a->{pulse=(float)a.getAnimatedValue();invalidate();});pulseAnimator.start();}
-        @Override protected void onDraw(android.graphics.Canvas c){super.onDraw(c);float cx=getWidth()/2f,cy=getHeight()/2f,d=getResources().getDisplayMetrics().density,stroke=13f*d,r=Math.min(cx,cy)-stroke*1.25f;if(r<=0)return;c.save();c.scale(pulse,pulse,cx,cy);paint.setStyle(android.graphics.Paint.Style.FILL);paint.setColor(fillColor);paint.clearShadowLayer();c.drawCircle(cx,cy,r-stroke*.55f,paint);arc.set(cx-r,cy-r,cx+r,cy+r);paint.setStyle(android.graphics.Paint.Style.STROKE);paint.setStrokeWidth(stroke);paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);paint.setColor(trackColor);c.drawArc(arc,0,360,false,paint);if(progress>.0005f){paint.setColor(progressColor);paint.setShadowLayer(16f*d,0,0,progressColor);c.drawArc(arc,-90,Math.min(359.8f,360f*progress),false,paint);paint.clearShadowLayer();float angle=(float)Math.toRadians(-90+360f*progress),x=cx+(float)Math.cos(angle)*r,y=cy+(float)Math.sin(angle)*r;paint.setStyle(android.graphics.Paint.Style.FILL);paint.setColor(0xFFFFFFFF);c.drawCircle(x,y,stroke*.34f,paint);paint.setColor(progressColor);c.drawCircle(x,y,stroke*.22f,paint);}c.restore();paint.setStyle(android.graphics.Paint.Style.FILL);}
+        void setProgress(float value){float target=Math.max(0f,Math.min(1f,value));if(progressAnimator!=null)progressAnimator.cancel();progressAnimator=android.animation.ValueAnimator.ofFloat(progress,target);progressAnimator.setDuration(420);progressAnimator.setInterpolator(new android.view.animation.DecelerateInterpolator());progressAnimator.addUpdateListener(a->{progress=(float)a.getAnimatedValue();invalidate();});progressAnimator.start();}
+        void setRunning(boolean running){if(pulseAnimator!=null){pulseAnimator.cancel();pulseAnimator=null;}if(!running){pulse=1f;invalidate();return;}pulseAnimator=android.animation.ValueAnimator.ofFloat(1f,1.012f);pulseAnimator.setDuration(1800);pulseAnimator.setRepeatMode(android.animation.ValueAnimator.REVERSE);pulseAnimator.setRepeatCount(android.animation.ValueAnimator.INFINITE);pulseAnimator.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());pulseAnimator.addUpdateListener(a->{pulse=(float)a.getAnimatedValue();invalidate();});pulseAnimator.start();}
+        @Override protected void onDraw(android.graphics.Canvas c){
+            super.onDraw(c);
+            float cx=getWidth()/2f,cy=getHeight()/2f,d=getResources().getDisplayMetrics().density;
+            float stroke=12f*d,r=Math.min(cx,cy)-stroke*2.25f;
+            if(r<=0)return;
+            c.save();c.scale(pulse,pulse,cx,cy);
+            paint.clearShadowLayer();paint.setShader(null);paint.setStyle(android.graphics.Paint.Style.FILL);
+            paint.setColor(fillColor);c.drawCircle(cx,cy,r-stroke*.45f,paint);
+            paint.setStyle(android.graphics.Paint.Style.STROKE);paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);
+            paint.setStrokeWidth(2f*d);paint.setColor(trackColor);c.drawCircle(cx,cy,r+stroke*.72f,paint);
+            arc.set(cx-r,cy-r,cx+r,cy+r);
+            paint.setStrokeWidth(stroke);paint.setColor(trackColor);c.drawArc(arc,0,360,false,paint);
+            paint.setStrokeWidth(1.5f*d);paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);
+            for(int i=0;i<60;i++){
+                double a=Math.toRadians(i*6-90);float inner=r+stroke*1.12f,outer=inner+(i%5==0?5f:2.5f)*d;
+                paint.setColor(i%5==0?progressColor:trackColor);
+                c.drawLine(cx+(float)Math.cos(a)*inner,cy+(float)Math.sin(a)*inner,cx+(float)Math.cos(a)*outer,cy+(float)Math.sin(a)*outer,paint);
+            }
+            if(progress>.0005f){
+                paint.setStyle(android.graphics.Paint.Style.STROKE);paint.setStrokeWidth(stroke);paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);
+                paint.setColor(progressColor);paint.setShadowLayer(13f*d,0,0,progressColor);
+                c.drawArc(arc,-90,Math.min(359.8f,360f*progress),false,paint);paint.clearShadowLayer();
+                float angle=(float)Math.toRadians(-90+360f*progress),x=cx+(float)Math.cos(angle)*r,y=cy+(float)Math.sin(angle)*r;
+                paint.setStyle(android.graphics.Paint.Style.FILL);paint.setColor(0xFFFFFFFF);c.drawCircle(x,y,stroke*.48f,paint);
+                paint.setColor(progressColor);c.drawCircle(x,y,stroke*.31f,paint);
+            }
+            paint.setShader(null);paint.setStyle(android.graphics.Paint.Style.FILL);c.restore();
+        }
         @Override protected void onDetachedFromWindow(){if(progressAnimator!=null)progressAnimator.cancel();if(pulseAnimator!=null)pulseAnimator.cancel();super.onDetachedFromWindow();}
     }
     private static class MiniQuestion { String prompt,explanation,type,answer,topic; String[] options; int correct; MiniQuestion(String p,String[] o,int c,String e){this(p,o,c,e,"choice",o!=null&&c>=0&&c<o.length?o[c]:"");} MiniQuestion(String p,String[] o,int c,String e,String t,String a){prompt=p;options=o;correct=c;explanation=e;type=t;answer=a;topic="";} }
@@ -498,24 +525,7 @@ public class MainActivity extends Activity {
 
     private static int reminderRequestCode(int day, int hour, int minute) { return 5000 + day * 10000 + hour * 100 + minute; }
 
-    private void showSquareTimePicker(int hour,int minute,TimePickerDialog.OnTimeSetListener listener){
-        android.view.ContextThemeWrapper themed=new android.view.ContextThemeWrapper(this,android.R.style.Theme_Material_Light_Dialog_Alert);
-        LinearLayout panel=new LinearLayout(themed);panel.setOrientation(LinearLayout.VERTICAL);
-        int pad=dp(16);panel.setPadding(pad,pad,pad,pad);panel.setBackground(shape(PALE,24,0x33C97891));
-        TextView heading=text("ВЫБЕРИ ВРЕМЯ",11,PINK,true);heading.setGravity(Gravity.CENTER);heading.setLetterSpacing(0.12f);
-        panel.addView(heading,lp(-1,28,0,0,0,8));
-        FrameLayout clockFrame=new FrameLayout(themed);clockFrame.setBackground(shape(0xFFFFF9F7,22,0x33C97891));
-        TimePicker picker=new TimePicker(themed);picker.setIs24HourView(true);
-        if(Build.VERSION.SDK_INT>=23){picker.setHour(Math.max(0,Math.min(23,hour)));picker.setMinute(Math.max(0,Math.min(59,minute)));}
-        else {picker.setCurrentHour(Math.max(0,Math.min(23,hour)));picker.setCurrentMinute(Math.max(0,Math.min(59,minute)));}
-        clockFrame.addView(picker,new FrameLayout.LayoutParams(-1,-1,Gravity.CENTER));
-        panel.addView(clockFrame,lp(-1,300,0,0,0,0));
-        AlertDialog dialog=new AlertDialog.Builder(this).setView(panel).setNegativeButton("Отмена",null).setPositiveButton("Готово",null).create();
-        dialog.setOnShowListener(v->{dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(PINK);dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(MUTED);dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(b->{if(listener!=null)listener.onTimeSet(picker,picker.getCurrentHour(),picker.getCurrentMinute());dialog.dismiss();});});
-        dialog.show();
-    }
-
-    private void chooseQuietTime(String key){String value=prefs.getString(key,key.endsWith("start")?"22:00":"08:00");String[] p=value.split(":");int h=22,m=0;try{h=Integer.parseInt(p[0]);m=Integer.parseInt(p[1]);}catch(Exception ignored){}showSquareTimePicker(h,m,(view,hour,minute)->{String time=String.format(Locale.US,"%02d:%02d",hour,minute);prefs.edit().putString(key,time).apply();scheduleReminders(this);showSettings();});}
+    private void chooseQuietTime(String key){String value=prefs.getString(key,key.endsWith("start")?"22:00":"08:00");String[] p=value.split(":");int h=22,m=0;try{h=Integer.parseInt(p[0]);m=Integer.parseInt(p[1]);}catch(Exception ignored){}new TimePickerDialog(this,(view,hour,minute)->{String time=String.format(Locale.US,"%02d:%02d",hour,minute);prefs.edit().putString(key,time).apply();scheduleReminders(this);showSettings();},h,m,true).show();}
     private static void scheduleEveningRest(Context context,SharedPreferences p,AlarmManager am){
         Intent intent=new Intent(context,ReminderReceiver.class).setAction("study_evening_rest").putExtra("message","На сегодня достаточно. Пора отдохнуть и восстановить силы 🌙").putExtra("id",9810);
         PendingIntent pi=PendingIntent.getBroadcast(context,9810,intent,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
@@ -1144,7 +1154,7 @@ public class MainActivity extends Activity {
     }
 
     private int parseClockMinutes(String value,int fallback){try{String[] p=value.split(":");return Math.max(0,Math.min(1439,Integer.parseInt(p[0])*60+Integer.parseInt(p[1])));}catch(Exception e){return fallback;}}
-    private void chooseClockPreference(String key,String title,String fallback){String value=prefs.getString(key,fallback);int hour=21,minute=0;try{String[] p=value.split(":");hour=Integer.parseInt(p[0]);minute=Integer.parseInt(p[1]);}catch(Exception ignored){}showSquareTimePicker(hour,minute,(view,h,m)->{prefs.edit().putString(key,String.format(Locale.US,"%02d:%02d",h,m)).apply();applySavedTheme();updateSystemBarIcons();showSettings();});}
+    private void chooseClockPreference(String key,String title,String fallback){String value=prefs.getString(key,fallback);int hour=21,minute=0;try{String[] p=value.split(":");hour=Integer.parseInt(p[0]);minute=Integer.parseInt(p[1]);}catch(Exception ignored){}new TimePickerDialog(this,(view,h,m)->{prefs.edit().putString(key,String.format(Locale.US,"%02d:%02d",h,m)).apply();applySavedTheme();updateSystemBarIcons();showSettings();},hour,minute,true).show();}
     private void applySavedTheme() {
         String theme = prefs == null ? "pink" : prefs.getString("app_theme", "pink");
         if(prefs!=null && prefs.getBoolean("scheduled_dark_enabled",false)){Calendar now=Calendar.getInstance(AppTime.zone());int current=now.get(Calendar.HOUR_OF_DAY)*60+now.get(Calendar.MINUTE);int start=parseClockMinutes(prefs.getString("scheduled_dark_start","21:00"),1260),end=parseClockMinutes(prefs.getString("scheduled_dark_end","07:00"),420);if(start<=end?(current>=start&&current<end):(current>=start||current<end))theme="night";}
@@ -2379,7 +2389,7 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams main=new LinearLayout.LayoutParams(0,dp(52),1f);main.setMargins(dp(4),0,dp(4),0);controls.addView(timerStartButton,main);
         LinearLayout.LayoutParams side=new LinearLayout.LayoutParams(0,dp(52),0.58f);side.setMargins(dp(4),0,dp(4),0);controls.addView(timerPauseButton,side);controls.addView(reset,side);
         screen.addView(controls,lp(-1,dp(58),0,dp(12),0,0));
-        timerDisplay.setOnLongClickListener(v->{if(timerRunning)return true;showSquareTimePicker(selectedStudyMinutes/60,selectedStudyMinutes%60,(picker,hour,minute)->{selectedStudyMinutes=Math.max(1,Math.min(600,hour*60+minute));prefs.edit().putInt("selected_study_minutes",selectedStudyMinutes).apply();if(!timerIsBreak)timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();});return true;});
+        timerDisplay.setOnLongClickListener(v->{if(timerRunning)return true;new TimePickerDialog(this,(picker,hour,minute)->{selectedStudyMinutes=Math.max(1,Math.min(600,hour*60+minute));prefs.edit().putInt("selected_study_minutes",selectedStudyMinutes).apply();if(!timerIsBreak)timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();},selectedStudyMinutes/60,selectedStudyMinutes%60,true).show();return true;});
         root.addView(screen,lp(-1,-2,0,dp(6),0,dp(10)));
         updateTimerRingProgress(timerRemainingMs);
         if(timerRunning){updateTimerDisplay();timerStartButton.setEnabled(false);timerPauseButton.setEnabled(true);if(timerTick==null){timerTick=new Runnable(){public void run(){updateTimerDisplay();long left=FocusTimerController.remainingUntil(timerEndElapsed);if(left<=0)finishTimerPhase();else timerHandler.postDelayed(this,250);}};timerHandler.post(timerTick);}}
@@ -3585,13 +3595,13 @@ public class MainActivity extends Activity {
             Calendar now=Calendar.getInstance(AppTime.zone());
             int h=20,m=0;
             try{String[] p=reminderTimes.get(0).split(":");h=Integer.parseInt(p[0]);m=Integer.parseInt(p[1]);}catch(Exception ignored){}
-            showSquareTimePicker(h,m,(picker,hour,minute)->{
+            new TimePickerDialog(this,(picker,hour,minute)->{
                 String value=String.format(Locale.US,"%02d:%02d",hour,minute);
                 reminderTimes.clear();
                 reminderTimes.add(value);
                 timeValue.setText(value);
                 hintText.setText("Мы напомним о занятии в "+value+".");
-            });
+            },h,m,true).show();
         };
         timeRow.setOnClickListener(chooseTime);
         timeValue.setOnClickListener(chooseTime);
@@ -3736,10 +3746,10 @@ public class MainActivity extends Activity {
 
     private void editReminderTime(String oldTime,Runnable refresh){
         try{String[] p=oldTime.split(":");int h=Integer.parseInt(p[0]),m=Integer.parseInt(p[1]);
-            showSquareTimePicker(h,m,(picker,hour,minute)->{String value=String.format(Locale.US,"%02d:%02d",hour,minute);
+            new TimePickerDialog(this,(picker,hour,minute)->{String value=String.format(Locale.US,"%02d:%02d",hour,minute);
                 if(!oldTime.equals(value)&&reminderTimes.contains(value)){showAppMessage("Такое время уже добавлено");return;}
                 int index=reminderTimes.indexOf(oldTime);if(index>=0){reminderTimes.set(index,value);java.util.Collections.sort(reminderTimes);refresh.run();}
-            });
+            },h,m,true).show();
         }catch(Exception ignored){showAppMessage("Не удалось изменить время");}
     }
 
