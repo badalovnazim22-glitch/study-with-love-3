@@ -907,6 +907,24 @@ public class MainActivity extends Activity {
     }
 
     private void showSettings() {
+        try {
+            showSettingsInternal();
+        } catch (RuntimeException error) {
+            android.util.Log.e("StudyWithLove", "Failed to open settings", error);
+            String details = error.getClass().getSimpleName() + (error.getMessage() == null ? "" : ": " + error.getMessage());
+            try {
+                new android.app.AlertDialog.Builder(this)
+                    .setTitle("Не удалось открыть настройки")
+                    .setMessage(details)
+                    .setPositiveButton("Понятно", null)
+                    .show();
+            } catch (RuntimeException dialogError) {
+                android.widget.Toast.makeText(this, "Ошибка настроек: " + details, android.widget.Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    private void showSettingsInternal() {
         if ((currentScreen.startsWith("settings_") || "settings".equals(currentScreen)) && activeScrollView != null) pendingSettingsScrollY=activeScrollView.getScrollY();
         if (!currentScreen.startsWith("settings_")) currentScreen="settings";
         String activeSection = currentScreen.startsWith("settings_") ? currentScreen.substring("settings_".length()) : "menu";
