@@ -1049,7 +1049,7 @@ public class MainActivity extends Activity {
         View actionDivider2=new View(this);actionDivider2.setBackgroundColor(isDarkAppearance()?0xFF49404B:0xFFECE5E9);appearanceActions.addView(actionDivider2,lp(-1,1,0,3,0,3));
         Button clearPhoto=button("Убрать фото фона   ›",false);clearPhoto.setCompoundDrawablesRelative(settingsIcon(2),null,null,null);clearPhoto.setCompoundDrawablePadding(dp(10));clearPhoto.setGravity(Gravity.CENTER_VERTICAL|Gravity.START);clearPhoto.setBackground(shape(isDarkAppearance()?0xFF25212B:0xFFFFFFFF,12,0));clearPhoto.setOnClickListener(v->{prefs.edit().remove("custom_background_uri").apply();showSettings();});appearanceActions.addView(clearPhoto,lp(-1,42,0,2,0,2));
         appearance.addView(appearanceActions,lp(-1,-2,0,5,0,0));
-        root.addView(appearance,lp(-1,-2,0,0,0,4));
+
 
         LinearLayout language=settingsGroup("ЯЗЫК ПРИЛОЖЕНИЯ");
         language.setTag("appearance");
