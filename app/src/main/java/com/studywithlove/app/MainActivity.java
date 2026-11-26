@@ -911,16 +911,16 @@ public class MainActivity extends Activity {
         if (!currentScreen.startsWith("settings_")) currentScreen="settings";
         String activeSection = currentScreen.startsWith("settings_") ? currentScreen.substring("settings_".length()) : "menu";
         boolean sectionPage = !"menu".equals(activeSection);
-        String sectionTitle = "appearance".equals(activeSection) ? "Внешний вид" : "study".equals(activeSection) ? "Учёба" : "notifications_sound".equals(activeSection) ? "Уведомления и звук" : "profile_ai".equals(activeSection) ? "Профиль и ИИ" : "data_security".equals(activeSection) ? "Данные и безопасность" : "О приложении";
+        String sectionTitle = "appearance".equals(activeSection) ? "Оформление и темы" : "study".equals(activeSection) ? "Обучение и цели" : "notifications_sound".equals(activeSection) ? "Напоминания и звуки" : "profile_ai".equals(activeSection) ? "Профиль и помощник" : "data_security".equals(activeSection) ? "Приватность и данные" : "О приложении";
         base(sectionPage ? sectionTitle : "Настройки ⚙", sectionPage ? "" : "");
         LinearLayout sectionMenu = new LinearLayout(this);
         sectionMenu.setOrientation(LinearLayout.VERTICAL);
         String[][] sections = {
-            {"appearance","🎨","Внешний вид"},
-            {"study","📚","Учёба"},
-            {"notifications_sound","🔔","Уведомления и звук"},
-            {"profile_ai","👤","Профиль и ИИ"},
-            {"data_security","🛡","Данные и безопасность"},
+            {"appearance","🎨","Оформление и темы"},
+            {"study","📚","Обучение и цели"},
+            {"notifications_sound","🔔","Напоминания и звуки"},
+            {"profile_ai","👤","Профиль и помощник"},
+            {"data_security","🛡","Приватность и данные"},
             {"about","ⓘ","О приложении"}
         };
         for (String[] section : sections) {
@@ -1464,7 +1464,7 @@ public class MainActivity extends Activity {
         reminder.setOrientation(LinearLayout.HORIZONTAL);
         reminder.setGravity(Gravity.CENTER_VERTICAL);
         reminder.setPadding(dp(8), dp(2), dp(7), dp(2));
-        reminder.setBackground(shape(PALE, 15, PINK));
+        reminder.setBackground(shape(PALE, 15, 0));
         LinearLayout reminderWords = new LinearLayout(this);
         reminderWords.setOrientation(LinearLayout.VERTICAL);
         addText(reminderWords, "НАПОМИНАНИЯ", 8, PINK, true);
