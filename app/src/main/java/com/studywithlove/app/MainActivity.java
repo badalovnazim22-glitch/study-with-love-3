@@ -3600,15 +3600,16 @@ public class MainActivity extends Activity {
                 boolean active=p==0?selected.size()==7:p==1?selected.equals(new TreeSet<>(Arrays.asList("2","3","4","5","6"))):selected.equals(new TreeSet<>(Arrays.asList("1","7")));
                 TextView chip=presetViews.get(p);
                 chip.setTextColor(active?0xFFFFFFFF:accent);
-                chip.setBackground(shape(active?accent:BG,30,active?accent:separator));
+                chip.setBackground(shape(active?accent:BG,14,active?accent:separator));
             }
         };
         for(int p=0;p<3;p++){
             final int preset=p;
-            TextView chip=text(presetNames[p],10,accent,true);
+            TextView chip=text(presetNames[p],11,accent,true);
             chip.setGravity(Gravity.CENTER);
             chip.setSingleLine(true);
-            chip.setPadding(dp(7),0,dp(7),0);
+            chip.setIncludeFontPadding(false);
+            chip.setPadding(dp(4),0,dp(4),0);
             chip.setOnClickListener(v->{
                 selected.clear();
                 if(preset==0){for(int d=1;d<=7;d++)selected.add(String.valueOf(d));}
@@ -3618,11 +3619,13 @@ public class MainActivity extends Activity {
                 refreshPresets.run();
             });
             presetViews.add(chip);
-            LinearLayout.LayoutParams pp=new LinearLayout.LayoutParams(0,dp(30),1f);
-            pp.setMargins(dp(2),0,dp(2),0);
+            LinearLayout.LayoutParams pp=new LinearLayout.LayoutParams(0,dp(38),1f);
+            pp.setMargins(dp(3),0,dp(3),0);
             presets.addView(chip,pp);
         }
-        dailyCard.addView(presets,lp(-1,32,0,0,0,8));
+        TextView quickTitle=text("БЫСТРЫЙ ВЫБОР",10,muted,true);
+        quickTitle.setLetterSpacing(0.08f);
+        quickTitle.setPadding(dp(2),0,0,0);
         String[] labels={"Пн","Вт","Ср","Чт","Пт","Сб","Вс"};
         int[] dayIds={2,3,4,5,6,7,1};
         LinearLayout days=new LinearLayout(this);
@@ -3655,7 +3658,9 @@ public class MainActivity extends Activity {
         }
         refreshDays.run();
         refreshPresets.run();
-        dailyCard.addView(days,lp(-1,44,0,0,0,2));
+        dailyCard.addView(days,lp(-1,44,0,0,0,10));
+        dailyCard.addView(quickTitle,lp(-1,-2,0,0,0,6));
+        dailyCard.addView(presets,lp(-1,38,0,0,0,2));
         root.addView(dailyCard,lp(-1,-2,0,0,0,15));
         root.addView(hintRow,lp(-1,-2,dp(3),0,0,18));
 
