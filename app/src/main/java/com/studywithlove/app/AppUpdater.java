@@ -52,8 +52,8 @@ public final class AppUpdater {
         } catch(Exception ignored) {}
     }
 
-    public static void checkAndNotify(android.content.Context context) {
-        if(context==null)return;
+    public static void checkAndNotify(android.content.Context context, Runnable completion) {
+        if(context==null){if(completion!=null)completion.run();return;}
         new Thread(()->{
             try {
                 String latest=fetchLatestVersion();
@@ -89,7 +89,9 @@ public final class AppUpdater {
                     .setContentIntent(tap);
                 manager.notify(7732,builder.build());
                 p.edit().putString(LAST_NOTIFIED_VERSION,latest).apply();
-            } catch(Exception ignored) {}
+            } catch(Exception ignored) {} finally {
+                if(completion!=null)completion.run();
+            }
         },"app-update-notification-check").start();
     }
 
