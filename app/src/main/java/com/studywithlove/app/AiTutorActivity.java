@@ -107,20 +107,20 @@ public class AiTutorActivity extends Activity {
         page.setPadding(pad, pad, pad, pad);
         page.setBackgroundColor(Color.WHITE);
         TextView title = new TextView(this);
-        title.setText("Не удалось открыть ИИ-помощника");
+        title.setText(tr("Не удалось открыть ИИ-помощника","Could not open the AI assistant","Süni intellekt köməkçisini açmaq mümkün olmadı"));
         title.setTextSize(19);
         title.setTextColor(Color.BLACK);
         page.addView(title, new LinearLayout.LayoutParams(-1, -2));
         String detail = error.getMessage();
         if (detail == null || detail.trim().isEmpty()) detail = error.getClass().getSimpleName();
         TextView message = new TextView(this);
-        message.setText("Ошибка запуска: " + detail);
+        message.setText(tr("Ошибка запуска: ","Startup error: ","Başlanma xətası: ")+detail);
         message.setTextSize(14);
         message.setTextColor(Color.DKGRAY);
         message.setPadding(0, pad, 0, pad);
         page.addView(message, new LinearLayout.LayoutParams(-1, -2));
         Button back = new Button(this);
-        back.setText("Вернуться назад");
+        back.setText(tr("Вернуться назад","Go back","Geri qayıt"));
         back.setAllCaps(false);
         back.setOnClickListener(v -> finish());
         page.addView(back, new LinearLayout.LayoutParams(-1, -2));
@@ -279,7 +279,7 @@ public class AiTutorActivity extends Activity {
         String question = input.getText().toString().trim();
         if (question.isEmpty()) return;
         if (question.length() > 6000) {
-            input.setError("Максимум 6000 символов");
+            input.setError(tr("Максимум 6000 символов","Maximum 6000 characters","Maksimum 6000 simvol"));
             return;
         }
         if (!hasNetworkConnection() && !offlineFallback.isEmpty()) {
@@ -416,7 +416,7 @@ public class AiTutorActivity extends Activity {
                     }
                     retryQuestion = question;
                     pendingQuestion = "";
-                    addBubble("Не получилось получить ответ: " + finalError + "\nНажми ↻, чтобы повторить.", false);
+                    addBubble(tr("Не получилось получить ответ: ","Could not get a reply: ","Cavab almaq mümkün olmadı: ")+finalError+"\n"+tr("Нажми ↻, чтобы повторить.","Tap ↻ to try again.","Yenidən cəhd etmək üçün ↻ düyməsinə toxun."), false);
                     sendButton.setText("↻");
                 }
             });
@@ -586,7 +586,7 @@ public class AiTutorActivity extends Activity {
             .setPositiveButton(tr("Сохранить", "Save", "Yadda saxla"), (dialog, which) -> {
                 String value = field.getText().toString().trim();
                 if (!value.isEmpty() && (!value.startsWith("https://") || !value.endsWith("/chat"))) {
-                    showStatusBanner("Нужен HTTPS-адрес сервера, заканчивающийся на /chat");
+                    showStatusBanner(tr("Нужен HTTPS-адрес сервера, заканчивающийся на /chat","Enter an HTTPS server address ending in /chat","/chat ilə bitən HTTPS server ünvanı daxil et"));
                     return;
                 }
                 SharedPreferences settings=getSharedPreferences(AI_PREFS,MODE_PRIVATE);
@@ -595,7 +595,7 @@ public class AiTutorActivity extends Activity {
                 if(!keep)edit.remove("saved_chat_history").remove("saved_study_context").remove("saved_offline_fallback");
                 edit.apply();
                 if(keep)saveChatHistoryIfEnabled();
-                showStatusBanner(value.isEmpty() ? "Адрес не задан" : "Настройки ИИ сохранены");
+                showStatusBanner(value.isEmpty() ? tr("Адрес не задан","No address set","Ünvan daxil edilməyib") : tr("Настройки ИИ сохранены","AI settings saved","Süni intellekt ayarları saxlanıldı"));
             }).show();
     }
 
