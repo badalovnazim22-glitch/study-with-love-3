@@ -1020,7 +1020,7 @@ public class MainActivity extends Activity {
         darkTimes.addView(darkStartBox,new LinearLayout.LayoutParams(0,-2,1f));darkTimes.addView(darkArrow,lp(28,40,0,0,0,0));darkTimes.addView(darkEndBox,new LinearLayout.LayoutParams(0,-2,1f));darkSchedule.addView(darkTimes,new LinearLayout.LayoutParams(0,-2,1f));
         darkStartBox.setOnClickListener(v->chooseClockPreference("scheduled_dark_start","Начало тёмной темы","21:00"));darkEndBox.setOnClickListener(v->chooseClockPreference("scheduled_dark_end","Конец тёмной темы","07:00"));darkClock.setOnClickListener(v->chooseClockPreference("scheduled_dark_start","Начало тёмной темы","21:00"));darkSchedule.setOnClickListener(v->chooseClockPreference("scheduled_dark_end","Конец тёмной темы","07:00"));
         appearance.addView(darkSchedule,lp(-1,48,0,0,0,8));
-        Button orderHome=button("↕  Изменить порядок блоков",false);orderHome.setOnClickListener(v->showHomeBlockOrderDialog());appearance.addView(orderHome,lp(-1,44,0,4,0,7));
+        LinearLayout orderCard=card();orderCard.setPadding(dp(10),dp(5),dp(10),dp(5));Button orderHome=button("↕  Изменить порядок блоков",false);orderHome.setBackgroundColor(android.graphics.Color.TRANSPARENT);orderHome.setOnClickListener(v->showHomeBlockOrderDialog());orderCard.addView(orderHome,lp(-1,44,0,0,0,0));appearance.addView(orderCard,lp(-1,-2,0,4,0,7));
         root.addView(appearance,lp(-1,-2,0,0,0,4));
         LinearLayout appearanceActions=card();
         appearanceActions.setPadding(dp(12),dp(5),dp(12),dp(5));
@@ -1505,7 +1505,7 @@ public class MainActivity extends Activity {
         Map<String,Boolean> visibility=new HashMap<>();
         for(int i=0;i<keys.length;i++)visibility.put(keys[i],prefs.getBoolean(prefKeys[i],true));
         LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(dp(12),dp(8),dp(12),dp(8));
-        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle("Блоки главного экрана").setView(body).setNegativeButton("Закрыть",null).setPositiveButton("Сохранить",(d,w)->{
+        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(this).setTitle(translate("Блоки главного экрана")).setView(body).setNegativeButton("Закрыть",null).setPositiveButton("Сохранить",(d,w)->{
             SharedPreferences.Editor edit=prefs.edit().putString("home_block_order",android.text.TextUtils.join(",",order));
             for(int i=0;i<keys.length;i++)edit.putBoolean(prefKeys[i],visibility.get(keys[i]));
             edit.apply();showHome();
