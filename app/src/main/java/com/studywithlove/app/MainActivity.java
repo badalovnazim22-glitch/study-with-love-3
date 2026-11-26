@@ -2357,7 +2357,7 @@ public class MainActivity extends Activity {
 
     private void showPomodoro() {
         currentScreen="pomodoro";
-        base("Фокус","Время для себя и своих целей");
+        base("Таймер","");
         int bg=isDarkAppearance()?0xFF25212B:0xFFFFFFFF;
         int track=isDarkAppearance()?0xFF49404D:PALE;
         int fg=isDarkAppearance()?0xFFF8F1F6:0xFF342A36;
@@ -2391,7 +2391,7 @@ public class MainActivity extends Activity {
         TextView stats=text("Сегодня: "+todaySessions+" полных сессий   ·   7 дней: "+weekSessions+"\nСреднее время до паузы сегодня: "+averagePause,11,muted,false);stats.setGravity(Gravity.CENTER);stats.setPadding(dp(4),dp(5),dp(4),dp(5));screen.addView(stats,lp(-1,-2,0,0,0,dp(3)));
         LinearLayout controls=new LinearLayout(this);controls.setGravity(Gravity.CENTER);controls.setOrientation(LinearLayout.HORIZONTAL);
         timerStartButton=button(timerRunning?"Продолжается":"Начать фокус",true);timerStartButton.setEnabled(!timerRunning);timerStartButton.setTextSize(14);
-        timerStartButton.setOnClickListener(v->{if(!timerIsBreak&&timerRemainingMs>=selectedStudyMinutes*60000L-1000L)showStudyRitual();else startTimer();});
+        timerStartButton.setOnClickListener(v->{startTimer();});
         timerPauseButton=button("Пауза",false);timerPauseButton.setTextSize(14);timerPauseButton.setEnabled(timerRunning);timerPauseButton.setOnClickListener(v->pauseTimer());
         dial.setOnClickListener(v->{if(timerRunning)pauseTimer();else if(timerStartButton!=null)timerStartButton.performClick();});
         Button reset=button("Сбросить",false);reset.setTextSize(14);reset.setOnClickListener(v->{
@@ -2403,9 +2403,10 @@ public class MainActivity extends Activity {
             if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}
             if(timerDisplay!=null)timerDisplay.animate().cancel();timerIsBreak=false;timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();
         });
-        LinearLayout.LayoutParams main=new LinearLayout.LayoutParams(0,dp(52),1f);main.setMargins(dp(4),0,dp(4),0);controls.addView(timerStartButton,main);
-        LinearLayout.LayoutParams side=new LinearLayout.LayoutParams(0,dp(52),0.58f);side.setMargins(dp(4),0,dp(4),0);controls.addView(timerPauseButton,side);controls.addView(reset,side);
-        screen.addView(controls,lp(-1,dp(58),0,dp(12),0,0));
+        LinearLayout.LayoutParams main=new LinearLayout.LayoutParams(0,dp(44),1.35f);main.setMargins(dp(2),0,dp(2),0);controls.addView(timerStartButton,main);
+        LinearLayout.LayoutParams side=new LinearLayout.LayoutParams(0,dp(44),0.72f);side.setMargins(dp(2),0,dp(2),0);controls.addView(timerPauseButton,side);controls.addView(reset,side);
+        timerStartButton.setTextSize(12);timerPauseButton.setTextSize(12);reset.setTextSize(12);
+        screen.addView(controls,lp(-1,dp(48),0,dp(6),0,0));
         timerDisplay.setOnLongClickListener(v->{if(timerRunning)return true;new TimePickerDialog(this,(picker,hour,minute)->{selectedStudyMinutes=Math.max(1,Math.min(600,hour*60+minute));prefs.edit().putInt("selected_study_minutes",selectedStudyMinutes).apply();if(!timerIsBreak)timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();},selectedStudyMinutes/60,selectedStudyMinutes%60,true).show();return true;});
         root.addView(screen,lp(-1,-2,0,dp(6),0,dp(10)));
         updateTimerRingProgress(timerRemainingMs);
@@ -2914,12 +2915,6 @@ public class MainActivity extends Activity {
     }
 
 
-    private void showStudyRitual(){
-        LinearLayout panel=new LinearLayout(this);panel.setOrientation(LinearLayout.VERTICAL);panel.setPadding(dp(8),dp(4),dp(8),dp(4));
-        TextView breathing=text("🌬  Сделай спокойный вдох и выдох",16,PINK,true);breathing.setGravity(Gravity.CENTER);panel.addView(breathing,lp(-1,48,0,0,0,8));
-        EditText goal=new EditText(this);goal.setSingleLine(true);goal.setHint("Моя цель на эту сессию");goal.setText(prefs.getString("focus_goal",""));panel.addView(goal,lp(-1,52,0,0,0,8));
-        new android.app.AlertDialog.Builder(this).setTitle("Ритуал начала занятия").setMessage("Первые 30 секунд — спокойное дыхание. Затем сформулируй цель и переходи к фокусу.").setView(panel).setNegativeButton("Позже",null).setPositiveButton("Начать фокус",(d,w)->{prefs.edit().putString("focus_goal",goal.getText().toString().trim()).apply();startTimer();}).show();
-    }
     @Override public void onUserLeaveHint(){super.onUserLeaveHint();if(timerRunning&&!timerIsBreak)prefs.edit().putBoolean("focus_left_app",true).apply();}
     private void showFlower() {
         currentScreen="flower";
@@ -3456,7 +3451,7 @@ public class MainActivity extends Activity {
         for(int i=0;i<tips.length;i++){LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);TextView num=text((i+1)+".",14,PINK,true);row.addView(num,lp(28,34,0,0,5,0));TextView label=text(tips[i],12,DARK,false);row.addView(label,new LinearLayout.LayoutParams(0,-2,1f));tipsCard.addView(row,lp(-1,-2,0,4,0,4));}
         root.addView(tipsCard,lp(-1,-2,0,0,0,10));
         addText(root,"Автоматическая блокировка других приложений пока не включена: для неё нужны отдельные системные разрешения. Этот режим не ограничивает доступ к телефону.",10,MUTED,false);
-        Button start=button("▶  Начать 25 минут фокуса",true);start.setOnClickListener(v->{selectedStudyMinutes=25;timerIsBreak=false;timerRemainingMs=25*60000L;showPomodoro();showStudyRitual();});root.addView(start,lp(-1,48,0,8,0,8));
+        Button start=button("▶  Начать 25 минут фокуса",true);start.setOnClickListener(v->{selectedStudyMinutes=25;timerIsBreak=false;timerRemainingMs=25*60000L;showPomodoro();startTimer();});root.addView(start,lp(-1,48,0,8,0,8));
         Button stats=button("Открыть календарь и статистику",false);stats.setOnClickListener(v->showDetailedStats());root.addView(stats,lp(-1,44,0,0,0,4));backHome();
     }
     private void startAmbience() {
@@ -3544,46 +3539,29 @@ public class MainActivity extends Activity {
             });
             root.addView(row,lp(-1,66,0,0,0,5));
         }
-        LinearLayout volumeCard=new LinearLayout(this);
-        volumeCard.setOrientation(LinearLayout.VERTICAL);
-        volumeCard.setPadding(dp(14),dp(12),dp(14),dp(10));
-        volumeCard.setBackground(shape(isDarkAppearance()?0xFF292431:0xFFFFF7FA,18,isDarkAppearance()?0xFF514454:0xFFF0DCE4));
+        LinearLayout volumeControl=new LinearLayout(this);
+        volumeControl.setOrientation(LinearLayout.VERTICAL);
+        volumeControl.setPadding(dp(2),dp(4),dp(2),dp(2));
         LinearLayout volumeHeading=new LinearLayout(this);
         volumeHeading.setGravity(Gravity.CENTER_VERTICAL);
-        TextView volumeIcon=text("♫",19,PINK,true);
-        volumeIcon.setGravity(Gravity.CENTER);
-        volumeIcon.setBackground(shape(isDarkAppearance()?0xFF493344:0xFFFFE8F0,13,0));
-        volumeHeading.addView(volumeIcon,lp(36,36,0,0,10,0));
-        LinearLayout volumeWords=new LinearLayout(this);
-        volumeWords.setOrientation(LinearLayout.VERTICAL);
-        addText(volumeWords,"ГРОМКОСТЬ ЗВУКА",10,PINK,true);
-        addText(volumeWords,"Настрой комфортный уровень",10,MUTED,false);
-        volumeHeading.addView(volumeWords,new LinearLayout.LayoutParams(0,-2,1f));
+        TextView volumeTitle=text("Громкость",13,DARK,true);
+        volumeHeading.addView(volumeTitle,new LinearLayout.LayoutParams(0,-2,1f));
         int savedVolume=Math.max(0,Math.min(100,prefs.getInt("ambience_volume",35)));
-        TextView volumeValue=text(savedVolume+"%",15,DARK,true);
+        TextView volumeValue=text(savedVolume+"%",13,PINK,true);
         volumeValue.setGravity(Gravity.CENTER);
-        volumeValue.setMinWidth(dp(48));
-        volumeValue.setBackground(shape(isDarkAppearance()?0xFF3A303D:0xFFFFEEF3,14,0));
-        volumeHeading.addView(volumeValue,lp(-2,32,5,0,0,0));
-        volumeCard.addView(volumeHeading,lp(-1,-2,0,0,0,5));
+        volumeHeading.addView(volumeValue,lp(-2,28,0,0,0,0));
+        volumeControl.addView(volumeHeading,lp(-1,-2,0,0,0,0));
         android.widget.SeekBar volume=new android.widget.SeekBar(this);
         volume.setMax(100);
         volume.setProgress(savedVolume);
-        volume.setPadding(dp(2),0,dp(2),0);
+        volume.setPadding(0,0,0,0);
         if(Build.VERSION.SDK_INT>=21){
             volume.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
             volume.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(isDarkAppearance()?0xFF514650:0xFFEADDE4));
             volume.setThumbTintList(android.content.res.ColorStateList.valueOf(PINK));
         }
-        volumeCard.addView(volume,lp(-1,38,0,0,0,0));
-        LinearLayout volumeScale=new LinearLayout(this);
-        volumeScale.setGravity(Gravity.CENTER_VERTICAL);
-        TextView quiet=text("МИНИМУМ",9,MUTED,true);
-        TextView loud=text("МАКСИМУМ",9,MUTED,true);
-        volumeScale.addView(quiet,new LinearLayout.LayoutParams(0,-2,1f));
-        volumeScale.addView(loud);
-        volumeCard.addView(volumeScale,lp(-1,-2,0,0,0,0));
-        root.addView(volumeCard,lp(-1,-2,0,10,0,10));
+        volumeControl.addView(volume,lp(-1,34,0,0,0,0));
+        root.addView(volumeControl,lp(-1,-2,0,5,0,5));
         volume.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener(){
             public void onProgressChanged(android.widget.SeekBar b,int value,boolean user){
                 volumeValue.setText(value+"%");
