@@ -244,13 +244,21 @@ public class MainActivity extends Activity {
         loadQuestionBank();
         setupDynamicShortcuts();
         scheduleReminders(this); rescheduleFutureLetterReminders(this); WeeklyReportReceiver.schedule(this); WeeklyBackupReceiver.schedule(this); StudyWidgetProvider.updateAll(this);
-        if (prefs.getBoolean("notifications_enabled", true) && Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 20);
         if (!prefs.getBoolean("welcome_done", false)) showWelcome(); else { showHome(); handleQuickAction(getIntent()); }
         if(!prefs.getString("app_pin_hash","").isEmpty())showPinLockDialog();
-        if(prefs.getBoolean("welcome_done",false) && prefs.getString("app_pin_hash","").isEmpty()){
+        AppUpdater.scheduleAutomaticChecks(this);
+        if(prefs.getBoolean("welcome_done",false)){
             new Handler(Looper.getMainLooper()).postDelayed(()->{
-                if(!isFinishing() && !isDestroyed()) AppUpdater.checkAutomatically(this);
+                if(!isFinishing() && !isDestroyed()){
+                    if(getIntent()!=null && getIntent().getBooleanExtra("show_update_prompt",false)){
+                        getIntent().removeExtra("show_update_prompt");
+                        AppUpdater.checkAndOffer(this);
+                    } else {
+                        AppUpdater.checkAutomatically(this);
+                    }
+                }
             },2800);
         }
     }
