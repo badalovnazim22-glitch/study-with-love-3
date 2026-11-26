@@ -30,62 +30,72 @@ public final class AppUpdater {
             "https://github.com/badalovnazim22-glitch/study-with-love-3/releases/latest/download/app-debug.apk";
     private static final String PREFS = "study_app_updates";
     private static final String PENDING_APK = "pending_apk";
+    private static final String LAST_AUTO_CHECK = "last_auto_check";
+    private static final String LAST_OFFERED_VERSION = "last_offered_version";
+    private static volatile String latestReleaseNotes = "";
     private static final int MAX_APK_BYTES = 100 * 1024 * 1024;
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
 
     private AppUpdater() {}
 
-    public static void checkAndOffer(Activity activity) {
-        ProgressDialog progress = new ProgressDialog(activity);
-        progress.setMessage("Проверяем наличие обновлений…");
-        progress.setCancelable(false);
-        progress.show();
+    public static void checkAndOffer(Activity activity) { check(activity, true); }
 
+    public static void checkAutomatically(Activity activity) {
+        if(activity==null || activity.isFinishing()) return;
+        android.content.SharedPreferences p=activity.getSharedPreferences(PREFS,Activity.MODE_PRIVATE);
+        long last=p.getLong(LAST_AUTO_CHECK,0L);
+        if(System.currentTimeMillis()-last<12L*60L*60L*1000L)return;
+        p.edit().putLong(LAST_AUTO_CHECK,System.currentTimeMillis()).apply();
+        check(activity,false);
+    }
+
+    private static void check(Activity activity, boolean manual) {
+        if(activity==null || activity.isFinishing())return;
+        ProgressDialog progress=null;
+        if(manual){progress=new ProgressDialog(activity);progress.setMessage("Проверяем наличие обновлений…");progress.setCancelable(false);progress.show();}
+        final ProgressDialog shownProgress=progress;
         new Thread(() -> {
-            String latestVersion = null;
-            String notes = "";
-            String error = null;
+            String latestVersion=null;String error=null;
             try {
-                // GitHub API is not reachable on some mobile networks. Try the API first,
-                // then use GitHub's public /releases/latest redirect as a fallback.
-                latestVersion = fetchLatestVersion();
-                if (latestVersion == null || latestVersion.trim().isEmpty()) {
-                    throw new Exception("Latest release version is empty");
-                }
-            } catch (Exception e) {
-                error = "Не удалось проверить обновления. Проверь подключение к интернету и попробуй ещё раз.";
-            }
-
-            final String foundVersion = latestVersion;
-            final String releaseNotes = notes;
-            final String failure = error;
-            MAIN.post(() -> {
-                if (activity.isFinishing() || (Build.VERSION.SDK_INT >= 17 && activity.isDestroyed())) return;
-                progress.dismiss();
-                if (failure != null) {
-                    Toast.makeText(activity, failure, Toast.LENGTH_LONG).show();
+                latestVersion=fetchLatestVersion();
+                if(latestVersion==null || latestVersion.trim().isEmpty())throw new Exception("Latest release version is empty");
+            } catch(Exception e){error="Не удалось проверить обновления. Проверь подключение к интернету и попробуй ещё раз.";}
+            final String foundVersion=latestVersion;final String failure=error;
+            MAIN.post(()->{
+                if(activity.isFinishing() || (Build.VERSION.SDK_INT>=17 && activity.isDestroyed()))return;
+                if(shownProgress!=null)shownProgress.dismiss();
+                if(failure!=null){if(manual)Toast.makeText(activity,failure,Toast.LENGTH_LONG).show();return;}
+                String current=installedVersion(activity);
+                if(compareVersions(foundVersion,current)<=0){
+                    if(manual)new AlertDialog.Builder(activity).setTitle("Обновлений пока нет").setMessage("Установлена последняя версия "+current+" ♡").setPositiveButton("Хорошо",null).show();
                     return;
                 }
-                String current = installedVersion(activity);
-                if (compareVersions(foundVersion, current) <= 0) {
-                    new AlertDialog.Builder(activity)
-                            .setTitle("Обновлений пока нет")
-                            .setMessage("Установлена последняя версия " + current + " ♡")
-                            .setPositiveButton("Хорошо", null)
-                            .show();
-                    return;
-                }
-                String message = releaseNotes.isEmpty()
-                        ? "Доступна новая версия приложения."
-                        : releaseNotes;
-                new AlertDialog.Builder(activity)
-                        .setTitle("Доступно обновление " + foundVersion)
-                        .setMessage(message)
-                        .setNegativeButton("Позже", null)
-                        .setPositiveButton("Скачать и установить", (dialog, which) -> download(activity))
-                        .show();
+                android.content.SharedPreferences p=activity.getSharedPreferences(PREFS,Activity.MODE_PRIVATE);
+                if(!manual && foundVersion.equals(p.getString(LAST_OFFERED_VERSION,"")))return;
+                p.edit().putString(LAST_OFFERED_VERSION,foundVersion).apply();
+                showUpdateScreen(activity,foundVersion,manual);
             });
-        }, "app-update-check").start();
+        },"app-update-check").start();
+    }
+
+    private static void showUpdateScreen(Activity activity,String version,boolean manual){
+        int pad=(int)(activity.getResources().getDisplayMetrics().density*20);
+        android.widget.LinearLayout panel=new android.widget.LinearLayout(activity);
+        panel.setOrientation(android.widget.LinearLayout.VERTICAL);panel.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
+        panel.setPadding(pad,pad,pad,pad);
+        panel.setBackground(roundRect(0xFFFFF9F7,28,0xFFF0DCE4,activity));
+        android.widget.TextView icon=new android.widget.TextView(activity);icon.setText("✦");icon.setTextSize(34);icon.setTextColor(0xFFC97891);icon.setGravity(android.view.Gravity.CENTER);
+        icon.setBackground(roundRect(0xFFFCEEF2,28,0,activity));panel.addView(icon,new android.widget.LinearLayout.LayoutParams(pad*3,pad*3));
+        android.widget.TextView title=new android.widget.TextView(activity);title.setText("Для тебя есть обновление");title.setTextColor(0xFF3F3439);title.setTextSize(21);title.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);title.setGravity(android.view.Gravity.CENTER);title.setPadding(0,pad,0,pad/3);panel.addView(title,new android.widget.LinearLayout.LayoutParams(-1,-2));
+        android.widget.TextView versionLabel=new android.widget.TextView(activity);versionLabel.setText("STUDY WITH LOVE  ·  ВЕРСИЯ "+version);versionLabel.setTextColor(0xFFC97891);versionLabel.setTextSize(12);versionLabel.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);versionLabel.setGravity(android.view.Gravity.CENTER);panel.addView(versionLabel,new android.widget.LinearLayout.LayoutParams(-1,-2));
+        android.widget.TextView notes=new android.widget.TextView(activity);String note=latestReleaseNotes==null?"":latestReleaseNotes.trim();if(note.isEmpty())note="Новые улучшения, более удобные функции и исправления для комфортной учёбы.";notes.setText(note);notes.setTextColor(0xFF75666D);notes.setTextSize(14);notes.setGravity(android.view.Gravity.CENTER);notes.setPadding(0,pad,0,pad/2);panel.addView(notes,new android.widget.LinearLayout.LayoutParams(-1,-2));
+        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(activity).setView(panel).setNegativeButton("Позже",null).setPositiveButton("Обновить",null).create();
+        dialog.setOnShowListener(v->{android.widget.Button positive=dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE);positive.setTextColor(0xFFC97891);positive.setOnClickListener(b->{dialog.dismiss();download(activity);};});
+        dialog.show();
+    }
+
+    private static android.graphics.drawable.GradientDrawable roundRect(int color,int radius,int stroke,Activity activity){
+        android.graphics.drawable.GradientDrawable d=new android.graphics.drawable.GradientDrawable();d.setColor(color);d.setCornerRadius(radius*activity.getResources().getDisplayMetrics().density);if(stroke!=0)d.setStroke((int)(activity.getResources().getDisplayMetrics().density),stroke);return d;
     }
 
     private static String fetchLatestVersion() throws Exception {
@@ -103,6 +113,7 @@ public final class AppUpdater {
             if (status == 200) {
                 JSONObject release = new JSONObject(readText(api.getInputStream(), 1024 * 1024));
                 String tag = release.optString("tag_name", "").trim();
+                latestReleaseNotes=release.optString("body","").trim();
                 if (!tag.isEmpty()) return stripVersionPrefix(tag);
             }
         } catch (Exception ignored) {
