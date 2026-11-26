@@ -1216,14 +1216,14 @@ public class MainActivity extends Activity {
     private void showCustomThemeAccentPicker(){
         final String[] names={"Розовый","Лавандовый","Мятный","Голубой","Персиковый","Красный","Золотой","Графитовый"};
         final int[] colors={0xFFC97891,0xFF8979B8,0xFF659B86,0xFF5D91B5,0xFFD88968,0xFFB32635,0xFFC49318,0xFF65758B};
-        new android.app.AlertDialog.Builder(this).setTitle("Цвет акцента").setItems(names,(dialog,which)->{
+        new android.app.AlertDialog.Builder(this).setTitle(translate("Цвет акцента")).setItems(new String[]{translate(names[0]),translate(names[1]),translate(names[2]),translate(names[3]),translate(names[4]),translate(names[5]),translate(names[6]),translate(names[7])},(dialog,which)->{
             prefs.edit().putString("app_theme","custom").putInt("app_accent_color",colors[which]).apply();
             showCustomThemeBackgroundPicker();
         }).setNegativeButton("Отмена",null).show();
     }
     private void showCustomThemeBackgroundPicker(){
         String[] names={"Светлый","Тёмно-серый","Чёрный"};String[] keys={"light","dark","black"};
-        new android.app.AlertDialog.Builder(this).setTitle("Цвет фона").setItems(names,(dialog,which)->{
+        new android.app.AlertDialog.Builder(this).setTitle(translate("Цвет фона")).setItems(new String[]{translate(names[0]),translate(names[1]),translate(names[2])},(dialog,which)->{
             prefs.edit().putString("app_theme","custom").putString("custom_theme_background",keys[which]).apply();
             applySavedTheme();updateSystemBarIcons();showSettings();
         }).setNegativeButton("Отмена",null).show();
@@ -4950,6 +4950,16 @@ public class MainActivity extends Activity {
             {"📚  ТЕМЫ ДЛЯ ЭКЗАМЕНА","📚  EXAM TOPICS","📚  İMTAHAN MÖVZULARI"},
             {"Выбрать все","Select all","Hamısını seç"},
             {"Снять выбор","Clear selection","Seçimi ləğv et"},
+            {"Своя тема","Custom theme","Öz teman"},
+            {"Выбери акцент и цвет фона","Choose an accent and background","Vurğu və fon rəngini seç"},
+            {"Цвет акцента","Accent color","Vurğu rəngi"},
+            {"Цвет фона","Background color","Fon rəngi"},
+            {"Розовый","Pink","Çəhrayı"}, {"Лавандовый","Lavender","Lavanda"}, {"Мятный","Mint","Nanə"}, {"Голубой","Blue","Mavi"}, {"Персиковый","Peach","Şaftalı"}, {"Красный","Red","Qırmızı"}, {"Золотой","Gold","Qızılı"}, {"Графитовый","Graphite","Qrafit"},
+            {"Светлый","Light","Açıq"}, {"Тёмно-серый","Dark gray","Tünd boz"}, {"Чёрный","Black","Qara"},
+            {"ВРЕМЕННОЙ ДИАПАЗОН","TIME RANGE","VAXT ARALIĞI"},
+            {"Начало","Start","Başlanğıc"}, {"Конец","End","Son"},
+            {"Версия · ","Version · ","Versiya · "},
+            {"Каждый шаг приближает к цели","Every step brings you closer to your goal","Hər addım səni məqsədinə yaxınlaşdırır"},
             {"Сделано с любовью ♡","Made with love ♡","Sevgi ilə hazırlanıb ♡"},
             {"местное время","local time","yerli vaxt"},
             {"Вс","Sun","Baz"}, {"Пн","Mon","B.e."}, {"Вт","Tue","Ç.a."}, {"Ср","Wed","Ç."}, {"Чт","Thu","C.a."}, {"Пт","Fri","C."}, {"Сб","Sat","Ş."},
