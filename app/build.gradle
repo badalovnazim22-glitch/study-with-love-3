@@ -21,9 +21,9 @@ android {
         applicationId 'com.studywithlove.app'
         minSdk 23
         targetSdk 35
-        versionCode 159
-        versionName '5.50'
-        // UI refresh: focus timer redesign with subject chips and circular layout
+        versionCode 160
+        versionName '5.51'
+        // Rollback: restore focus timer interface from 5.49
         // Compile fix: updater progress label
     }
 
