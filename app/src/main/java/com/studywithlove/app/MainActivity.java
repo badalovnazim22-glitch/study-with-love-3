@@ -170,9 +170,36 @@ public class MainActivity extends Activity {
         private float progress=0f,pulse=1f;
         private android.animation.ValueAnimator progressAnimator,pulseAnimator;
         TimerRingView(Context c,int fill,int track,int accent){super(c);fillColor=fill;trackColor=track;progressColor=accent;setLayerType(View.LAYER_TYPE_SOFTWARE,null);}
-        void setProgress(float value){float target=Math.max(0f,Math.min(1f,value));if(progressAnimator!=null)progressAnimator.cancel();progressAnimator=android.animation.ValueAnimator.ofFloat(progress,target);progressAnimator.setDuration(280);progressAnimator.setInterpolator(new android.view.animation.DecelerateInterpolator());progressAnimator.addUpdateListener(a->{progress=(float)a.getAnimatedValue();invalidate();});progressAnimator.start();}
-        void setRunning(boolean running){if(pulseAnimator!=null){pulseAnimator.cancel();pulseAnimator=null;}if(!running){pulse=1f;invalidate();return;}pulseAnimator=android.animation.ValueAnimator.ofFloat(1f,1.018f);pulseAnimator.setDuration(1350);pulseAnimator.setRepeatMode(android.animation.ValueAnimator.REVERSE);pulseAnimator.setRepeatCount(android.animation.ValueAnimator.INFINITE);pulseAnimator.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());pulseAnimator.addUpdateListener(a->{pulse=(float)a.getAnimatedValue();invalidate();});pulseAnimator.start();}
-        @Override protected void onDraw(android.graphics.Canvas c){super.onDraw(c);float cx=getWidth()/2f,cy=getHeight()/2f,d=getResources().getDisplayMetrics().density,stroke=13f*d,r=Math.min(cx,cy)-stroke*1.25f;if(r<=0)return;c.save();c.scale(pulse,pulse,cx,cy);paint.setStyle(android.graphics.Paint.Style.FILL);paint.setColor(fillColor);paint.clearShadowLayer();c.drawCircle(cx,cy,r-stroke*.55f,paint);arc.set(cx-r,cy-r,cx+r,cy+r);paint.setStyle(android.graphics.Paint.Style.STROKE);paint.setStrokeWidth(stroke);paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);paint.setColor(trackColor);c.drawArc(arc,0,360,false,paint);if(progress>.0005f){paint.setColor(progressColor);paint.setShadowLayer(16f*d,0,0,progressColor);c.drawArc(arc,-90,Math.min(359.8f,360f*progress),false,paint);paint.clearShadowLayer();float angle=(float)Math.toRadians(-90+360f*progress),x=cx+(float)Math.cos(angle)*r,y=cy+(float)Math.sin(angle)*r;paint.setStyle(android.graphics.Paint.Style.FILL);paint.setColor(0xFFFFFFFF);c.drawCircle(x,y,stroke*.34f,paint);paint.setColor(progressColor);c.drawCircle(x,y,stroke*.22f,paint);}c.restore();paint.setStyle(android.graphics.Paint.Style.FILL);}
+        void setProgress(float value){float target=Math.max(0f,Math.min(1f,value));if(progressAnimator!=null)progressAnimator.cancel();progressAnimator=android.animation.ValueAnimator.ofFloat(progress,target);progressAnimator.setDuration(420);progressAnimator.setInterpolator(new android.view.animation.DecelerateInterpolator());progressAnimator.addUpdateListener(a->{progress=(float)a.getAnimatedValue();invalidate();});progressAnimator.start();}
+        void setRunning(boolean running){if(pulseAnimator!=null){pulseAnimator.cancel();pulseAnimator=null;}if(!running){pulse=1f;invalidate();return;}pulseAnimator=android.animation.ValueAnimator.ofFloat(1f,1.012f);pulseAnimator.setDuration(1800);pulseAnimator.setRepeatMode(android.animation.ValueAnimator.REVERSE);pulseAnimator.setRepeatCount(android.animation.ValueAnimator.INFINITE);pulseAnimator.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());pulseAnimator.addUpdateListener(a->{pulse=(float)a.getAnimatedValue();invalidate();});pulseAnimator.start();}
+        @Override protected void onDraw(android.graphics.Canvas c){
+            super.onDraw(c);
+            float cx=getWidth()/2f,cy=getHeight()/2f,d=getResources().getDisplayMetrics().density;
+            float stroke=12f*d,r=Math.min(cx,cy)-stroke*2.25f;
+            if(r<=0)return;
+            c.save();c.scale(pulse,pulse,cx,cy);
+            paint.clearShadowLayer();paint.setShader(null);paint.setStyle(android.graphics.Paint.Style.FILL);
+            paint.setColor(fillColor);c.drawCircle(cx,cy,r-stroke*.45f,paint);
+            paint.setStyle(android.graphics.Paint.Style.STROKE);paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);
+            paint.setStrokeWidth(2f*d);paint.setColor(trackColor);c.drawCircle(cx,cy,r+stroke*.72f,paint);
+            arc.set(cx-r,cy-r,cx+r,cy+r);
+            paint.setStrokeWidth(stroke);paint.setColor(trackColor);c.drawArc(arc,0,360,false,paint);
+            paint.setStrokeWidth(1.5f*d);paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);
+            for(int i=0;i<60;i++){
+                double a=Math.toRadians(i*6-90);float inner=r+stroke*1.12f,outer=inner+(i%5==0?5f:2.5f)*d;
+                paint.setColor(i%5==0?progressColor:trackColor);
+                c.drawLine(cx+(float)Math.cos(a)*inner,cy+(float)Math.sin(a)*inner,cx+(float)Math.cos(a)*outer,cy+(float)Math.sin(a)*outer,paint);
+            }
+            if(progress>.0005f){
+                paint.setStyle(android.graphics.Paint.Style.STROKE);paint.setStrokeWidth(stroke);paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);
+                paint.setColor(progressColor);paint.setShadowLayer(13f*d,0,0,progressColor);
+                c.drawArc(arc,-90,Math.min(359.8f,360f*progress),false,paint);paint.clearShadowLayer();
+                float angle=(float)Math.toRadians(-90+360f*progress),x=cx+(float)Math.cos(angle)*r,y=cy+(float)Math.sin(angle)*r;
+                paint.setStyle(android.graphics.Paint.Style.FILL);paint.setColor(0xFFFFFFFF);c.drawCircle(x,y,stroke*.48f,paint);
+                paint.setColor(progressColor);c.drawCircle(x,y,stroke*.31f,paint);
+            }
+            paint.setShader(null);paint.setStyle(android.graphics.Paint.Style.FILL);c.restore();
+        }
         @Override protected void onDetachedFromWindow(){if(progressAnimator!=null)progressAnimator.cancel();if(pulseAnimator!=null)pulseAnimator.cancel();super.onDetachedFromWindow();}
     }
     private static class MiniQuestion { String prompt,explanation,type,answer,topic; String[] options; int correct; MiniQuestion(String p,String[] o,int c,String e){this(p,o,c,e,"choice",o!=null&&c>=0&&c<o.length?o[c]:"");} MiniQuestion(String p,String[] o,int c,String e,String t,String a){prompt=p;options=o;correct=c;explanation=e;type=t;answer=a;topic="";} }
@@ -848,21 +875,34 @@ public class MainActivity extends Activity {
         }
     }
 
-    private CheckBox addSettingsToggle(LinearLayout host,String label,String key,boolean defaultValue,Runnable afterChange){
-        CheckBox box=new CheckBox(this);
-        box.setText(translate(label));
-        box.setTextSize(15);
-        box.setTextColor(DARK);
-        box.setMinHeight(dp(36));
-        box.setGravity(Gravity.CENTER_VERTICAL);
-        box.setIncludeFontPadding(false);
-        box.setPadding(0,0,dp(4),0);
-        styleRoundCheckBox(box);
-        box.setChecked(prefs.getBoolean(key,defaultValue));
-        // Плотная строка переключателя без лишних вертикальных отступов.
-        host.addView(box,lp(-1,42,0,0,0,0));
-        box.setOnCheckedChangeListener((button,checked)->{prefs.edit().putBoolean(key,checked).apply();if(afterChange!=null)afterChange.run();});
-        return box;
+    private void addSettingsToggle(LinearLayout host,String label,String key,boolean defaultValue,Runnable afterChange){
+        LinearLayout row=new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(dp(2),dp(3),dp(2),dp(3));
+        TextView title=text(translate(label),14,DARK,false);
+        title.setGravity(Gravity.CENTER_VERTICAL);
+        title.setMinHeight(dp(42));
+        row.addView(title,new LinearLayout.LayoutParams(0,-2,1f));
+        android.widget.Switch toggle=new android.widget.Switch(this);
+        toggle.setShowText(false);
+        toggle.setChecked(prefs.getBoolean(key,defaultValue));
+        if(Build.VERSION.SDK_INT>=21){
+            toggle.setThumbTintList(new android.content.res.ColorStateList(
+                new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},
+                new int[]{PINK,0xFFE3E3E8}));
+            toggle.setTrackTintList(new android.content.res.ColorStateList(
+                new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},
+                new int[]{0x66C97891,0x33777777}));
+        }
+        row.addView(toggle,lp(58,42,dp(8),0,0,0));
+        host.addView(row,lp(-1,48,0,0,0,0));
+        toggle.setOnCheckedChangeListener((button,checked)->{
+            prefs.edit().putBoolean(key,checked).apply();
+            if(afterChange!=null)afterChange.run();
+        });
+        row.setOnClickListener(v->toggle.setChecked(!toggle.isChecked()));
+        title.setOnClickListener(v->toggle.setChecked(!toggle.isChecked()));
     }
 
     private void showSettings() {
@@ -3501,18 +3541,11 @@ public class MainActivity extends Activity {
         dailyCard.setBackground(shape(surface,24,separator));
         dailyCard.setElevation(dp(2));
 
-        CheckBox enabled=new CheckBox(this);
-        enabled.setButtonDrawable((Drawable)null);
-        enabled.setText("Напоминания об учёбе");
-        enabled.setTextColor(ink);
-        enabled.setTextSize(16);
-        enabled.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
-        enabled.setChecked(prefs.getBoolean("notifications_enabled",true));
-        enabled.setPadding(0,0,0,0);
+        TextView enabled=text("Напоминания об учёбе",16,ink,true);
         TextView enabledSub=text("Напоминание каждый день в выбранное время",12,muted,false);
         android.widget.Switch dailySwitch=new android.widget.Switch(this);
         dailySwitch.setShowText(false);
-        dailySwitch.setChecked(enabled.isChecked());
+        dailySwitch.setChecked(prefs.getBoolean("notifications_enabled",true));
         if(Build.VERSION.SDK_INT>=21){
             dailySwitch.setThumbTintList(new android.content.res.ColorStateList(
                 new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},
@@ -3682,11 +3715,7 @@ public class MainActivity extends Activity {
             hintRow.setAlpha(active?1f:0.45f);
             hintText.setText(active?"Мы напомним о занятии в "+reminderTimes.get(0)+".":"Напоминания об учёбе отключены.");
         };
-        enabled.setOnCheckedChangeListener((button,checked)->{
-            if(dailySwitch.isChecked()!=checked)dailySwitch.setChecked(checked);
-        });
         dailySwitch.setOnCheckedChangeListener((button,checked)->{
-            enabled.setChecked(checked);
             prefs.edit().putBoolean("notifications_enabled",checked).apply();
             scheduleReminders(this);
             updateReminderControls.run();
