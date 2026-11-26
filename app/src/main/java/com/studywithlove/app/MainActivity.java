@@ -2357,44 +2357,155 @@ public class MainActivity extends Activity {
 
     private void showPomodoro() {
         currentScreen="pomodoro";
-        base("Фокус","Время для себя и своих целей");
-        int bg=isDarkAppearance()?0xFF25212B:0xFFFFFFFF;
-        int track=isDarkAppearance()?0xFF49404D:PALE;
-        int fg=isDarkAppearance()?0xFFF8F1F6:0xFF342A36;
-        int muted=MUTED;
+        base("Таймер","Настрой свой ритм и сосредоточься");
+        final int blue=0xFF3979E8, blueDark=0xFF2866D5, ink=0xFF202633, grey=0xFF8B929E;
+        final int pale=0xFFE9EDF3, white=0xFFFFFFFF;
         if(timerRemainingMs<=0)timerRemainingMs=(timerIsBreak?selectedBreakMinutes:selectedStudyMinutes)*60000L;
-        int diameter=Math.min(dp(342),Math.max(dp(270),getResources().getDisplayMetrics().widthPixels-dp(44)));
-        LinearLayout screen=new LinearLayout(this);screen.setOrientation(LinearLayout.VERTICAL);screen.setGravity(Gravity.CENTER_HORIZONTAL);screen.setPadding(0,dp(2),0,dp(8));
-        FrameLayout dial=new FrameLayout(this);dial.setBackgroundColor(android.graphics.Color.TRANSPARENT);dial.setClickable(true);dial.setFocusable(true);
-        timerRing=new TimerRingView(this,bg,track,PINK);
+
+        LinearLayout screen=new LinearLayout(this);
+        screen.setOrientation(LinearLayout.VERTICAL);
+        screen.setGravity(Gravity.CENTER_HORIZONTAL);
+        screen.setPadding(dp(12),dp(4),dp(12),dp(10));
+
+        // Subject tags
+        LinearLayout tags=new LinearLayout(this);
+        tags.setOrientation(LinearLayout.HORIZONTAL);
+        tags.setGravity(Gravity.CENTER_VERTICAL);
+        tags.setPadding(0,0,0,dp(10));
+        java.util.ArrayList<String> subjects=new java.util.ArrayList<>();
+        subjects.add("Все");
+        subjects.add("Математика");
+        Set<String> savedSubjects=prefs.getStringSet("pomodoro_subjects",new java.util.TreeSet<String>());
+        for(String item:savedSubjects)if(!item.trim().isEmpty()&&!subjects.contains(item))subjects.add(item);
+        String activeSubject=prefs.getString("pomodoro_active_subject","Все");
+        if(!subjects.contains(activeSubject))activeSubject="Все";
+        final String[] selectedSubject={activeSubject};
+        for(String subject:subjects){
+            final String value=subject;
+            TextView chip=text(subject,12,subject.equals(activeSubject)?white:0xFF687180,true);
+            chip.setGravity(Gravity.CENTER);
+            chip.setPadding(dp(16),0,dp(16),0);
+            chip.setBackground(shape(subject.equals(activeSubject)?blue:white,22,subject.equals(activeSubject)?blue:0xFFE4E8EF));
+            LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(-2,dp(36));
+            cp.setMargins(0,0,dp(7),0);
+            tags.addView(chip,cp);
+            chip.setOnClickListener(v->{selectedSubject[0]=value;prefs.edit().putString("pomodoro_active_subject",value).apply();showPomodoro();});
+        }
+        TextView addSubject=text("+ Предмет",12,blue,true);
+        addSubject.setGravity(Gravity.CENTER);
+        addSubject.setPadding(dp(14),0,dp(14),0);
+        android.graphics.drawable.GradientDrawable dashed=shape(0x00FFFFFF,22,blue);
+        dashed.setStroke(dp(1),blue,dp(5),dp(3));
+        addSubject.setBackground(dashed);
+        LinearLayout.LayoutParams addParams=new LinearLayout.LayoutParams(-2,dp(36));
+        tags.addView(addSubject,addParams);
+        addSubject.setOnClickListener(v->{
+            EditText input=new EditText(this);input.setSingleLine(true);input.setHint("Название предмета");
+            new AlertDialog.Builder(this).setTitle("Новый предмет").setView(input)
+                .setNegativeButton("Отмена",null).setPositiveButton("Добавить",(d,w)->{
+                    String name=input.getText().toString().trim();
+                    if(!name.isEmpty()){
+                        java.util.TreeSet<String> next=new java.util.TreeSet<>(prefs.getStringSet("pomodoro_subjects",new java.util.TreeSet<String>()));
+                        next.add(name);prefs.edit().putStringSet("pomodoro_subjects",next).putString("pomodoro_active_subject",name).apply();showPomodoro();
+                    }
+                }).show();
+        });
+        HorizontalScrollView tagScroll=new HorizontalScrollView(this);tagScroll.setHorizontalScrollBarEnabled(false);tagScroll.addView(tags);
+        screen.addView(tagScroll,lp(-1,dp(46)));
+
+        // Main circular timer
+        int diameter=Math.min(dp(318),Math.max(dp(260),getResources().getDisplayMetrics().widthPixels-dp(64)));
+        FrameLayout dial=new FrameLayout(this);
+        dial.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        timerRing=new TimerRingView(this,white,pale,blue);
         dial.addView(timerRing,new FrameLayout.LayoutParams(-1,-1));
-        LinearLayout center=new LinearLayout(this);center.setOrientation(LinearLayout.VERTICAL);center.setGravity(Gravity.CENTER);
-        TextView phase=text(timerIsBreak?"ПЕРЕРЫВ":"ВРЕМЯ ФОКУСА",11,muted,true);phase.setLetterSpacing(0.16f);phase.setGravity(Gravity.CENTER);center.addView(phase,lp(-1,-2,0,0,0,dp(10)));
-        timerDisplay=text(formatTimer(timerRemainingMs),56,fg,true);timerDisplay.setGravity(Gravity.CENTER);timerDisplay.setIncludeFontPadding(false);timerDisplay.setTypeface(android.graphics.Typeface.create("sans-serif",android.graphics.Typeface.BOLD));center.addView(timerDisplay,lp(-1,-2,0,0,0,dp(8)));
-        TextView hint=text(timerRunning?"Ты в потоке":"Нажми, чтобы начать",13,muted,false);hint.setGravity(Gravity.CENTER);center.addView(hint,lp(-1,-2,0,0,0,0));
-        dial.addView(center,new FrameLayout.LayoutParams(-1,-1));screen.addView(dial,new LinearLayout.LayoutParams(diameter,diameter));
-        timerStatus=text(timerIsBreak?"Отдых тоже часть успеха":"Один шаг за раз",14,muted,false);timerStatus.setGravity(Gravity.CENTER);timerStatus.setPadding(dp(12),dp(16),dp(12),dp(12));screen.addView(timerStatus,lp(-1,-2,0,0,0,dp(4)));
-        TextView presetsTitle=text("ДЛИТЕЛЬНОСТЬ ФОКУСА",11,muted,true);presetsTitle.setGravity(Gravity.CENTER);screen.addView(presetsTitle,lp(-1,-2,0,dp(3),0,dp(3)));
-        LinearLayout focusPresets=new LinearLayout(this);focusPresets.setGravity(Gravity.CENTER);focusPresets.setOrientation(LinearLayout.HORIZONTAL);
-        for(int minutes:new int[]{15,25,30,45,60}){Button chip=button(minutes+"м",selectedStudyMinutes==minutes);chip.setTextSize(12);LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(38),1f);cp.setMargins(dp(2),0,dp(2),0);focusPresets.addView(chip,cp);chip.setOnClickListener(v->{if(timerRunning)return;selectedStudyMinutes=minutes;prefs.edit().putInt("selected_study_minutes",minutes).apply();if(!timerIsBreak)timerRemainingMs=minutes*60000L;showPomodoro();});}
-        screen.addView(focusPresets,lp(-1,dp(40),0,0,0,dp(4)));
-        TextView breakTitle=text("КОРОТКИЙ И ДЛИННЫЙ ПЕРЕРЫВ",11,muted,true);breakTitle.setGravity(Gravity.CENTER);screen.addView(breakTitle,lp(-1,-2,0,dp(3),0,dp(3)));
-        LinearLayout breakPresets=new LinearLayout(this);breakPresets.setGravity(Gravity.CENTER);breakPresets.setOrientation(LinearLayout.HORIZONTAL);
-        for(int minutes:new int[]{3,5,10}){Button chip=button("Короткий "+minutes,selectedBreakMinutes==minutes);chip.setTextSize(12);LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(40),1f);cp.setMargins(dp(2),0,dp(2),0);breakPresets.addView(chip,cp);chip.setOnClickListener(v->{if(timerRunning)return;selectedBreakMinutes=minutes;prefs.edit().putInt("selected_break_minutes",minutes).apply();showPomodoro();});}
-        screen.addView(breakPresets,lp(-1,dp(40),0,0,0,dp(2)));
-        LinearLayout longBreakPresets=new LinearLayout(this);longBreakPresets.setGravity(Gravity.CENTER);longBreakPresets.setOrientation(LinearLayout.HORIZONTAL);
-        int longBreak=Math.max(15,prefs.getInt("pomodoro_long_break_minutes",15));
-        for(int minutes:new int[]{15,20,30}){Button chip=button("Длинный "+minutes,longBreak==minutes);chip.setTextSize(11);LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(38),1f);cp.setMargins(dp(2),0,dp(2),0);longBreakPresets.addView(chip,cp);chip.setOnClickListener(v->{if(timerRunning)return;prefs.edit().putInt("pomodoro_long_break_minutes",minutes).apply();showPomodoro();});}
-        screen.addView(longBreakPresets,lp(-1,dp(40),0,0,0,dp(7)));
-        int todaySessions=prefs.getInt("pomodoro_completed_sessions_"+todayKey(),0),weekSessions=0;Calendar weekCursor=Calendar.getInstance(AppTime.zone());SimpleDateFormat weekFmt=new SimpleDateFormat("yyyy-MM-dd",Locale.US);weekFmt.setTimeZone(AppTime.zone());for(int day=0;day<7;day++){weekSessions+=prefs.getInt("pomodoro_completed_sessions_"+weekFmt.format(weekCursor.getTime()),0);weekCursor.add(Calendar.DAY_OF_YEAR,-1);}
-        int pauseCount=prefs.getInt("pomodoro_pause_count_"+todayKey(),0);long pauseTotal=prefs.getLong("pomodoro_pause_total_ms_"+todayKey(),0L);String averagePause=pauseCount==0?"—":String.format(Locale.getDefault(),"%.1f мин",(pauseTotal/60000.0)/pauseCount);
-        TextView stats=text("Сегодня: "+todaySessions+" полных сессий   ·   7 дней: "+weekSessions+"\nСреднее время до паузы сегодня: "+averagePause,11,muted,false);stats.setGravity(Gravity.CENTER);stats.setPadding(dp(4),dp(5),dp(4),dp(5));screen.addView(stats,lp(-1,-2,0,0,0,dp(3)));
-        LinearLayout controls=new LinearLayout(this);controls.setGravity(Gravity.CENTER);controls.setOrientation(LinearLayout.HORIZONTAL);
-        timerStartButton=button(timerRunning?"Продолжается":"Начать фокус",true);timerStartButton.setEnabled(!timerRunning);timerStartButton.setTextSize(14);
+
+        LinearLayout center=new LinearLayout(this);
+        center.setOrientation(LinearLayout.VERTICAL);
+        center.setGravity(Gravity.CENTER);
+        center.setPadding(dp(24),dp(22),dp(24),dp(14));
+
+        View illustration=new View(this){
+            final android.graphics.Paint p=new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+            void fill(android.graphics.Canvas c,int color){p.setColor(color);p.setStyle(android.graphics.Paint.Style.FILL);p.clearShadowLayer();}
+            @Override protected void onDraw(android.graphics.Canvas canvas){
+                super.onDraw(canvas);
+                float sx=getWidth()/180f, sy=getHeight()/112f;
+                canvas.save();canvas.scale(sx,sy);
+                // desk and chair
+                fill(canvas,0xFFB9D2F6);canvas.drawRoundRect(48,70,137,76,3,3,p);
+                fill(canvas,0xFF7FA6DE);canvas.drawRoundRect(62,76,67,98,2,2,p);canvas.drawRoundRect(119,76,124,98,2,2,p);
+                fill(canvas,0xFF9DB9E6);canvas.drawRoundRect(39,56,59,78,7,7,p);
+                // person
+                fill(canvas,0xFFFFD6B8);canvas.drawCircle(83,35,13,p);
+                fill(canvas,0xFF465A79);canvas.drawArc(70,20,96,48,180,180,true,p);
+                fill(canvas,0xFF6C8FC6);canvas.drawRoundRect(72,47,105,72,9,9,p);
+                fill(canvas,0xFFFFD6B8);canvas.drawRoundRect(99,54,118,61,4,4,p);
+                // laptop
+                fill(canvas,0xFF526783);canvas.drawRoundRect(82,53,111,69,3,3,p);
+                fill(canvas,0xFFDAE7F8);canvas.drawRoundRect(85,56,108,66,2,2,p);
+                fill(canvas,0xFF7B91AE);canvas.drawRoundRect(79,69,115,72,2,2,p);
+                // water bottle
+                fill(canvas,0xFF75BFEA);canvas.drawRoundRect(22,49,34,74,4,4,p);
+                fill(canvas,0xFF4B9ED7);canvas.drawRoundRect(25,44,31,51,2,2,p);
+                fill(canvas,0xFFDBF4FF);canvas.drawRoundRect(25,57,31,69,2,2,p);
+                // coffee cup and steam
+                fill(canvas,0xFFF1B77E);canvas.drawRoundRect(143,60,160,74,3,3,p);
+                p.setStyle(android.graphics.Paint.Style.STROKE);p.setStrokeWidth(2);p.setStrokeCap(android.graphics.Paint.Cap.ROUND);p.setColor(0xFFF1B77E);
+                canvas.drawArc(156,62,168,72,-80,160,false,p);
+                canvas.drawLine(148,55,146,49,p);canvas.drawLine(153,55,155,48,p);
+                // question bubble
+                fill(canvas,0xFFEAF1FF);canvas.drawCircle(116,20,12,p);
+                p.setColor(blue);p.setTextSize(17);p.setTypeface(android.graphics.Typeface.create("sans-serif-bold",1));canvas.drawText("?",112,26,p);
+                canvas.restore();
+            }
+        };
+        center.addView(illustration,lp(dp(180),dp(112),0,0,0,dp(2)));
+        timerDisplay=text(formatTimer(timerRemainingMs),46,ink,true);
+        timerDisplay.setGravity(Gravity.CENTER);timerDisplay.setIncludeFontPadding(false);
+        timerDisplay.setTypeface(android.graphics.Typeface.create("sans-serif",android.graphics.Typeface.BOLD));
+        center.addView(timerDisplay,lp(-1,-2,0,0,0,dp(2)));
+        TextView focusLabel=text("Ф О К У С   З А   С Е Г О Д Н Я",9,grey,true);
+        focusLabel.setGravity(Gravity.CENTER);
+        center.addView(focusLabel,lp(-1,dp(20)));
+        dial.addView(center,new FrameLayout.LayoutParams(-1,-1));
+        screen.addView(dial,new LinearLayout.LayoutParams(diameter,diameter));
+
+        TextView phase=text(timerIsBreak?"ВРЕМЯ ОТДОХНУТЬ":"Готов начать?",12,grey,false);
+        phase.setGravity(Gravity.CENTER);
+        screen.addView(phase,lp(-1,dp(25),0,dp(2),0,dp(5)));
+
+        // Duration choices remain available
+        LinearLayout presets=new LinearLayout(this);presets.setGravity(Gravity.CENTER);presets.setOrientation(LinearLayout.HORIZONTAL);
+        for(int minutes:new int[]{15,25,30,45,60}){
+            TextView chip=text(minutes+" мин",11,selectedStudyMinutes==minutes?white:grey,true);
+            chip.setGravity(Gravity.CENTER);
+            chip.setBackground(shape(selectedStudyMinutes==minutes?blue:white,18,selectedStudyMinutes==minutes?blue:0xFFE7EAF0));
+            LinearLayout.LayoutParams cp=new LinearLayout.LayoutParams(0,dp(34),1f);cp.setMargins(dp(2),0,dp(2),0);presets.addView(chip,cp);
+            chip.setOnClickListener(v->{if(timerRunning)return;selectedStudyMinutes=minutes;prefs.edit().putInt("selected_study_minutes",minutes).apply();if(!timerIsBreak)timerRemainingMs=minutes*60000L;showPomodoro();});
+        }
+        screen.addView(presets,lp(-1,dp(38),0,dp(3),0,dp(8)));
+
+        LinearLayout footer=new LinearLayout(this);footer.setOrientation(LinearLayout.HORIZONTAL);footer.setGravity(Gravity.CENTER_VERTICAL);
+        timerStartButton=button(timerRunning?"Идёт учёба":"▶  НАЧАТЬ УЧЁБУ",true);
+        timerStartButton.setTextSize(13);timerStartButton.setTextColor(white);
+        timerStartButton.setBackground(shape(blue,18,blue));timerStartButton.setElevation(dp(3));
+        timerStartButton.setEnabled(!timerRunning);
         timerStartButton.setOnClickListener(v->{if(!timerIsBreak&&timerRemainingMs>=selectedStudyMinutes*60000L-1000L)showStudyRitual();else startTimer();});
-        timerPauseButton=button("Пауза",false);timerPauseButton.setTextSize(14);timerPauseButton.setEnabled(timerRunning);timerPauseButton.setOnClickListener(v->pauseTimer());
-        dial.setOnClickListener(v->{if(timerRunning)pauseTimer();else if(timerStartButton!=null)timerStartButton.performClick();});
-        Button reset=button("Сбросить",false);reset.setTextSize(14);reset.setOnClickListener(v->{
+        LinearLayout.LayoutParams startLp=new LinearLayout.LayoutParams(0,dp(54),1f);startLp.setMargins(0,0,dp(10),0);footer.addView(timerStartButton,startLp);
+
+        TextView pause=text("Ⅱ",22,blue,true);pause.setGravity(Gravity.CENTER);
+        pause.setBackground(shape(white,28,0xFFD5E1F5));pause.setElevation(dp(2));
+        footer.addView(pause,new LinearLayout.LayoutParams(dp(54),dp(54)));
+        pause.setOnClickListener(v->{if(timerRunning)pauseTimer();else if(timerStartButton!=null)timerStartButton.performClick();});
+        screen.addView(footer,lp(-1,dp(58),0,dp(4),0,dp(8)));
+
+        LinearLayout extra=new LinearLayout(this);extra.setGravity(Gravity.CENTER);extra.setOrientation(LinearLayout.HORIZONTAL);
+        TextView breakChip=text("Перерыв: "+selectedBreakMinutes+" мин",11,grey,true);breakChip.setGravity(Gravity.CENTER);breakChip.setPadding(dp(10),dp(7),dp(10),dp(7));breakChip.setBackground(shape(white,16,0xFFE7EAF0));
+        extra.addView(breakChip,lp(-2,dp(32),0,0,dp(6),0));
+        breakChip.setOnClickListener(v->{String[] choices={"3 минуты","5 минут","10 минут"};new AlertDialog.Builder(this).setTitle("Длительность перерыва").setItems(choices,(d,w)->{selectedBreakMinutes=new int[]{3,5,10}[w];prefs.edit().putInt("selected_break_minutes",selectedBreakMinutes).apply();if(timerIsBreak)timerRemainingMs=selectedBreakMinutes*60000L;showPomodoro();}).show();});
+        TextView reset=text("Сбросить",11,grey,true);reset.setGravity(Gravity.CENTER);reset.setPadding(dp(12),dp(7),dp(12),dp(7));reset.setBackground(shape(white,16,0xFFE7EAF0));extra.addView(reset,lp(-2,dp(32)));
+        reset.setOnClickListener(v->{
             long elapsed=timerRunning&&!timerIsBreak?Math.max(0,System.currentTimeMillis()-timerSessionStarted):0;
             FocusTimerController.clearIfMatches(this,timerEndElapsed);
             timerHandler.removeCallbacks(timerTick);timerRunning=false;cancelTimerFinishAlarm();
@@ -2403,13 +2514,12 @@ public class MainActivity extends Activity {
             if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}
             if(timerDisplay!=null)timerDisplay.animate().cancel();timerIsBreak=false;timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();
         });
-        LinearLayout.LayoutParams main=new LinearLayout.LayoutParams(0,dp(52),1f);main.setMargins(dp(4),0,dp(4),0);controls.addView(timerStartButton,main);
-        LinearLayout.LayoutParams side=new LinearLayout.LayoutParams(0,dp(52),0.58f);side.setMargins(dp(4),0,dp(4),0);controls.addView(timerPauseButton,side);controls.addView(reset,side);
-        screen.addView(controls,lp(-1,dp(58),0,dp(12),0,0));
+        screen.addView(extra,lp(-1,dp(38),0,0,0,dp(2)));
+
         timerDisplay.setOnLongClickListener(v->{if(timerRunning)return true;new TimePickerDialog(this,(picker,hour,minute)->{selectedStudyMinutes=Math.max(1,Math.min(600,hour*60+minute));prefs.edit().putInt("selected_study_minutes",selectedStudyMinutes).apply();if(!timerIsBreak)timerRemainingMs=selectedStudyMinutes*60000L;showPomodoro();},selectedStudyMinutes/60,selectedStudyMinutes%60,true).show();return true;});
-        root.addView(screen,lp(-1,-2,0,dp(6),0,dp(10)));
+        root.addView(screen,lp(-1,-2,0,dp(4),0,dp(8)));
         updateTimerRingProgress(timerRemainingMs);
-        if(timerRunning){updateTimerDisplay();timerStartButton.setEnabled(false);timerPauseButton.setEnabled(true);if(timerTick==null){timerTick=new Runnable(){public void run(){updateTimerDisplay();long left=FocusTimerController.remainingUntil(timerEndElapsed);if(left<=0)finishTimerPhase();else timerHandler.postDelayed(this,250);}};timerHandler.post(timerTick);}}
+        if(timerRunning){updateTimerDisplay();timerStartButton.setEnabled(false);if(timerTick==null){timerTick=new Runnable(){public void run(){updateTimerDisplay();long left=FocusTimerController.remainingUntil(timerEndElapsed);if(left<=0)finishTimerPhase();else timerHandler.postDelayed(this,250);}};timerHandler.post(timerTick);}}
     }
 
     private String formatTimer(long ms) {
