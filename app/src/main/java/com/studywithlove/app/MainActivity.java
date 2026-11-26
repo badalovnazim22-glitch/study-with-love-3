@@ -1307,8 +1307,6 @@ public class MainActivity extends Activity {
         String homeSubtitle = returningAfterGap ? "Рада тебя видеть. Давай начнём с малого. · До цели " + remaining + " мин."
                 : (currentStreak() > 0 ? "🔥 Серия: " + currentStreak() + " " + dayWord(currentStreak()) : "Начни новую серию сегодня") + " · Осталось " + remaining + " мин. до цели дня";
         base(greetingTitle, homeSubtitle);
-        addDailyMoodCard(root);
-        if(root.getChildCount()>0)root.getChildAt(root.getChildCount()-1).setTag("home_mood");
 
         int totalTopics = 0, completedTopics = 0;
         for (Map.Entry<String, List<String>> entry : chapters.entrySet()) {
@@ -1385,6 +1383,9 @@ public class MainActivity extends Activity {
         TextView completedLabel=text(completedTopics + " из " + totalTopics + " тем завершено",13,MUTED,false);
         continueCard.addView(completedLabel,lp(-1,-2,0,0,0,0));
         root.addView(continueCard, lp(-1, -2, 0, 1, 0, 6));
+
+        addDailyMoodCard(root);
+        if(root.getChildCount()>0)root.getChildAt(root.getChildCount()-1).setTag("home_mood");
 
         // Three compact home summary tiles restored from the earlier design.
         LinearLayout homeStats = new LinearLayout(this);
