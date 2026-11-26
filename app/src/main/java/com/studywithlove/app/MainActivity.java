@@ -526,7 +526,7 @@ public class MainActivity extends Activity {
         Set<String> days = p.getStringSet("reminder_days", null);
         if (days == null) { days = new TreeSet<>(); for (int d = 1; d <= 7; d++) days.add(String.valueOf(d)); }
         Set<String> times = p.getStringSet("reminder_times", null);
-        if (times == null) times = new TreeSet<>(java.util.Arrays.asList("10:00", "15:00", "19:00", "21:00"));
+        if (times == null) times = new TreeSet<>(java.util.Arrays.asList("20:00"));
         Set<String> newKeys = new TreeSet<>();
         TimeZone tz = AppTime.zone();
         for (String dayValue : days) for (String timeValue : times) {
