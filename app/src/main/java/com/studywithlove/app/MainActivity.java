@@ -763,7 +763,7 @@ public class MainActivity extends Activity {
         bar.setPadding(dp(5),dp(4),dp(5),dp(4));
         GradientDrawable navBg=new GradientDrawable();
         navBg.setColor(isDarkAppearance()?0xF5211E29:0xF5FFFFFF);
-        navBg.setCornerRadius(dp(30));
+        navBg.setCornerRadius(0f);
         navBg.setStroke(dp(1),isDarkAppearance()?0x55393442:0x55ECEAF2);
         bar.setBackground(navBg);
         bar.setElevation(dp(10));
@@ -871,7 +871,7 @@ public class MainActivity extends Activity {
         box.setOnTouchListener((v,event)->{if(event.getAction()==android.view.MotionEvent.ACTION_DOWN){v.animate().cancel();v.animate().scaleX(0.985f).scaleY(0.985f).setDuration(75).start();}else if(event.getAction()==android.view.MotionEvent.ACTION_UP||event.getAction()==android.view.MotionEvent.ACTION_CANCEL){v.animate().cancel();v.animate().scaleX(1f).scaleY(1f).setDuration(180).setInterpolator(new android.view.animation.OvershootInterpolator(1.15f)).start();}return false;});
         if(Build.VERSION.SDK_INT>=21){
             android.graphics.drawable.GradientDrawable rippleMask=new android.graphics.drawable.GradientDrawable();
-            rippleMask.setColor(0xFFFFFFFF);rippleMask.setCornerRadius(dp(14));
+            rippleMask.setColor(0xFFFFFFFF);rippleMask.setCornerRadius(0f);
             box.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x18C97891),null,rippleMask));
         }
     }
@@ -967,7 +967,7 @@ public class MainActivity extends Activity {
         android.widget.GridLayout palette=new android.widget.GridLayout(this);palette.setColumnCount(paletteColumns);
         String activeTheme=prefs.getString("app_theme","pink");
         for(int i=0;i<keys.length;i++){final String key=keys[i];final int color=colors[i];final String label=names[i];LinearLayout option=new LinearLayout(this);option.setGravity(Gravity.CENTER_VERTICAL);option.setPadding(dp(8),dp(7),dp(5),dp(7));option.setBackground(shape(activeTheme.equals(key)?blendColors(PALE,BG,0.18f):0x00FFFFFF,13,activeTheme.equals(key)?PINK:blendColors(PALE,BG,0.15f)));
-            TextView swatch=text(activeTheme.equals(key)?"✓":"",12,onAccentTextColor(color),true);swatch.setGravity(Gravity.CENTER);GradientDrawable swatchBg=new GradientDrawable();swatchBg.setColor(color);swatchBg.setCornerRadius(dp(50));if(activeTheme.equals(key))swatchBg.setStroke(dp(2),PINK);swatch.setBackground(swatchBg);option.addView(swatch,lp(28,28,0,0,7,0));TextView labelView=text(label,11,DARK,true);option.addView(labelView,new LinearLayout.LayoutParams(0,dp(30),1f));
+            TextView swatch=text(activeTheme.equals(key)?"✓":"",12,onAccentTextColor(color),true);swatch.setGravity(Gravity.CENTER);GradientDrawable swatchBg=new GradientDrawable();swatchBg.setColor(color);swatchBg.setCornerRadius(0f);if(activeTheme.equals(key))swatchBg.setStroke(dp(2),PINK);swatch.setBackground(swatchBg);option.addView(swatch,lp(28,28,0,0,7,0));TextView labelView=text(label,11,DARK,true);option.addView(labelView,new LinearLayout.LayoutParams(0,dp(30),1f));
             android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(48);gp.columnSpec=android.widget.GridLayout.spec(i%paletteColumns,1f);gp.setMargins(dp(2),dp(3),dp(2),dp(3));palette.addView(option,gp);
             option.setOnClickListener(v->{prefs.edit().putString("app_theme",key).remove("app_accent_color").apply();applySavedTheme();showSettings();});
         }
@@ -979,7 +979,7 @@ public class MainActivity extends Activity {
         String[] fontFamilies={"sans-serif","sans-serif-rounded","serif","monospace","sans-serif-condensed","sans-serif-medium"};
         String activeFont=prefs.getString("app_font","sans");
         android.widget.GridLayout fontGrid=new android.widget.GridLayout(this);fontGrid.setColumnCount(2);
-        for(int i=0;i<fontKeys.length;i++){final String key=fontKeys[i],family=fontFamilies[i];Button choice=button((activeFont.equals(key)?"✓  ":"")+translate(fontNames[i]),activeFont.equals(key));choice.setTypeface(Typeface.create(family,Typeface.BOLD));if(activeFont.equals(key)){GradientDrawable selectedFontBg=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{adjustColor(PINK,0.92f),adjustColor(PINK,0.78f)});selectedFontBg.setCornerRadius(dp(12));choice.setBackground(selectedFontBg);}else choice.setBackground(shape(isDarkAppearance()?blendColors(PALE,BG,0.18f):0xCCFFFFFF,13,blendColors(PINK,BG,isDarkAppearance()?0.42f:0.68f)));android.widget.GridLayout.LayoutParams fp=new android.widget.GridLayout.LayoutParams();fp.width=0;fp.height=dp(44);fp.columnSpec=android.widget.GridLayout.spec(i%2,1f);fp.setMargins(dp(3),dp(3),dp(3),dp(3));fontGrid.addView(choice,fp);choice.setOnClickListener(v->{prefs.edit().putString("app_font",key).apply();showSettings();});}
+        for(int i=0;i<fontKeys.length;i++){final String key=fontKeys[i],family=fontFamilies[i];Button choice=button((activeFont.equals(key)?"✓  ":"")+translate(fontNames[i]),activeFont.equals(key));choice.setTypeface(Typeface.create(family,Typeface.BOLD));if(activeFont.equals(key)){GradientDrawable selectedFontBg=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{adjustColor(PINK,0.92f),adjustColor(PINK,0.78f)});selectedFontBg.setCornerRadius(0f);choice.setBackground(selectedFontBg);}else choice.setBackground(shape(isDarkAppearance()?blendColors(PALE,BG,0.18f):0xCCFFFFFF,13,blendColors(PINK,BG,isDarkAppearance()?0.42f:0.68f)));android.widget.GridLayout.LayoutParams fp=new android.widget.GridLayout.LayoutParams();fp.width=0;fp.height=dp(44);fp.columnSpec=android.widget.GridLayout.spec(i%2,1f);fp.setMargins(dp(3),dp(3),dp(3),dp(3));fontGrid.addView(choice,fp);choice.setOnClickListener(v->{prefs.edit().putString("app_font",key).apply();showSettings();});}
         fontGroup.addView(fontGrid,lp(-1,-2,0,4,0,0));appearance.addView(fontGroup,lp(-1,-2,0,4,0,6));
         LinearLayout fontSizeGroup=settingsGroup("РАЗМЕР ТЕКСТА");
         fontSizeGroup.setTag("appearance");
@@ -1001,7 +1001,7 @@ public class MainActivity extends Activity {
             choice.setSingleLine(true);
             choice.setIncludeFontPadding(false);
             choice.setPadding(dp(2),dp(9),dp(2),dp(9));
-            if(selected){GradientDrawable activeSegment=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{adjustColor(PINK,1.12f),adjustColor(PINK,0.78f)});activeSegment.setCornerRadius(dp(14));activeSegment.setStroke(dp(1),adjustColor(PINK,0.78f));choice.setBackground(activeSegment);}else choice.setBackground(shape(isDarkAppearance()?0xFF292530:0x00FFFFFF,10,0));
+            if(selected){GradientDrawable activeSegment=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{adjustColor(PINK,1.12f),adjustColor(PINK,0.78f)});activeSegment.setCornerRadius(0f);activeSegment.setStroke(dp(1),adjustColor(PINK,0.78f));choice.setBackground(activeSegment);}else choice.setBackground(shape(isDarkAppearance()?0xFF292530:0x00FFFFFF,10,0));
             LinearLayout.LayoutParams scaleLp=new LinearLayout.LayoutParams(0,dp(42),1f);
             scaleLp.setMargins(dp(1),0,dp(1),0);
             scaleStrip.addView(choice,scaleLp);
@@ -3037,8 +3037,8 @@ public class MainActivity extends Activity {
     }
 
     private android.graphics.drawable.Drawable roundedAchievementProgress(int trackColor,int fillColor){
-        GradientDrawable track=new GradientDrawable();track.setColor(trackColor);track.setCornerRadius(dp(10));
-        GradientDrawable fill=new GradientDrawable();fill.setColor(fillColor);fill.setCornerRadius(dp(10));
+        GradientDrawable track=new GradientDrawable();track.setColor(trackColor);track.setCornerRadius(0f);
+        GradientDrawable fill=new GradientDrawable();fill.setColor(fillColor);fill.setCornerRadius(0f);
         android.graphics.drawable.LayerDrawable layers=new android.graphics.drawable.LayerDrawable(new android.graphics.drawable.Drawable[]{track,new android.graphics.drawable.ClipDrawable(fill,Gravity.LEFT,android.graphics.drawable.ClipDrawable.HORIZONTAL)});
         layers.setId(0,android.R.id.background);layers.setId(1,android.R.id.progress);
         return new android.graphics.drawable.InsetDrawable(layers,dp(2),0,dp(2),0);
@@ -3695,8 +3695,8 @@ public class MainActivity extends Activity {
         ProgressBar bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         bar.setMax(100);
         bar.setProgress(Math.max(0, Math.min(100, percent)));
-        GradientDrawable track=new GradientDrawable();track.setColor(isDarkAppearance()?0xFF514650:0xFFFFE6ED);track.setCornerRadius(dp(8));
-        GradientDrawable fill=new GradientDrawable();fill.setColor(PINK);fill.setCornerRadius(dp(8));
+        GradientDrawable track=new GradientDrawable();track.setColor(isDarkAppearance()?0xFF514650:0xFFFFE6ED);track.setCornerRadius(0f);
+        GradientDrawable fill=new GradientDrawable();fill.setColor(PINK);fill.setCornerRadius(0f);
         android.graphics.drawable.ClipDrawable clipped=new android.graphics.drawable.ClipDrawable(fill,Gravity.LEFT,android.graphics.drawable.ClipDrawable.HORIZONTAL);
         bar.setProgressDrawable(new android.graphics.drawable.LayerDrawable(new android.graphics.drawable.Drawable[]{track,clipped}){{setId(0,android.R.id.background);setId(1,android.R.id.progress);}});
         parent.addView(bar, lp(-1, 9, 0, 0, 0, 6));
@@ -4224,13 +4224,13 @@ public class MainActivity extends Activity {
         if(primary){
             GradientDrawable gradient=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
                     new int[]{adjustColor(accent,0.92f),accentDeep});
-            gradient.setCornerRadius(dp(14));
+            gradient.setCornerRadius(0f);
             gradient.setStroke(dp(0),accentDeep);
             bg=gradient;
         }else{
             GradientDrawable inactive=new GradientDrawable();
             inactive.setColor(isDarkAppearance()?blendColors(PALE,BG,0.22f):0xBFFFFFFF);
-            inactive.setCornerRadius(dp(14));
+            inactive.setCornerRadius(0f);
             inactive.setStroke(dp(1),isDarkAppearance()?0xFF4B4558:0xFFE7E3F0);
             bg=inactive;
         }
@@ -5005,7 +5005,7 @@ public class MainActivity extends Activity {
 
     private interface OnAction { void go(); }
     private GradientDrawable shape(int color, int radius, int stroke) {
-        radius=Math.max(0,Math.min(radius,28));
+        radius=0;
         String theme = prefs == null ? "pink" : prefs.getString("app_theme", "pink");
         if(isThemeAccentColor(color))color=PINK;
         if(isThemeAccentColor(stroke))stroke=PINK;
@@ -5054,7 +5054,7 @@ public class MainActivity extends Activity {
             if (white) color = color == 0xFFFFF9F7 ? 0xFFFFF5EF : 0xFFFFFCF9; else if (soft || pale) color = 0xFFFBE5D9;
             if (border) stroke = 0xFFF0D2C4;
         }
-        GradientDrawable d = new GradientDrawable(); d.setColor(color); d.setCornerRadius(dp(radius)); if (stroke != 0) d.setStroke(dp(1), stroke); return d;
+        GradientDrawable d = new GradientDrawable(); d.setColor(color); d.setCornerRadius(0f); if (stroke != 0) d.setStroke(dp(1), stroke); return d;
     }
     private LinearLayout.LayoutParams lp(int w, int h, int l, int t, int r, int b) { LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(w < 0 ? w : dp(w), h < 0 ? h : dp(h)); p.setMargins(dp(l), dp(t), dp(r), dp(b)); return p; }
     private int dp(int x) { return (int)(x * getResources().getDisplayMetrics().density + 0.5f); }
