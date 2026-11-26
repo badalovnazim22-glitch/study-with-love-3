@@ -965,7 +965,7 @@ public class MainActivity extends Activity {
         int[] colors={0xFF8070A8,0xFF8979B8,0xFF659B86,0xFF302735,0xFFFFFFFF,0xFF8B6046,0xFFC49318,0xFF30251F,0xFF5D91B5,0xFFD88968,0xFFB32635,0xFFD9C19A};
         LinearLayout preview = card();
         preview.setPadding(dp(14), dp(12), dp(14), dp(12));
-        preview.setBackground(shape(isDarkAppearance() ? 0xFF302735 : 0xFFFFF0F4, 18, PINK));
+        preview.setBackground(shape(PALE,18,blendColors(PINK,BG,isDarkAppearance()?0.42f:0.68f)));
         addText(preview, "ПРЕДПРОСМОТР ТЕМЫ", 12, PINK, true);
         TextView previewText = text("Твой прогресс  ·  65%", 16, DARK, true);
         preview.addView(previewText, lp(-1, 30, 0, 4, 0, 5));
@@ -973,7 +973,7 @@ public class MainActivity extends Activity {
         previewBar.setMax(100); previewBar.setProgress(65);
         if (Build.VERSION.SDK_INT >= 21) previewBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
         preview.addView(previewBar, lp(-1, 8, 0, 0, 0, 4));
-        Button previewButton = button("Продолжить", true);
+        Button previewButton = button("Продолжить", true);previewButton.setBackground(shape(PINK,12,0));
         preview.addView(previewButton, lp(-1, 42, 0, 5, 0, 0));
         appearance.addView(preview, lp(-1, -2, 0, 7, 0, 8));
         int paletteColumns = getResources().getConfiguration().screenWidthDp < 380 ? 2 : 3;
@@ -984,13 +984,21 @@ public class MainActivity extends Activity {
             android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(48);gp.columnSpec=android.widget.GridLayout.spec(i%paletteColumns,1f);gp.setMargins(dp(2),dp(3),dp(2),dp(3));palette.addView(option,gp);
             option.setOnClickListener(v->{prefs.edit().putString("app_theme",key).remove("app_accent_color").apply();applySavedTheme();showSettings();});
         }
-        appearance.addView(palette,lp(-1,-2,0,7,0,8));
+        appearance.addView(palette,lp(-1,-2,0,7,0,5));
+        LinearLayout customTheme=card();customTheme.setOrientation(LinearLayout.HORIZONTAL);customTheme.setGravity(Gravity.CENTER_VERTICAL);customTheme.setPadding(dp(12),dp(8),dp(12),dp(8));
+        TextView customSwatch=text("✦",20,0xFFFFFFFF,true);customSwatch.setGravity(Gravity.CENTER);GradientDrawable customSwatchBg=new GradientDrawable(GradientDrawable.Orientation.TL_BR,new int[]{PINK,adjustColor(PINK,0.68f)});customSwatchBg.setShape(GradientDrawable.OVAL);customSwatch.setBackground(customSwatchBg);customTheme.addView(customSwatch,lp(38,38,0,0,10,0));
+        LinearLayout customWords=new LinearLayout(this);customWords.setOrientation(LinearLayout.VERTICAL);addText(customWords,"Своя тема",14,DARK,true);addText(customWords,"Выбери акцент и цвет фона",11,MUTED,false);customTheme.addView(customWords,new LinearLayout.LayoutParams(0,-2,1f));customTheme.addView(text("›",24,PINK,true));customTheme.setOnClickListener(v->showCustomThemeAccentPicker());appearance.addView(customTheme,lp(-1,-2,0,0,0,8));
         LinearLayout fontGroup=settingsGroup("ШРИФТ ПРИЛОЖЕНИЯ");
         
         String[] fontNames={"Современный","Округлый","С засечками","Моноширинный","Узкий","Средний"};
         String[] fontKeys={"sans","rounded","serif","mono","condensed","medium"};
         String[] fontFamilies={"sans-serif","sans-serif-rounded","serif","monospace","sans-serif-condensed","sans-serif-medium"};
         String activeFont=prefs.getString("app_font","sans");
+        LinearLayout fontPreview=card();fontPreview.setPadding(dp(13),dp(10),dp(13),dp(10));fontPreview.setBackground(shape(PALE,16,blendColors(PINK,BG,isDarkAppearance()?0.5f:0.75f)));
+        TextView fontPreviewTitle=text("Твой прогресс",17,DARK,true);fontPreviewTitle.setTypeface(Typeface.create(selectedFontFamily(),Typeface.BOLD));fontPreview.addView(fontPreviewTitle,lp(-1,-2,0,0,0,3));
+        TextView fontPreviewBody=text("Каждый шаг приближает к цели",12,MUTED,false);fontPreviewBody.setTypeface(Typeface.create(selectedFontFamily(),Typeface.NORMAL));fontPreview.addView(fontPreviewBody,lp(-1,-2,0,0,0,7));
+        ProgressBar fontPreviewProgress=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);fontPreviewProgress.setMax(100);fontPreviewProgress.setProgress(65);if(Build.VERSION.SDK_INT>=21)fontPreviewProgress.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));fontPreview.addView(fontPreviewProgress,lp(-1,7,0,0,0,0));
+        fontGroup.addView(fontPreview,lp(-1,-2,0,5,0,6));
         android.widget.GridLayout fontGrid=new android.widget.GridLayout(this);fontGrid.setColumnCount(2);
         for(int i=0;i<fontKeys.length;i++){final String key=fontKeys[i],family=fontFamilies[i];Button choice=button((activeFont.equals(key)?"✓  ":"")+fontNames[i],activeFont.equals(key));choice.setTypeface(Typeface.create(family,Typeface.BOLD));if(activeFont.equals(key)){GradientDrawable selectedFontBg=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{adjustColor(PINK,0.92f),adjustColor(PINK,0.78f)});selectedFontBg.setCornerRadius(dp(14));choice.setBackground(selectedFontBg);}else choice.setBackground(shape(isDarkAppearance()?blendColors(PALE,BG,0.18f):0xCCFFFFFF,13,blendColors(PINK,BG,isDarkAppearance()?0.42f:0.68f)));android.widget.GridLayout.LayoutParams fp=new android.widget.GridLayout.LayoutParams();fp.width=0;fp.height=dp(44);fp.columnSpec=android.widget.GridLayout.spec(i%2,1f);fp.setMargins(dp(3),dp(3),dp(3),dp(3));fontGrid.addView(choice,fp);choice.setOnClickListener(v->{prefs.edit().putString("app_font",key).apply();showSettings();});}
         fontGroup.addView(fontGrid,lp(-1,-2,0,4,0,0));appearance.addView(fontGroup,lp(-1,-2,0,4,0,6));
@@ -1065,7 +1073,7 @@ public class MainActivity extends Activity {
         reminders.setTag("notifications_sound");
         addSettingsToggle(reminders,"Включить напоминания о занятиях","notifications_enabled",true,()->{scheduleReminders(this);if(prefs.getBoolean("notifications_enabled",true)&&Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},20);});
         addSettingsToggle(reminders,"Тихие часы для уведомлений","quiet_hours_enabled",false,()->scheduleReminders(this));
-        Button quietStart=button("Начало тишины · "+prefs.getString("quiet_hours_start","22:00"),false);Button quietEnd=button("Конец тишины · "+prefs.getString("quiet_hours_end","08:00"),false);quietStart.setOnClickListener(v->chooseQuietTime("quiet_hours_start"));quietEnd.setOnClickListener(v->chooseQuietTime("quiet_hours_end"));reminders.addView(quietStart,lp(-1,48,0,3,0,3));reminders.addView(quietEnd,lp(-1, 48,0,0,0,5));
+        LinearLayout quietRange=card();quietRange.setPadding(dp(10),dp(9),dp(10),dp(9));addText(quietRange,"ВРЕМЕННОЙ ДИАПАЗОН",10,PINK,true);LinearLayout quietTimes=new LinearLayout(this);quietTimes.setOrientation(LinearLayout.HORIZONTAL);Button quietStart=button("Начало\n"+prefs.getString("quiet_hours_start","22:00"),false);Button quietEnd=button("Конец\n"+prefs.getString("quiet_hours_end","08:00"),false);quietStart.setMinHeight(dp(54));quietEnd.setMinHeight(dp(54));quietStart.setOnClickListener(v->chooseQuietTime("quiet_hours_start"));quietEnd.setOnClickListener(v->chooseQuietTime("quiet_hours_end"));LinearLayout.LayoutParams quietLp=new LinearLayout.LayoutParams(0,dp(54),1f);quietLp.setMargins(dp(2),dp(3),dp(4),dp(2));quietTimes.addView(quietStart,quietLp);LinearLayout.LayoutParams quietEndLp=new LinearLayout.LayoutParams(0,dp(54),1f);quietEndLp.setMargins(dp(4),dp(3),dp(2),dp(2));quietTimes.addView(quietEnd,quietEndLp);quietRange.addView(quietTimes,lp(-1,58,0,2,0,0));reminders.addView(quietRange,lp(-1,-2,0,4,0,6));
         Button reminderSettings=button("Настроить дни и время",false);reminderSettings.setOnClickListener(v->showReminderSettings());reminders.addView(reminderSettings,lp(-1, 48,0,0,0,0));addSettingsToggle(reminders,"Недельный отчёт","weekly_report_enabled",true,()->WeeklyReportReceiver.schedule(this));int repeat=prefs.getInt("reminder_repeat_minutes",0);int[] repeats={0,5,10,15,30};String[] repeatNames={"Не повторять","5 минут","10 минут","15 минут","30 минут"};int ri=0;for(int k=0;k<repeats.length;k++)if(repeats[k]==repeat)ri=k;final int[] repeatIndex={ri};Button repeatButton=button("Повтор напоминания · "+repeatNames[ri],false);repeatButton.setOnClickListener(v->{repeatIndex[0]=(repeatIndex[0]+1)%repeats.length;prefs.edit().putInt("reminder_repeat_minutes",repeats[repeatIndex[0]]).apply();repeatButton.setText("Повтор напоминания · "+repeatNames[repeatIndex[0]]);});reminders.addView(repeatButton,lp(-1,42,0,3,0,3));String tone=prefs.getString("reminder_tone","soft");String[] tones={"soft","neutral","strict"},toneNames={"Мягкий","Нейтральный","Строгий"};int ti=0;for(int k=0;k<tones.length;k++)if(tones[k].equals(tone))ti=k;final int[] toneIndex={ti};Button toneButton=button("Тон напоминаний · "+toneNames[ti],false);toneButton.setOnClickListener(v->{toneIndex[0]=(toneIndex[0]+1)%tones.length;prefs.edit().putString("reminder_tone",tones[toneIndex[0]]).apply();toneButton.setText("Тон напоминаний · "+toneNames[toneIndex[0]]);});reminders.addView(toneButton,lp(-1,42,0,2,0,3));addSettingsToggle(reminders,"Напоминания о письмах себе","future_letters_enabled",true,()->rescheduleFutureLetterReminders(this));addSettingsToggle(reminders,"Вечернее напоминание об отдыхе","evening_rest_enabled",false,()->scheduleReminders(this));root.addView(reminders,lp(-1,-2,0,0,0,4));
 
         LinearLayout focus=settingsGroup("РЕЖИМ ФОКУСА");
@@ -1094,21 +1102,22 @@ public class MainActivity extends Activity {
         String installedVersion="—";
         try { installedVersion=getPackageManager().getPackageInfo(getPackageName(),0).versionName; } catch(Exception ignored) {}
 
-        LinearLayout updateInfo=new LinearLayout(this);
-        updateInfo.setOrientation(LinearLayout.HORIZONTAL);
-        updateInfo.setGravity(Gravity.CENTER_VERTICAL);
-        TextView updateIcon=text("↻",28,PINK,true);
+        LinearLayout updateStatus=new LinearLayout(this);
+        updateStatus.setOrientation(LinearLayout.VERTICAL);
+        updateStatus.setGravity(Gravity.CENTER);
+        updateStatus.setPadding(dp(14),dp(16),dp(14),dp(14));
+        updateStatus.setBackground(shape(PALE,18,blendColors(PINK,BG,isDarkAppearance()?0.48f:0.76f)));
+        TextView updateIcon=text("✓",24,0xFFFFFFFF,true);
         updateIcon.setGravity(Gravity.CENTER);
-        updateIcon.setBackground(shape(isDarkAppearance()?0xFF403541:0xFFFBEAF0,16,0));
-        updateInfo.addView(updateIcon,lp(48,48,0,0,13,0));
-        LinearLayout updateText=new LinearLayout(this);
-        updateText.setOrientation(LinearLayout.VERTICAL);
-        TextView updateTitle=text("Следи за новыми возможностями",15,DARK,true);
-        updateText.addView(updateTitle,lp(-1,-2,0,0,0,3));
-        TextView versionLabel=text("Установленная версия · "+installedVersion,12,MUTED,false);
-        updateText.addView(versionLabel,lp(-1,-2,0,0,0,0));
-        updateInfo.addView(updateText,new LinearLayout.LayoutParams(0,-2,1f));
-        updates.addView(updateInfo,lp(-1,-2,0,0,0,5));
+        GradientDrawable updateIconBg=new GradientDrawable();updateIconBg.setColor(PINK);updateIconBg.setShape(GradientDrawable.OVAL);updateIcon.setBackground(updateIconBg);
+        updateStatus.addView(updateIcon,lp(48,48,0,0,0,8));
+        TextView updateTitle=text("Обновлений пока нет",16,DARK,true);updateTitle.setGravity(Gravity.CENTER);
+        updateStatus.addView(updateTitle,lp(-1,-2,0,0,0,4));
+        TextView updateSubtitle=text("Установлена последняя версия",12,MUTED,false);updateSubtitle.setGravity(Gravity.CENTER);
+        updateStatus.addView(updateSubtitle,lp(-1,-2,0,0,0,8));
+        TextView versionLabel=text("Версия · "+installedVersion,11,MUTED,false);versionLabel.setGravity(Gravity.CENTER);
+        updateStatus.addView(versionLabel,lp(-1,-2,0,0,0,0));
+        updates.addView(updateStatus,lp(-1,-2,0,7,0,5));
 
         Button checkUpdates=button("Проверить обновления",false);
         checkUpdates.setBackground(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
@@ -1160,7 +1169,7 @@ public class MainActivity extends Activity {
     private void updateSystemBarIcons() {
         if (Build.VERSION.SDK_INT >= 23 && getWindow() != null) {
             String t=prefs==null?"pink":prefs.getString("app_theme","pink");
-            boolean darkIcons=!("night".equals(t)||"luxury".equals(t)||("system".equals(t)&&(getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES));
+            boolean darkIcons=!("night".equals(t)||"luxury".equals(t)||("custom".equals(t)&&!"light".equals(prefs.getString("custom_theme_background","light")))||("system".equals(t)&&(getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES));
             if (Build.VERSION.SDK_INT >= 30) {
                 android.view.WindowInsetsController c=getWindow().getInsetsController();
                 if(c!=null){int flags=android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS; c.setSystemBarsAppearance(darkIcons?flags:0,flags);}
@@ -1192,11 +1201,34 @@ public class MainActivity extends Activity {
         else if ("peach".equals(theme)) { BG=0xFFFFF5EF; PINK=0xFFD88968; PALE=0xFFFBE5D9; DARK=0xFF513D34; MUTED=0xFF856C60; }
         else if ("red".equals(theme)) { BG=0xFFFFF5F4; PINK=0xFFB32635; PALE=0xFFF8E2E3; DARK=0xFF4B2026; MUTED=0xFF81595E; }
         else if ("lv".equals(theme)) { BG=0xFFF4E8D5; PINK=0xFF76502F; PALE=0xFFE7D2B3; DARK=0xFF3B281C; MUTED=0xFF76604A; }
+        else if ("custom".equals(theme)) {
+            String bg=prefs==null?"light":prefs.getString("custom_theme_background","light");
+            if("black".equals(bg)){BG=0xFF101114;PALE=0xFF202226;DARK=0xFFF2F2F4;MUTED=0xFFAAAAB2;}
+            else if("dark".equals(bg)){BG=0xFF292B30;PALE=0xFF383B42;DARK=0xFFF3F4F6;MUTED=0xFFB8BBC3;}
+            else{BG=0xFFF7F8FA;PALE=0xFFE9EDF2;DARK=0xFF303844;MUTED=0xFF65717F;}
+            PINK=prefs==null?0xFFC97891:prefs.getInt("app_accent_color",0xFFC97891);
+        }
         else { BG=0xFFFFF9F7; PINK=0xFFC97891; PALE=0xFFFCEEF2; DARK=0xFF3F3439; MUTED=0xFF75666D; }
         applyAccentOverlay(theme);
         if (prefs != null && prefs.contains("app_accent_color")) PINK = prefs.getInt("app_accent_color", PINK);
         if (getWindow() != null) { getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(BG)); getWindow().getDecorView().setBackgroundColor(BG); if(Build.VERSION.SDK_INT>=30){getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);getWindow().setDecorFitsSystemWindows(false);if(Build.VERSION.SDK_INT>=29){getWindow().setStatusBarContrastEnforced(false);getWindow().setNavigationBarContrastEnforced(false);}}else{getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(BG);} updateSystemBarIcons(); }
     }
+    private void showCustomThemeAccentPicker(){
+        final String[] names={"Розовый","Лавандовый","Мятный","Голубой","Персиковый","Красный","Золотой","Графитовый"};
+        final int[] colors={0xFFC97891,0xFF8979B8,0xFF659B86,0xFF5D91B5,0xFFD88968,0xFFB32635,0xFFC49318,0xFF65758B};
+        new android.app.AlertDialog.Builder(this).setTitle("Цвет акцента").setItems(names,(dialog,which)->{
+            prefs.edit().putString("app_theme","custom").putInt("app_accent_color",colors[which]).apply();
+            showCustomThemeBackgroundPicker();
+        }).setNegativeButton("Отмена",null).show();
+    }
+    private void showCustomThemeBackgroundPicker(){
+        String[] names={"Светлый","Тёмно-серый","Чёрный"};String[] keys={"light","dark","black"};
+        new android.app.AlertDialog.Builder(this).setTitle("Цвет фона").setItems(names,(dialog,which)->{
+            prefs.edit().putString("app_theme","custom").putString("custom_theme_background",keys[which]).apply();
+            applySavedTheme();updateSystemBarIcons();showSettings();
+        }).setNegativeButton("Отмена",null).show();
+    }
+
     private void applyAccentOverlay(String theme){
         int style=R.style.AppAccentPink;
         if("lavender".equals(theme))style=R.style.AppAccentLavender;
@@ -4068,7 +4100,7 @@ public class MainActivity extends Activity {
                 c==0xFF9D777B||c==0xFF60786B||c==0xFF5E788A||c==0xFF856C60||
                 c==0xFF81595E||c==0xFF76604A||c==0xFF795B1E;
     }
-    private boolean isDarkAppearance(){String t=prefs==null?"pink":prefs.getString("app_theme","pink");return "night".equals(t)||"luxury".equals(t)||("system".equals(t)&&(getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES);}
+    private boolean isDarkAppearance(){String t=prefs==null?"pink":prefs.getString("app_theme","pink");String customBg=prefs==null?"light":prefs.getString("custom_theme_background","light");return "night".equals(t)||"luxury".equals(t)||("custom".equals(t)&&!"light".equals(customBg))||("system".equals(t)&&(getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES);}
     private LinearLayout card() {
         LinearLayout l=new LinearLayout(this);
         l.setOrientation(LinearLayout.VERTICAL);
