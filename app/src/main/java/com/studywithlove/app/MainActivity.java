@@ -701,9 +701,24 @@ public class MainActivity extends Activity {
         root.addView(brandRow, lp(-1, 48, 0, 0, 0, 16));
         }
         if (!title.isEmpty()) {
-            TextView h = text(title, 23, DARK, true);
-            h.setLetterSpacing(-0.02f);
-            root.addView(h, lp(-1, -2, 0, 0, 0, 6));
+            if (!"home".equals(currentScreen) && !"welcome".equals(currentScreen)) {
+                LinearLayout titleRow=new LinearLayout(this);
+                titleRow.setGravity(Gravity.CENTER_VERTICAL);
+                TextView back=text("‹",25,PINK,true);
+                back.setGravity(Gravity.CENTER);
+                back.setContentDescription("Назад");
+                back.setBackground(shape(PALE,13,0));
+                back.setOnClickListener(v->handleBackNavigation());
+                titleRow.addView(back,lp(32,32,0,0,10,0));
+                TextView h = text(title, 22, DARK, true);
+                h.setLetterSpacing(-0.02f);
+                titleRow.addView(h,new LinearLayout.LayoutParams(0,dp(40),1f));
+                root.addView(titleRow,lp(-1,40,0,0,0,10));
+            } else {
+                TextView h = text(title, 23, DARK, true);
+                h.setLetterSpacing(-0.02f);
+                root.addView(h, lp(-1, -2, 0, 0, 0, 6));
+            }
         }
         if (!subtitle.isEmpty()) {
             TextView sub = text(subtitle, 13, MUTED, false);
@@ -3470,22 +3485,10 @@ public class MainActivity extends Activity {
 
     private void showReminderSettings() {
         currentScreen = "reminders";
-        base("", "");
+        base("Уведомления", "");
 
         final int accent=PINK, surface=PALE, ink=DARK, muted=MUTED;
         final int separator=0x33777777;
-        LinearLayout header=new LinearLayout(this);
-        header.setGravity(Gravity.CENTER_VERTICAL);
-        TextView back=text("‹",34,accent,false);
-        back.setGravity(Gravity.CENTER);
-        back.setContentDescription("Назад");
-        back.setBackground(shape(surface,18,0));
-        back.setOnClickListener(v->showSettings());
-        header.addView(back,lp(42,42,0,0,12,0));
-        TextView pageTitle=text("Уведомления",23,ink,true);
-        pageTitle.setLetterSpacing(-0.02f);
-        header.addView(pageTitle,new LinearLayout.LayoutParams(0,dp(44),1f));
-        root.addView(header,lp(-1,48,0,0,0,22));
 
         TextView daily=text("ЕЖЕДНЕВНОЕ НАПОМИНАНИЕ",12,muted,true);
         daily.setLetterSpacing(0.07f);
@@ -3583,8 +3586,41 @@ public class MainActivity extends Activity {
         TextView repeatTitle=text("Повтор",16,ink,true);
         TextView repeatSub=text("Дни, в которые приходит напоминание",12,muted,false);
         dailyCard.addView(repeatTitle,lp(-1,-2,0,0,0,2));
-        dailyCard.addView(repeatSub,lp(-1,-2,0,0,0,10));
+        dailyCard.addView(repeatSub,lp(-1,-2,0,0,0,9));
         Set<String> selected=new TreeSet<>(selectedDays());
+        LinearLayout presets=new LinearLayout(this);
+        presets.setGravity(Gravity.CENTER_VERTICAL);
+        presets.setOrientation(LinearLayout.HORIZONTAL);
+        List<TextView> presetViews=new ArrayList<>();
+        String[] presetNames={"Каждый день","Будни","Выходные"};
+        Runnable refreshPresets=()->{
+            for(int p=0;p<presetViews.size();p++){
+                boolean active=p==0?selected.size()==7:p==1?selected.equals(new TreeSet<>(Arrays.asList("2","3","4","5","6"))):selected.equals(new TreeSet<>(Arrays.asList("1","7")));
+                TextView chip=presetViews.get(p);
+                chip.setTextColor(active?0xFFFFFFFF:accent);
+                chip.setBackground(shape(active?accent:BG,30,active?accent:separator));
+            }
+        };
+        for(int p=0;p<3;p++){
+            final int preset=p;
+            TextView chip=text(presetNames[p],10,accent,true);
+            chip.setGravity(Gravity.CENTER);
+            chip.setSingleLine(true);
+            chip.setPadding(dp(7),0,dp(7),0);
+            chip.setOnClickListener(v->{
+                selected.clear();
+                if(preset==0){for(int d=1;d<=7;d++)selected.add(String.valueOf(d));}
+                else if(preset==1){for(int d=2;d<=6;d++)selected.add(String.valueOf(d));}
+                else {selected.add("1");selected.add("7");}
+                refreshDays.run();
+                refreshPresets.run();
+            });
+            presetViews.add(chip);
+            LinearLayout.LayoutParams pp=new LinearLayout.LayoutParams(0,dp(30),1f);
+            pp.setMargins(dp(2),0,dp(2),0);
+            presets.addView(chip,pp);
+        }
+        dailyCard.addView(presets,lp(-1,32,0,0,0,8));
         String[] labels={"Пн","Вт","Ср","Чт","Пт","Сб","Вс"};
         int[] dayIds={2,3,4,5,6,7,1};
         LinearLayout days=new LinearLayout(this);
@@ -3615,16 +3651,39 @@ public class MainActivity extends Activity {
             days.addView(day,p);
         }
         refreshDays.run();
+        refreshPresets.run();
         dailyCard.addView(days,lp(-1,44,0,0,0,2));
         root.addView(dailyCard,lp(-1,-2,0,0,0,15));
         root.addView(hintRow,lp(-1,-2,dp(3),0,0,18));
 
-        enabled.setOnCheckedChangeListener((button,checked)->dailySwitch.setChecked(checked));
+        Runnable updateReminderControls=()->{
+            boolean active=dailySwitch.isChecked();
+            float alpha=active?1f:0.38f;
+            timeRow.setAlpha(alpha);
+            timeRow.setEnabled(active);
+            timeValue.setEnabled(active);
+            chevron.setEnabled(active);
+            repeatTitle.setAlpha(alpha);
+            repeatSub.setAlpha(alpha);
+            presets.setAlpha(alpha);
+            presets.setEnabled(active);
+            for(int i=0;i<presetViews.size();i++)presetViews.get(i).setEnabled(active);
+            days.setAlpha(alpha);
+            days.setEnabled(active);
+            for(int i=0;i<dayViews.size();i++)dayViews.get(i).setEnabled(active);
+            hintRow.setAlpha(active?1f:0.45f);
+            hintText.setText(active?"Мы напомним о занятии в "+reminderTimes.get(0)+".":"Напоминания об учёбе отключены.");
+        };
+        enabled.setOnCheckedChangeListener((button,checked)->{
+            if(dailySwitch.isChecked()!=checked)dailySwitch.setChecked(checked);
+        });
         dailySwitch.setOnCheckedChangeListener((button,checked)->{
             enabled.setChecked(checked);
             prefs.edit().putBoolean("notifications_enabled",checked).apply();
             scheduleReminders(this);
+            updateReminderControls.run();
         });
+        updateReminderControls.run();
 
         Button save=button("Сохранить",true);
         save.setBackground(shape(accent,18,0));
