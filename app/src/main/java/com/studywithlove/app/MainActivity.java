@@ -1412,6 +1412,26 @@ public class MainActivity extends Activity {
         }
         root.addView(homeStats, lp(-1, -2, 0, 0, 0, 6));homeStats.setTag("home_stats");
 
+        // Quick access to the existing math quiz from the home screen.
+        LinearLayout quizCard = card();
+        quizCard.setOrientation(LinearLayout.HORIZONTAL);
+        quizCard.setGravity(Gravity.CENTER_VERTICAL);
+        quizCard.setPadding(dp(14), dp(12), dp(14), dp(12));
+        TextView quizIcon = text("🧮", 27, PINK, true);
+        quizIcon.setGravity(Gravity.CENTER);
+        quizCard.addView(quizIcon, lp(44, 44, 0, 0, 11, 0));
+        LinearLayout quizWords = new LinearLayout(this);
+        quizWords.setOrientation(LinearLayout.VERTICAL);
+        addText(quizWords, "Викторина", 15, DARK, true);
+        addText(quizWords, "Проверь знания и набирай очки", 12, MUTED, false);
+        quizCard.addView(quizWords, new LinearLayout.LayoutParams(0, -2, 1f));
+        TextView quizArrow = text("›", 28, PINK, true);
+        quizArrow.setGravity(Gravity.CENTER);
+        quizCard.addView(quizArrow, lp(28, 38, 0, 0, 0, 0));
+        quizCard.setOnClickListener(v -> showMathQuiz());
+        root.addView(quizCard, lp(-1, -2, 0, 0, 0, 8));
+        quizCard.setTag("home_quiz");
+
         // Weekly goal with a Monday-to-Sunday activity strip on the home screen.
         int weeklyGoal = prefs.getInt("weekly_goal_minutes", 300);
         int weeklyDone = weeklyMinutesLast7Days();
