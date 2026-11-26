@@ -90,7 +90,7 @@ public final class AppUpdater {
         android.widget.TextView versionLabel=new android.widget.TextView(activity);versionLabel.setText("STUDY WITH LOVE  ·  ВЕРСИЯ "+version);versionLabel.setTextColor(0xFFC97891);versionLabel.setTextSize(12);versionLabel.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);versionLabel.setGravity(android.view.Gravity.CENTER);panel.addView(versionLabel,new android.widget.LinearLayout.LayoutParams(-1,-2));
         android.widget.TextView notes=new android.widget.TextView(activity);String note=latestReleaseNotes==null?"":latestReleaseNotes.trim();if(note.isEmpty())note="Новые улучшения, более удобные функции и исправления для комфортной учёбы.";notes.setText(note);notes.setTextColor(0xFF75666D);notes.setTextSize(14);notes.setGravity(android.view.Gravity.CENTER);notes.setPadding(0,pad,0,pad/2);panel.addView(notes,new android.widget.LinearLayout.LayoutParams(-1,-2));
         android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(activity).setView(panel).setNegativeButton("Позже",null).setPositiveButton("Обновить",null).create();
-        dialog.setOnShowListener(v->{android.widget.Button positive=dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE);positive.setTextColor(0xFFC97891);positive.setOnClickListener(b->{dialog.dismiss();download(activity);};});
+        dialog.setOnShowListener(v->{android.widget.Button positive=dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE);positive.setTextColor(0xFFC97891);positive.setOnClickListener(b->{dialog.dismiss();download(activity);});
         dialog.show();
     }
 
