@@ -86,10 +86,25 @@ public class MainActivity extends Activity {
         private ModelViewer viewer;
         private Engine engine;
         private boolean frameLoopActive;
+        private long animationStartNanos;
         private final Choreographer.FrameCallback frameCallback = new Choreographer.FrameCallback() {
             @Override public void doFrame(long frameTimeNanos) {
                 if (!frameLoopActive || viewer == null) return;
-                try { viewer.render(frameTimeNanos); } catch (Throwable ignored) { frameLoopActive = false; return; }
+                try {
+                    // Filament 1.70.2 does not autoplay GLB animations in ModelViewer.
+                    // Advance the first glTF animation explicitly before rendering.
+                    com.google.android.filament.gltfio.Animator animator = viewer.getAnimator();
+                    if (animator != null && animator.getAnimationCount() > 0) {
+                        if (animationStartNanos == 0L) animationStartNanos = frameTimeNanos;
+                        float duration = animator.getAnimationDuration(0);
+                        if (duration > 0f) {
+                            float elapsed = (frameTimeNanos - animationStartNanos) / 1_000_000_000f;
+                            animator.applyAnimation(0, elapsed % duration);
+                            animator.updateBoneMatrices();
+                        }
+                    }
+                    viewer.render(frameTimeNanos);
+                } catch (Throwable ignored) { frameLoopActive = false; return; }
                 Choreographer.getInstance().postFrameCallback(this);
             }
         };
