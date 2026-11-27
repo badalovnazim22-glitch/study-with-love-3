@@ -760,6 +760,30 @@ public class MainActivity extends Activity {
             sub.setLineSpacing(dp(2), 1f);
             root.addView(sub, lp(-1, -2, 0, 0, 0, 16));
         }
+        if (screenChanged) {
+            root.post(() -> animateScreenEntrance(root));
+        }
+    }
+
+    // Единый мягкий переход для всех разделов приложения.
+    private void animateScreenEntrance(LinearLayout screenRoot) {
+        if (screenRoot == null || screenRoot != root || prefs == null
+                || prefs.getBoolean("reduce_motion", false)) return;
+        android.view.animation.Interpolator easing =
+                new android.view.animation.DecelerateInterpolator(1.6f);
+        int count = screenRoot.getChildCount();
+        for (int i = 0; i < count; i++) {
+            View child = screenRoot.getChildAt(i);
+            if (child == null) continue;
+            child.animate().cancel();
+            child.setAlpha(0f);
+            child.setTranslationY(dp(9));
+            child.animate().alpha(1f).translationY(0f)
+                    .setStartDelay(Math.min(i * 24L, 168L))
+                    .setDuration(260L)
+                    .setInterpolator(easing)
+                    .start();
+        }
     }
 
     private View bottomNavigation() {
@@ -4376,7 +4400,9 @@ public class MainActivity extends Activity {
         android.graphics.drawable.Drawable bg=shape(surface,24,border);
         if(Build.VERSION.SDK_INT>=21)l.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x1E000000|(PINK&0x00FFFFFF)),bg,shape(surface,24,0)));
         else l.setBackground(bg);
-        l.setElevation(dp(0));
+        l.setElevation(dp(1));
+        l.setClipToOutline(Build.VERSION.SDK_INT >= 21);
+        l.setFocusable(false);
         return l;
     }
     private void addText(LinearLayout parent, String value, int size, int color, boolean bold) { TextView t = text(value, size, color, bold); parent.addView(t, lp(-1, -2, 0, 0, 0, 5)); }
