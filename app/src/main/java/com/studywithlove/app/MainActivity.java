@@ -30,6 +30,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import android.view.View;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TimePicker;
@@ -104,7 +105,7 @@ public class MainActivity extends Activity {
                         }
                     }
                     viewer.render(frameTimeNanos);
-                } catch (Throwable ignored) { frameLoopActive = false; return; }
+                } catch (Throwable failure) { Log.e("HomeStats3D", "Filament frame failed", failure); frameLoopActive = false; return; }
                 Choreographer.getInstance().postFrameCallback(this);
             }
         };
@@ -152,15 +153,14 @@ public class MainActivity extends Activity {
                     while ((count = in.read(chunk)) != -1) out.write(chunk, 0, count);
                     viewer.loadModelGlb(ByteBuffer.wrap(out.toByteArray()));
                 }
-                texture.post(() -> {
-                    if (viewer == null) return;
-                    try {
-                        viewer.setCameraFocalLength(28f);
-                        viewer.getCamera().lookAt(0.0, -4.5, 0.55, 0.0, 0.0, 0.55, 0.0, 0.0, 1.0);
-                    } catch (Throwable ignored) { }
-                });
+                // Fit the complete three-model GLB into the camera frustum.
+                // A hard-coded camera position previously viewed the Y-up glTF scene
+                // from an unverified orientation and could leave the models outside
+                // the visible part of the compact statistics row.
+                viewer.transformToUnitCube();
             } catch (Throwable failure) {
-                if (viewer == null) setVisibility(View.GONE);
+                Log.e("HomeStats3D", "Unable to initialize or load home_stats.glb", failure);
+                setVisibility(View.GONE);
             }
         }
 
