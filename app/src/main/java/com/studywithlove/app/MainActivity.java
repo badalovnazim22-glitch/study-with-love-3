@@ -90,6 +90,10 @@ public class MainActivity extends Activity {
         private long animationStartNanos;
         private com.google.android.filament.LightManager lightManager;
         private int fillLightInstance;
+        // Individual glTF child nodes are animated independently to give each model
+        // its own motion rather than rotating the three parent groups as one object.
+        private final int[] motionEntities = new int[10];
+        private final float[][] motionBaseTransforms = new float[10][];
         private final Choreographer.FrameCallback frameCallback = new Choreographer.FrameCallback() {
             @Override public void doFrame(long frameTimeNanos) {
                 if (!frameLoopActive || viewer == null) return;
@@ -117,6 +121,7 @@ public class MainActivity extends Activity {
                         lightManager.setIntensity(fillLightInstance,
                                 520.0f + 110.0f * (0.5f + 0.5f * (float) Math.sin(elapsed * 1.35f)));
                     }
+                    animateIndividualModels(elapsed);
                     viewer.render(frameTimeNanos);
                 } catch (Throwable failure) { Log.e("HomeStats3D", "Filament frame failed", failure); frameLoopActive = false; return; }
                 Choreographer.getInstance().postFrameCallback(this);
@@ -168,6 +173,7 @@ public class MainActivity extends Activity {
                     while ((count = in.read(chunk)) != -1) out.write(chunk, 0, count);
                     viewer.loadModelGlb(ByteBuffer.wrap(out.toByteArray()));
                 }
+                captureAnimatedNodes();
                 // Fit the complete three-model GLB into the camera frustum.
                 // A hard-coded camera position previously viewed the Y-up glTF scene
                 // from an unverified orientation and could leave the models outside
@@ -177,6 +183,80 @@ public class MainActivity extends Activity {
                 Log.e("HomeStats3D", "Unable to initialize or load home_stats.glb", failure);
                 setVisibility(View.GONE);
             }
+        }
+
+        private void captureAnimatedNodes() {
+            if (viewer == null || viewer.getAsset() == null) return;
+            com.google.android.filament.gltfio.FilamentAsset asset = viewer.getAsset();
+            String[] names = {
+                    "Outer flame", "Amber flame", "Inner flame",
+                    "Book cover 0", "Book pages 0",
+                    "Book cover 1", "Book pages 1",
+                    "Book cover 2", "Book pages 2",
+                    "Cup"
+            };
+            com.google.android.filament.TransformManager transforms = engine.getTransformManager();
+            for (int i = 0; i < names.length; i++) {
+                int entity = asset.getFirstEntityByName(names[i]);
+                if (entity != 0 && transforms.hasComponent(entity)) {
+                    motionEntities[i] = entity;
+                    motionBaseTransforms[i] = transforms.getTransform(transforms.getInstance(entity), null);
+                }
+            }
+        }
+
+        private void animateIndividualModels(float elapsed) {
+            if (engine == null) return;
+            float p0 = (float) Math.sin(elapsed * 4.1f);
+            float p1 = (float) Math.sin(elapsed * 3.2f + 1.1f);
+            float p2 = (float) Math.sin(elapsed * 3.7f + 2.0f);
+
+            // Flame: three independent layers breathe and flicker at different rates.
+            applyNodeMotion(0, 1.0f + 0.035f * p0, 1.0f + 0.075f * p1, 1.0f, 0.018f * p2);
+            applyNodeMotion(1, 1.0f + 0.045f * p1, 1.0f + 0.055f * p2, 1.0f, 0.024f * p0);
+            applyNodeMotion(2, 1.0f + 0.025f * p2, 1.0f + 0.045f * p0, 1.0f, 0.015f * p1);
+
+            // Books: each cover and its page block get a restrained, staggered sway.
+            float b0 = 0.012f * (float) Math.sin(elapsed * 1.35f);
+            float b1 = 0.010f * (float) Math.sin(elapsed * 1.18f + 1.4f);
+            float b2 = 0.008f * (float) Math.sin(elapsed * 1.52f + 2.3f);
+            applyNodeMotion(3, 1f, 1f, 1f, b0);
+            applyNodeMotion(4, 1f, 1f, 1f, b0);
+            applyNodeMotion(5, 1f, 1f, 1f, b1);
+            applyNodeMotion(6, 1f, 1f, 1f, b1);
+            applyNodeMotion(7, 1f, 1f, 1f, b2);
+            applyNodeMotion(8, 1f, 1f, 1f, b2);
+
+            // Trophy: a very small independent cup movement catches the moving specular light.
+            applyNodeMotion(9, 1.0f + 0.006f * p1, 1.0f + 0.006f * p1, 1.0f, 0.012f * p2);
+        }
+
+        private void applyNodeMotion(int index, float sx, float sy, float sz, float angle) {
+            if (motionEntities[index] == 0 || motionBaseTransforms[index] == null) return;
+            float c = (float) Math.cos(angle);
+            float sn = (float) Math.sin(angle);
+            // Column-major local rotation * scale matrix.
+            float[] local = new float[] {
+                    c * sx, sn * sx, 0f, 0f,
+                    -sn * sy, c * sy, 0f, 0f,
+                    0f, 0f, sz, 0f,
+                    0f, 0f, 0f, 1f
+            };
+            float[] result = multiplyMat4(motionBaseTransforms[index], local);
+            com.google.android.filament.TransformManager transforms = engine.getTransformManager();
+            transforms.setTransform(transforms.getInstance(motionEntities[index]), result);
+        }
+
+        private float[] multiplyMat4(float[] a, float[] b) {
+            float[] out = new float[16];
+            for (int col = 0; col < 4; col++) {
+                for (int row = 0; row < 4; row++) {
+                    float value = 0f;
+                    for (int k = 0; k < 4; k++) value += a[k * 4 + row] * b[col * 4 + k];
+                    out[col * 4 + row] = value;
+                }
+            }
+            return out;
         }
 
         @Override protected void onAttachedToWindow() {
