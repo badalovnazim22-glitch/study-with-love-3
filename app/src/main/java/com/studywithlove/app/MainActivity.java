@@ -17,6 +17,16 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.TextureView;
+import android.view.Choreographer;
+import com.google.android.filament.Engine;
+import com.google.android.filament.Renderer;
+import com.google.android.filament.android.UiHelper;
+import com.google.android.filament.utils.ModelViewer;
+import com.google.android.filament.utils.Utils;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -62,6 +72,78 @@ import java.util.Random;
 import java.util.TimeZone;
 
 public class MainActivity extends Activity {
+    private static final boolean FILAMENT_READY;
+    static {
+        boolean ready = false;
+        try { Utils.init(); ready = true; } catch (Throwable ignored) { }
+        FILAMENT_READY = ready;
+    }
+
+    /** One transparent Filament surface for all three compact home statistics models. */
+    private static final class HomeStats3DView extends FrameLayout {
+        private ModelViewer viewer;
+        private boolean frameLoopActive;
+        private final Choreographer.FrameCallback frameCallback = new Choreographer.FrameCallback() {
+            @Override public void doFrame(long frameTimeNanos) {
+                if (!frameLoopActive || viewer == null) return;
+                try { viewer.render(frameTimeNanos); } catch (Throwable ignored) { frameLoopActive = false; return; }
+                Choreographer.getInstance().postFrameCallback(this);
+            }
+        };
+
+        HomeStats3DView(Context context) {
+            super(context);
+            if (!FILAMENT_READY) { setVisibility(View.GONE); return; }
+            TextureView texture = new TextureView(context);
+            texture.setOpaque(false);
+            addView(texture, new FrameLayout.LayoutParams(-1, -1));
+            try {
+                UiHelper helper = new UiHelper(UiHelper.ContextErrorPolicy.DONT_CHECK);
+                helper.setOpaque(false);
+                viewer = new ModelViewer(texture, Engine.create(), helper, null);
+                viewer.setAutoPlayAnimations(true);
+                Renderer.ClearOptions clear = viewer.getRenderer().getClearOptions();
+                clear.clear = true;
+                clear.clearColor[0] = 0f; clear.clearColor[1] = 0f;
+                clear.clearColor[2] = 0f; clear.clearColor[3] = 0f;
+                viewer.getRenderer().setClearOptions(clear);
+                viewer.getView().setBlendMode(com.google.android.filament.View.BlendMode.TRANSLUCENT);
+                viewer.getScene().setSkybox(null);
+                try (InputStream in = context.getResources().openRawResource(R.raw.home_stats);
+                     ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                    byte[] chunk = new byte[4096]; int count;
+                    while ((count = in.read(chunk)) != -1) out.write(chunk, 0, count);
+                    viewer.loadModelGlb(ByteBuffer.wrap(out.toByteArray()));
+                }
+                texture.post(() -> {
+                    if (viewer == null) return;
+                    try {
+                        viewer.setCameraFocalLength(85f);
+                        viewer.getCamera().lookAt(0.0, -4.5, 0.55, 0.0, 0.0, 0.55, 0.0, 0.0, 1.0);
+                    } catch (Throwable ignored) { }
+                });
+            } catch (Throwable failure) {
+                if (viewer != null) { try { viewer.destroy(); } catch (Throwable ignored) { } viewer = null; }
+                setVisibility(View.GONE);
+            }
+        }
+
+        @Override protected void onAttachedToWindow() {
+            super.onAttachedToWindow();
+            if (viewer != null) {
+                frameLoopActive = true;
+                Choreographer.getInstance().postFrameCallback(frameCallback);
+            }
+        }
+
+        @Override protected void onDetachedFromWindow() {
+            frameLoopActive = false;
+            Choreographer.getInstance().removeFrameCallback(frameCallback);
+            // ModelViewer destroys its Filament resources when its TextureView detaches.
+            viewer = null;
+            super.onDetachedFromWindow();
+        }
+    }
     public static volatile boolean activityVisible=false;
     private static volatile MainActivity foregroundActivity;
     private int BG = 0xFFFFF9F7, PINK = 0xFFC97891, PALE = 0xFFFCEEF2, DARK = 0xFF3F3439, MUTED = 0xFF75666D;
@@ -1649,26 +1731,34 @@ public class MainActivity extends Activity {
         addDailyMoodCard(root);
         if(root.getChildCount()>0)root.getChildAt(root.getChildCount()-1).setTag("home_mood");
 
-        // Premium 3D summary cards: streak, completed lessons and personal record.
+        // Premium 3D summary cards: one shared Filament renderer, unchanged 3-column layout.
+        FrameLayout statsFrame = new FrameLayout(this);
+        HomeStats3DView stats3DView = new HomeStats3DView(this);
+        FrameLayout.LayoutParams modelLp = new FrameLayout.LayoutParams(-1, dp(48), Gravity.TOP);
+        statsFrame.addView(stats3DView, modelLp);
+
         LinearLayout homeStats = new LinearLayout(this);
         homeStats.setOrientation(LinearLayout.HORIZONTAL);
         homeStats.setGravity(Gravity.CENTER_VERTICAL);
         int[] statValues = {streak, done, prefs.getInt("longest_streak", streak)};
         String[] statLabels = {"дней подряд", "уроков", "личный рекорд"};
-        int[] statArt = {R.drawable.home_feature_planner, R.drawable.home_feature_quiz, R.drawable.home_feature_achievements};
         for (int statIndex = 0; statIndex < statValues.length; statIndex++) {
             LinearLayout statCard = new LinearLayout(this);
             statCard.setOrientation(LinearLayout.VERTICAL);
             statCard.setGravity(Gravity.CENTER);
             statCard.setPadding(dp(5), dp(7), dp(5), dp(7));
-            statCard.setBackground(homePanel(PINK, 18, isDarkAppearance() ? 0.16f : 0.09f));
+            GradientDrawable glass = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                    isDarkAppearance()
+                            ? new int[]{0x88716A7A, 0x66534D5B}
+                            : new int[]{0xBFFFFFFF, 0x88FFFFFF});
+            glass.setCornerRadius(dp(18));
+            glass.setStroke(dp(1), isDarkAppearance() ? 0x33FFFFFF : 0x44FFFFFF);
+            statCard.setBackground(glass);
             statCard.setForeground(null);
             statCard.setElevation(0f);
-            ImageView statArtView = new ImageView(this);
-            statArtView.setImageResource(statArt[statIndex]);
-            statArtView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            statArtView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-            statCard.addView(statArtView, lp(48, 43, 0, 0, 0, 1));
+            View artSpace = new View(this);
+            artSpace.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+            statCard.addView(artSpace, lp(48, 43, 0, 0, 0, 1));
             TextView statValue = text(String.valueOf(statValues[statIndex]), 21, DARK, true);
             statValue.setGravity(Gravity.CENTER);
             statCard.addView(statValue, lp(-1, 27, 0, 0, 0, 1));
@@ -1677,15 +1767,6 @@ public class MainActivity extends Activity {
             statLabel.setMaxLines(2);
             statLabel.setEllipsize(android.text.TextUtils.TruncateAt.END);
             statCard.addView(statLabel, lp(-1, -2, 0, 0, 0, 0));
-            android.animation.ObjectAnimator floatArt = android.animation.ObjectAnimator.ofFloat(statArtView, "translationY", 0f, -dp(2));
-            floatArt.setDuration(1700 + statIndex * 180);
-            floatArt.setRepeatMode(android.animation.ValueAnimator.REVERSE);
-            floatArt.setRepeatCount(android.animation.ValueAnimator.INFINITE);
-            floatArt.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
-            statArtView.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
-                @Override public void onViewAttachedToWindow(View v) { floatArt.start(); }
-                @Override public void onViewDetachedFromWindow(View v) { floatArt.cancel(); }
-            });
             statCard.setAlpha(0f);
             statCard.setTranslationY(dp(7));
             statCard.postDelayed(() -> statCard.animate().alpha(1f).translationY(0f).setDuration(260)
@@ -1694,7 +1775,9 @@ public class MainActivity extends Activity {
             statLp.setMargins(dp(3), 0, dp(3), 0);
             homeStats.addView(statCard, statLp);
         }
-        root.addView(homeStats, lp(-1, -2, 0, 0, 0, 6));homeStats.setTag("home_stats");
+        statsFrame.addView(homeStats, new FrameLayout.LayoutParams(-1, -1));
+        root.addView(statsFrame, lp(-1, -2, 0, 0, 0, 6));
+        statsFrame.setTag("home_stats");
 
         // Quick access to the existing math quiz from the home screen.
         LinearLayout quizCard = card();
