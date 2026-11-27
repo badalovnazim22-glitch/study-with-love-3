@@ -1785,39 +1785,102 @@ public class MainActivity extends Activity {
     }
 
     private void addHomeFeatureGrid(LinearLayout parent){
-        String[] icons={"📚","🏆","🗓️","🎯","📔","🎧"};
-        String[] titles={"Уроки","Мои достижения","Мой прогресс","Экзамен","Дневник успехов","Музыка"};
-        String[] details={"Изучай новое","Твои победы","Следи за результатами","Будь готов","Делись мыслями","Настройся на учёбу"};
-        Runnable[] actions={this::showChapters,this::showAchievements,this::showProgress,this::showExam,this::showDiary,this::showAtmosphere};
+        String[] titles={"Мой цветочек","Атмосфера","Планировщик","Достижения","Напарник"};
+        String[] details={"Расти вместе с успехами","Настройся на учёбу","Планируй свой день","Отмечай свои победы","Учитесь вместе"};
+        int[] kinds={0,1,2,3,4};
+        Runnable[] actions={this::showFlower,this::showAtmosphere,this::showPlanner,this::showAchievements,this::showStudyBuddy};
         LinearLayout grid=new LinearLayout(this);grid.setOrientation(LinearLayout.VERTICAL);
         for(int rowIndex=0;rowIndex<3;rowIndex++){
-            LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);row.setGravity(Gravity.CENTER_VERTICAL);
-            for(int col=0;col<2;col++){
+            LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);row.setGravity(Gravity.CENTER);
+            int count=rowIndex==2?1:2;
+            for(int col=0;col<count;col++){
                 final int index=rowIndex*2+col;
                 LinearLayout tile=card();tile.setOrientation(LinearLayout.HORIZONTAL);tile.setGravity(Gravity.CENTER_VERTICAL);
-                tile.setPadding(dp(9),dp(9),dp(8),dp(9));
-                int tint=index==2?0xFF9A8BE8:index==3?0xFF8D80D8:PINK;
-                tile.setBackground(homePanel(tint,22,isDarkAppearance()?0.18f:0.085f));
+                tile.setPadding(dp(10),dp(9),dp(9),dp(9));
+                int accent=homeFeatureAccent();
+                tile.setBackground(homePanel(accent,22,isDarkAppearance()?0.17f:0.075f));
                 tile.setElevation(0f);
-                TextView illustration=text(icons[index],34,tint,true);illustration.setGravity(Gravity.CENTER);
-                illustration.setBackground(shape(blendColors(tint,BG,isDarkAppearance()?0.68f:0.82f),18,0));
-                tile.addView(illustration,lp(58,66,0,0,8,0));
+                HomeFeatureArtView art=new HomeFeatureArtView(this,kinds[index],accent);
+                tile.addView(art,lp(66,72,0,0,9,0));
                 LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);words.setGravity(Gravity.CENTER_VERTICAL);
                 TextView title=text(titles[index],14,DARK,true);title.setMaxLines(2);title.setLineSpacing(0,0.98f);
                 words.addView(title,lp(-1,-2,0,0,0,3));
                 TextView subtitle=text(details[index],10,MUTED,false);subtitle.setMaxLines(2);
                 words.addView(subtitle,lp(-1,-2,0,0,0,0));
                 tile.addView(words,new LinearLayout.LayoutParams(0,-2,1f));
-                TextView arrow=text("→",19,tint,true);arrow.setGravity(Gravity.CENTER);
-                tile.addView(arrow,lp(22,30,4,0,0,0));
+                TextView arrow=text("→",19,accent,true);arrow.setGravity(Gravity.CENTER);
+                tile.addView(arrow,lp(20,30,3,0,0,0));
                 tile.setContentDescription(titles[index]+". "+details[index]);
                 tile.setFocusable(true);tile.setOnClickListener(v->animateLessonTap(tile,actions[index]));
                 LinearLayout.LayoutParams cardLp=new LinearLayout.LayoutParams(0,dp(116),1f);
-                cardLp.setMargins(dp(3),dp(3),dp(3),dp(3));row.addView(tile,cardLp);
+                cardLp.setMargins(dp(3),dp(3),dp(3),dp(3));
+                if(rowIndex==2){cardLp.width=dp(170);cardLp.weight=0f;}
+                row.addView(tile,cardLp);
             }
             grid.addView(row,lp(-1,dp(122),0,0,0,0));
         }
         parent.addView(grid,lp(-1,-2,0,0,0,8));grid.setTag("home_emotions");
+    }
+
+    private int homeFeatureAccent(){
+        String theme=prefs==null?"pink":prefs.getString("app_theme","pink");
+        switch(theme){
+            case "blue":case "white":return 0xFF6D9FCB;
+            case "lavender":return 0xFF9A86D2;
+            case "mint":return 0xFF70A991;
+            case "night":return 0xFFB7A2E8;
+            case "luxury":case "brown":return 0xFFC39A68;
+            case "gold":return 0xFFC6A34B;
+            case "system":return isDarkAppearance()?0xFFB7A2E8:0xFF8D91C8;
+            default:return PINK;
+        }
+    }
+
+    private class HomeFeatureArtView extends View{
+        private final android.graphics.Paint paint=new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        private final int kind,accent;
+        HomeFeatureArtView(Context context,int kind,int accent){super(context);this.kind=kind;this.accent=accent;setLayerType(View.LAYER_TYPE_SOFTWARE,null);}
+        private void fill(android.graphics.Canvas c,int color){paint.setStyle(android.graphics.Paint.Style.FILL);paint.setColor(color);paint.setShader(null);paint.setShadowLayer(0,0,0,0);}
+        private void gradient(android.graphics.Canvas c,int a,int b,float top,float bottom){paint.setStyle(android.graphics.Paint.Style.FILL);paint.setShader(new android.graphics.LinearGradient(0,top,getWidth(),bottom,a,b,android.graphics.Shader.TileMode.CLAMP));paint.setShadowLayer(dp(3),0,dp(2),0x26000000);}
+        private void stroke(int color,float width){paint.setShader(null);paint.setStyle(android.graphics.Paint.Style.STROKE);paint.setStrokeWidth(width);paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);paint.setStrokeJoin(android.graphics.Paint.Join.ROUND);paint.setColor(color);paint.setShadowLayer(0,0,0,0);}
+        @Override protected void onDraw(android.graphics.Canvas canvas){
+            super.onDraw(canvas);float w=getWidth(),h=getHeight();if(w<=0||h<=0)return;
+            int light=blendColors(accent,0xFFFFFFFF,0.34f),deep=blendColors(accent,0xFF29213F,0.30f);
+            paint.setShader(new android.graphics.RadialGradient(w*.48f,h*.48f,w*.52f,new int[]{blendColors(accent,0xFFFFFFFF,0.76f),blendColors(accent,0xFFFFFFFF,0.91f),0x00FFFFFF},null,android.graphics.Shader.TileMode.CLAMP));
+            canvas.drawCircle(w*.49f,h*.49f,w*.48f,paint);paint.setShader(null);
+            canvas.save();canvas.translate(w*.5f,h*.5f);canvas.scale(w/66f,h/72f);
+            if(kind==0){
+                stroke(deep,2.4f);android.graphics.Path stem=new android.graphics.Path();stem.moveTo(0,24);stem.cubicTo(-3,35,4,44,0,55);canvas.drawPath(stem,paint);
+                fill(canvas,blendColors(accent,0xFF6FAD82,0.35f));android.graphics.Path leaf=new android.graphics.Path();leaf.moveTo(-1,42);leaf.cubicTo(-20,28,-24,43,-3,48);leaf.close();canvas.drawPath(leaf,paint);
+                fill(canvas,blendColors(accent,0xFF6FAD82,0.20f));leaf.reset();leaf.moveTo(1,49);leaf.cubicTo(18,34,25,47,3,55);leaf.close();canvas.drawPath(leaf,paint);
+                for(int i=0;i<6;i++){canvas.save();canvas.rotate(i*60);gradient(canvas,0xFFFFFFFF,light,-24,8);canvas.drawOval(-5,-27,5,-10,paint);canvas.restore();}
+                fill(canvas,deep);canvas.drawCircle(0,-18,5,paint);fill(canvas,0xFFFFE6A8);canvas.drawCircle(-1,-19,2.1f,paint);
+            }else if(kind==1){
+                stroke(blendColors(accent,0xFFFFFFFF,0.12f),2.8f);
+                for(int i=0;i<3;i++)canvas.drawArc(-23-i*5,-20-i*5,23+i*5,20+i*5,-52,104,false,paint);
+                fill(canvas,blendColors(accent,0xFFFFFFFF,0.25f));canvas.drawCircle(0,0,10,paint);
+                fill(canvas,light);canvas.drawCircle(0,0,5,paint);
+                fill(canvas,0xBFFFFFFF);canvas.drawCircle(-17,-22,2.3f,paint);canvas.drawCircle(21,19,1.8f,paint);
+                stroke(deep,2.2f);canvas.drawArc(-10,-9,10,9,200,140,false,paint);
+            }else if(kind==2){
+                gradient(canvas,0xFFFFFFFF,light,-29,31);canvas.drawRoundRect(-23,-29,23,29,7,7,paint);
+                fill(canvas,deep);canvas.drawRoundRect(-23,-29,23,-17,7,7,paint);
+                fill(canvas,0xFFFFFFFF);for(int i=0;i<3;i++)for(int j=0;j<3;j++)canvas.drawRoundRect(-15+j*11,-10+i*11,-11+j*11,-6+i*11,1.5f,1.5f,paint);
+                stroke(accent,2.5f);android.graphics.Path check=new android.graphics.Path();check.moveTo(-3,7);check.lineTo(1,11);check.lineTo(9,2);canvas.drawPath(check,paint);
+                fill(canvas,blendColors(accent,0xFFFFFFFF,0.48f));canvas.drawCircle(19,-25,4,paint);
+            }else if(kind==3){
+                gradient(canvas,0xFFFFFFFF,deep,-24,27);android.graphics.Path cup=new android.graphics.Path();cup.moveTo(-17,-22);cup.lineTo(17,-22);cup.lineTo(13,1);cup.quadTo(0,17,-13,1);cup.close();canvas.drawPath(cup,paint);
+                stroke(accent,3);canvas.drawArc(-27,-21,-10,5,265,190,false,paint);canvas.drawArc(10,-21,27,5,85,190,false,paint);
+                fill(canvas,light);canvas.drawRoundRect(-3,12,3,22,2,2,paint);canvas.drawRoundRect(-13,22,13,27,3,3,paint);
+                fill(canvas,0xFFFFE7A8);android.graphics.Path star=new android.graphics.Path();for(int i=0;i<10;i++){double angle=-Math.PI/2+i*Math.PI/5;float r=i%2==0?7:3;float x=(float)Math.cos(angle)*r,y=(float)Math.sin(angle)*r-7;if(i==0)star.moveTo(x,y);else star.lineTo(x,y);}star.close();canvas.drawPath(star,paint);
+            }else{
+                fill(canvas,blendColors(accent,0xFFFFFFFF,0.25f));canvas.drawCircle(-10,-13,12,paint);fill(canvas,deep);canvas.drawCircle(11,-11,11,paint);
+                gradient(canvas,light,deep,-2,31);canvas.drawOval(-29,0,7,31,paint);gradient(canvas,0xFFFFFFFF,light,-2,31);canvas.drawOval(-5,2,29,31,paint);
+                fill(canvas,0xBFFFFFFF);canvas.drawCircle(-14,-17,3,paint);canvas.drawCircle(8,-15,2.5f,paint);
+                stroke(accent,2);canvas.drawArc(-8,-4,9,12,20,140,false,paint);
+            }
+            canvas.restore();
+        }
     }
 
     private void reorderHomeBlocks(){
