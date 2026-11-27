@@ -1333,6 +1333,16 @@ public class MainActivity extends Activity {
         host.addView(moodCard, lp(-1, -2, 0, 0, 0, 12));
     }
 
+    private android.graphics.drawable.Drawable homePanel(int tint, int radius, float tintStrength) {
+        int surface = themeSurfaceColor(0xFFFFFFFF);
+        int upper = blendColors(surface, tint, tintStrength);
+        GradientDrawable panel = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{upper, surface});
+        panel.setCornerRadius(dp(radius));
+        panel.setStroke(dp(1), blendColors(PINK, BG, isDarkAppearance() ? 0.42f : 0.78f));
+        return panel;
+    }
+
     private void showHome() {
         currentScreen = "home";
         StudyWidgetProvider.updateAll(this);
@@ -1398,7 +1408,9 @@ public class MainActivity extends Activity {
 
         // Compact motivational progress card: consistent small vertical rhythm.
         LinearLayout continueCard = card();
-        continueCard.setPadding(dp(18), dp(17), dp(18), dp(17));
+        continueCard.setPadding(dp(20), dp(19), dp(20), dp(19));
+        continueCard.setBackground(homePanel(PINK, 24, isDarkAppearance() ? 0.10f : 0.055f));
+        continueCard.setElevation(dp(2));
         TextView progressCaption=text("ТВОЙ ПРОГРЕСС",13,PINK,true);
         continueCard.addView(progressCaption,lp(-1,-2,0,0,0,2));
         TextView encouragement=text("Ты справляешься.\nПродолжай в своём темпе.",23,DARK,true);
@@ -1438,7 +1450,7 @@ public class MainActivity extends Activity {
             statCard.setOrientation(LinearLayout.VERTICAL);
             statCard.setGravity(Gravity.CENTER);
             statCard.setPadding(dp(4), dp(8), dp(4), dp(8));
-            statCard.setBackground(shape(themeSurfaceColor(PALE), 16, blendColors(PINK, BG, isDarkAppearance() ? 0.48f : 0.72f)));
+            statCard.setBackground(homePanel(PINK, 16, isDarkAppearance() ? 0.12f : 0.075f));
             statCard.setForeground(null);
             statCard.setElevation(0f);
             TextView statValue = text(String.valueOf(statValues[statIndex]), 22, DARK, true);
@@ -1455,6 +1467,8 @@ public class MainActivity extends Activity {
 
         // Quick access to the existing math quiz from the home screen.
         LinearLayout quizCard = card();
+        quizCard.setBackground(homePanel(PINK, 24, isDarkAppearance() ? 0.12f : 0.07f));
+        quizCard.setElevation(dp(2));
         quizCard.setOrientation(LinearLayout.HORIZONTAL);
         quizCard.setGravity(Gravity.CENTER_VERTICAL);
         quizCard.setPadding(dp(14), dp(12), dp(14), dp(12));
@@ -1477,6 +1491,8 @@ public class MainActivity extends Activity {
         int weeklyGoal = prefs.getInt("weekly_goal_minutes", 300);
         int weeklyDone = weeklyMinutesLast7Days();
         LinearLayout weeklyCard = card();
+        weeklyCard.setBackground(homePanel(PINK, 24, isDarkAppearance() ? 0.09f : 0.045f));
+        weeklyCard.setElevation(dp(2));
         weeklyCard.setPadding(dp(13), dp(12), dp(13), dp(12));
         addText(weeklyCard, "🎯  ЦЕЛЬ НЕДЕЛИ", 11, PINK, true);
         addText(weeklyCard, weeklyDone + " из " + weeklyGoal + " минут", 14, DARK, true);
@@ -1501,7 +1517,7 @@ public class MainActivity extends Activity {
             TextView dayName = text(weekLabels[dayIndex], 10, isToday ? PINK : MUTED, true);
             dayName.setGravity(Gravity.CENTER);
             dayCell.addView(dayName, lp(-1, 16, 0, 0, 0, 2));
-            if (isToday) dayCell.setBackground(shape(themeSurfaceColor(PALE), 12, blendColors(PINK, BG, isDarkAppearance() ? 0.38f : 0.58f)));
+            if (isToday) dayCell.setBackground(homePanel(PINK, 12, isDarkAppearance() ? 0.24f : 0.14f));
             TextView dayMark = text(dayMinutes > 0 ? "♥" : (isToday ? "●" : "·"),
                     dayMinutes > 0 ? 18 : 17, (dayMinutes > 0 || isToday) ? PINK : MUTED, true);
             dayMark.setGravity(Gravity.CENTER);
@@ -1520,7 +1536,7 @@ public class MainActivity extends Activity {
         aiCard.setOrientation(LinearLayout.HORIZONTAL);
         aiCard.setGravity(Gravity.CENTER_VERTICAL);
         aiCard.setPadding(dp(14), dp(10), dp(14), dp(10));
-        aiCard.setBackground(shape(themeSurfaceColor(0xFFF3F0FF), 20, blendColors(PINK, BG, isDarkAppearance() ? 0.42f : 0.68f)));
+        aiCard.setBackground(homePanel(0xFFB9A5E8, 20, isDarkAppearance() ? 0.18f : 0.11f));
         TextView aiIcon = text("✧", 28, PINK, true);
         aiIcon.setGravity(Gravity.CENTER);
         aiCard.addView(aiIcon, lp(42, 44, 0, 0, 10, 0));
@@ -1555,7 +1571,7 @@ public class MainActivity extends Activity {
         reminder.setOrientation(LinearLayout.HORIZONTAL);
         reminder.setGravity(Gravity.CENTER_VERTICAL);
         reminder.setPadding(dp(8), dp(2), dp(7), dp(2));
-        reminder.setBackground(shape(themeSurfaceColor(PALE), 15, blendColors(PINK, BG, isDarkAppearance() ? 0.55f : 0.78f)));
+        reminder.setBackground(homePanel(PINK, 15, isDarkAppearance() ? 0.10f : 0.055f));
         LinearLayout reminderWords = new LinearLayout(this);
         reminderWords.setOrientation(LinearLayout.VERTICAL);
         addText(reminderWords, "НАПОМИНАНИЯ", 8, PINK, true);
