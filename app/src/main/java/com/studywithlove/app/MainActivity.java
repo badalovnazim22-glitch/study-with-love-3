@@ -4267,7 +4267,7 @@ public class MainActivity extends Activity {
     }
     private void applyThemeFont(View view){
         android.graphics.drawable.Drawable background=view.getBackground();
-        if(background instanceof android.graphics.drawable.GradientDrawable){
+        if(Build.VERSION.SDK_INT>=24 && background instanceof android.graphics.drawable.GradientDrawable){
             android.graphics.drawable.GradientDrawable gd=(android.graphics.drawable.GradientDrawable)background;
             android.content.res.ColorStateList fill=gd.getColor();
             if(fill!=null){int old=fill.getDefaultColor();int mapped=themeSurfaceColor(old);if(mapped!=old)gd.setColor(mapped);else if(isThemeAccentColor(old))gd.setColor(PINK);}
