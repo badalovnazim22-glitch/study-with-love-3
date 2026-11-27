@@ -1116,6 +1116,9 @@ public class MainActivity extends Activity {
 
         LinearLayout backup=settingsGroup("РЕЗЕРВНАЯ КОПИЯ");
         backup.setTag("data_security");
+        backup.setPadding(dp(14),dp(14),dp(14),dp(14));
+        backup.setBackground(shape(themeSurfaceColor(PALE),18,blendColors(PINK,BG,isDarkAppearance()?0.42f:0.72f)));
+        addText(backup,"Сохраняй учебные данные и настройки в отдельный файл, чтобы при необходимости перенести их на другое устройство.",12,MUTED,false);
         
         Button export=button("Экспортировать копию",true);export.setOnClickListener(v->{Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");i.putExtra(Intent.EXTRA_TITLE,"study_with_love_backup.json");startActivityForResult(i,BACKUP_EXPORT);});backup.addView(export,lp(-1, 48,0,7,0,7));
         LinearLayout diaryExports=new LinearLayout(this);diaryExports.setOrientation(LinearLayout.HORIZONTAL);diaryExports.setGravity(Gravity.CENTER_VERTICAL);
