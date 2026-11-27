@@ -35,6 +35,16 @@ import android.os.SystemClock;
 import android.widget.Toast;
 import android.widget.FrameLayout;
 import com.google.firebase.analytics.FirebaseAnalytics;
+import com.airbnb.lottie.LottieAnimationView;
+import com.airbnb.lottie.LottieDrawable;
+import androidx.dynamicanimation.animation.DynamicAnimation;
+import androidx.dynamicanimation.animation.SpringAnimation;
+import androidx.dynamicanimation.animation.SpringForce;
+import com.facebook.shimmer.Shimmer;
+import com.facebook.shimmer.ShimmerFrameLayout;
+import com.bumptech.glide.Glide;
+import com.google.android.material.shape.MaterialShapeDrawable;
+import com.google.android.material.shape.ShapeAppearanceModel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -1123,8 +1133,12 @@ public class MainActivity extends Activity {
         checkUpdates.setTranslationZ(0f);
         if(Build.VERSION.SDK_INT>=21)checkUpdates.setStateListAnimator(null);
         checkUpdates.setAllCaps(false);
-        checkUpdates.setOnClickListener(v->AppUpdater.checkAndOffer(this));
-        updates.addView(checkUpdates,lp(-1,44,0,3,0,0));
+        ShimmerFrameLayout updateShimmer=new ShimmerFrameLayout(this);
+        updateShimmer.setShimmer(new Shimmer.ColorHighlightBuilder().setBaseColor(blendColors(PINK,BG,0.78f)).setHighlightColor(blendColors(PINK,BG,0.48f)).setDuration(1150).setDirection(Shimmer.Direction.LEFT_TO_RIGHT).build());
+        updateShimmer.setClipToPadding(false);updateShimmer.setShimmerAutoStart(false);
+        updateShimmer.addView(checkUpdates,new FrameLayout.LayoutParams(-1,dp(44)));
+        checkUpdates.setOnClickListener(v->{updateShimmer.startShimmer();checkUpdates.setText(translate("Проверяем наличие обновлений…"));checkUpdates.setEnabled(false);AppUpdater.checkAndOffer(this);new Handler(Looper.getMainLooper()).postDelayed(()->{if(!isFinishing()&&!isDestroyed()){updateShimmer.stopShimmer();checkUpdates.setText(translate("Проверить обновления"));checkUpdates.setEnabled(true);}},2400);});
+        updates.addView(updateShimmer,lp(-1,44,0,3,0,0));
         root.addView(updates,lp(-1,-2,0,0,0,4));
 
         for (int i = 0; i < root.getChildCount(); i++) {
@@ -1712,8 +1726,11 @@ public class MainActivity extends Activity {
         for(int i=0;i<4;i+=2){LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);for(int j=i;j<i+2;j++){String answer=choices.get(j);Button option=button(answer,false);option.setTextSize(14);answerButtons.add(option);option.setOnClickListener(v->{if(!quizActive||!"english_quiz_game".equals(currentScreen)||answerChosen[0])return;answerChosen[0]=true;boolean correct=answer.equals(q[1]);for(Button candidate:answerButtons){candidate.setEnabled(false);String candidateText=candidate.getText().toString();if(candidateText.equals(q[1])){candidate.setBackground(shape(0xFFE1F4E7,20,0xFF54A96C));candidate.setTextColor(0xFF216B39);candidate.animate().scaleX(1.035f).scaleY(1.035f).setDuration(170).withEndAction(()->candidate.animate().scaleX(1f).scaleY(1f).setDuration(190).start()).start();}else if(candidate==option&&!correct){candidate.setBackground(shape(0xFFFFE8E8,20,0xFFE58A8A));candidate.setTextColor(0xFFB64242);}}
             haptic(option,correct);if(correct){quizStreak++;streakLabelRef[0].setText("Серия правильных ответов: "+quizStreak);animateEnglishStreak(flameRef[0],streakLabelRef[0],quizStreak);}else{quizStreak=0;streakLabelRef[0].setText("Серия прервана · начни новую 🔥");flameRef[0].animate().scaleX(0.85f).scaleY(0.85f).setDuration(180).withEndAction(()->flameRef[0].animate().scaleX(1f).scaleY(1f).setDuration(180).start()).start();}
             new Handler(Looper.getMainLooper()).postDelayed(()->submitEnglishQuizAnswer(correct),520);});LinearLayout.LayoutParams op=new LinearLayout.LayoutParams(0,dp(58),1f);op.setMargins(dp(3),0,dp(3),0);row.addView(option,op);}root.addView(row,lp(-1,-2,0,0,0,8));}
-        LinearLayout streakPanel=new LinearLayout(this);streakPanel.setGravity(Gravity.CENTER);streakPanel.setPadding(dp(12),dp(7),dp(12),dp(7));streakPanel.setBackground(shape(blendColors(PINK,BG,0.90f),18,blendColors(PINK,BG,0.62f)));
-        TextView flame=text("🔥",24,PINK,true);flame.setGravity(Gravity.CENTER);flameRef[0]=flame;streakPanel.addView(flame,lp(38,38,0,0,7,0));
+        LinearLayout streakPanel=new LinearLayout(this);streakPanel.setGravity(Gravity.CENTER);streakPanel.setPadding(dp(12),dp(7),dp(12),dp(7));MaterialShapeDrawable streakBackground=new MaterialShapeDrawable(ShapeAppearanceModel.builder().setAllCornerSizes(dp(18)).build());streakBackground.setFillColor(android.content.res.ColorStateList.valueOf(blendColors(PINK,BG,0.90f)));streakBackground.setStroke(dp(1),android.content.res.ColorStateList.valueOf(blendColors(PINK,BG,0.62f)));streakPanel.setBackground(streakBackground);
+        FrameLayout flameWrap=new FrameLayout(this);
+        LottieAnimationView glow=new LottieAnimationView(this);glow.setAnimation(R.raw.streak_glow);glow.setRepeatCount(LottieDrawable.INFINITE);glow.setRepeatMode(LottieDrawable.RESTART);glow.setScaleType(ImageView.ScaleType.FIT_CENTER);glow.playAnimation();
+        flameWrap.addView(glow,new FrameLayout.LayoutParams(dp(42),dp(42),Gravity.CENTER));
+        TextView flame=text("🔥",23,PINK,true);flame.setGravity(Gravity.CENTER);flameRef[0]=flame;flameWrap.addView(flame,new FrameLayout.LayoutParams(dp(38),dp(38),Gravity.CENTER));streakPanel.addView(flameWrap,lp(44,44,0,0,7,0));
         TextView streakLabel=text("Серия правильных ответов: "+quizStreak,13,PINK,true);streakLabel.setGravity(Gravity.CENTER_VERTICAL);streakLabelRef[0]=streakLabel;streakPanel.addView(streakLabel);
         root.addView(streakPanel,lp(-1,52,0,8,0,0));
         if(quizTimed){quizTick=()->{if(!quizActive||!"english_quiz_game".equals(currentScreen))return;long left=quizDeadline-SystemClock.elapsedRealtime();if(left<=0){if(quizTimerLabel!=null)quizTimerLabel.setText("0 сек");if(quizTimerBar!=null)quizTimerBar.setProgress(0);endEnglishQuiz(true);return;}int sec=(int)((left+999)/1000);if(quizTimerLabel!=null)quizTimerLabel.setText(sec+" сек");if(quizTimerBar!=null)quizTimerBar.setProgress((int)Math.max(0,Math.min(1000,left*1000L/(quizSeconds*1000L))));quizHandler.postDelayed(quizTick,80);};quizHandler.post(quizTick);}
@@ -1723,8 +1740,16 @@ public class MainActivity extends Activity {
         float growth=Math.min(0.55f,Math.max(0,streak-1)*0.045f);
         float peak=1.38f+growth;
         flame.animate().cancel();label.animate().cancel();
-        flame.setRotation(0f);flame.setScaleX(1f);flame.setScaleY(1f);
-        flame.animate().scaleX(peak).scaleY(peak).rotationBy(-9f).setDuration(190).setInterpolator(new android.view.animation.OvershootInterpolator(1.15f)).withEndAction(()->flame.animate().scaleX(1f+growth*0.35f).scaleY(1f+growth*0.35f).rotation(0f).setDuration(260).setInterpolator(new android.view.animation.DecelerateInterpolator()).start()).start();
+        float resting=1f+growth*0.35f;
+        flame.setRotation(0f);
+        SpringAnimation sx=new SpringAnimation(flame,DynamicAnimation.SCALE_X,peak);
+        sx.setSpring(new SpringForce(peak).setDampingRatio(SpringForce.DAMPING_RATIO_MEDIUM_BOUNCY).setStiffness(SpringForce.STIFFNESS_MEDIUM));
+        SpringAnimation sy=new SpringAnimation(flame,DynamicAnimation.SCALE_Y,peak);
+        sy.setSpring(new SpringForce(peak).setDampingRatio(SpringForce.DAMPING_RATIO_MEDIUM_BOUNCY).setStiffness(SpringForce.STIFFNESS_MEDIUM));
+        sx.addEndListener((animation,canceled,value,velocity)->{if(!canceled){SpringAnimation settle=new SpringAnimation(flame,DynamicAnimation.SCALE_X,resting);settle.setSpring(new SpringForce(resting).setDampingRatio(SpringForce.DAMPING_RATIO_LOW_BOUNCY).setStiffness(SpringForce.STIFFNESS_LOW));settle.start();}});
+        sy.addEndListener((animation,canceled,value,velocity)->{if(!canceled){SpringAnimation settle=new SpringAnimation(flame,DynamicAnimation.SCALE_Y,resting);settle.setSpring(new SpringForce(resting).setDampingRatio(SpringForce.DAMPING_RATIO_LOW_BOUNCY).setStiffness(SpringForce.STIFFNESS_LOW));settle.start();}});
+        sx.start();sy.start();
+        flame.animate().rotationBy(-9f).setDuration(260).setInterpolator(new android.view.animation.DecelerateInterpolator()).withEndAction(()->flame.animate().rotation(0f).setDuration(220).start()).start();
         label.animate().alpha(0.55f).setDuration(100).withEndAction(()->label.animate().alpha(1f).scaleX(1.035f).scaleY(1.035f).setDuration(220).setInterpolator(new android.view.animation.DecelerateInterpolator()).withEndAction(()->label.animate().scaleX(1f).scaleY(1f).setDuration(170).start()).start()).start();
         if(streak>0&&streak%5==0){flame.animate().rotationBy(18f).setDuration(130).withEndAction(()->flame.animate().rotation(0f).setDuration(190).start()).start();label.setText("✨ "+streak+" подряд! Так держать! 🔥");}
     }
@@ -2243,7 +2268,7 @@ public class MainActivity extends Activity {
     }
     private void addTopicPhoto(String topic){
         String suffix=topicStorageSuffix(selectedChapter,topic),key="topic_photo_"+suffix,uri=prefs.getString(key,""),file=prefs.getString("topic_photo_file_"+suffix,"");LinearLayout c=card();addText(c,"📷  ФОТО ЗАДАЧИ",11,PINK,true);addText(c,"Сохрани снимок задания из учебника, чтобы вернуться к нему позже.",12,MUTED,false);
-        if(!uri.isEmpty()||!file.isEmpty()){try{ImageView image=new ImageView(this);if(!file.isEmpty())image.setImageBitmap(android.graphics.BitmapFactory.decodeFile(file));else image.setImageURI(android.net.Uri.parse(uri));image.setScaleType(ImageView.ScaleType.CENTER_INSIDE);c.addView(image,lp(-1,190,0,6,0,7));}catch(Exception ignored){}}
+        if(!uri.isEmpty()||!file.isEmpty()){try{ImageView image=new ImageView(this);image.setScaleType(ImageView.ScaleType.CENTER_INSIDE);image.setBackground(shape(blendColors(PALE,BG,0.28f),14,0));c.addView(image,lp(-1,190,0,6,0,7));Object source=file.isEmpty()?android.net.Uri.parse(uri):file;Glide.with(this).load(source).placeholder(shape(blendColors(PALE,BG,0.28f),14,0)).error(shape(blendColors(PALE,BG,0.28f),14,0)).into(image);}catch(Exception ignored){}}
         LinearLayout actions=new LinearLayout(this);actions.setOrientation(LinearLayout.HORIZONTAL);Button camera=button("📷  Камера",false),gallery=button("Из галереи",false);actions.addView(camera,new LinearLayout.LayoutParams(0,dp(48),1f));actions.addView(gallery,new LinearLayout.LayoutParams(0,dp(48),1f));camera.setOnClickListener(v->{Intent take=new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);if(take.resolveActivity(getPackageManager())!=null)startActivityForResult(take,PICK_TOPIC_CAMERA);else showAppMessage("Камера недоступна");});gallery.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT);pick.addCategory(Intent.CATEGORY_OPENABLE);pick.setType("image/*");pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,PICK_TOPIC_PHOTO);});c.addView(actions,lp(-1,48,0,5,0,0));root.addView(c,lp(-1,-2,0,0,0,12));
     }
     private void loadQuestionBank(){
