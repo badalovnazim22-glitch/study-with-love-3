@@ -3990,7 +3990,7 @@ public class MainActivity extends Activity {
         }catch(Exception e){stopAmbience();showAppMessage("Не удалось загрузить звук атмосферы");}
     }
     private void stopAmbience(){if(ambienceAutoStopTick!=null){settingsHandler.removeCallbacks(ambienceAutoStopTick);ambienceAutoStopTick=null;}ambiencePlaying=false;ambienceLoading=false;android.media.MediaPlayer player=ambiencePlayer;ambiencePlayer=null;if(player!=null){try{if(player.isPlaying())player.stop();}catch(Exception ignored){}try{player.release();}catch(Exception ignored){}}if(ambienceAudioManager!=null){try{if(Build.VERSION.SDK_INT>=26&&ambienceFocusRequest!=null)ambienceAudioManager.abandonAudioFocusRequest((android.media.AudioFocusRequest)ambienceFocusRequest);else ambienceAudioManager.abandonAudioFocus(ambienceFocusListener);}catch(Exception ignored){}}}
-    @Override protected void onDestroy(){if(flowerBreatheAnimator!=null){flowerBreatheAnimator.cancel();flowerBreatheAnimator=null;}if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}stopAmbience();super.onDestroy();}
+    @Override protected void onDestroy(){AppUpdater.setDownloadObserver(null);if(flowerBreatheAnimator!=null){flowerBreatheAnimator.cancel();flowerBreatheAnimator=null;}if(timerPulseAnimator!=null){timerPulseAnimator.cancel();timerPulseAnimator=null;}stopAmbience();super.onDestroy();}
 
     private void showAtmosphere() {
         currentScreen = "atmosphere";
