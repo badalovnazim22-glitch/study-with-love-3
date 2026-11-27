@@ -117,7 +117,7 @@ public class MainActivity extends Activity {
                 texture.post(() -> {
                     if (viewer == null) return;
                     try {
-                        viewer.setCameraFocalLength(85f);
+                        viewer.setCameraFocalLength(28f);
                         viewer.getCamera().lookAt(0.0, -4.5, 0.55, 0.0, 0.0, 0.55, 0.0, 0.0, 1.0);
                     } catch (Throwable ignored) { }
                 });
