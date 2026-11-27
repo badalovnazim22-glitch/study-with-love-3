@@ -2243,13 +2243,22 @@ public class MainActivity extends Activity {
         return false;
     }
 
+    private TextView createStandardBackButton(Runnable action){
+        TextView back=text("‹",25,PINK,true);
+        back.setGravity(Gravity.CENTER);
+        back.setContentDescription("Назад");
+        back.setBackground(shape(themeSurfaceColor(PALE),13,0));
+        back.setOnClickListener(v->action.run());
+        return back;
+    }
+
     private void showChapters() {
         currentScreen = "chapters";
         lessonsSearchOpen=false;
         base("", "");
         LinearLayout lessonTop=new LinearLayout(this);
         lessonTop.setGravity(Gravity.CENTER_VERTICAL);
-        TextView lessonBack=text("‹",34,PINK,true);lessonBack.setGravity(Gravity.CENTER);lessonBack.setContentDescription("Назад");lessonTop.addView(lessonBack,lp(38,44,0,0,5,0));lessonBack.setOnClickListener(v->showHome());
+        TextView lessonBack=createStandardBackButton(()->showHome());lessonTop.addView(lessonBack,lp(32,32,0,0,10,0));
         TextView pageTitle=text("Уроки 📚",25,DARK,true);
         pageTitle.setGravity(Gravity.CENTER_VERTICAL);pageTitle.setSingleLine(true);pageTitle.setIncludeFontPadding(false);
         lessonTop.addView(pageTitle,new LinearLayout.LayoutParams(0,dp(44),1f));
@@ -3214,7 +3223,7 @@ public class MainActivity extends Activity {
         currentScreen="diary";
         base("","");
         LinearLayout diaryTitleRow=new LinearLayout(this);diaryTitleRow.setGravity(Gravity.CENTER_VERTICAL);
-        TextView diaryBack=text("‹",34,PINK,true);diaryBack.setGravity(Gravity.CENTER);diaryBack.setContentDescription("Назад");diaryTitleRow.addView(diaryBack,lp(38,42,0,0,5,0));diaryBack.setOnClickListener(v->showHome());
+        TextView diaryBack=createStandardBackButton(()->showHome());diaryTitleRow.addView(diaryBack,lp(32,32,0,0,10,0));
         TextView diaryTitle=text("Дневник успехов ♡",23,DARK,true);diaryTitle.setLetterSpacing(-0.02f);diaryTitleRow.addView(diaryTitle,new LinearLayout.LayoutParams(0,dp(42),1f));
         HeaderActionIconView diaryTopSearch=new HeaderActionIconView(this,1,PINK);diaryTopSearch.setContentDescription("Поиск по дневнику");diaryTitleRow.addView(diaryTopSearch,lp(40,40,0,0,0,0));root.addView(diaryTitleRow,lp(-1,46,0,0,0,3));
         addText(root,"МАЛЕНЬКАЯ ПОБЕДА СЕГОДНЯ",11,PINK,true);
