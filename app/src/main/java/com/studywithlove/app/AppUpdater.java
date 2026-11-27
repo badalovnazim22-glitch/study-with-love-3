@@ -31,6 +31,8 @@ public final class AppUpdater {
             "https://github.com/badalovnazim22-glitch/study-with-love-3/releases/latest/download/app-debug.apk";
     private static final String PREFS = "study_app_updates";
     private static final String PENDING_APK = "pending_apk";
+    private static final String PENDING_VERSION = "pending_version";
+    private static final String INSTALL_LAUNCHED = "install_launched";
     private static final String LAST_AUTO_CHECK = "last_auto_check";
     private static final String LAST_OFFERED_VERSION = "last_offered_version";
     private static volatile String latestReleaseNotes = "";
@@ -189,7 +191,7 @@ public final class AppUpdater {
         android.widget.TextView versionLabel=new android.widget.TextView(activity);versionLabel.setText("STUDY WITH LOVE  ·  ВЕРСИЯ "+version);versionLabel.setTextColor(accent);versionLabel.setTextSize(12);versionLabel.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);versionLabel.setGravity(android.view.Gravity.CENTER);panel.addView(versionLabel,new android.widget.LinearLayout.LayoutParams(-1,-2));
         android.widget.TextView notes=new android.widget.TextView(activity);String note=latestReleaseNotes==null?"":latestReleaseNotes.trim();if(note.isEmpty())note="Новые улучшения, более удобные функции и исправления для комфортной учёбы.";notes.setText(note);notes.setTextColor(muted);notes.setTextSize(14);notes.setGravity(android.view.Gravity.CENTER);notes.setPadding(0,pad,0,pad/2);panel.addView(notes,new android.widget.LinearLayout.LayoutParams(-1,-2));
         android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(activity).setView(panel).setNegativeButton("Позже",null).setPositiveButton("Обновить",null).create();
-        dialog.setOnShowListener(v->{android.widget.Button positive=dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE);positive.setTextColor(accent);positive.setOnClickListener(b->{dialog.dismiss();download(activity);});});
+        dialog.setOnShowListener(v->{android.widget.Button positive=dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE);positive.setTextColor(accent);positive.setOnClickListener(b->{dialog.dismiss();download(activity,version);});});
         dialog.show();
     }
 
@@ -281,7 +283,7 @@ public final class AppUpdater {
         return value.startsWith("v") || value.startsWith("V") ? value.substring(1) : value;
     }
 
-    private static void download(Activity activity) {
+    private static void download(Activity activity, String version) {
         int pad=(int)(activity.getResources().getDisplayMetrics().density*18);
         int[] colors=palette(activity);int accent=colors[0],surface=colors[1],soft=colors[2],ink=colors[3],muted=colors[4],border=colors[5];
         android.widget.LinearLayout panel=new android.widget.LinearLayout(activity);panel.setOrientation(android.widget.LinearLayout.VERTICAL);panel.setPadding(pad,pad,pad,pad);
@@ -334,11 +336,13 @@ public final class AppUpdater {
                     }
                     out.getFD().sync();
                 }
-                if (copied < 100000 || !temporary.renameTo(target)) {
-                    throw new Exception("Не удалось сохранить APK.");
-                }
+                if (copied < 100000) throw new Exception("Файл обновления слишком мал или повреждён.");
+                if (target.exists() && !target.delete()) throw new Exception("Не удалось заменить предыдущий файл обновления.");
+                if (!temporary.renameTo(target)) throw new Exception("Не удалось сохранить APK.");
                 activity.getSharedPreferences(PREFS, Activity.MODE_PRIVATE)
-                        .edit().putString(PENDING_APK, target.getAbsolutePath()).apply();
+                        .edit().putString(PENDING_APK, target.getAbsolutePath())
+                        .putString(PENDING_VERSION, version)
+                        .putBoolean(INSTALL_LAUNCHED, false).apply();
                 MAIN.post(() -> {
                     if (activity.isFinishing() || (Build.VERSION.SDK_INT >= 17 && activity.isDestroyed())) return;
                     progress.dismiss();
@@ -372,9 +376,17 @@ public final class AppUpdater {
         File apk = new File(path);
         if (!apk.isFile() || apk.length() < 100000) {
             activity.getSharedPreferences(PREFS, Activity.MODE_PRIVATE)
-                    .edit().remove(PENDING_APK).apply();
+                    .edit().remove(PENDING_APK).remove(PENDING_VERSION)
+                    .remove(INSTALL_LAUNCHED).apply();
             return;
         }
+        android.content.SharedPreferences prefs=activity.getSharedPreferences(PREFS, Activity.MODE_PRIVATE);
+        String targetVersion=prefs.getString(PENDING_VERSION, "");
+        if (!targetVersion.isEmpty() && compareVersions(installedVersion(activity), targetVersion) >= 0) {
+            prefs.edit().remove(PENDING_APK).remove(PENDING_VERSION).remove(INSTALL_LAUNCHED).apply();
+            return;
+        }
+        if (prefs.getBoolean(INSTALL_LAUNCHED, false)) return;
         if (Build.VERSION.SDK_INT >= 26 &&
                 !activity.getPackageManager().canRequestPackageInstalls()) return;
         installFile(activity, apk);
@@ -407,10 +419,11 @@ public final class AppUpdater {
                     activity.getPackageName() + ".fileprovider", apk);
             Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
             intent.setDataAndType(uri, "application/vnd.android.package-archive");
+            intent.setClipData(android.content.ClipData.newRawUri("Study with Love update", uri));
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             activity.startActivity(intent);
             activity.getSharedPreferences(PREFS, Activity.MODE_PRIVATE)
-                    .edit().remove(PENDING_APK).apply();
+                    .edit().putBoolean(INSTALL_LAUNCHED, true).apply();
         } catch (Exception e) {
             Toast.makeText(activity, "Не удалось открыть установщик Android.", Toast.LENGTH_LONG).show();
         }
