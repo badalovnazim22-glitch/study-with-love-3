@@ -21,8 +21,8 @@ android {
         applicationId 'com.studywithlove.app'
         minSdk 23
         targetSdk 35
-        versionCode 244
-        versionName '5.135'
+        versionCode 245
+        versionName '5.136'
         // Launcher icon refresh: blue-lavender glass book
     }
 
