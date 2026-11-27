@@ -24,7 +24,7 @@ import com.google.android.filament.Renderer;
 import com.google.android.filament.LightManager;
 import com.google.android.filament.android.UiHelper;
 import com.google.android.filament.utils.ModelViewer;
-import com.google.android.filament.utils.EntityManager;
+import com.google.android.filament.EntityManager;
 import com.google.android.filament.utils.Utils;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
