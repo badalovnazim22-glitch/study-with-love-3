@@ -1428,7 +1428,7 @@ public class MainActivity extends Activity {
         TextView quizArrow = text("›", 28, PINK, true);
         quizArrow.setGravity(Gravity.CENTER);
         quizCard.addView(quizArrow, lp(28, 38, 0, 0, 0, 0));
-        quizCard.setOnClickListener(v -> showMathQuiz());
+        quizCard.setOnClickListener(v -> showQuizHub());
         root.addView(quizCard, lp(-1, -2, 0, 0, 0, 8));
         quizCard.setTag("home_quiz");
 
@@ -1591,6 +1591,87 @@ public class MainActivity extends Activity {
     private int quizTimeForDifficulty() { return quizDifficulty == 0 ? 15 : quizDifficulty == 1 ? 10 : 6; }
     private String quizDifficultyName() { return quizDifficulty == 0 ? "Лёгкая" : quizDifficulty == 1 ? "Средняя" : "Тяжёлая"; }
     private String quizModeName() { return quizTimed ? "С таймером" : "Без времени"; }
+
+    private void showQuizHub() {
+        stopQuizTimer(); quizActive=false; currentScreen="math_quiz";
+        base("Викторина", "Выбери направление и проверь свои знания");
+        LinearLayout intro=card();intro.setPadding(dp(17),dp(17),dp(17),dp(17));
+        addText(intro,"ВРЕМЯ ПРОВЕРИТЬ СЕБЯ",11,PINK,true);
+        addText(intro,"Учись играя ✨",22,DARK,true);
+        addText(intro,"Выбирай предмет, отвечай на вопросы и открывай новые достижения.",13,MUTED,false);
+        root.addView(intro,lp(-1,-2,0,0,0,14));
+        addText(root,"ВЫБЕРИ ПРЕДМЕТ",12,PINK,true);
+        LinearLayout tiles=new LinearLayout(this);tiles.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout math=quizSubjectTile("🧮","Математика","Примеры · уровни",PALE);
+        LinearLayout english=quizSubjectTile("🇬🇧","Английский","Слова · перевод",blendColors(PALE,BG,0.35f));
+        LinearLayout.LayoutParams mlp=new LinearLayout.LayoutParams(0,dp(142),1f);mlp.setMargins(0,0,dp(6),0);tiles.addView(math,mlp);
+        LinearLayout.LayoutParams elp=new LinearLayout.LayoutParams(0,dp(142),1f);elp.setMargins(dp(6),0,0,0);tiles.addView(english,elp);
+        math.setOnClickListener(v->showMathQuiz());english.setOnClickListener(v->showEnglishQuiz());
+        root.addView(tiles,lp(-1,-2,0,0,0,14));
+        LinearLayout stats=card();stats.setPadding(dp(15),dp(13),dp(15),dp(13));
+        addText(stats,"ТВОЙ РЕЗУЛЬТАТ",11,PINK,true);
+        addText(stats,"Математика · "+prefs.getInt("quiz_best_score",0)+" очков",14,DARK,true);
+        addText(stats,"Английский · "+prefs.getInt("english_quiz_best",0)+" очков",14,DARK,true);
+        root.addView(stats,lp(-1,-2,0,0,0,10));
+        Button awards=button("🏅  Достижения математики",false);awards.setOnClickListener(v->showMathQuizAchievements());
+        root.addView(awards,lp(-1,46,0,0,0,6));
+    }
+
+    private LinearLayout quizSubjectTile(String emoji,String name,String detail,int bgColor) {
+        LinearLayout tile=new LinearLayout(this);tile.setOrientation(LinearLayout.VERTICAL);tile.setGravity(Gravity.CENTER);
+        tile.setPadding(dp(10),dp(12),dp(10),dp(12));tile.setBackground(shape(bgColor,22,0));
+        TextView icon=text(emoji,32,DARK,true);icon.setGravity(Gravity.CENTER);tile.addView(icon,lp(-1,48,0,0,0,5));
+        TextView title=text(name,16,DARK,true);title.setGravity(Gravity.CENTER);tile.addView(title,lp(-1,-2,0,0,0,3));
+        TextView subtitle=text(detail,11,MUTED,false);subtitle.setGravity(Gravity.CENTER);tile.addView(subtitle,lp(-1,-2,0,0,0,0));
+        return tile;
+    }
+
+    private int englishQuestionIndex=0,englishQuizScore=0;
+    private final String[][] englishQuestions={
+        {"Apple","Яблоко","Апельсин","Банан","Груша"},
+        {"Book","Книга","Тетрадь","Ручка","Стол"},
+        {"Window","Окно","Дверь","Стена","Пол"},
+        {"Beautiful","Красивый","Быстрый","Высокий","Тихий"},
+        {"Morning","Утро","Вечер","Ночь","День"},
+        {"Friend","Друг","Учитель","Сосед","Брат"},
+        {"Water","Вода","Молоко","Сок","Чай"},
+        {"School","Школа","Дом","Магазин","Парк"},
+        {"Happy","Счастливый","Грустный","Уставший","Голодный"},
+        {"Always","Всегда","Иногда","Никогда","Редко"}
+    };
+
+    private void showEnglishQuiz() {
+        currentScreen="english_quiz";base("Английский 🇬🇧","Выбери правильный перевод слова");
+        LinearLayout top=card();top.setPadding(dp(15),dp(12),dp(15),dp(12));
+        addText(top,"АНГЛИЙСКИЙ · СЛОВА",11,PINK,true);
+        addText(top,"Очки: "+englishQuizScore+"  ·  Вопрос "+(englishQuestionIndex+1)+"/10",14,DARK,true);
+        root.addView(top,lp(-1,-2,0,0,0,12));
+        final String[] q=englishQuestions[englishQuestionIndex%englishQuestions.length];
+        LinearLayout word=card();word.setGravity(Gravity.CENTER);word.setPadding(dp(14),dp(22),dp(14),dp(22));
+        addText(word,"КАК ПЕРЕВОДИТСЯ?",11,MUTED,true);
+        TextView prompt=text(q[0],30,DARK,true);prompt.setGravity(Gravity.CENTER);
+        word.addView(prompt,lp(-1,58,0,6,0,0));root.addView(word,lp(-1,-2,0,0,0,14));
+        List<String> answers=new ArrayList<>();for(int i=1;i<q.length;i++)answers.add(q[i]);java.util.Collections.shuffle(answers,quizRandom);
+        for(String answer:answers){
+            Button option=button(answer,false);option.setTextSize(15);
+            option.setOnClickListener(v->{
+                if(!"english_quiz".equals(currentScreen))return;
+                if(answer.equals(q[1]))englishQuizScore+=10;
+                if(englishQuestionIndex>=9){
+                    prefs.edit().putInt("english_quiz_best",Math.max(englishQuizScore,prefs.getInt("english_quiz_best",0))).apply();
+                    currentScreen="english_quiz_result";base("Результат 🇬🇧","Английская викторина завершена");
+                    LinearLayout result=card();result.setGravity(Gravity.CENTER);result.setPadding(dp(18),dp(22),dp(18),dp(22));
+                    addText(result,"ТВОЙ РЕЗУЛЬТАТ",12,PINK,true);
+                    TextView score=text(englishQuizScore+" очков",34,DARK,true);score.setGravity(Gravity.CENTER);
+                    result.addView(score,lp(-1,64,0,8,0,0));root.addView(result,lp(-1,-2,0,0,0,14));
+                    Button again=button("↻  Ещё раз",true);again.setOnClickListener(x->{englishQuestionIndex=0;englishQuizScore=0;showEnglishQuiz();});root.addView(again,lp(-1,50,0,0,0,8));
+                    Button back=button("←  К викторине",false);back.setOnClickListener(x->showQuizHub());root.addView(back,lp(-1,46,0,0,0,6));
+                }else{englishQuestionIndex++;showEnglishQuiz();}
+            });
+            root.addView(option,lp(-1,48,0,0,0,7));
+        }
+        Button back=button("←  Все викторины",false);back.setOnClickListener(v->showQuizHub());root.addView(back,lp(-1,44,0,10,0,0));
+    }
 
     private void showMathQuiz() {
         stopQuizTimer();
@@ -3723,8 +3804,9 @@ public class MainActivity extends Activity {
             case "atmosphere": showAtmosphere(); break;
             case "reminders": showReminderSettings(); break;
             case "message": showMessage(); break;
-            case "math_quiz": showMathQuiz(); break;
-            case "math_quiz_result": showMathQuiz(); break;
+            case "math_quiz": showQuizHub(); break;
+            case "math_quiz_result": showQuizHub(); break;
+            case "english_quiz": showEnglishQuiz(); break;
             case "math_quiz_awards": showMathQuizAchievements(); break;
             default: showHome(); break;
         }
