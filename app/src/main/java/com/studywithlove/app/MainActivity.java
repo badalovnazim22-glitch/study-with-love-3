@@ -1596,7 +1596,7 @@ public class MainActivity extends Activity {
         stopQuizTimer();
         quizActive = false;
         currentScreen = "math_quiz";
-        base("Математическая викторина 🧮", "Бесконечная практика в твоём темпе");
+        base("Математическая викторина 🧮", "Проверь знания и набирай очки");
         LinearLayout intro = card();
         intro.setPadding(dp(18),dp(18),dp(18),dp(18));
         intro.setBackground(shape(0xFFFFF0F4,24,0));
@@ -1605,12 +1605,19 @@ public class MainActivity extends Activity {
         addText(intro,"Выбери режим и сложность. Набирай очки, проходи уровни и собирай достижения. Ошибка завершит забег.",13,MUTED,false);
         root.addView(intro,lp(-1,-2,0,0,0,14));
         addText(root,"РЕЖИМ ИГРЫ",12,PINK,true);
-        LinearLayout modes=new LinearLayout(this);modes.setOrientation(LinearLayout.HORIZONTAL);
-        Button timedMode=button("⏱ С таймером",quizTimed),freeMode=button("☁ Без времени",!quizTimed);
-        LinearLayout.LayoutParams modeLp=new LinearLayout.LayoutParams(0,dp(48),1f);modeLp.setMargins(0,0,dp(5),0);modes.addView(timedMode,modeLp);
-        LinearLayout.LayoutParams freeLp=new LinearLayout.LayoutParams(0,dp(48),1f);freeLp.setMargins(dp(5),0,0,0);modes.addView(freeMode,freeLp);
-        timedMode.setOnClickListener(v->{quizTimed=true;showMathQuiz();});freeMode.setOnClickListener(v->{quizTimed=false;showMathQuiz();});
-        root.addView(modes,lp(-1,50,0,0,0,14));
+        FrameLayout modeTrack=new FrameLayout(this);
+        modeTrack.setBackground(shape(PALE,18,0));
+        View modeIndicator=new View(this);modeIndicator.setBackground(shape(PINK,15,0));
+        FrameLayout.LayoutParams indicatorLp=new FrameLayout.LayoutParams(0,dp(36),Gravity.START|Gravity.CENTER_VERTICAL);indicatorLp.leftMargin=dp(3);modeTrack.addView(modeIndicator,indicatorLp);
+        LinearLayout modeLabels=new LinearLayout(this);modeLabels.setOrientation(LinearLayout.HORIZONTAL);
+        TextView timedMode=text("⏱ С таймером",14,quizTimed?0xFFFFFFFF:DARK,true);timedMode.setGravity(Gravity.CENTER);
+        TextView freeMode=text("☁ Без времени",14,quizTimed?DARK:0xFFFFFFFF,true);freeMode.setGravity(Gravity.CENTER);
+        modeLabels.addView(timedMode,new LinearLayout.LayoutParams(0,dp(42),1f));modeLabels.addView(freeMode,new LinearLayout.LayoutParams(0,dp(42),1f));
+        modeTrack.addView(modeLabels,new FrameLayout.LayoutParams(-1,-1));
+        Runnable updateModeSelection=()->{int target=quizTimed?0:Math.max(0,(modeTrack.getWidth()-dp(6))/2+dp(3));modeIndicator.animate().translationX(target).setDuration(220).start();timedMode.setTextColor(quizTimed?0xFFFFFFFF:DARK);freeMode.setTextColor(quizTimed?DARK:0xFFFFFFFF);};
+        modeTrack.post(()->{FrameLayout.LayoutParams p=(FrameLayout.LayoutParams)modeIndicator.getLayoutParams();p.width=Math.max(0,(modeTrack.getWidth()-dp(6))/2);modeIndicator.setLayoutParams(p);updateModeSelection.run();});
+        timedMode.setOnClickListener(v->{quizTimed=true;updateModeSelection.run();});freeMode.setOnClickListener(v->{quizTimed=false;updateModeSelection.run();});
+        root.addView(modeTrack,lp(-1,42,0,0,0,12));
         addText(root,"ВЫБЕРИ СЛОЖНОСТЬ",12,PINK,true);
         String[] names={"🌱  Лёгкая","⚡  Средняя","🔥  Тяжёлая"};
         String[] details={"До 20 · таблица умножения 2–5 · простые примеры","До 100 · умножение и деление на числа до 12","До 500 · крупные числа · умножение до 30"};
@@ -1668,14 +1675,13 @@ public class MainActivity extends Activity {
         root.addView(top,lp(-1,-2,0,0,0,12));
         quizTimerLabel=null;quizTimerBar=null;
         if(quizTimed){
-            LinearLayout timerCard=card();timerCard.setGravity(Gravity.CENTER);timerCard.setPadding(dp(14),dp(14),dp(14),dp(14));
-            quizTimerLabel=text(quizTimeForDifficulty()+" сек",30,PINK,true);quizTimerLabel.setGravity(Gravity.CENTER);
-            timerCard.addView(quizTimerLabel,lp(-1, 48,0,0,0,5));
+            quizTimerLabel=text(quizTimeForDifficulty()+" сек",26,PINK,true);quizTimerLabel.setGravity(Gravity.CENTER);
+            root.addView(quizTimerLabel,lp(-1,38,0,0,0,4));
             quizTimerBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);quizTimerBar.setMax(1000);quizTimerBar.setProgress(1000);
-            if(Build.VERSION.SDK_INT>=21){quizTimerBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));quizTimerBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFE2EA));}
-            timerCard.addView(quizTimerBar,lp(-1,8,0,0,0,0));root.addView(timerCard,lp(-1,-2,0,0,0,18));
+            if(Build.VERSION.SDK_INT>=21){quizTimerBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));quizTimerBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(blendColors(PALE,BG,0.28f)));}
+            root.addView(quizTimerBar,lp(-1,6,0,0,0,14));
         }else{
-            LinearLayout relaxed=card();relaxed.setGravity(Gravity.CENTER);addText(relaxed,"☁  Время не ограничено",14,PINK,true);root.addView(relaxed,lp(-1,48,0,0,0,14));
+            TextView relaxed=text("☁  Время не ограничено",13,MUTED,true);relaxed.setGravity(Gravity.CENTER);root.addView(relaxed,lp(-1,36,0,0,0,12));
         }
         LinearLayout question=card();question.setGravity(Gravity.CENTER);question.setPadding(dp(12),dp(25),dp(12),dp(25));
         addText(question,"СКОЛЬКО БУДЕТ?",11,MUTED,true);
