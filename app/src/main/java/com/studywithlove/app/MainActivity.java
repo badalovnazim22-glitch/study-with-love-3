@@ -1722,11 +1722,11 @@ public class MainActivity extends Activity {
     private void animateEnglishStreak(TextView flame,TextView label,int streak){
         float growth=Math.min(0.55f,Math.max(0,streak-1)*0.045f);
         float peak=1.38f+growth;
-        flameRef[0].animate().cancel();label.animate().cancel();
+        flame.animate().cancel();label.animate().cancel();
         flame.setRotation(0f);flame.setScaleX(1f);flame.setScaleY(1f);
-        flameRef[0].animate().scaleX(peak).scaleY(peak).rotationBy(-9f).setDuration(190).setInterpolator(new android.view.animation.OvershootInterpolator(1.15f)).withEndAction(()->flameRef[0].animate().scaleX(1f+growth*0.35f).scaleY(1f+growth*0.35f).rotation(0f).setDuration(260).setInterpolator(new android.view.animation.DecelerateInterpolator()).start()).start();
+        flame.animate().scaleX(peak).scaleY(peak).rotationBy(-9f).setDuration(190).setInterpolator(new android.view.animation.OvershootInterpolator(1.15f)).withEndAction(()->flame.animate().scaleX(1f+growth*0.35f).scaleY(1f+growth*0.35f).rotation(0f).setDuration(260).setInterpolator(new android.view.animation.DecelerateInterpolator()).start()).start();
         label.animate().alpha(0.55f).setDuration(100).withEndAction(()->label.animate().alpha(1f).scaleX(1.035f).scaleY(1.035f).setDuration(220).setInterpolator(new android.view.animation.DecelerateInterpolator()).withEndAction(()->label.animate().scaleX(1f).scaleY(1f).setDuration(170).start()).start()).start();
-        if(streak>0&&streak%5==0){flameRef[0].animate().rotationBy(18f).setDuration(130).withEndAction(()->flameRef[0].animate().rotation(0f).setDuration(190).start()).start();label.setText("✨ "+streak+" подряд! Так держать! 🔥");}
+        if(streak>0&&streak%5==0){flame.animate().rotationBy(18f).setDuration(130).withEndAction(()->flame.animate().rotation(0f).setDuration(190).start()).start();label.setText("✨ "+streak+" подряд! Так держать! 🔥");}
     }
 
     private void submitEnglishQuizAnswer(boolean correct){if(!quizActive)return;stopQuizTimer();englishQuestionCount++;if(!correct){endEnglishQuiz(false);return;}quizScore+=10;englishBestStreak=Math.max(englishBestStreak,quizStreak);prefs.edit().putInt("english_quiz_total_correct",prefs.getInt("english_quiz_total_correct",0)+1).apply();if(quizScore>prefs.getInt("english_quiz_best",0)){prefs.edit().putInt("english_quiz_best",quizScore).apply();celebrate();}quizLevel=quizScore/50+1;unlockEnglishQuizAwards();englishQuestionIndex++;showEnglishQuizQuestion();}
