@@ -1941,7 +1941,9 @@ public class MainActivity extends Activity {
 
     private void showEnglishQuiz(){
         stopQuizTimer();quizActive=false;currentScreen="english_quiz";base("Английский 🇬🇧","");
-        LinearLayout intro=card();intro.setPadding(dp(16),dp(14),dp(16),dp(14));addText(intro,"ENGLISH CHALLENGE",11,PINK,true);addText(intro,"Пополняй словарный запас",19,DARK,true);addText(intro,"Выбирай сложность, переводи слова и собирай награды.",12,MUTED,false);root.addView(intro,lp(-1,-2,0,0,0,12));
+        addQuizAwardsIcon(root,()->showEnglishQuizAchievements());
+        addQuizRecordCard(root,"english_quiz_best","english_quiz_total_correct","английском");
+        LinearLayout intro=card();intro.setPadding(dp(16),dp(14),dp(16),dp(14));intro.setBackground(shape(themeSurfaceColor(PALE),20,0));addText(intro,"ENGLISH CHALLENGE",11,PINK,true);addText(intro,"Пополняй словарный запас",19,DARK,true);addText(intro,"Переводи слова и собирай награды.",12,MUTED,false);root.addView(intro,lp(-1,-2,0,0,0,12));
         addText(root,"РЕЖИМ ИГРЫ",12,PINK,true);
         FrameLayout track=new FrameLayout(this);track.setBackground(shape(PALE,18,0));View mark=new View(this);mark.setBackground(shape(PINK,15,0));FrameLayout.LayoutParams mp=new FrameLayout.LayoutParams(0,dp(36),Gravity.START|Gravity.CENTER_VERTICAL);mp.leftMargin=dp(3);track.addView(mark,mp);
         LinearLayout labels=new LinearLayout(this);labels.setOrientation(LinearLayout.HORIZONTAL);TextView timed=text("⏱ С таймером",13,quizTimed?0xFFFFFFFF:DARK,true);TextView free=text("☁ Без времени",13,quizTimed?DARK:0xFFFFFFFF,true);timed.setGravity(Gravity.CENTER);free.setGravity(Gravity.CENTER);labels.addView(timed,new LinearLayout.LayoutParams(0,dp(42),1f));labels.addView(free,new LinearLayout.LayoutParams(0,dp(42),1f));track.addView(labels,new FrameLayout.LayoutParams(-1,-1));
@@ -1951,13 +1953,12 @@ public class MainActivity extends Activity {
         String[] names={"Начальный","Средний","Продвинутый"};String[] hints={"Повседневные слова и простые переводы","Больше слов и полезных выражений","Сложная лексика и точные значения"};String[] icons={"🌱","⚡","🔥"};int[] counts={20,20,20};
         for(int i=0;i<3;i++){
             final int d=i;LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.HORIZONTAL);item.setGravity(Gravity.CENTER_VERTICAL);item.setPadding(dp(14),dp(12),dp(13),dp(12));
-            item.setBackground(shape(blendColors(PALE,BG,0.16f),20,blendColors(PINK,BG,0.62f)));
+            item.setBackground(shape(blendColors(PALE,BG,0.16f),20,0));
             TextView emblem=text(icons[i],27,DARK,true);emblem.setGravity(Gravity.CENTER);emblem.setBackground(shape(blendColors(PINK,BG,0.82f),16,0));item.addView(emblem,lp(48,48,0,0,12,0));
             LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,names[i],15,DARK,true);addText(words,hints[i],11,MUTED,false);addText(words,counts[i]+" слов · "+(quizTimed?(i==0?"15 сек на вопрос":i==1?"10 сек на вопрос":"6 сек на вопрос"):"без ограничения времени"),10,PINK,true);
             item.addView(words,new LinearLayout.LayoutParams(0,-2,1f));TextView arrow=text("›",25,PINK,true);item.addView(arrow);item.setOnClickListener(v->{quizDifficulty=d;startEnglishQuiz();});root.addView(item,lp(-1,-2,0,0,0,9));
         }
-        addQuizRecordCard(root,"english_quiz_best","english_quiz_total_correct","английском");
-        Button awards=button("🏅  Достижения английского",false);awards.setOnClickListener(v->showEnglishQuizAchievements());root.addView(awards,lp(-1,46,0,0,0,5));Button back=button("←  К предметам",false);back.setOnClickListener(v->showQuizHub());root.addView(back,lp(-1,42,0,0,0,4));
+        Button back=button("←  К предметам",false);back.setOnClickListener(v->showQuizHub());root.addView(back,lp(-1,42,0,0,0,4));
     }
 
     private void startEnglishQuiz(){stopQuizTimer();quizActive=true;quizScore=0;quizStreak=0;englishBestStreak=0;quizLevel=1;englishQuestionIndex=0;englishQuestionCount=0;showEnglishQuizQuestion();}
@@ -2014,27 +2015,39 @@ public class MainActivity extends Activity {
     private void unlockEnglishQuizAwards(){int total=prefs.getInt("english_quiz_total_correct",0);int[] thresholds={1,5,10,25,50,100};for(int n:thresholds)if(total>=n)unlockQuizAward("english_award_correct_"+n);if(englishBestStreak>=5)unlockQuizAward("english_award_streak_5");if(englishBestStreak>=10)unlockQuizAward("english_award_streak_10");if(prefs.getInt("english_quiz_best",0)>=100)unlockQuizAward("english_award_score_100");if(quizDifficulty==2&&quizScore>=100)unlockQuizAward("english_award_advanced");}
 
     private void showEnglishQuizAchievements(){stopQuizTimer();quizActive=false;currentScreen="english_quiz_awards";base("Награды английского 🇬🇧","Твои успехи в изучении слов");String[][] awards={{"🌱","Первое слово","Первый правильный перевод","english_award_correct_1"},{"⭐","Пять слов","5 правильных переводов","english_award_correct_5"},{"🧠","Словарный запас","10 правильных переводов","english_award_correct_10"},{"🔥","25 побед","25 правильных переводов","english_award_correct_25"},{"💎","Полсотни","50 правильных переводов","english_award_correct_50"},{"🌟","Сотня слов","100 правильных переводов","english_award_correct_100"},{"⚡","Серия из пяти","5 верных ответов подряд","english_award_streak_5"},{"🚀","Без остановки","10 верных ответов подряд","english_award_streak_10"},{"🥇","Сто очков","100 очков за раунд","english_award_score_100"},{"🏆","Продвинутый","100 очков на сложном уровне","english_award_advanced"}};int opened=0;for(String[] x:awards)if(prefs.getBoolean(x[3],false))opened++;addText(root,"ОТКРЫТО "+opened+" ИЗ "+awards.length,12,PINK,true);for(String[] x:awards){boolean ok=prefs.getBoolean(x[3],false);LinearLayout item=card();item.setOrientation(LinearLayout.HORIZONTAL);item.setGravity(Gravity.CENTER_VERTICAL);TextView icon=text(ok?x[0]:"🔒",26,ok?PINK:MUTED,true);item.addView(icon,lp(44,44,0,0,8,0));LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,x[1],14,ok?DARK:MUTED,true);addText(words,x[2],11,MUTED,false);item.addView(words,new LinearLayout.LayoutParams(0,-2,1f));item.addView(text(ok?"✓":"···",16,ok?PINK:MUTED,true));root.addView(item,lp(-1,-2,0,0,0,7));}Button back=button("←  К английскому",false);back.setOnClickListener(v->showEnglishQuiz());root.addView(back,lp(-1,44,0,10,0,0));}
+    private void addQuizAwardsIcon(LinearLayout parent,Runnable action){
+        LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.RIGHT|Gravity.CENTER_VERTICAL);
+        TextView awards=text("🏅",21,PINK,true);awards.setGravity(Gravity.CENTER);
+        awards.setContentDescription("Достижения");
+        awards.setBackground(shape(themeSurfaceColor(PALE),15,0));
+        awards.setOnClickListener(v->action.run());
+        row.addView(awards,lp(44,44,0,0,0,0));
+        parent.addView(row,lp(-1,44,0,0,0,6));
+    }
+
     private void addQuizRecordCard(LinearLayout parent,String bestKey,String totalKey,String subject){
         int best=prefs.getInt(bestKey,0),total=prefs.getInt(totalKey,0);int next=((best/50)+1)*50;int progress=best%50;
-        LinearLayout record=new LinearLayout(this);record.setOrientation(LinearLayout.VERTICAL);record.setPadding(dp(15),dp(13),dp(15),dp(13));record.setBackground(shape(blendColors(PINK,BG,0.90f),21,blendColors(PINK,BG,0.58f)));
+        LinearLayout record=new LinearLayout(this);record.setOrientation(LinearLayout.VERTICAL);record.setPadding(dp(15),dp(13),dp(15),dp(13));record.setBackground(shape(blendColors(PINK,BG,0.90f),21,0));
         LinearLayout header=new LinearLayout(this);header.setGravity(Gravity.CENTER_VERTICAL);TextView flame=text(best>=100?"🔥":"✨",25,DARK,true);header.addView(flame,lp(38,38,0,0,8,0));
         LinearLayout labels=new LinearLayout(this);labels.setOrientation(LinearLayout.VERTICAL);addText(labels,"ТВОЙ ЛИЧНЫЙ РЕКОРД",10,PINK,true);addText(labels,"Каждая игра — новый шаг!",12,DARK,true);header.addView(labels,new LinearLayout.LayoutParams(0,-2,1f));record.addView(header);
         LinearLayout scoreRow=new LinearLayout(this);scoreRow.setGravity(Gravity.CENTER_VERTICAL);TextView score=text(best+"",31,DARK,true);scoreRow.addView(score);TextView pts=text("  ОЧКОВ",10,PINK,true);pts.setGravity(Gravity.BOTTOM);scoreRow.addView(pts);TextView totalLabel=text(total+" верных ответов",11,MUTED,true);totalLabel.setGravity(Gravity.CENTER_VERTICAL|Gravity.RIGHT);scoreRow.addView(totalLabel,new LinearLayout.LayoutParams(0,-2,1f));record.addView(scoreRow);
         ProgressBar bar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);bar.setMax(50);bar.setProgress(progress);if(Build.VERSION.SDK_INT>=21){bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(blendColors(PALE,BG,0.2f)));}record.addView(bar,lp(-1,dp(7),0,dp(8),0,5));
-        addText(record,best==0?"Начни играть — твой первый рекорд уже рядом! 🔥":"Ещё "+(50-progress)+" очков до отметки "+next+" — продолжай! 🔥",11,MUTED,false);parent.addView(record,lp(-1,-2,0,8,0,10));
+        addText(record,best==0?"Начни играть — твой первый рекорд уже рядом! 🔥":"Ещё "+(50-progress)+" очков до отметки "+next+" — продолжай! 🔥",11,MUTED,false);parent.addView(record,lp(-1,-2,0,0,0,10));
     }
 
     private void showMathQuiz() {
         stopQuizTimer();
         quizActive = false;
         currentScreen = "math_quiz";
-        base("Математика 🧮", "Выбери режим и уровень");
+        base("Математика 🧮", "");
+        addQuizAwardsIcon(root,()->showMathQuizAchievements());
+        addQuizRecordCard(root,"quiz_best_score","quiz_total_correct","математике");
         LinearLayout intro = card();
         intro.setPadding(dp(18),dp(18),dp(18),dp(18));
         intro.setBackground(shape(0xFFFFF0F4,24,0));
         addText(intro,"ТВОЙ МАТЕМАТИЧЕСКИЙ ЧЕЛЛЕНДЖ",11,PINK,true);
         addText(intro,"Сколько примеров ты решишь подряд?",22,DARK,true);
-        addText(intro,"Выбери режим и сложность. Набирай очки, проходи уровни и собирай достижения. Ошибка завершит забег.",13,MUTED,false);
+        addText(intro,"Набирай очки, проходи уровни и собирай достижения. Ошибка завершит забег.",13,MUTED,false);
         root.addView(intro,lp(-1,-2,0,0,0,14));
         addText(root,"РЕЖИМ ИГРЫ",12,PINK,true);
         FrameLayout modeTrack=new FrameLayout(this);
@@ -2061,8 +2074,7 @@ public class MainActivity extends Activity {
             LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,names[i],15,DARK,true);addText(words,details[i],11,MUTED,false);addText(words,quizTimed?(i==0?"15 секунд на вопрос":i==1?"10 секунд на вопрос":"6 секунд на вопрос"):"Без ограничения времени",10,PINK,true);
             item.addView(words,new LinearLayout.LayoutParams(0,-2,1f));TextView arrow=text("›",25,PINK,true);item.addView(arrow);item.setOnClickListener(v->{quizDifficulty=d;startMathQuiz();});root.addView(item,lp(-1,-2,0,0,0,9));
         }
-        addQuizRecordCard(root,"quiz_best_score","quiz_total_correct","математике");
-        Button awards=button("🏅  Посмотреть достижения",false);awards.setOnClickListener(v->showMathQuizAchievements());root.addView(awards,lp(-1,48,0,0,0,6));
+
     }
 
     private void startMathQuiz() {
