@@ -1770,7 +1770,7 @@ public class MainActivity extends Activity {
         // Premium 3D summary cards: one shared Filament renderer, unchanged 3-column layout.
         FrameLayout statsFrame = new FrameLayout(this);
         HomeStats3DView stats3DView = new HomeStats3DView(this);
-        FrameLayout.LayoutParams modelLp = new FrameLayout.LayoutParams(-1, dp(48), Gravity.TOP);
+        FrameLayout.LayoutParams modelLp = new FrameLayout.LayoutParams(-1, dp(112), Gravity.TOP);
         LinearLayout homeStats = new LinearLayout(this);
         homeStats.setOrientation(LinearLayout.HORIZONTAL);
         homeStats.setGravity(Gravity.CENTER_VERTICAL);
