@@ -4254,7 +4254,7 @@ public class MainActivity extends Activity {
             case 0xFFFFFFFF:case 0xFFFFF0F4:case 0xFFFFF5F7:case 0xFFFFF9F7:case 0xFFFFF7F9:
             case 0xFFFFFBFC:case 0xFFFFF4F7:case 0xFFFFEEF3:case 0xFFFFF7F8:case 0xFFFFF2F6:
             case 0xFFFFF5F8:case 0xFFFFF7FA:case 0xFFFFF8FA:case 0xFFFFFAFC:case 0xFFFFE3EC:
-            case 0xFFFCEEF2:case 0xFFFBEAF0:case 0xFFF9E7ED:case 0xFFF8E7ED:case 0xFFFFF0F4:
+            case 0xFFFCEEF2:case 0xFFFBEAF0:case 0xFFF9E7ED:case 0xFFF8E7ED:
             case 0xFFF8F7FC:case 0xFFF0EDFA:case 0xFFEFEAF8:case 0xFFF3F0FF:
             case 0xFFF5FAF7:case 0xFFEAF5EF:case 0xFFE5F2EB:
             case 0xFFF7F8FA:case 0xFFE9EDF2:case 0xFFE7ECF2:
