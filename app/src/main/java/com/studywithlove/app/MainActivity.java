@@ -1807,9 +1807,8 @@ public class MainActivity extends Activity {
                     ImageView art=new ImageView(this);
                     art.setImageResource(artId);
                     art.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                    art.setColorFilter(new android.graphics.PorterDuffColorFilter(
-                        android.graphics.Color.argb(34,Color.red(accent),Color.green(accent),Color.blue(accent)),
-                        android.graphics.PorterDuff.Mode.SRC_ATOP));
+                    art.setAdjustViewBounds(true);
+                    art.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
                     tile.addView(art,lp(64,76,0,0,5,0));
                 }else{
                     HomeFeatureArtView art=new HomeFeatureArtView(this,kinds[index],accent);
