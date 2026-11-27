@@ -74,6 +74,7 @@ public class MainActivity extends Activity {
     private String renderedScreen = "";
     private final List<String> screenHistory = new ArrayList<>();
     private boolean navigatingBack = false;
+    private int screenSwipeDirection = 0;
     private boolean lessonsSearchOpen = false;
     private long lastBackPressedAt=0L;
     private SharedPreferences prefs;
@@ -635,6 +636,20 @@ public class MainActivity extends Activity {
         scroll.setVerticalScrollBarEnabled(false);
         scroll.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
         if (Build.VERSION.SDK_INT >= 29) scroll.setEdgeEffectColor(PINK);
+        final float[] swipeStart = new float[]{0f,0f};
+        final android.view.GestureDetector sectionSwipeDetector = new android.view.GestureDetector(this,
+                new android.view.GestureDetector.SimpleOnGestureListener(){
+                    @Override public boolean onDown(android.view.MotionEvent e){return true;}
+                    @Override public boolean onFling(android.view.MotionEvent e1,android.view.MotionEvent e2,float velocityX,float velocityY){
+                        if(e1==null||e2==null)return false;
+                        float dx=e2.getX()-e1.getX(),dy=e2.getY()-e1.getY();
+                        if(Math.abs(dx)>dp(72)&&Math.abs(dx)>Math.abs(dy)*1.25f&&Math.abs(velocityX)>dp(280)){
+                            navigateMainSectionBySwipe(dx<0?1:-1);return true;
+                        }
+                        return false;
+                    }
+                });
+        scroll.setOnTouchListener((view,event)->{sectionSwipeDetector.onTouchEvent(event);return false;});
         root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
         root.setClipChildren(false);
         root.setClipToPadding(false);
@@ -766,17 +781,41 @@ public class MainActivity extends Activity {
         android.view.animation.Interpolator easing =
                 new android.view.animation.DecelerateInterpolator(1.6f);
         int count = screenRoot.getChildCount();
+        int direction=screenSwipeDirection;screenSwipeDirection=0;
         for (int i = 0; i < count; i++) {
             View child = screenRoot.getChildAt(i);
             if (child == null) continue;
             child.animate().cancel();
             child.setAlpha(0f);
-            child.setTranslationY(dp(9));
-            child.animate().alpha(1f).translationY(0f)
-                    .setStartDelay(Math.min(i * 24L, 168L))
-                    .setDuration(260L)
+            child.setTranslationY(direction==0?dp(9):0f);
+            child.setTranslationX(direction==0?0f:dp(direction*18));
+            child.animate().alpha(1f).translationY(0f).translationX(0f)
+                    .setStartDelay(Math.min(i * 18L, 126L))
+                    .setDuration(300L)
                     .setInterpolator(easing)
                     .start();
+        }
+    }
+
+    private void navigateMainSectionBySwipe(int direction){
+        if(currentScreen.startsWith("settings")||"welcome".equals(currentScreen))return;
+        String active=currentScreen.equals("home")?"home":
+                (currentScreen.equals("chapters")||currentScreen.equals("math_chapters")||currentScreen.equals("topics")||currentScreen.equals("topic"))?"math":
+                (currentScreen.equals("progress")||currentScreen.equals("flower")||currentScreen.equals("achievements")||currentScreen.equals("stats"))?"progress":
+                currentScreen.equals("exam")?"exam":(currentScreen.equals("diary")||currentScreen.equals("letters"))?"diary":
+                currentScreen.equals("pomodoro")?"timer":"";
+        String[] keys={"home","math","progress","exam","diary","timer"};
+        int index=-1;for(int i=0;i<keys.length;i++)if(keys[i].equals(active)){index=i;break;}
+        if(index<0)return;
+        int next=index+direction;if(next<0||next>=keys.length)return;
+        screenSwipeDirection=direction;
+        switch(keys[next]){
+            case "home":showHome();break;
+            case "math":showChapters();break;
+            case "progress":showProgress();break;
+            case "exam":showExam();break;
+            case "diary":showDiary();break;
+            case "timer":showPomodoro();break;
         }
     }
 
@@ -1138,14 +1177,16 @@ public class MainActivity extends Activity {
             .setMessage("Текущие данные приложения будут заменены содержимым выбранной копии. Перед продолжением убедись, что у тебя есть актуальная резервная копия.")
             .setNegativeButton("Отмена",null).setPositiveButton("Продолжить",(dialog,which)->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");startActivityForResult(i,BACKUP_IMPORT);}).show());backup.addView(restore,lp(-1,48,0,0,0,0));addSettingsToggle(backup,"Автоматическая копия каждое воскресенье","weekly_backup_enabled",false,()->WeeklyBackupReceiver.schedule(this));Button chooseBackupFolder=button(prefs.getString("weekly_backup_tree_uri","").isEmpty()?"Выбрать папку для копий":"Изменить папку для копий",false);chooseBackupFolder.setOnClickListener(v->{Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);startActivityForResult(pick,WEEKLY_BACKUP_FOLDER);});backup.addView(chooseBackupFolder,lp(-1,44,0,3,0,5));long backupAt=prefs.getLong("weekly_backup_last_success",0L);addSettingsToggle(backup,"Скрывать содержимое в списке недавних приложений","hide_recent_preview",false,()->{if(prefs.getBoolean("hide_recent_preview",false))getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);else getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);});Button pinButton=button(prefs.getString("app_pin_hash","").isEmpty()?"Установить PIN-код":"Изменить или отключить PIN-код",false);pinButton.setOnClickListener(v->showPinSetupDialog());backup.addView(pinButton,lp(-1,46,0,6,0,0));root.addView(backup,lp(-1,-2,0,0,0,4));
 
-        LinearLayout updates=card();
+        LinearLayout updates=new LinearLayout(this);
+        updates.setOrientation(LinearLayout.VERTICAL);
         updates.setTag("about");
-        updates.setPadding(dp(18),dp(15),dp(18),dp(10));
+        updates.setPadding(0,dp(8),0,dp(4));
+        updates.setBackgroundColor(android.graphics.Color.TRANSPARENT);
 
         String installedVersion="—";
         try { installedVersion=getPackageManager().getPackageInfo(getPackageName(),0).versionName; } catch(Exception ignored) {}
 
-        LinearLayout updateStatus=new LinearLayout(this);updateStatus.setOrientation(LinearLayout.VERTICAL);updateStatus.setPadding(dp(14),dp(13),dp(14),dp(13));updateStatus.setBackground(shape(PALE,18,blendColors(PINK,BG,isDarkAppearance()?0.48f:0.76f)));
+        LinearLayout updateStatus=new LinearLayout(this);updateStatus.setOrientation(LinearLayout.VERTICAL);updateStatus.setPadding(0,dp(8),0,dp(8));updateStatus.setBackgroundColor(android.graphics.Color.TRANSPARENT);
         LinearLayout updateTop=new LinearLayout(this);updateTop.setGravity(Gravity.CENTER_VERTICAL);
         TextView updateIcon=text("✓",22,0xFFFFFFFF,true);updateIcon.setGravity(Gravity.CENTER);GradientDrawable updateIconBg=new GradientDrawable();updateIconBg.setColor(PINK);updateIconBg.setShape(GradientDrawable.OVAL);updateIcon.setBackground(updateIconBg);updateTop.addView(updateIcon,lp(42,42,0,0,11,0));
         LinearLayout updateWords=new LinearLayout(this);updateWords.setOrientation(LinearLayout.VERTICAL);TextView updateTitle=text(translate("Обновлений пока нет"),15,DARK,true);updateWords.addView(updateTitle,lp(-1,-2,0,0,0,3));TextView updateSubtitle=text(translate("Установлена последняя версия"),12,MUTED,false);updateWords.addView(updateSubtitle,lp(-1,-2,0,0,0,0));updateTop.addView(updateWords,new LinearLayout.LayoutParams(0,-2,1f));
@@ -1155,13 +1196,9 @@ public class MainActivity extends Activity {
         updates.addView(updateStatus,lp(-1,-2,0,7,0,5));
 
         Button checkUpdates=button("Проверить обновления",false);
-        GradientDrawable updateButtonBg=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                new int[]{isDarkAppearance()?0xFF35313D:0xFF34313B,isDarkAppearance()?0xFF25222D:0xFF24212B});
-        updateButtonBg.setCornerRadius(dp(16));
-        updateButtonBg.setStroke(0,android.graphics.Color.TRANSPARENT);
-        checkUpdates.setBackground(updateButtonBg);
+        checkUpdates.setBackgroundColor(android.graphics.Color.TRANSPARENT);
         if(Build.VERSION.SDK_INT>=21)checkUpdates.setBackgroundTintList(null);
-        checkUpdates.setTextColor(0xFFFFFFFF);
+        checkUpdates.setTextColor(android.graphics.Color.BLACK);
         checkUpdates.setTypeface(Typeface.create(selectedFontFamily(),Typeface.BOLD));
         checkUpdates.setElevation(0f);
         checkUpdates.setElevation(0f);
