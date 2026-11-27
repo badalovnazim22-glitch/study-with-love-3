@@ -34,6 +34,20 @@ public final class AppUpdater {
     private static final String LAST_AUTO_CHECK = "last_auto_check";
     private static final String LAST_OFFERED_VERSION = "last_offered_version";
     private static volatile String latestReleaseNotes = "";
+    public interface DownloadObserver {
+        void onProgress(int percent, boolean known);
+        void onFinished(boolean success);
+    }
+    private static volatile DownloadObserver downloadObserver;
+    public static void setDownloadObserver(DownloadObserver observer) { downloadObserver = observer; }
+    private static void publishDownloadProgress(int percent, boolean known) {
+        DownloadObserver observer=downloadObserver;
+        if(observer!=null) observer.onProgress(percent,known);
+    }
+    private static void publishDownloadFinished(boolean success) {
+        DownloadObserver observer=downloadObserver;
+        if(observer!=null) observer.onFinished(success);
+    }
     private static final int MAX_APK_BYTES = 100 * 1024 * 1024;
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
 
@@ -276,6 +290,7 @@ public final class AppUpdater {
         android.widget.LinearLayout.LayoutParams barLp=new android.widget.LinearLayout.LayoutParams(-1,(int)(8*activity.getResources().getDisplayMetrics().density));barLp.topMargin=pad;barLp.bottomMargin=pad/2;panel.addView(progressBar,barLp);
         android.widget.TextView percent=new android.widget.TextView(activity);percent.setText("0%");percent.setTextColor(accent);percent.setTextSize(13);percent.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);percent.setGravity(android.view.Gravity.CENTER);panel.addView(percent,new android.widget.LinearLayout.LayoutParams(-1,-2));
         AlertDialog progress=new AlertDialog.Builder(activity).setView(panel).setCancelable(false).create();progress.show();
+        publishDownloadProgress(0,false);
 
         new Thread(() -> {
             HttpURLConnection connection = null;
@@ -309,7 +324,7 @@ public final class AppUpdater {
                         out.write(buffer, 0, count);
                         if (total > 0) {
                             int value = (int) Math.min(100, copied * 100 / total);
-                            MAIN.post(() -> {progressBar.setProgress(value);percent.setText(value+"%");statusText.setText("Скачиваем файл обновления…");});
+                            MAIN.post(() -> {progressBar.setProgress(value);percent.setText(value+"%");statusText.setText("Скачиваем файл обновления…");publishDownloadProgress(value,true);});
                         }
                     }
                     out.getFD().sync();
@@ -322,6 +337,8 @@ public final class AppUpdater {
                 MAIN.post(() -> {
                     if (activity.isFinishing() || (Build.VERSION.SDK_INT >= 17 && activity.isDestroyed())) return;
                     progress.dismiss();
+                    publishDownloadProgress(100,true);
+                    publishDownloadFinished(true);
                     installPending(activity);
                 });
             } catch (Exception e) {
@@ -335,6 +352,7 @@ public final class AppUpdater {
                 MAIN.post(() -> {
                     if (activity.isFinishing() || (Build.VERSION.SDK_INT >= 17 && activity.isDestroyed())) return;
                     progress.dismiss();
+                    publishDownloadFinished(false);
                     Toast.makeText(activity, failure, Toast.LENGTH_LONG).show();
                 });
             }
