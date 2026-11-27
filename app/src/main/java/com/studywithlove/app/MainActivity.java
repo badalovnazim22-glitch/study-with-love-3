@@ -1626,7 +1626,7 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams elp=new LinearLayout.LayoutParams(0,dp(146),1f);
         elp.setMargins(dp(5),0,0,0);tiles.addView(english,elp);
         math.setOnClickListener(v->showMathQuiz());
-        english.setOnClickListener(v->{englishQuestionIndex=0;englishQuizScore=0;showEnglishQuiz();});
+        english.setOnClickListener(v->showEnglishQuiz());
         root.addView(tiles,lp(-1,-2,0,0,0,14));
 
         addText(root,"ТВОИ РЕЗУЛЬТАТЫ",11,PINK,true);
@@ -1665,53 +1665,46 @@ public class MainActivity extends Activity {
         return tile;
     }
 
-    private int englishQuestionIndex=0,englishQuizScore=0;
-    private final String[][] englishQuestions={
-        {"Apple","Яблоко","Апельсин","Банан","Груша"},
-        {"Book","Книга","Тетрадь","Ручка","Стол"},
-        {"Window","Окно","Дверь","Стена","Пол"},
-        {"Beautiful","Красивый","Быстрый","Высокий","Тихий"},
-        {"Morning","Утро","Вечер","Ночь","День"},
-        {"Friend","Друг","Учитель","Сосед","Брат"},
-        {"Water","Вода","Молоко","Сок","Чай"},
-        {"School","Школа","Дом","Магазин","Парк"},
-        {"Happy","Счастливый","Грустный","Уставший","Голодный"},
-        {"Always","Всегда","Иногда","Никогда","Редко"}
+    private int englishQuestionIndex=0,englishQuizScore=0,englishQuestionCount=0,englishBestStreak=0;
+    private final String[][][] englishWords={
+        {{"Apple","Яблоко"},{"Book","Книга"},{"Window","Окно"},{"Morning","Утро"},{"Friend","Друг"},{"Water","Вода"},{"School","Школа"},{"Happy","Счастливый"},{"Always","Всегда"},{"Garden","Сад"},{"Family","Семья"},{"Yellow","Жёлтый"},{"Small","Маленький"},{"Beautiful","Красивый"},{"Mother","Мама"},{"Quickly","Быстро"},{"Bread","Хлеб"},{"Winter","Зима"},{"Teacher","Учитель"},{"Journey","Путешествие"}},
+        {{"Although","Хотя"},{"Improve","Улучшать"},{"Knowledge","Знание"},{"Environment","Окружающая среда"},{"Careful","Осторожный"},{"Achievement","Достижение"},{"Decision","Решение"},{"Available","Доступный"},{"Describe","Описывать"},{"Experience","Опыт"},{"Opportunity","Возможность"},{"Reliable","Надёжный"},{"Suggest","Предлагать"},{"Successful","Успешный"},{"Behaviour","Поведение"},{"Discover","Открывать"},{"Consider","Рассматривать"},{"Purpose","Цель"},{"Require","Требовать"},{"Support","Поддерживать"}},
+        {{"Accomplish","Выполнять"},{"Consequently","Следовательно"},{"Nevertheless","Тем не менее"},{"Significant","Значительный"},{"Reluctant","Неохотный"},{"Determine","Определять"},{"Assumption","Предположение"},{"Circumstance","Обстоятельство"},{"Establish","Устанавливать"},{"Distinguish","Различать"},{"Comprehensive","Всесторонний"},{"Inevitable","Неизбежный"},{"Furthermore","Кроме того"},{"Approach","Подход"},{"Accurate","Точный"},{"Contribution","Вклад"},{"Emphasize","Подчёркивать"},{"Maintain","Поддерживать"},{"Evidence","Доказательство"},{"Enhance","Улучшать"}}
     };
 
-    private void showEnglishQuiz() {
-        currentScreen="english_quiz";base("Английский 🇬🇧","Выбери правильный перевод слова");
-        LinearLayout top=card();top.setPadding(dp(15),dp(12),dp(15),dp(12));
-        addText(top,"АНГЛИЙСКИЙ · СЛОВА",11,PINK,true);
-        addText(top,"Очки: "+englishQuizScore+"  ·  Вопрос "+(englishQuestionIndex+1)+"/10",14,DARK,true);
-        root.addView(top,lp(-1,-2,0,0,0,12));
-        final String[] q=englishQuestions[englishQuestionIndex%englishQuestions.length];
-        LinearLayout word=card();word.setGravity(Gravity.CENTER);word.setPadding(dp(14),dp(22),dp(14),dp(22));
-        addText(word,"КАК ПЕРЕВОДИТСЯ?",11,MUTED,true);
-        TextView prompt=text(q[0],30,DARK,true);prompt.setGravity(Gravity.CENTER);
-        word.addView(prompt,lp(-1,58,0,6,0,0));root.addView(word,lp(-1,-2,0,0,0,14));
-        List<String> answers=new ArrayList<>();for(int i=1;i<q.length;i++)answers.add(q[i]);java.util.Collections.shuffle(answers,quizRandom);
-        for(String answer:answers){
-            Button option=button(answer,false);option.setTextSize(15);
-            option.setOnClickListener(v->{
-                if(!"english_quiz".equals(currentScreen))return;
-                if(answer.equals(q[1]))englishQuizScore+=10;
-                if(englishQuestionIndex>=9){
-                    prefs.edit().putInt("english_quiz_best",Math.max(englishQuizScore,prefs.getInt("english_quiz_best",0))).apply();
-                    currentScreen="english_quiz_result";base("Результат 🇬🇧","Английская викторина завершена");
-                    LinearLayout result=card();result.setGravity(Gravity.CENTER);result.setPadding(dp(18),dp(22),dp(18),dp(22));
-                    addText(result,"ТВОЙ РЕЗУЛЬТАТ",12,PINK,true);
-                    TextView score=text(englishQuizScore+" очков",34,DARK,true);score.setGravity(Gravity.CENTER);
-                    result.addView(score,lp(-1,64,0,8,0,0));root.addView(result,lp(-1,-2,0,0,0,14));
-                    Button again=button("↻  Ещё раз",true);again.setOnClickListener(x->{englishQuestionIndex=0;englishQuizScore=0;showEnglishQuiz();});root.addView(again,lp(-1,50,0,0,0,8));
-                    Button back=button("←  К викторине",false);back.setOnClickListener(x->showQuizHub());root.addView(back,lp(-1,46,0,0,0,6));
-                }else{englishQuestionIndex++;showEnglishQuiz();}
-            });
-            root.addView(option,lp(-1,48,0,0,0,7));
-        }
-        Button back=button("←  Все викторины",false);back.setOnClickListener(v->showQuizHub());root.addView(back,lp(-1,44,0,10,0,0));
+    private void showEnglishQuiz(){
+        stopQuizTimer();quizActive=false;currentScreen="english_quiz";base("Английский 🇬🇧","");
+        LinearLayout intro=card();intro.setPadding(dp(16),dp(14),dp(16),dp(14));addText(intro,"ENGLISH CHALLENGE",11,PINK,true);addText(intro,"Пополняй словарный запас",19,DARK,true);addText(intro,"Выбирай сложность, переводи слова и собирай награды.",12,MUTED,false);root.addView(intro,lp(-1,-2,0,0,0,12));
+        addText(root,"РЕЖИМ ИГРЫ",12,PINK,true);
+        FrameLayout track=new FrameLayout(this);track.setBackground(shape(PALE,18,0));View mark=new View(this);mark.setBackground(shape(PINK,15,0));FrameLayout.LayoutParams mp=new FrameLayout.LayoutParams(0,dp(36),Gravity.START|Gravity.CENTER_VERTICAL);mp.leftMargin=dp(3);track.addView(mark,mp);
+        LinearLayout labels=new LinearLayout(this);labels.setOrientation(LinearLayout.HORIZONTAL);TextView timed=text("⏱ С таймером",13,quizTimed?0xFFFFFFFF:DARK,true);TextView free=text("☁ Без времени",13,quizTimed?DARK:0xFFFFFFFF,true);timed.setGravity(Gravity.CENTER);free.setGravity(Gravity.CENTER);labels.addView(timed,new LinearLayout.LayoutParams(0,dp(42),1f));labels.addView(free,new LinearLayout.LayoutParams(0,dp(42),1f));track.addView(labels,new FrameLayout.LayoutParams(-1,-1));
+        Runnable sync=()->{mark.animate().translationX(quizTimed?0:Math.max(0,(track.getWidth()-dp(6))/2+dp(3))).setDuration(180).start();timed.setTextColor(quizTimed?0xFFFFFFFF:DARK);free.setTextColor(quizTimed?DARK:0xFFFFFFFF);};track.post(()->{FrameLayout.LayoutParams p=(FrameLayout.LayoutParams)mark.getLayoutParams();p.width=Math.max(0,(track.getWidth()-dp(6))/2);mark.setLayoutParams(p);sync.run();});timed.setOnClickListener(v->{quizTimed=true;sync.run();});free.setOnClickListener(v->{quizTimed=false;sync.run();});root.addView(track,lp(-1,42,0,0,0,12));
+        addText(root,"ВЫБЕРИ СЛОЖНОСТЬ",12,PINK,true);String[] names={"🌱  Начальный","⚡  Средний","🔥  Продвинутый"};String[] hints={"Простые слова на каждый день","Новые слова и выражения","Сложная лексика"};
+        for(int i=0;i<3;i++){final int d=i;LinearLayout item=card();item.setPadding(dp(14),dp(11),dp(14),dp(11));LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,names[i],15,DARK,true);addText(words,hints[i],11,MUTED,false);row.addView(words,new LinearLayout.LayoutParams(0,-2,1f));row.addView(text("›",24,PINK,true));item.addView(row);item.setOnClickListener(v->{quizDifficulty=d;startEnglishQuiz();});root.addView(item,lp(-1,-2,0,0,0,8));}
+        LinearLayout stats=card();stats.setPadding(dp(14),dp(11),dp(14),dp(11));addText(stats,"ТВОЙ РЕКОРД",11,PINK,true);addText(stats,prefs.getInt("english_quiz_best",0)+" очков  ·  "+prefs.getInt("english_quiz_total_correct",0)+" правильных ответов",13,DARK,true);root.addView(stats,lp(-1,-2,0,7,0,8));
+        Button awards=button("🏅  Достижения английского",false);awards.setOnClickListener(v->showEnglishQuizAchievements());root.addView(awards,lp(-1,46,0,0,0,5));Button back=button("←  К предметам",false);back.setOnClickListener(v->showQuizHub());root.addView(back,lp(-1,42,0,0,0,4));
     }
 
+    private void startEnglishQuiz(){stopQuizTimer();quizActive=true;quizScore=0;quizStreak=0;englishBestStreak=0;quizLevel=1;englishQuestionIndex=0;englishQuestionCount=0;showEnglishQuizQuestion();}
+
+    private void showEnglishQuizQuestion(){
+        currentScreen="english_quiz_game";String[] q=englishWords[quizDifficulty][englishQuestionIndex%englishWords[quizDifficulty].length];base("Уровень "+quizLevel+"  ·  "+(quizDifficulty==0?"Начальный":quizDifficulty==1?"Средний":"Продвинутый"),quizTimed?"Английский · с таймером":"Английский · без времени");
+        LinearLayout top=card();top.setPadding(dp(15),dp(12),dp(15),dp(12));LinearLayout line=new LinearLayout(this);line.setGravity(Gravity.CENTER_VERTICAL);quizScoreLabel=text("⭐ "+quizScore+" очков",14,DARK,true);line.addView(quizScoreLabel,new LinearLayout.LayoutParams(0,-2,1f));quizLevelLabel=text("ВОПРОС "+(englishQuestionCount+1),12,PINK,true);line.addView(quizLevelLabel);top.addView(line);root.addView(top,lp(-1,-2,0,0,0,10));
+        quizTimerLabel=null;quizTimerBar=null;if(quizTimed){quizSeconds=quizTimeForDifficulty();quizDeadline=SystemClock.elapsedRealtime()+quizSeconds*1000L;quizTimerLabel=text(quizSeconds+" сек",25,PINK,true);quizTimerLabel.setGravity(Gravity.CENTER);root.addView(quizTimerLabel,lp(-1,36,0,0,0,3));quizTimerBar=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);quizTimerBar.setMax(1000);quizTimerBar.setProgress(1000);if(Build.VERSION.SDK_INT>=21){quizTimerBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));quizTimerBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(blendColors(PALE,BG,0.25f)));}root.addView(quizTimerBar,lp(-1,6,0,0,0,12));}else{TextView no=text("☁  Время не ограничено",12,MUTED,true);no.setGravity(Gravity.CENTER);root.addView(no,lp(-1,32,0,0,0,8));}
+        LinearLayout question=card();question.setGravity(Gravity.CENTER);question.setPadding(dp(12),dp(22),dp(12),dp(22));addText(question,"ВЫБЕРИ ПРАВИЛЬНЫЙ ПЕРЕВОД",11,MUTED,true);TextView prompt=text(q[0],30,DARK,true);prompt.setGravity(Gravity.CENTER);question.addView(prompt,lp(-1,66,0,5,0,0));root.addView(question,lp(-1,-2,0,0,0,14));
+        List<String> choices=new ArrayList<>();choices.add(q[1]);while(choices.size()<4){String[] candidate=englishWords[quizDifficulty][quizRandom.nextInt(englishWords[quizDifficulty].length)];if(!choices.contains(candidate[1]))choices.add(candidate[1]);}java.util.Collections.shuffle(choices,quizRandom);
+        for(int i=0;i<4;i+=2){LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);for(int j=i;j<i+2;j++){String answer=choices.get(j);Button option=button(answer,false);option.setTextSize(14);option.setOnClickListener(v->{if(!quizActive||!"english_quiz_game".equals(currentScreen))return;boolean correct=answer.equals(q[1]);option.setBackground(shape(correct?0xFFE4F4E8:0xFFFFE8E8,20,correct?0xFF75B987:0xFFE58A8A));option.setTextColor(correct?0xFF287A43:0xFFB64242);if(!correct)for(int k=0;k<row.getChildCount();k++){View child=row.getChildAt(k);if(child instanceof Button&&((Button)child).getText().toString().equals(q[1])){child.setBackground(shape(0xFFE4F4E8,20,0xFF75B987));((Button)child).setTextColor(0xFF287A43);}}haptic(option,correct);new Handler(Looper.getMainLooper()).postDelayed(()->submitEnglishQuizAnswer(correct),250);});LinearLayout.LayoutParams op=new LinearLayout.LayoutParams(0,dp(58),1f);op.setMargins(dp(3),0,dp(3),0);row.addView(option,op);}root.addView(row,lp(-1,-2,0,0,0,8));}
+        TextView streak=text("🔥 Серия правильных ответов: "+quizStreak,13,PINK,true);streak.setGravity(Gravity.CENTER);root.addView(streak,lp(-1,42,0,7,0,0));
+        if(quizTimed){quizTick=()->{if(!quizActive||!"english_quiz_game".equals(currentScreen))return;long left=quizDeadline-SystemClock.elapsedRealtime();if(left<=0){if(quizTimerLabel!=null)quizTimerLabel.setText("0 сек");if(quizTimerBar!=null)quizTimerBar.setProgress(0);endEnglishQuiz(true);return;}int sec=(int)((left+999)/1000);if(quizTimerLabel!=null)quizTimerLabel.setText(sec+" сек");if(quizTimerBar!=null)quizTimerBar.setProgress((int)Math.max(0,Math.min(1000,left*1000L/(quizSeconds*1000L))));quizHandler.postDelayed(quizTick,80);};quizHandler.post(quizTick);}
+    }
+
+    private void submitEnglishQuizAnswer(boolean correct){if(!quizActive)return;stopQuizTimer();englishQuestionCount++;if(!correct){endEnglishQuiz(false);return;}quizScore+=10;quizStreak++;englishBestStreak=Math.max(englishBestStreak,quizStreak);prefs.edit().putInt("english_quiz_total_correct",prefs.getInt("english_quiz_total_correct",0)+1).apply();if(quizScore>prefs.getInt("english_quiz_best",0)){prefs.edit().putInt("english_quiz_best",quizScore).apply();celebrate();}quizLevel=quizScore/50+1;unlockEnglishQuizAwards();englishQuestionIndex++;showEnglishQuizQuestion();}
+
+    private void endEnglishQuiz(boolean timeout){if(!quizActive)return;quizActive=false;stopQuizTimer();unlockEnglishQuizAwards();currentScreen="english_quiz_result";base(timeout?"Время вышло! ⏰":"Игра окончена",timeout?"Попробуешь ещё раз?":"Ошибки помогают учиться.");LinearLayout result=card();result.setGravity(Gravity.CENTER);result.setPadding(dp(18),dp(22),dp(18),dp(22));TextView medal=text(quizScore>=200?"🏆":quizScore>=100?"🥇":quizScore>=50?"🥈":"🌸",52,PINK,true);medal.setGravity(Gravity.CENTER);result.addView(medal,lp(-1,72,0,0,0,8));addText(result,"ТВОЙ РЕЗУЛЬТАТ",12,PINK,true);TextView score=text(quizScore+" очков",35,DARK,true);score.setGravity(Gravity.CENTER);result.addView(score,lp(-1,58,0,5,0,3));addText(result,"Правильных ответов: "+(quizScore/10),13,DARK,true);addText(result,"Достигнутый уровень: "+quizLevel,13,DARK,true);addText(result,"Рекорд: "+prefs.getInt("english_quiz_best",0)+" очков",12,PINK,true);root.addView(result,lp(-1,-2,0,0,0,14));Button retry=button("↻  Играть ещё раз",true);retry.setOnClickListener(v->startEnglishQuiz());root.addView(retry,lp(-1,50,0,0,0,7));Button awards=button("🏅  Достижения английского",false);awards.setOnClickListener(v->showEnglishQuizAchievements());root.addView(awards,lp(-1,46,0,0,0,5));}
+
+    private void unlockEnglishQuizAwards(){int total=prefs.getInt("english_quiz_total_correct",0);int[] thresholds={1,5,10,25,50,100};for(int n:thresholds)if(total>=n)unlockQuizAward("english_award_correct_"+n);if(englishBestStreak>=5)unlockQuizAward("english_award_streak_5");if(englishBestStreak>=10)unlockQuizAward("english_award_streak_10");if(prefs.getInt("english_quiz_best",0)>=100)unlockQuizAward("english_award_score_100");if(quizDifficulty==2&&quizScore>=100)unlockQuizAward("english_award_advanced");}
+
+    private void showEnglishQuizAchievements(){stopQuizTimer();quizActive=false;currentScreen="english_quiz_awards";base("Награды английского 🇬🇧","Твои успехи в изучении слов");String[][] awards={{"🌱","Первое слово","Первый правильный перевод","english_award_correct_1"},{"⭐","Пять слов","5 правильных переводов","english_award_correct_5"},{"🧠","Словарный запас","10 правильных переводов","english_award_correct_10"},{"🔥","25 побед","25 правильных переводов","english_award_correct_25"},{"💎","Полсотни","50 правильных переводов","english_award_correct_50"},{"🌟","Сотня слов","100 правильных переводов","english_award_correct_100"},{"⚡","Серия из пяти","5 верных ответов подряд","english_award_streak_5"},{"🚀","Без остановки","10 верных ответов подряд","english_award_streak_10"},{"🥇","Сто очков","100 очков за раунд","english_award_score_100"},{"🏆","Продвинутый","100 очков на сложном уровне","english_award_advanced"}};int opened=0;for(String[] x:awards)if(prefs.getBoolean(x[3],false))opened++;addText(root,"ОТКРЫТО "+opened+" ИЗ "+awards.length,12,PINK,true);for(String[] x:awards){boolean ok=prefs.getBoolean(x[3],false);LinearLayout item=card();item.setOrientation(LinearLayout.HORIZONTAL);item.setGravity(Gravity.CENTER_VERTICAL);TextView icon=text(ok?x[0]:"🔒",26,ok?PINK:MUTED,true);item.addView(icon,lp(44,44,0,0,8,0));LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,x[1],14,ok?DARK:MUTED,true);addText(words,x[2],11,MUTED,false);item.addView(words,new LinearLayout.LayoutParams(0,-2,1f));item.addView(text(ok?"✓":"···",16,ok?PINK:MUTED,true));root.addView(item,lp(-1,-2,0,0,0,7));}Button back=button("←  К английскому",false);back.setOnClickListener(v->showEnglishQuiz());root.addView(back,lp(-1,44,0,10,0,0));}
     private void showMathQuiz() {
         stopQuizTimer();
         quizActive = false;
@@ -3846,6 +3839,9 @@ public class MainActivity extends Activity {
             case "math_quiz": showQuizHub(); break;
             case "math_quiz_result": showQuizHub(); break;
             case "english_quiz": showEnglishQuiz(); break;
+            case "english_quiz_game": showEnglishQuizQuestion(); break;
+            case "english_quiz_result": showEnglishQuiz(); break;
+            case "english_quiz_awards": showEnglishQuizAchievements(); break;
             case "math_quiz_awards": showMathQuizAchievements(); break;
             default: showHome(); break;
         }
