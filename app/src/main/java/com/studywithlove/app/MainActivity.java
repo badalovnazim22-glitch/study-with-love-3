@@ -1371,7 +1371,7 @@ public class MainActivity extends Activity {
         updateShimmer.setShimmer(new Shimmer.ColorHighlightBuilder().setBaseColor(0x55FFFFFF).setHighlightColor(0xE6FFFFFF).setDuration(1250).setDirection(Shimmer.Direction.LEFT_TO_RIGHT).build());
         updateShimmer.setClipToPadding(false);
         updateShimmer.addView(checkUpdates,new FrameLayout.LayoutParams(-1,dp(44)));
-        checkUpdates.setOnClickListener(v->{updateShimmer.startShimmer();checkUpdates.setText(translate("Проверяем наличие обновлений…"));checkUpdates.setEnabled(false);AppUpdater.checkAndOffer(this);new Handler(Looper.getMainLooper()).postDelayed(()->{if(!isFinishing()&&!isDestroyed()){updateShimmer.stopShimmer();checkUpdates.setText(translate("Проверить обновление"));checkUpdates.setEnabled(true);}},2400);});
+        checkUpdates.setOnClickListener(v->{updateShimmer.startShimmer();checkUpdates.setText(translate("Проверяем наличие обновлений…"));checkUpdates.setEnabled(false);AppUpdater.checkAndOffer(this,()->{if(!isFinishing()&&!isDestroyed()){updateShimmer.stopShimmer();checkUpdates.setText(translate("Проверить обновление"));checkUpdates.setEnabled(true);}});});
         updates.addView(updateShimmer,lp(-1,48,0,2,0,0));
         updates.setVisibility(sectionPage && "about".equals(activeSection) ? View.VISIBLE : View.GONE);
         updates.setAlpha(1f);
