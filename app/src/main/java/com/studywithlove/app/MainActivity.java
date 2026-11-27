@@ -659,23 +659,8 @@ public class MainActivity extends Activity {
         } else {
             setContentView(shell);
         }
-        // Единая мягкая анимация появления содержимого при переходе между экранами.
-        // Повторное обновление той же вкладки не перезапускает анимацию.
-        if(screenChanged && !"welcome".equals(currentScreen) && !(prefs!=null && prefs.getBoolean("reduce_motion",false))){
-            root.setAlpha(0f);
-            root.setScaleX(0.985f);
-            root.setScaleY(0.985f);
-            root.setTranslationY(dp(8));
-            root.post(()->{
-                root.animate().cancel();
-                root.setLayerType(View.LAYER_TYPE_HARDWARE,null);
-                root.animate().alpha(1f).scaleX(1f).scaleY(1f).translationY(0f)
-                    .setDuration(360)
-                    .setInterpolator(new android.view.animation.DecelerateInterpolator(1.7f))
-                    .withEndAction(()->root.setLayerType(View.LAYER_TYPE_NONE,null))
-                    .start();
-            });
-        }
+        // Появление экрана выполняется одной каскадной анимацией ниже,
+        // без второго параллельного эффекта на всём контейнере.
         if(currentScreen.startsWith("settings_") || "settings".equals(currentScreen)) {
             final int restoreY=pendingSettingsScrollY;
             scroll.post(()->scroll.scrollTo(0,restoreY));
@@ -707,7 +692,7 @@ public class MainActivity extends Activity {
         LinearLayout brandRow = new LinearLayout(this);
         brandRow.setGravity(Gravity.CENTER_VERTICAL);
         brandRow.setPadding(dp(12), dp(7), dp(8), dp(7));
-        brandRow.setBackground(shape(0xFFFCEEF2, 30, 0));
+        brandRow.setBackground(shape(themeSurfaceColor(0xFFFCEEF2), 30, 0));
         TextView flower = text("✿", 16, PINK, true);
         brandRow.addView(flower, lp(24, 24, 0, 0, 7, 0));
         TextView brand = text("STUDY WITH LOVE", 9, PINK, true);
@@ -742,7 +727,7 @@ public class MainActivity extends Activity {
                 TextView back=text("‹",25,PINK,true);
                 back.setGravity(Gravity.CENTER);
                 back.setContentDescription("Назад");
-                back.setBackground(shape(PALE,13,0));
+                back.setBackground(shape(themeSurfaceColor(PALE),13,0));
                 back.setOnClickListener(v->handleBackNavigation());
                 titleRow.addView(back,lp(32,32,0,0,10,0));
                 TextView h = text(title, 22, DARK, true);
@@ -761,7 +746,8 @@ public class MainActivity extends Activity {
             root.addView(sub, lp(-1, -2, 0, 0, 0, 16));
         }
         if (screenChanged) {
-            root.post(() -> animateScreenEntrance(root));
+            final LinearLayout screenRoot = root;
+            screenRoot.post(() -> animateScreenEntrance(screenRoot));
         }
     }
 
