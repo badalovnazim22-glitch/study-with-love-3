@@ -634,7 +634,7 @@ public class MainActivity extends Activity {
         scroll.setSmoothScrollingEnabled(true);
         scroll.setVerticalScrollBarEnabled(false);
         scroll.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
-        if (Build.VERSION.SDK_INT >= 21) scroll.setEdgeEffectColor(PINK);
+        if (Build.VERSION.SDK_INT >= 29) scroll.setEdgeEffectColor(PINK);
         root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
         root.setClipChildren(false);
         root.setClipToPadding(false);
