@@ -1759,23 +1759,8 @@ public class MainActivity extends Activity {
         aiCard.setOnClickListener(v -> launchAiTutor());
         root.addView(aiCard, lp(-1, -2, 0, 0, 0, 8));aiCard.setTag("home_ai");
 
-        TextView emotionsTitle=text("ЭМОЦИИ И МОТИВАЦИЯ",12,PINK,true);emotionsTitle.setTag("home_emotions");root.addView(emotionsTitle,lp(-1,-2,0,0,0,0));
-        LinearLayout feelings2 = new LinearLayout(this);
-        feelings2.setOrientation(LinearLayout.HORIZONTAL);
-        ritualTile(feelings2, "✿", "Цветочек", "Растёт с тобой", this::showFlower);
-        ritualTile(feelings2, "♫", "Атмосфера", "Звуки для учёбы", this::showAtmosphere);
-        root.addView(feelings2, lp(-1, -2, 0, 0, 0, 6));feelings2.setTag("home_emotions");
+        addHomeFeatureGrid(root);
 
-        // Compact three-column square shortcuts; planner remains easy to find.
-        // Planner shortcuts are self-explanatory; no extra section caption.
-        LinearLayout plannerAwardsRow = new LinearLayout(this);
-        plannerAwardsRow.setOrientation(LinearLayout.HORIZONTAL);
-        plannerAwardsRow.setGravity(Gravity.CENTER_VERTICAL);
-        ritualTile(plannerAwardsRow, "▦", "Планировщик", "План на день", this::showPlanner);
-        ritualTile(plannerAwardsRow, "✧", "Достижения", "Твои награды", this::showAchievements);
-        ritualTile(plannerAwardsRow, "♧", "Напарник", "Общая цель", this::showStudyBuddy);
-        root.addView(plannerAwardsRow,lp(-1,-2,0,0,0,4));
-        plannerAwardsRow.setTag("home_planner");
 
         LinearLayout reminder = card();
         reminder.setOrientation(LinearLayout.HORIZONTAL);
@@ -1797,6 +1782,42 @@ public class MainActivity extends Activity {
         reorderHomeBlocks();
         applyHomeBlockVisibility();
         animateHomeCascade();
+    }
+
+    private void addHomeFeatureGrid(LinearLayout parent){
+        String[] icons={"📚","🏆","🗓️","🎯","📔","🎧"};
+        String[] titles={"Уроки","Мои достижения","Мой прогресс","Экзамен","Дневник успехов","Музыка"};
+        String[] details={"Изучай новое","Твои победы","Следи за результатами","Будь готов","Делись мыслями","Настройся на учёбу"};
+        Runnable[] actions={this::showChapters,this::showAchievements,this::showProgress,this::showExam,this::showDiary,this::showAtmosphere};
+        LinearLayout grid=new LinearLayout(this);grid.setOrientation(LinearLayout.VERTICAL);
+        for(int rowIndex=0;rowIndex<3;rowIndex++){
+            LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);row.setGravity(Gravity.CENTER_VERTICAL);
+            for(int col=0;col<2;col++){
+                final int index=rowIndex*2+col;
+                LinearLayout tile=card();tile.setOrientation(LinearLayout.HORIZONTAL);tile.setGravity(Gravity.CENTER_VERTICAL);
+                tile.setPadding(dp(9),dp(9),dp(8),dp(9));
+                int tint=index==2?0xFF9A8BE8:index==3?0xFF8D80D8:PINK;
+                tile.setBackground(homePanel(tint,22,isDarkAppearance()?0.18f:0.085f));
+                tile.setElevation(0f);
+                TextView illustration=text(icons[index],34,tint,true);illustration.setGravity(Gravity.CENTER);
+                illustration.setBackground(shape(blendColors(tint,BG,isDarkAppearance()?0.68f:0.82f),18,0));
+                tile.addView(illustration,lp(58,66,0,0,8,0));
+                LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);words.setGravity(Gravity.CENTER_VERTICAL);
+                TextView title=text(titles[index],14,DARK,true);title.setMaxLines(2);title.setLineSpacing(0,0.98f);
+                words.addView(title,lp(-1,-2,0,0,0,3));
+                TextView subtitle=text(details[index],10,MUTED,false);subtitle.setMaxLines(2);
+                words.addView(subtitle,lp(-1,-2,0,0,0,0));
+                tile.addView(words,new LinearLayout.LayoutParams(0,-2,1f));
+                TextView arrow=text("→",19,tint,true);arrow.setGravity(Gravity.CENTER);
+                tile.addView(arrow,lp(22,30,4,0,0,0));
+                tile.setContentDescription(titles[index]+". "+details[index]);
+                tile.setFocusable(true);tile.setOnClickListener(v->animateLessonTap(tile,actions[index]));
+                LinearLayout.LayoutParams cardLp=new LinearLayout.LayoutParams(0,dp(116),1f);
+                cardLp.setMargins(dp(3),dp(3),dp(3),dp(3));row.addView(tile,cardLp);
+            }
+            grid.addView(row,lp(-1,dp(122),0,0,0,0));
+        }
+        parent.addView(grid,lp(-1,-2,0,0,0,8));grid.setTag("home_emotions");
     }
 
     private void reorderHomeBlocks(){
