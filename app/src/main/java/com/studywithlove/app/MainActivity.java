@@ -678,6 +678,7 @@ public class MainActivity extends Activity {
         final boolean[] horizontalGesture={false};
         final boolean[] settling={false};
         final long[] gestureTime={0L};
+        final android.view.VelocityTracker[] swipeVelocity={null};
         final String[] mainKeys={"home","math","progress","exam","diary","timer"};
         final String[] mainTitles={"Главная","Уроки","Прогресс","Экзамен","Дневник","Таймер"};
         final String[] mainScreens={"home","chapters","progress","exam","diary","pomodoro"};
@@ -685,16 +686,22 @@ public class MainActivity extends Activity {
             int action=event.getActionMasked();
             if(action==android.view.MotionEvent.ACTION_DOWN){
                 scroll.animate().cancel();swipePreview.animate().cancel();settling[0]=false;
+                if(swipeVelocity[0]!=null){swipeVelocity[0].recycle();swipeVelocity[0]=null;}
+                swipeVelocity[0]=android.view.VelocityTracker.obtain();
+                swipeVelocity[0].addMovement(event);
                 gesture[0]=event.getX();gesture[1]=event.getY();gesture[2]=0f;gesture[3]=0f;
                 gestureTime[0]=event.getEventTime();
                 horizontalGesture[0]=false;gestureDirection[0]=0;
                 return false;
             }
             if(action==android.view.MotionEvent.ACTION_MOVE){
+                if(swipeVelocity[0]!=null)swipeVelocity[0].addMovement(event);
                 float dx=event.getX()-gesture[0],dy=event.getY()-gesture[1];
                 if(!horizontalGesture[0]&&Math.abs(dx)>dp(10)&&Math.abs(dx)>Math.abs(dy)*1.18f){
                     if(currentScreen.startsWith("settings")||"welcome".equals(currentScreen))return false;
                     horizontalGesture[0]=true;
+                    scroll.setLayerType(View.LAYER_TYPE_HARDWARE,null);
+                    swipePreview.setLayerType(View.LAYER_TYPE_HARDWARE,null);
                     String active=currentScreen.equals("home")?"home":
                         (currentScreen.equals("chapters")||currentScreen.equals("math_chapters")||currentScreen.equals("topics")||currentScreen.equals("topic"))?"math":
                         (currentScreen.equals("progress")||currentScreen.equals("flower")||currentScreen.equals("achievements")||currentScreen.equals("stats"))?"progress":
@@ -728,26 +735,43 @@ public class MainActivity extends Activity {
             }
             if(action==android.view.MotionEvent.ACTION_UP||action==android.view.MotionEvent.ACTION_CANCEL){
                 if(!horizontalGesture[0])return false;
+                if(swipeVelocity[0]!=null){
+                    swipeVelocity[0].addMovement(event);
+                    swipeVelocity[0].computeCurrentVelocity(1000);
+                }
                 float dx=action==android.view.MotionEvent.ACTION_CANCEL?0f:event.getX()-gesture[0];
-                long elapsed=Math.max(1,event.getEventTime()-gestureTime[0]);
-                float velocity=dx*1000f/elapsed;
+                float velocity=swipeVelocity[0]==null?0f:swipeVelocity[0].getXVelocity();
+                if(swipeVelocity[0]!=null){swipeVelocity[0].recycle();swipeVelocity[0]=null;}
                 float width=Math.max(1,swipeHost.getWidth());
-                boolean commit=gestureDirection[0]!=0&&(Math.abs(dx)>=width*0.38f||Math.abs(velocity)>=dp(650));
+                boolean fastEnough=Math.abs(velocity)>=dp(850)&&Math.signum(velocity)==Math.signum(dx)&&Math.abs(dx)>=dp(44);
+                boolean commit=action!=android.view.MotionEvent.ACTION_CANCEL&&gestureDirection[0]!=0&&
+                        (Math.abs(dx)>=width*0.30f||fastEnough);
                 settling[0]=true;
                 scroll.animate().cancel();swipePreview.animate().cancel();
                 if(commit){
                     int dir=gestureDirection[0];
-                    scroll.animate().translationX(-dir*width).setDuration(190).setInterpolator(new android.view.animation.DecelerateInterpolator()).withEndAction(()->{
-                        if(!settling[0])return;
-                        swipePreview.animate().cancel();
-                        navigateMainSectionBySwipe(dir);
-                    }).start();
-                    swipePreview.animate().translationX(0f).alpha(1f).setDuration(190).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
+                    long settleDuration=Math.max(125L,Math.min(220L,(long)(190f*(1f-Math.min(0.30f,Math.abs(dx)/width)))));
+                    scroll.animate().translationX(-dir*width).setDuration(settleDuration)
+                        .setInterpolator(new android.view.animation.PathInterpolator(0.22f,0.72f,0.18f,1f))
+                        .withEndAction(()->{
+                            if(!settling[0])return;
+                            swipePreview.animate().cancel();
+                            scroll.setLayerType(View.LAYER_TYPE_NONE,null);
+                            swipePreview.setLayerType(View.LAYER_TYPE_NONE,null);
+                            navigateMainSectionBySwipe(dir);
+                        }).start();
+                    swipePreview.animate().translationX(0f).alpha(1f).setDuration(settleDuration)
+                        .setInterpolator(new android.view.animation.PathInterpolator(0.22f,0.72f,0.18f,1f)).start();
                 }else{
-                    scroll.animate().translationX(0f).setDuration(210).setInterpolator(new android.view.animation.OvershootInterpolator(0.82f)).withEndAction(()->{
-                        if(settling[0]){swipePreview.setVisibility(View.GONE);swipePreview.setAlpha(0f);}
-                    }).start();
-                    swipePreview.animate().translationX(gestureDirection[0]==1?width:-width).alpha(0f).setDuration(190).start();
+                    scroll.animate().translationX(0f).setDuration(230)
+                        .setInterpolator(new android.view.animation.OvershootInterpolator(0.72f))
+                        .withEndAction(()->{
+                            if(settling[0]){swipePreview.setVisibility(View.GONE);swipePreview.setAlpha(0f);}
+                            scroll.setLayerType(View.LAYER_TYPE_NONE,null);
+                            swipePreview.setLayerType(View.LAYER_TYPE_NONE,null);
+                        }).start();
+                    swipePreview.animate().translationX(gestureDirection[0]==1?width:-width).alpha(0f)
+                        .setDuration(200).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
                 }
                 horizontalGesture[0]=false;
                 return true;
