@@ -639,7 +639,7 @@ public class MainActivity extends Activity {
         root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
         root.setClipChildren(false);
         root.setClipToPadding(false);
-        root.setPadding(dp(15), dp(12), dp(15), dp(104)); root.setBackgroundColor(BG); // Keep the final home cards clear of the floating navigation.
+        root.setPadding(dp(15), dp(12), dp(15), dp(82)); root.setBackgroundColor(BG); // Reserve only the space required by the floating navigation.
         installThemeFontListener(root);
         String customBg=prefs.getString("custom_background_uri","");
         if(!customBg.isEmpty()){try{if(!customBg.equals(cachedBackgroundUri)||cachedBackgroundBitmap==null){java.io.InputStream in=getContentResolver().openInputStream(android.net.Uri.parse(customBg));if(in!=null){android.graphics.Bitmap decoded=android.graphics.BitmapFactory.decodeStream(in);in.close();cachedBackgroundBitmap=decoded;cachedBackgroundUri=customBg;}}if(cachedBackgroundBitmap!=null){Drawable photo=new android.graphics.drawable.BitmapDrawable(getResources(),cachedBackgroundBitmap);photo.setAlpha(42);root.setBackground(photo);}}catch(Exception ignored){}}
@@ -1785,39 +1785,56 @@ public class MainActivity extends Activity {
     }
 
     private void addHomeFeatureGrid(LinearLayout parent){
-        String[] titles={"Мой цветочек","Атмосфера","Планировщик","Достижения","Напарник"};
-        String[] details={"Расти вместе с успехами","Настройся на учёбу","Планируй свой день","Отмечай свои победы","Учитесь вместе"};
-        int[] kinds={0,1,2,3,4};
-        Runnable[] actions={this::showFlower,this::showAtmosphere,this::showPlanner,this::showAchievements,this::showStudyBuddy};
+        String[] titles={"Мой цветочек","Атмосфера","Планировщик","Достижения","Напарник","Викторина"};
+        String[] details={"Расти вместе с успехами","Настройся на учёбу","Планируй свой день","Отмечай свои победы","Учитесь вместе","Проверь свои знания"};
+        String[] artNames={"home_feature_flower","home_feature_atmosphere","home_feature_planner","home_feature_achievements","home_feature_companion","home_feature_quiz"};
+        int[] kinds={0,1,2,3,4,5};
+        Runnable[] actions={this::showFlower,this::showAtmosphere,this::showPlanner,this::showAchievements,this::showStudyBuddy,this::showEnglishQuiz};
         LinearLayout grid=new LinearLayout(this);grid.setOrientation(LinearLayout.VERTICAL);
+        grid.setClipChildren(false);grid.setClipToPadding(false);
         for(int rowIndex=0;rowIndex<3;rowIndex++){
-            LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);row.setGravity(Gravity.CENTER);
-            int count=rowIndex==2?1:2;
-            for(int col=0;col<count;col++){
+            LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);row.setClipChildren(false);row.setClipToPadding(false);
+            for(int col=0;col<2;col++){
                 final int index=rowIndex*2+col;
                 LinearLayout tile=card();tile.setOrientation(LinearLayout.HORIZONTAL);tile.setGravity(Gravity.CENTER_VERTICAL);
-                tile.setPadding(dp(10),dp(9),dp(9),dp(9));
+                tile.setPadding(dp(7),dp(7),dp(7),dp(7));
                 int accent=homeFeatureAccent();
-                tile.setBackground(homePanel(accent,22,isDarkAppearance()?0.17f:0.075f));
+                tile.setBackground(homePanel(accent,20,isDarkAppearance()?0.18f:0.085f));
                 tile.setElevation(0f);
-                HomeFeatureArtView art=new HomeFeatureArtView(this,kinds[index],accent);
-                tile.addView(art,lp(66,72,0,0,9,0));
-                LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);words.setGravity(Gravity.CENTER_VERTICAL);
-                TextView title=text(titles[index],14,DARK,true);title.setMaxLines(2);title.setLineSpacing(0,0.98f);
+                int artId=getResources().getIdentifier(artNames[index],"drawable",getPackageName());
+                if(artId!=0){
+                    ImageView art=new ImageView(this);
+                    art.setImageResource(artId);
+                    art.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                    art.setColorFilter(new android.graphics.PorterDuffColorFilter(
+                        android.graphics.Color.argb(34,Color.red(accent),Color.green(accent),Color.blue(accent)),
+                        android.graphics.PorterDuff.Mode.SRC_ATOP));
+                    tile.addView(art,lp(64,76,0,0,5,0));
+                }else{
+                    HomeFeatureArtView art=new HomeFeatureArtView(this,kinds[index],accent);
+                    tile.addView(art,lp(64,76,0,0,5,0));
+                }
+                LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);
+                words.setGravity(Gravity.CENTER_VERTICAL);
+                TextView title=text(titles[index],12,DARK,true);
+                title.setMaxLines(2);title.setBreakStrategy(android.text.Layout.BREAK_STRATEGY_HIGH_QUALITY);
+                title.setHyphenationFrequency(android.text.Layout.HYPHENATION_FREQUENCY_NONE);
+                title.setLineSpacing(0,0.98f);
                 words.addView(title,lp(-1,-2,0,0,0,3));
-                TextView subtitle=text(details[index],10,MUTED,false);subtitle.setMaxLines(2);
+                TextView subtitle=text(details[index],9,MUTED,false);
+                subtitle.setMaxLines(2);subtitle.setEllipsize(android.text.TextUtils.TruncateAt.END);
+                subtitle.setBreakStrategy(android.text.Layout.BREAK_STRATEGY_HIGH_QUALITY);
+                subtitle.setHyphenationFrequency(android.text.Layout.HYPHENATION_FREQUENCY_NONE);
                 words.addView(subtitle,lp(-1,-2,0,0,0,0));
                 tile.addView(words,new LinearLayout.LayoutParams(0,-2,1f));
-                TextView arrow=text("→",19,accent,true);arrow.setGravity(Gravity.CENTER);
-                tile.addView(arrow,lp(20,30,3,0,0,0));
                 tile.setContentDescription(titles[index]+". "+details[index]);
                 tile.setFocusable(true);tile.setOnClickListener(v->animateLessonTap(tile,actions[index]));
-                LinearLayout.LayoutParams cardLp=new LinearLayout.LayoutParams(0,dp(116),1f);
+                LinearLayout.LayoutParams cardLp=new LinearLayout.LayoutParams(0,dp(112),1f);
                 cardLp.setMargins(dp(3),dp(3),dp(3),dp(3));
-                if(rowIndex==2){cardLp.width=dp(170);cardLp.weight=0f;}
                 row.addView(tile,cardLp);
             }
-            grid.addView(row,lp(-1,dp(122),0,0,0,0));
+            grid.addView(row,new LinearLayout.LayoutParams(-1,dp(118)));
         }
         parent.addView(grid,lp(-1,-2,0,0,0,8));grid.setTag("home_emotions");
     }
