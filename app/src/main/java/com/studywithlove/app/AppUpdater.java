@@ -131,17 +131,18 @@ public final class AppUpdater {
     }
     private AppUpdater() {}
 
-    public static void checkAndOffer(Activity activity) { check(activity, true); }
+    public static void checkAndOffer(Activity activity) { check(activity, true, null); }
+    public static void checkAndOffer(Activity activity, Runnable completion) { check(activity, true, completion); }
 
     public static void checkAutomatically(Activity activity) {
         if(activity==null || activity.isFinishing()) return;
         android.content.SharedPreferences p=activity.getSharedPreferences(PREFS,Activity.MODE_PRIVATE);
         long last=p.getLong(LAST_AUTO_CHECK,0L);
         if(System.currentTimeMillis()-last<12L*60L*60L*1000L)return;
-        check(activity,false);
+        check(activity,false,null);
     }
 
-    private static void check(Activity activity, boolean manual) {
+    private static void check(Activity activity, boolean manual, Runnable completion) {
         if(activity==null || activity.isFinishing())return;
         ProgressDialog progress=null;
         if(manual){progress=new ProgressDialog(activity);progress.setMessage("Проверяем наличие обновлений…");progress.setCancelable(false);progress.show();}
@@ -155,18 +156,22 @@ public final class AppUpdater {
             final String foundVersion=latestVersion;final String failure=error;
             if(failure==null && !manual) activity.getSharedPreferences(PREFS,Activity.MODE_PRIVATE).edit().putLong(LAST_AUTO_CHECK,System.currentTimeMillis()).apply();
             MAIN.post(()->{
-                if(activity.isFinishing() || (Build.VERSION.SDK_INT>=17 && activity.isDestroyed()))return;
-                if(shownProgress!=null)shownProgress.dismiss();
-                if(failure!=null){if(manual)Toast.makeText(activity,failure,Toast.LENGTH_LONG).show();return;}
-                String current=installedVersion(activity);
-                if(compareVersions(foundVersion,current)<=0){
-                    if(manual)showNoUpdatesDialog(activity,current);
-                    return;
+                try {
+                    if(activity.isFinishing() || (Build.VERSION.SDK_INT>=17 && activity.isDestroyed()))return;
+                    if(shownProgress!=null)shownProgress.dismiss();
+                    if(failure!=null){if(manual)Toast.makeText(activity,failure,Toast.LENGTH_LONG).show();return;}
+                    String current=installedVersion(activity);
+                    if(compareVersions(foundVersion,current)<=0){
+                        if(manual)showNoUpdatesDialog(activity,current);
+                        return;
+                    }
+                    android.content.SharedPreferences p=activity.getSharedPreferences(PREFS,Activity.MODE_PRIVATE);
+                    if(!manual && foundVersion.equals(p.getString(LAST_OFFERED_VERSION,"")))return;
+                    p.edit().putString(LAST_OFFERED_VERSION,foundVersion).apply();
+                    showUpdateScreen(activity,foundVersion,manual);
+                } finally {
+                    if(completion!=null)completion.run();
                 }
-                android.content.SharedPreferences p=activity.getSharedPreferences(PREFS,Activity.MODE_PRIVATE);
-                if(!manual && foundVersion.equals(p.getString(LAST_OFFERED_VERSION,"")))return;
-                p.edit().putString(LAST_OFFERED_VERSION,foundVersion).apply();
-                showUpdateScreen(activity,foundVersion,manual);
             });
         },"app-update-check").start();
     }
