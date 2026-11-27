@@ -1819,6 +1819,7 @@ public class MainActivity extends Activity {
                 words.setGravity(Gravity.CENTER_VERTICAL);
                 TextView title=text(titles[index],12,DARK,true);
                 title.setMaxLines(2);
+                title.setEllipsize(android.text.TextUtils.TruncateAt.END);
                 title.setHyphenationFrequency(android.text.Layout.HYPHENATION_FREQUENCY_NONE);
                 title.setLineSpacing(0,0.98f);
                 words.addView(title,lp(-1,-2,0,0,0,3));
@@ -1889,11 +1890,19 @@ public class MainActivity extends Activity {
                 stroke(accent,3);canvas.drawArc(-27,-21,-10,5,265,190,false,paint);canvas.drawArc(10,-21,27,5,85,190,false,paint);
                 fill(canvas,light);canvas.drawRoundRect(-3,12,3,22,2,2,paint);canvas.drawRoundRect(-13,22,13,27,3,3,paint);
                 fill(canvas,0xFFFFE7A8);android.graphics.Path star=new android.graphics.Path();for(int i=0;i<10;i++){double angle=-Math.PI/2+i*Math.PI/5;float r=i%2==0?7:3;float x=(float)Math.cos(angle)*r,y=(float)Math.sin(angle)*r-7;if(i==0)star.moveTo(x,y);else star.lineTo(x,y);}star.close();canvas.drawPath(star,paint);
-            }else{
+            }else if(kind==4){
                 fill(canvas,blendColors(accent,0xFFFFFFFF,0.25f));canvas.drawCircle(-10,-13,12,paint);fill(canvas,deep);canvas.drawCircle(11,-11,11,paint);
                 gradient(canvas,light,deep,-2,31);canvas.drawOval(-29,0,7,31,paint);gradient(canvas,0xFFFFFFFF,light,-2,31);canvas.drawOval(-5,2,29,31,paint);
                 fill(canvas,0xBFFFFFFF);canvas.drawCircle(-14,-17,3,paint);canvas.drawCircle(8,-15,2.5f,paint);
                 stroke(accent,2);canvas.drawArc(-8,-4,9,12,20,140,false,paint);
+            }else{
+                gradient(canvas,0xFFFFFFFF,light,-28,29);canvas.drawRoundRect(-23,-29,23,29,6,6,paint);
+                fill(canvas,deep);canvas.drawRoundRect(-23,-29,23,-20,6,6,paint);
+                fill(canvas,0xFFFFE6A8);canvas.drawCircle(0,-24,2,paint);
+                stroke(accent,3);canvas.drawCircle(0,1,13,paint);
+                fill(canvas,accent);canvas.drawCircle(0,-7,2.2f,paint);
+                stroke(deep,2.8f);canvas.drawArc(-7,-5,7,9,190,160,false,paint);
+                fill(canvas,blendColors(accent,0xFFFFFFFF,0.55f));canvas.drawCircle(17,-25,4,paint);
             }
             canvas.restore();
         }
