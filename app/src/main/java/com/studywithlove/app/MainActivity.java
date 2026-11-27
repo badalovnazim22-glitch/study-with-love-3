@@ -1655,7 +1655,7 @@ public class MainActivity extends Activity {
         homeStats.setGravity(Gravity.CENTER_VERTICAL);
         int[] statValues = {streak, done, prefs.getInt("longest_streak", streak)};
         String[] statLabels = {"дней подряд", "уроков", "личный рекорд"};
-        int[] statArt = {R.drawable.home_stat_streak, R.drawable.home_stat_lessons, R.drawable.home_stat_record};
+        int[] statArt = {R.drawable.home_feature_planner, R.drawable.home_feature_quiz, R.drawable.home_feature_achievements};
         for (int statIndex = 0; statIndex < statValues.length; statIndex++) {
             LinearLayout statCard = new LinearLayout(this);
             statCard.setOrientation(LinearLayout.VERTICAL);
