@@ -1155,15 +1155,21 @@ public class MainActivity extends Activity {
         updates.addView(updateStatus,lp(-1,-2,0,7,0,5));
 
         Button checkUpdates=button("Проверить обновления",false);
-        checkUpdates.setBackground(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        GradientDrawable updateButtonBg=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{isDarkAppearance()?0xFF35313D:0xFF34313B,isDarkAppearance()?0xFF25222D:0xFF24212B});
+        updateButtonBg.setCornerRadius(dp(16));
+        updateButtonBg.setStroke(0,android.graphics.Color.TRANSPARENT);
+        checkUpdates.setBackground(updateButtonBg);
         if(Build.VERSION.SDK_INT>=21)checkUpdates.setBackgroundTintList(null);
-        checkUpdates.setTextColor(PINK);
+        checkUpdates.setTextColor(0xFFFFFFFF);
+        checkUpdates.setTypeface(Typeface.create(selectedFontFamily(),Typeface.BOLD));
+        checkUpdates.setElevation(0f);
         checkUpdates.setElevation(0f);
         checkUpdates.setTranslationZ(0f);
         if(Build.VERSION.SDK_INT>=21)checkUpdates.setStateListAnimator(null);
         checkUpdates.setAllCaps(false);
         ShimmerFrameLayout updateShimmer=new ShimmerFrameLayout(this);
-        updateShimmer.setShimmer(new Shimmer.ColorHighlightBuilder().setBaseColor(blendColors(PINK,BG,0.78f)).setHighlightColor(blendColors(PINK,BG,0.48f)).setDuration(1150).setDirection(Shimmer.Direction.LEFT_TO_RIGHT).build());
+        updateShimmer.setShimmer(new Shimmer.ColorHighlightBuilder().setBaseColor(0x55FFFFFF).setHighlightColor(0xE6FFFFFF).setDuration(1250).setDirection(Shimmer.Direction.LEFT_TO_RIGHT).build());
         updateShimmer.setClipToPadding(false);
         updateShimmer.addView(checkUpdates,new FrameLayout.LayoutParams(-1,dp(44)));
         checkUpdates.setOnClickListener(v->{updateShimmer.startShimmer();checkUpdates.setText(translate("Проверяем наличие обновлений…"));checkUpdates.setEnabled(false);AppUpdater.checkAndOffer(this);new Handler(Looper.getMainLooper()).postDelayed(()->{if(!isFinishing()&&!isDestroyed()){updateShimmer.stopShimmer();checkUpdates.setText(translate("Проверить обновления"));checkUpdates.setEnabled(true);}},2400);});
@@ -4430,7 +4436,11 @@ public class MainActivity extends Activity {
             case "lv": surface=night?0xFF30281F:0xFFFFF9EF;border=night?0xFF68553B:0xFFC6A779;break;
             default: surface=night?0xFF30232A:0xFFFFFFFF;border=night?0xFF60404E:0xFFF4DCE5;break;
         }
-        android.graphics.drawable.Drawable bg=shape(surface,24,0);
+        // Единый стиль карточек приложения: мягкий фирменный градиент как на главной,
+        // без обводки и без изменения размеров, отступов или расположения.
+        int tint=isDarkAppearance()?0xFFB9A5E8:PINK;
+        float tintStrength=isDarkAppearance()?0.105f:0.052f;
+        GradientDrawable bg=(GradientDrawable)homePanel(tint,24,tintStrength);
         if(Build.VERSION.SDK_INT>=21)l.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x1E000000|(PINK&0x00FFFFFF)),bg,shape(surface,24,0)));
         else l.setBackground(bg);
         l.setElevation(0f);
