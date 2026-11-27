@@ -1341,7 +1341,7 @@ public class MainActivity extends Activity {
         GradientDrawable panel = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
                 new int[]{upper, surface});
         panel.setCornerRadius(dp(radius));
-        panel.setStroke(dp(1), blendColors(PINK, BG, isDarkAppearance() ? 0.42f : 0.78f));
+        panel.setStroke(0, android.graphics.Color.TRANSPARENT);
         return panel;
     }
 
@@ -1412,7 +1412,7 @@ public class MainActivity extends Activity {
         LinearLayout continueCard = card();
         continueCard.setPadding(dp(20), dp(19), dp(20), dp(19));
         continueCard.setBackground(homePanel(PINK, 24, isDarkAppearance() ? 0.10f : 0.055f));
-        continueCard.setElevation(dp(2));
+        continueCard.setElevation(0f);
         TextView progressCaption=text("ТВОЙ ПРОГРЕСС",13,PINK,true);
         continueCard.addView(progressCaption,lp(-1,-2,0,0,0,2));
         TextView encouragement=text("Ты справляешься.\nПродолжай в своём темпе.",23,DARK,true);
@@ -1470,7 +1470,7 @@ public class MainActivity extends Activity {
         // Quick access to the existing math quiz from the home screen.
         LinearLayout quizCard = card();
         quizCard.setBackground(homePanel(PINK, 24, isDarkAppearance() ? 0.12f : 0.07f));
-        quizCard.setElevation(dp(2));
+        quizCard.setElevation(0f);
         quizCard.setOrientation(LinearLayout.HORIZONTAL);
         quizCard.setGravity(Gravity.CENTER_VERTICAL);
         quizCard.setPadding(dp(14), dp(12), dp(14), dp(12));
@@ -1494,7 +1494,7 @@ public class MainActivity extends Activity {
         int weeklyDone = weeklyMinutesLast7Days();
         LinearLayout weeklyCard = card();
         weeklyCard.setBackground(homePanel(PINK, 24, isDarkAppearance() ? 0.09f : 0.045f));
-        weeklyCard.setElevation(dp(2));
+        weeklyCard.setElevation(0f);
         weeklyCard.setPadding(dp(13), dp(12), dp(13), dp(12));
         addText(weeklyCard, "🎯  ЦЕЛЬ НЕДЕЛИ", 11, PINK, true);
         addText(weeklyCard, weeklyDone + " из " + weeklyGoal + " минут", 14, DARK, true);
@@ -3634,7 +3634,7 @@ public class MainActivity extends Activity {
         LinearLayout switcher=new LinearLayout(this);switcher.setGravity(Gravity.CENTER);switcher.setBackgroundColor(android.graphics.Color.TRANSPARENT);
         TextView todayChip=text("Сегодня",13,PINK,true),tomorrowChip=text("Завтра",13,MUTED,true);todayChip.setGravity(Gravity.CENTER);tomorrowChip.setGravity(Gravity.CENTER);
         switcher.addView(todayChip,new LinearLayout.LayoutParams(0,dp(48),1f));switcher.addView(tomorrowChip,new LinearLayout.LayoutParams(0,dp(48),1f));root.addView(switcher,lp(-1, 48,0,0,0,10));
-        LinearLayout overview=card();overview.setBackground(shape(0xFFFFF7FA,20,0xFFF0DCE4));overview.setElevation(dp(2));overview.setPadding(dp(16),dp(14),dp(16),dp(14));
+        LinearLayout overview=card();overview.setBackground(shape(themeSurfaceColor(0xFFFFF7FA),20,0));overview.setElevation(0f);overview.setPadding(dp(16),dp(14),dp(16),dp(14));
         addText(overview,"ТВОЙ ПЛАН НА ДЕНЬ",10,PINK,true);
         TextView overviewDate=text("Сегодня",18,DARK,true);overview.addView(overviewDate,lp(-1,28,0,3,0,2));
         TextView overviewStats=text("0 выполнено · 0 осталось",12,MUTED,false);overview.addView(overviewStats,lp(-1,22,0,0,0,0));
@@ -3642,7 +3642,7 @@ public class MainActivity extends Activity {
         root.addView(overview,lp(-1,-2,0,0,0,12));
         addSpacedRepetitionSection();
         int examPlanTopics=ensureExamPlan();if(!mainExamDate().isEmpty()){boolean noExamTopics=prefs.getBoolean("exam_topic_filter_enabled",false)&&prefs.getStringSet("exam_topic_ids",new TreeSet<String>()).isEmpty();String planMessage=daysUntil(mainExamDate())<0?"Дата экзамена уже прошла.":noExamTopics?"Отметь темы для экзамена в разделе «Мой экзамен» — тогда появится план.":examPlanTopics==0?"Все выбранные темы уже завершены.":"План автоматически распределил "+examPlanTopics+" незавершённых тем до "+mainExamDate()+". При пропуске план пересчитывается при следующем открытии.";LinearLayout planCard=card();planCard.setBackgroundColor(android.graphics.Color.TRANSPARENT);planCard.setElevation(0);planCard.setPadding(0,dp(4),0,dp(4));addText(planCard,"🎯  ПЛАН ДО ЭКЗАМЕНА",11,PINK,true);addText(planCard,planMessage,13,DARK,false);root.addView(planCard,lp(-1,-2,0,0,0,10));}
-        LinearLayout form=card();form.setBackground(shape(0xFFFFFFFF,18,0xFFF0E5EA));form.setElevation(dp(1));form.setPadding(dp(14),dp(12),dp(14),dp(12));addText(form,"НОВАЯ ЗАДАЧА",12,PINK,true);TextView counter=text("0 задач на день",11,MUTED,true);form.addView(counter,lp(-1,22,0,2,0,0));
+        LinearLayout form=card();form.setBackground(shape(themeSurfaceColor(0xFFFFFFFF),18,0));form.setElevation(0f);form.setPadding(dp(14),dp(12),dp(14),dp(12));addText(form,"НОВАЯ ЗАДАЧА",12,PINK,true);TextView counter=text("0 задач на день",11,MUTED,true);form.addView(counter,lp(-1,22,0,2,0,0));
         EditText task=new EditText(this);task.setSingleLine(true);task.setHint("Например: Дроби");task.setTextColor(DARK);task.setHintTextColor(MUTED);task.setTextSize(16);task.setInputType(android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);task.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_DONE);task.setPadding(dp(15),dp(11),dp(15),dp(11));task.setIncludeFontPadding(false);task.setMinHeight(dp(52));task.setBackground(shape(0xFFFFF8FA,16,0xFFEAD5DE));form.addView(task,lp(-1,52,0,7,0,8));
         addText(form,"СКОЛЬКО ВРЕМЕНИ?",10,MUTED,true);
         LinearLayout durationRow=new LinearLayout(this);durationRow.setGravity(Gravity.CENTER_VERTICAL);form.addView(durationRow,lp(-1,48,0,3,0,7));
@@ -4038,8 +4038,8 @@ public class MainActivity extends Activity {
         LinearLayout dailyCard=new LinearLayout(this);
         dailyCard.setOrientation(LinearLayout.VERTICAL);
         dailyCard.setPadding(dp(17),dp(12),dp(17),dp(12));
-        dailyCard.setBackground(shape(themeSurfaceColor(surface),24,blendColors(PALE,BG,0.22f)));
-        dailyCard.setElevation(dp(2));
+        dailyCard.setBackground(shape(themeSurfaceColor(surface),24,0));
+        dailyCard.setElevation(0f);
 
         TextView enabled=text("Напоминания об учёбе",16,ink,true);
         TextView enabledSub=text("Напоминание каждый день в выбранное время",12,muted,false);
@@ -4320,7 +4320,7 @@ public class MainActivity extends Activity {
 
     private LinearLayout action(String title, String sub, OnAction run) {
         LinearLayout c = new LinearLayout(this); c.setOrientation(LinearLayout.HORIZONTAL); c.setGravity(Gravity.CENTER_VERTICAL); c.setPadding(dp(16), dp(14), dp(14), dp(14));
-        c.setBackground(shape(0xFFFFFFFF, 24, 0xFFF3E9EC)); c.setElevation(dp(2));
+        c.setBackground(shape(themeSurfaceColor(0xFFFFFFFF), 24, 0)); c.setElevation(0f);
         LinearLayout words = new LinearLayout(this); words.setOrientation(LinearLayout.VERTICAL); words.setGravity(Gravity.CENTER_VERTICAL);
         TextView heading = text(title, 17, DARK, true); heading.setMaxLines(2); words.addView(heading, lp(-1, -2, 0, 0, 0, 4));
         TextView detail = text(sub, 13, MUTED, false); detail.setMaxLines(2); words.addView(detail, lp(-1, -2, 0, 0, 0, 0));
@@ -4430,10 +4430,10 @@ public class MainActivity extends Activity {
             case "lv": surface=night?0xFF30281F:0xFFFFF9EF;border=night?0xFF68553B:0xFFC6A779;break;
             default: surface=night?0xFF30232A:0xFFFFFFFF;border=night?0xFF60404E:0xFFF4DCE5;break;
         }
-        android.graphics.drawable.Drawable bg=shape(surface,24,border);
+        android.graphics.drawable.Drawable bg=shape(surface,24,0);
         if(Build.VERSION.SDK_INT>=21)l.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x1E000000|(PINK&0x00FFFFFF)),bg,shape(surface,24,0)));
         else l.setBackground(bg);
-        l.setElevation(dp(1));
+        l.setElevation(0f);
         l.setClipToOutline(Build.VERSION.SDK_INT >= 21);
         l.setFocusable(false);
         return l;
