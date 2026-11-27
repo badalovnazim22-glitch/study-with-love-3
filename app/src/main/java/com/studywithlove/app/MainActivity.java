@@ -1649,27 +1649,48 @@ public class MainActivity extends Activity {
         addDailyMoodCard(root);
         if(root.getChildCount()>0)root.getChildAt(root.getChildCount()-1).setTag("home_mood");
 
-        // Three compact home summary tiles restored from the earlier design.
+        // Premium 3D summary cards: streak, completed lessons and personal record.
         LinearLayout homeStats = new LinearLayout(this);
         homeStats.setOrientation(LinearLayout.HORIZONTAL);
         homeStats.setGravity(Gravity.CENTER_VERTICAL);
         int[] statValues = {streak, done, prefs.getInt("longest_streak", streak)};
         String[] statLabels = {"дней подряд", "уроков", "личный рекорд"};
+        int[] statArt = {R.drawable.home_stat_streak, R.drawable.home_stat_lessons, R.drawable.home_stat_record};
         for (int statIndex = 0; statIndex < statValues.length; statIndex++) {
             LinearLayout statCard = new LinearLayout(this);
             statCard.setOrientation(LinearLayout.VERTICAL);
             statCard.setGravity(Gravity.CENTER);
-            statCard.setPadding(dp(4), dp(8), dp(4), dp(8));
-            statCard.setBackground(homePanel(PINK, 16, isDarkAppearance() ? 0.12f : 0.075f));
+            statCard.setPadding(dp(5), dp(7), dp(5), dp(7));
+            statCard.setBackground(homePanel(PINK, 18, isDarkAppearance() ? 0.16f : 0.09f));
             statCard.setForeground(null);
             statCard.setElevation(0f);
-            TextView statValue = text(String.valueOf(statValues[statIndex]), 22, DARK, true);
+            ImageView statArtView = new ImageView(this);
+            statArtView.setImageResource(statArt[statIndex]);
+            statArtView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            statArtView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+            statCard.addView(statArtView, lp(48, 43, 0, 0, 0, 1));
+            TextView statValue = text(String.valueOf(statValues[statIndex]), 21, DARK, true);
             statValue.setGravity(Gravity.CENTER);
-            statCard.addView(statValue, lp(-1, 30, 0, 0, 0, 3));
-            TextView statLabel = text(statLabels[statIndex], 12, DARK, true);
+            statCard.addView(statValue, lp(-1, 27, 0, 0, 0, 1));
+            TextView statLabel = text(statLabels[statIndex], 10, DARK, true);
             statLabel.setGravity(Gravity.CENTER);
+            statLabel.setMaxLines(2);
+            statLabel.setEllipsize(android.text.TextUtils.TruncateAt.END);
             statCard.addView(statLabel, lp(-1, -2, 0, 0, 0, 0));
-            LinearLayout.LayoutParams statLp = new LinearLayout.LayoutParams(0, dp(82), 1f);
+            android.animation.ObjectAnimator floatArt = android.animation.ObjectAnimator.ofFloat(statArtView, "translationY", 0f, -dp(2));
+            floatArt.setDuration(1700 + statIndex * 180);
+            floatArt.setRepeatMode(android.animation.ValueAnimator.REVERSE);
+            floatArt.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+            floatArt.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
+            statArtView.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+                @Override public void onViewAttachedToWindow(View v) { floatArt.start(); }
+                @Override public void onViewDetachedFromWindow(View v) { floatArt.cancel(); }
+            });
+            statCard.setAlpha(0f);
+            statCard.setTranslationY(dp(7));
+            statCard.postDelayed(() -> statCard.animate().alpha(1f).translationY(0f).setDuration(260)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator()).start(), statIndex * 55L);
+            LinearLayout.LayoutParams statLp = new LinearLayout.LayoutParams(0, dp(112), 1f);
             statLp.setMargins(dp(3), 0, dp(3), 0);
             homeStats.addView(statCard, statLp);
         }
