@@ -254,12 +254,8 @@ public class MainActivity extends Activity {
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
         firebaseAnalytics = FirebaseAnalytics.getInstance(this);
         firebaseAnalytics.logEvent("app_open", null);
-        // Возвращаем розовую тему после прежнего обновления с лавандовой палитрой.
-        if ("lavender".equals(prefs.getString("app_theme", "pink"))) {
-            SharedPreferences.Editor themeMigration=prefs.edit().putString("app_theme","pink");
-            if (prefs.getInt("app_accent_color",0)==0xFF8070A8) themeMigration.remove("app_accent_color");
-            themeMigration.apply();
-        }
+        // Сохраняем выбранную пользователем тему между версиями приложения.
+        // Не сбрасываем lavender/custom и другие палитры при запуске.
         selectedStudyMinutes=Math.max(1,Math.min(600,prefs.getInt("selected_study_minutes",25)));
         selectedBreakMinutes=Math.max(1,Math.min(30,prefs.getInt("selected_break_minutes",5)));
         int openedReminder=getIntent()==null?-1:getIntent().getIntExtra("opened_reminder_id",-1);if(openedReminder>0)prefs.edit().putLong("reminder_opened_at_"+openedReminder,System.currentTimeMillis()).apply();
