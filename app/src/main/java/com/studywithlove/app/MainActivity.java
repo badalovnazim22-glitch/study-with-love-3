@@ -1661,7 +1661,7 @@ public class MainActivity extends Activity {
         tile.setGravity(Gravity.CENTER);
         tile.setPadding(dp(10),dp(12),dp(10),dp(10));
         tile.setBackground(shape(bgColor,23,0));
-        TextView icon=text(symbol,symbol.contains("\\n")?25:38,DARK,true);
+        TextView icon=text(symbol,symbol.indexOf('\n')>=0?25:38,DARK,true);
         icon.setGravity(Gravity.CENTER);
         icon.setLineSpacing(0f,0.82f);
         tile.addView(icon,lp(-1,66,0,0,0,5));
