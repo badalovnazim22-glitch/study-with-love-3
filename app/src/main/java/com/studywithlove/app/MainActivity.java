@@ -2555,7 +2555,7 @@ public class MainActivity extends Activity {
                 int day = slot - offset + 1;
                 String dateKey = String.format(Locale.US, "%04d-%02d-%02d", yearNumber, monthNumber + 1, day);
                 boolean studied = studiedDays.contains(dateKey), visited = visitedDays.contains(dateKey), isToday = progressMonthOffset == 0 && day == todayDay;
-                cell.setText(String.valueOf(day)); int minutes=prefs.getInt("focus_minutes_"+dateKey,0);int heatColor=minutes>=60?0xFFFFC4D5:minutes>=30?0xFFFFD8E3:minutes>=15?0xFFFFE8EE:studied?0xFFFFF2F5:(isToday?PALE:(visited?0xFFF1F0F2:0xFFFFFFFF));cell.setTextColor(studied?PINK:DARK);
+                cell.setText(String.valueOf(day)); int minutes=prefs.getInt("focus_minutes_"+dateKey,0);int heatColor=minutes>=60?0xFFFFC4D5:minutes>=30?0xFFFFD8E3:minutes>=15?0xFFFFE8EE:studied?0xFFFFF2F5:(isToday?PALE:(visited?0xFFF1F0F2:0xFFFFFFFF));heatColor=themeSurfaceColor(heatColor);cell.setTextColor(studied?PINK:DARK);
                 cell.setBackground(shape(heatColor,9,isToday?PINK:(studied?0xFFFFC6D7:0x00FFFFFF)));
                 cell.setElevation(dp(1)); if (isToday) cell.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             }
@@ -3689,7 +3689,7 @@ public class MainActivity extends Activity {
             String key=new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(date.getTime());
             int mins=prefs.getInt("focus_minutes_"+key,0);boolean studied=days.contains(key)||mins>0;
             boolean isToday=key.equals(todayKey());boolean future=date.after(today);
-            int fill=studied?PINK:(isToday?0xFFFFE3EC:0xFFF8F3F5);
+            int fill=studied?PINK:themeSurfaceColor(isToday?0xFFFFE3EC:0xFFF8F3F5);
             int stroke=isToday?PINK:0;
             TextView cell=text(String.valueOf(day),11,studied?0xFFFFFFFF:(future?0xFFBEB4B9:MUTED),true);
             cell.setGravity(Gravity.CENTER);cell.setBackground(shape(fill,11,stroke));
@@ -4313,7 +4313,7 @@ public class MainActivity extends Activity {
             case 0xFFF5FAF7:case 0xFFEAF5EF:case 0xFFE5F2EB:
             case 0xFFF7F8FA:case 0xFFE9EDF2:case 0xFFE7ECF2:
             case 0xFFF7F1EA:case 0xFFEDE0D2:case 0xFFFFF8DF:case 0xFFF5E2A6:
-            case 0xFFF1F8FC:case 0xFFE1EFF8:case 0xFFFFF5EF:case 0xFFFBE5D9:
+            case 0xFFF1F8FC:case 0xFFE1EFF8:case 0xFFFFF5EF:case 0xFFFBE5D9:\n            case 0xFFFFC4D5:case 0xFFFFD8E3:case 0xFFFFE8EE:case 0xFFFFF2F5:case 0xFFF1F0F2:case 0xFFF8F3F5:
             case 0xFFFFF5F4:case 0xFFF8E2E3:case 0xFFF4E8D5:case 0xFFE7D2B3:
                 return blendColors(PALE,BG,0.28f);
             default:return color;
