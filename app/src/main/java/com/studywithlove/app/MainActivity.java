@@ -628,8 +628,16 @@ public class MainActivity extends Activity {
         shell.setBackgroundColor(BG);
         ScrollView scroll = new ScrollView(this);
         activeScrollView = scroll;
-        scroll.setFillViewport(true); scroll.setClipToPadding(false);
+        // Единое поведение прокрутки для всех экранов приложения.
+        scroll.setFillViewport(true);
+        scroll.setClipToPadding(false);
+        scroll.setSmoothScrollingEnabled(true);
+        scroll.setVerticalScrollBarEnabled(false);
+        scroll.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+        if (Build.VERSION.SDK_INT >= 21) scroll.setEdgeEffectColor(PINK);
         root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
+        root.setClipChildren(false);
+        root.setClipToPadding(false);
         root.setPadding(dp(15), dp(12), dp(15), dp(104)); root.setBackgroundColor(BG); // Keep the final home cards clear of the floating navigation.
         installThemeFontListener(root);
         String customBg=prefs.getString("custom_background_uri","");
