@@ -787,15 +787,20 @@ public class MainActivity extends Activity {
             });
             shell.requestApplyInsets();
         }
-        scroll.setAlpha(0f); scroll.setTranslationY(dp(backNavigation?-8:8));
-        scroll.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-        if (!prefs.getBoolean("reduce_motion", false)) {
-            scroll.animate().alpha(1f).translationY(0f).setStartDelay(12).setDuration(280)
+        boolean swipeNavigation=screenSwipeDirection!=0;
+        scroll.setAlpha(1f); scroll.setTranslationY(0f);
+        if (!swipeNavigation && !prefs.getBoolean("reduce_motion", false)) {
+            scroll.setAlpha(0f); scroll.setTranslationY(dp(backNavigation?-8:8));
+            scroll.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+            scroll.animate().alpha(1f).translationY(0f).setStartDelay(12).setDuration(180)
                 .setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
             View nav=shell.getChildCount()>1?shell.getChildAt(1):null;
-            if(nav!=null){nav.setAlpha(0f);nav.animate().alpha(1f).setStartDelay(35).setDuration(240)
+            if(nav!=null){nav.setAlpha(0f);nav.animate().alpha(1f).setStartDelay(20).setDuration(160)
                 .setInterpolator(new android.view.animation.DecelerateInterpolator()).start();}
-        } else { scroll.setAlpha(1f); scroll.setTranslationY(0f); }
+        } else {
+            scroll.setLayerType(View.LAYER_TYPE_NONE, null);
+            scroll.setAlpha(1f); scroll.setTranslationY(0f);
+        }
         if (currentScreen.equals("home")) {
         LinearLayout brandRow = new LinearLayout(this);
         brandRow.setGravity(Gravity.CENTER_VERTICAL);
@@ -865,18 +870,25 @@ public class MainActivity extends Activity {
                 || prefs.getBoolean("reduce_motion", false)) return;
         android.view.animation.Interpolator easing =
                 new android.view.animation.DecelerateInterpolator(1.6f);
-        int count = screenRoot.getChildCount();
         int direction=screenSwipeDirection;screenSwipeDirection=0;
+        if(direction!=0){
+            for(int i=0;i<screenRoot.getChildCount();i++){
+                View child=screenRoot.getChildAt(i);
+                if(child!=null){child.animate().cancel();child.setAlpha(1f);child.setTranslationX(0f);child.setTranslationY(0f);}
+            }
+            return;
+        }
+        int count = screenRoot.getChildCount();
         for (int i = 0; i < count; i++) {
             View child = screenRoot.getChildAt(i);
             if (child == null) continue;
             child.animate().cancel();
             child.setAlpha(0f);
-            child.setTranslationY(direction==0?dp(9):0f);
-            child.setTranslationX(direction==0?0f:dp(direction*18));
+            child.setTranslationY(dp(9));
+            child.setTranslationX(0f);
             child.animate().alpha(1f).translationY(0f).translationX(0f)
-                    .setStartDelay(Math.min(i * 18L, 126L))
-                    .setDuration(300L)
+                    .setStartDelay(Math.min(i * 12L, 72L))
+                    .setDuration(190L)
                     .setInterpolator(easing)
                     .start();
         }
@@ -1283,7 +1295,7 @@ public class MainActivity extends Activity {
         Button checkUpdates=button("Проверить обновления",false);
         checkUpdates.setBackgroundColor(android.graphics.Color.TRANSPARENT);
         if(Build.VERSION.SDK_INT>=21)checkUpdates.setBackgroundTintList(null);
-        checkUpdates.setTextColor(android.graphics.Color.BLACK);
+        checkUpdates.setTextColor(isDarkAppearance()?android.graphics.Color.WHITE:android.graphics.Color.BLACK);
         checkUpdates.setTypeface(Typeface.create(selectedFontFamily(),Typeface.BOLD));
         checkUpdates.setElevation(0f);
         checkUpdates.setElevation(0f);
@@ -1297,6 +1309,8 @@ public class MainActivity extends Activity {
         checkUpdates.setOnClickListener(v->{updateShimmer.startShimmer();checkUpdates.setText(translate("Проверяем наличие обновлений…"));checkUpdates.setEnabled(false);AppUpdater.checkAndOffer(this);new Handler(Looper.getMainLooper()).postDelayed(()->{if(!isFinishing()&&!isDestroyed()){updateShimmer.stopShimmer();checkUpdates.setText(translate("Проверить обновления"));checkUpdates.setEnabled(true);}},2400);});
         updates.addView(updateShimmer,lp(-1,48,0,3,0,0));
         updates.setVisibility(sectionPage && "about".equals(activeSection) ? View.VISIBLE : View.GONE);
+        updates.setAlpha(1f);
+        updates.setEnabled(true);
         root.addView(updates,lp(-1,-2,0,0,0,4));
 
         for (int i = 0; i < root.getChildCount(); i++) {
