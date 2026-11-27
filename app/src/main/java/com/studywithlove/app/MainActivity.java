@@ -636,20 +636,6 @@ public class MainActivity extends Activity {
         scroll.setVerticalScrollBarEnabled(false);
         scroll.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
         if (Build.VERSION.SDK_INT >= 29) scroll.setEdgeEffectColor(PINK);
-        final float[] swipeStart = new float[]{0f,0f};
-        final android.view.GestureDetector sectionSwipeDetector = new android.view.GestureDetector(this,
-                new android.view.GestureDetector.SimpleOnGestureListener(){
-                    @Override public boolean onDown(android.view.MotionEvent e){return true;}
-                    @Override public boolean onFling(android.view.MotionEvent e1,android.view.MotionEvent e2,float velocityX,float velocityY){
-                        if(e1==null||e2==null)return false;
-                        float dx=e2.getX()-e1.getX(),dy=e2.getY()-e1.getY();
-                        if(Math.abs(dx)>dp(72)&&Math.abs(dx)>Math.abs(dy)*1.25f&&Math.abs(velocityX)>dp(280)){
-                            navigateMainSectionBySwipe(dx<0?1:-1);return true;
-                        }
-                        return false;
-                    }
-                });
-        scroll.setOnTouchListener((view,event)->{sectionSwipeDetector.onTouchEvent(event);return false;});
         root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
         root.setClipChildren(false);
         root.setClipToPadding(false);
@@ -668,7 +654,106 @@ public class MainActivity extends Activity {
                         Gravity.TOP | Gravity.CENTER_HORIZONTAL);
         contentFrame.addView(root, contentParams);
         scroll.addView(contentFrame, new android.widget.ScrollView.LayoutParams(-1, -2));
-        shell.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
+        android.widget.FrameLayout swipeHost=new android.widget.FrameLayout(this);
+        swipeHost.setClipChildren(false);
+        swipeHost.setClipToPadding(false);
+        swipeHost.addView(scroll,new android.widget.FrameLayout.LayoutParams(-1,-1));
+        LinearLayout swipePreview=new LinearLayout(this);
+        swipePreview.setOrientation(LinearLayout.VERTICAL);
+        swipePreview.setGravity(Gravity.CENTER);
+        swipePreview.setPadding(dp(24),dp(24),dp(24),dp(24));
+        swipePreview.setBackground(homePanel(isDarkAppearance()?0xFFB9A5E8:PINK,24,isDarkAppearance()?0.13f:0.07f));
+        swipePreview.setAlpha(0f);
+        swipePreview.setVisibility(View.GONE);
+        TextView previewMark=text("✦",30,PINK,true);previewMark.setGravity(Gravity.CENTER);
+        swipePreview.addView(previewMark,lp(-1,48,0,0,0,10));
+        TextView previewTitle=text("",22,DARK,true);previewTitle.setGravity(Gravity.CENTER);previewTitle.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        swipePreview.addView(previewTitle,lp(-1,-2,0,0,0,6));
+        TextView previewHint=text("Перейти к разделу",12,MUTED,false);previewHint.setGravity(Gravity.CENTER);
+        swipePreview.addView(previewHint,lp(-1,-2,0,0,0,0));
+        swipeHost.addView(swipePreview,new android.widget.FrameLayout.LayoutParams(-1,-1));
+        shell.addView(swipeHost,new LinearLayout.LayoutParams(-1,0,1f));
+        final float[] gesture={0f,0f,0f,0f};
+        final int[] gestureDirection={0};
+        final boolean[] horizontalGesture={false};
+        final boolean[] settling={false};
+        final long[] gestureTime={0L};
+        final String[] mainKeys={"home","math","progress","exam","diary","timer"};
+        final String[] mainTitles={"Главная","Уроки","Прогресс","Экзамен","Дневник","Таймер"};
+        final String[] mainScreens={"home","chapters","progress","exam","diary","pomodoro"};
+        scroll.setOnTouchListener((view,event)->{
+            int action=event.getActionMasked();
+            if(action==android.view.MotionEvent.ACTION_DOWN){
+                scroll.animate().cancel();swipePreview.animate().cancel();settling[0]=false;
+                gesture[0]=event.getX();gesture[1]=event.getY();gesture[2]=0f;gesture[3]=0f;
+                gestureTime[0]=android.view.MotionEvent.eventTimeToMillis(event.getEventTime());
+                horizontalGesture[0]=false;gestureDirection[0]=0;
+                return false;
+            }
+            if(action==android.view.MotionEvent.ACTION_MOVE){
+                float dx=event.getX()-gesture[0],dy=event.getY()-gesture[1];
+                if(!horizontalGesture[0]&&Math.abs(dx)>dp(10)&&Math.abs(dx)>Math.abs(dy)*1.18f){
+                    if(currentScreen.startsWith("settings")||"welcome".equals(currentScreen))return false;
+                    horizontalGesture[0]=true;
+                    String active=currentScreen.equals("home")?"home":
+                        (currentScreen.equals("chapters")||currentScreen.equals("math_chapters")||currentScreen.equals("topics")||currentScreen.equals("topic"))?"math":
+                        (currentScreen.equals("progress")||currentScreen.equals("flower")||currentScreen.equals("achievements")||currentScreen.equals("stats"))?"progress":
+                        currentScreen.equals("exam")?"exam":(currentScreen.equals("diary")||currentScreen.equals("letters"))?"diary":
+                        currentScreen.equals("pomodoro")?"timer":"";
+                    int idx=-1;for(int n=0;n<mainKeys.length;n++)if(mainKeys[n].equals(active)){idx=n;break;}
+                    int dir=dx<0?1:-1;int next=idx+dir;
+                    gestureDirection[0]=(idx>=0&&next>=0&&next<mainKeys.length)?dir:0;
+                    if(gestureDirection[0]!=0){
+                        previewTitle.setText(mainTitles[next]);
+                        swipePreview.setVisibility(View.VISIBLE);
+                        swipePreview.setAlpha(1f);
+                        swipePreview.setTranslationX(dir*swipeHost.getWidth());
+                    }
+                }
+                if(horizontalGesture[0]){
+                    float width=Math.max(1,swipeHost.getWidth());
+                    if(gestureDirection[0]==0){
+                        scroll.setTranslationX(dx*0.22f);
+                        swipePreview.setAlpha(0f);
+                    }else{
+                        float clamped=Math.max(-width,Math.min(width,dx));
+                        scroll.setTranslationX(clamped);
+                        swipePreview.setTranslationX((dx<0?width:-width)+clamped);
+                        swipePreview.setAlpha(Math.min(1f,Math.abs(clamped)/Math.max(1f,width*0.18f)));
+                    }
+                    gesture[2]=dx;gesture[3]=event.getX();
+                    return true;
+                }
+                return false;
+            }
+            if(action==android.view.MotionEvent.ACTION_UP||action==android.view.MotionEvent.ACTION_CANCEL){
+                if(!horizontalGesture[0])return false;
+                float dx=action==android.view.MotionEvent.ACTION_CANCEL?0f:event.getX()-gesture[0];
+                long elapsed=Math.max(1,event.getEventTime()-gestureTime[0]);
+                float velocity=dx*1000f/elapsed;
+                float width=Math.max(1,swipeHost.getWidth());
+                boolean commit=gestureDirection[0]!=0&&(Math.abs(dx)>=width*0.38f||Math.abs(velocity)>=dp(650));
+                settling[0]=true;
+                scroll.animate().cancel();swipePreview.animate().cancel();
+                if(commit){
+                    int dir=gestureDirection[0];
+                    scroll.animate().translationX(-dir*width).setDuration(190).setInterpolator(new android.view.animation.DecelerateInterpolator()).withEndAction(()->{
+                        if(!settling[0])return;
+                        swipePreview.animate().cancel();
+                        navigateMainSectionBySwipe(dir);
+                    }).start();
+                    swipePreview.animate().translationX(0f).alpha(1f).setDuration(190).setInterpolator(new android.view.animation.DecelerateInterpolator()).start();
+                }else{
+                    scroll.animate().translationX(0f).setDuration(210).setInterpolator(new android.view.animation.OvershootInterpolator(0.82f)).withEndAction(()->{
+                        if(settling[0]){swipePreview.setVisibility(View.GONE);swipePreview.setAlpha(0f);}
+                    }).start();
+                    swipePreview.animate().translationX(gestureDirection[0]==1?width:-width).alpha(0f).setDuration(190).start();
+                }
+                horizontalGesture[0]=false;
+                return true;
+            }
+            return horizontalGesture[0];
+        });
         // Навигация размещается поверх содержимого в прозрачном overlay-контейнере.
         if (!currentScreen.equals("welcome")) {
             android.widget.FrameLayout overlay=new android.widget.FrameLayout(this);
@@ -1210,7 +1295,8 @@ public class MainActivity extends Activity {
         updateShimmer.setClipToPadding(false);
         updateShimmer.addView(checkUpdates,new FrameLayout.LayoutParams(-1,dp(44)));
         checkUpdates.setOnClickListener(v->{updateShimmer.startShimmer();checkUpdates.setText(translate("Проверяем наличие обновлений…"));checkUpdates.setEnabled(false);AppUpdater.checkAndOffer(this);new Handler(Looper.getMainLooper()).postDelayed(()->{if(!isFinishing()&&!isDestroyed()){updateShimmer.stopShimmer();checkUpdates.setText(translate("Проверить обновления"));checkUpdates.setEnabled(true);}},2400);});
-        updates.addView(updateShimmer,lp(-1,44,0,3,0,0));
+        updates.addView(updateShimmer,lp(-1,48,0,3,0,0));
+        updates.setVisibility(sectionPage && "about".equals(activeSection) ? View.VISIBLE : View.GONE);
         root.addView(updates,lp(-1,-2,0,0,0,4));
 
         for (int i = 0; i < root.getChildCount(); i++) {
