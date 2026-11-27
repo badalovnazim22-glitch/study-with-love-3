@@ -98,6 +98,8 @@ public final class AppUpdater {
 
     private static int[] palette(Activity a){
         android.content.SharedPreferences p=a.getSharedPreferences("study_progress",Activity.MODE_PRIVATE);String t=p.getString("app_theme","pink");
+        if("system".equals(t)){boolean dark=(a.getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_YES;t=dark?"night":"pink";}
+        if(p.getBoolean("scheduled_dark_enabled",false)){java.util.Calendar now=java.util.Calendar.getInstance();int current=now.get(java.util.Calendar.HOUR_OF_DAY)*60+now.get(java.util.Calendar.MINUTE);String[] startParts=p.getString("scheduled_dark_start","21:00").split(":");String[] endParts=p.getString("scheduled_dark_end","07:00").split(":");int start=21*60,end=7*60;try{start=Integer.parseInt(startParts[0])*60+Integer.parseInt(startParts[1]);end=Integer.parseInt(endParts[0])*60+Integer.parseInt(endParts[1]);}catch(Exception ignored){}if(start<=end?(current>=start&&current<end):(current>=start||current<end))t="night";}
         int accent=p.getInt("app_accent_color",0xFFC97891),surface=0xFFFFF9F7,soft=0xFFFCEEF2,ink=0xFF3F3439,muted=0xFF75666D,border=0xFFF0DCE4;
         if("lavender".equals(t)){accent=0xFF8070A8;surface=0xFFF8F7FC;soft=0xFFF0EDFA;ink=0xFF292638;muted=0xFF858096;border=0xFFE5E1EF;}
         else if("mint".equals(t)){accent=0xFF659B86;surface=0xFFF5FAF7;soft=0xFFEAF5EF;ink=0xFF34443D;muted=0xFF60786B;border=0xFFDCEBE2;}
@@ -174,27 +176,28 @@ public final class AppUpdater {
 
     private static void showNoUpdatesDialog(Activity activity,String version){
         int pad=(int)(activity.getResources().getDisplayMetrics().density*18);
+        int[] colors=palette(activity);int accent=colors[0],surface=colors[1],soft=colors[2],ink=colors[3],muted=colors[4],border=colors[5];
         android.widget.LinearLayout panel=new android.widget.LinearLayout(activity);
         panel.setOrientation(android.widget.LinearLayout.VERTICAL);
         panel.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
         panel.setPadding(pad,pad,pad,pad);
-        panel.setBackground(roundRect(0xFFFFF9F7,26,0xFFF0DCE4,activity));
+        panel.setBackground(roundRect(surface,26,border,activity));
         android.widget.TextView icon=new android.widget.TextView(activity);
         icon.setText("✓");icon.setTextSize(27);icon.setTextColor(0xFFFFFFFF);icon.setGravity(android.view.Gravity.CENTER);
-        icon.setBackground(roundRect(0xFFC97891,30,0,activity));
+        icon.setBackground(roundRect(accent,30,0,activity));
         android.widget.LinearLayout.LayoutParams iconLp=new android.widget.LinearLayout.LayoutParams(pad*3,pad*3);
         iconLp.gravity=android.view.Gravity.CENTER_HORIZONTAL;panel.addView(icon,iconLp);
         android.widget.TextView title=new android.widget.TextView(activity);
-        title.setText("Обновлений пока нет");title.setTextColor(0xFF3F3439);title.setTextSize(20);
+        title.setText("Обновлений пока нет");title.setTextColor(ink);title.setTextSize(20);
         title.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);
         title.setGravity(android.view.Gravity.CENTER);title.setPadding(0,pad,0,pad/3);
         panel.addView(title,new android.widget.LinearLayout.LayoutParams(-1,-2));
         android.widget.TextView message=new android.widget.TextView(activity);
-        message.setText("Установлена последняя версия "+version+" ♡");message.setTextColor(0xFF75666D);
+        message.setText("Установлена последняя версия "+version+" ♡");message.setTextColor(muted);
         message.setTextSize(14);message.setGravity(android.view.Gravity.CENTER);
         message.setPadding(0,0,0,pad/3);panel.addView(message,new android.widget.LinearLayout.LayoutParams(-1,-2));
         AlertDialog dialog=new AlertDialog.Builder(activity).setView(panel).setPositiveButton("Хорошо",null).create();
-        dialog.setOnShowListener(v->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(0xFFC97891));
+        dialog.setOnShowListener(v->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(accent));
         dialog.show();
     }
 
