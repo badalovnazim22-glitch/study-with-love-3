@@ -4313,7 +4313,8 @@ public class MainActivity extends Activity {
             case 0xFFF5FAF7:case 0xFFEAF5EF:case 0xFFE5F2EB:
             case 0xFFF7F8FA:case 0xFFE9EDF2:case 0xFFE7ECF2:
             case 0xFFF7F1EA:case 0xFFEDE0D2:case 0xFFFFF8DF:case 0xFFF5E2A6:
-            case 0xFFF1F8FC:case 0xFFE1EFF8:case 0xFFFFF5EF:case 0xFFFBE5D9:\n            case 0xFFFFC4D5:case 0xFFFFD8E3:case 0xFFFFE8EE:case 0xFFFFF2F5:case 0xFFF1F0F2:case 0xFFF8F3F5:
+            case 0xFFF1F8FC:case 0xFFE1EFF8:case 0xFFFFF5EF:case 0xFFFBE5D9:
+            case 0xFFFFC4D5:case 0xFFFFD8E3:case 0xFFFFE8EE:case 0xFFFFF2F5:case 0xFFF1F0F2:case 0xFFF8F3F5:
             case 0xFFFFF5F4:case 0xFFF8E2E3:case 0xFFF4E8D5:case 0xFFE7D2B3:
                 return blendColors(PALE,BG,0.28f);
             default:return color;
