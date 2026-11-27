@@ -101,7 +101,6 @@ public class MainActivity extends Activity {
                 UiHelper helper = new UiHelper(UiHelper.ContextErrorPolicy.DONT_CHECK);
                 helper.setOpaque(false);
                 viewer = new ModelViewer(texture, Engine.create(), helper, null);
-                viewer.setAutoPlayAnimations(true);
                 Renderer.ClearOptions clear = viewer.getRenderer().getClearOptions();
                 clear.clear = true;
                 clear.clearColor[0] = 0f; clear.clearColor[1] = 0f;
@@ -123,8 +122,7 @@ public class MainActivity extends Activity {
                     } catch (Throwable ignored) { }
                 });
             } catch (Throwable failure) {
-                if (viewer != null) { try { viewer.destroy(); } catch (Throwable ignored) { } viewer = null; }
-                setVisibility(View.GONE);
+                if (viewer == null) setVisibility(View.GONE);
             }
         }
 
