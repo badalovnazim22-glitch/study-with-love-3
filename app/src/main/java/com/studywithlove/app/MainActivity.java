@@ -88,6 +88,8 @@ public class MainActivity extends Activity {
         private Engine engine;
         private boolean frameLoopActive;
         private long animationStartNanos;
+        private com.google.android.filament.LightManager lightManager;
+        private int fillLightInstance;
         private final Choreographer.FrameCallback frameCallback = new Choreographer.FrameCallback() {
             @Override public void doFrame(long frameTimeNanos) {
                 if (!frameLoopActive || viewer == null) return;
@@ -95,14 +97,25 @@ public class MainActivity extends Activity {
                     // Filament 1.70.2 does not autoplay GLB animations in ModelViewer.
                     // Advance the first glTF animation explicitly before rendering.
                     com.google.android.filament.gltfio.Animator animator = viewer.getAnimator();
+                    if (animationStartNanos == 0L) animationStartNanos = frameTimeNanos;
+                    float elapsed = (frameTimeNanos - animationStartNanos) / 1_000_000_000f;
                     if (animator != null && animator.getAnimationCount() > 0) {
-                        if (animationStartNanos == 0L) animationStartNanos = frameTimeNanos;
                         float duration = animator.getAnimationDuration(0);
                         if (duration > 0f) {
-                            float elapsed = (frameTimeNanos - animationStartNanos) / 1_000_000_000f;
-                            animator.applyAnimation(0, elapsed % duration);
+                            // Gentle continuous motion for the flame, book stack and trophy.
+                            animator.applyAnimation(0, (elapsed * 0.82f) % duration);
                             animator.updateBoneMatrices();
                         }
+                    }
+                    // Sweep a soft warm point-light across the models. The moving
+                    // specular reflection gives the metallic trophy a live highlight.
+                    if (lightManager != null && fillLightInstance != 0) {
+                        float sweep = (float) Math.sin(elapsed * 0.92f);
+                        float depth = (float) Math.cos(elapsed * 0.67f);
+                        lightManager.setPosition(fillLightInstance,
+                                sweep * 1.65f, -0.25f + depth * 0.22f, 1.55f);
+                        lightManager.setIntensity(fillLightInstance,
+                                520.0f + 110.0f * (0.5f + 0.5f * (float) Math.sin(elapsed * 1.35f)));
                     }
                     viewer.render(frameTimeNanos);
                 } catch (Throwable failure) { Log.e("HomeStats3D", "Filament frame failed", failure); frameLoopActive = false; return; }
@@ -145,6 +158,8 @@ public class MainActivity extends Activity {
                         .falloff(5.5f)
                         .build(engine, fillLight);
                 viewer.getScene().addEntity(fillLight);
+                lightManager = engine.getLightManager();
+                fillLightInstance = lightManager.getInstance(fillLight);
                 viewer.getCamera().setExposure(16.0f, 1.0f / 125.0f, 100.0f);
                 viewer.getScene().setSkybox(null);
                 try (InputStream in = context.getResources().openRawResource(R.raw.home_stats);
