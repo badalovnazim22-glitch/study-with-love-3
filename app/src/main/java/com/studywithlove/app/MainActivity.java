@@ -200,7 +200,7 @@ public class MainActivity extends Activity {
                 int entity = asset.getFirstEntityByName(names[i]);
                 if (entity != 0 && transforms.hasComponent(entity)) {
                     motionEntities[i] = entity;
-                    motionBaseTransforms[i] = transforms.getTransform(transforms.getInstance(entity), null);
+                    motionBaseTransforms[i] = transforms.getTransform(transforms.getInstance(entity), new float[16]);
                 }
             }
         }
