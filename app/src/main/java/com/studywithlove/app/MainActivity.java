@@ -2624,9 +2624,9 @@ public class MainActivity extends Activity {
     private void showPomodoro() {
         currentScreen="pomodoro";
         base("Таймер","");
-        int bg=isDarkAppearance()?0xFF25212B:0xFFFFFFFF;
-        int track=isDarkAppearance()?0xFF49404D:PALE;
-        int fg=isDarkAppearance()?0xFFF8F1F6:0xFF342A36;
+        int bg=themeSurfaceColor(0xFFFFFFFF);
+        int track=themeSurfaceColor(0xFFFCEEF2);
+        int fg=DARK;
         int muted=MUTED;
         if(timerRemainingMs<=0)timerRemainingMs=(timerIsBreak?selectedBreakMinutes:selectedStudyMinutes)*60000L;
         int diameter=Math.min(dp(342),Math.max(dp(270),getResources().getDisplayMetrics().widthPixels-dp(44)));
@@ -3924,7 +3924,7 @@ public class MainActivity extends Activity {
         ProgressBar bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         bar.setMax(100);
         bar.setProgress(Math.max(0, Math.min(100, percent)));
-        GradientDrawable track=new GradientDrawable();track.setColor(isDarkAppearance()?0xFF514650:0xFFFFE6ED);track.setCornerRadius(dp(5));
+        GradientDrawable track=new GradientDrawable();track.setColor(themeSurfaceColor(0xFFFFE6ED));track.setCornerRadius(dp(5));
         GradientDrawable fill=new GradientDrawable();fill.setColor(PINK);fill.setCornerRadius(dp(5));
         android.graphics.drawable.ClipDrawable clipped=new android.graphics.drawable.ClipDrawable(fill,Gravity.LEFT,android.graphics.drawable.ClipDrawable.HORIZONTAL);
         bar.setProgressDrawable(new android.graphics.drawable.LayerDrawable(new android.graphics.drawable.Drawable[]{track,clipped}){{setId(0,android.R.id.background);setId(1,android.R.id.progress);}});
