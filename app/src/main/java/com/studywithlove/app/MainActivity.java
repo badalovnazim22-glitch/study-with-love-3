@@ -2069,7 +2069,7 @@ public class MainActivity extends Activity {
         String[] names={"Лёгкая","Средняя","Тяжёлая"};String[] details={"Простые примеры и таблица умножения 2–5","Умножение и деление, числа до 100","Сложные примеры и большие числа"};String[] icons={"🌱","⚡","🔥"};
         for(int i=0;i<3;i++){
             final int d=i;LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.HORIZONTAL);item.setGravity(Gravity.CENTER_VERTICAL);item.setPadding(dp(14),dp(12),dp(13),dp(12));
-            item.setBackground(shape(blendColors(PALE,BG,0.16f),20,blendColors(PINK,BG,0.62f)));
+            item.setBackground(shape(blendColors(PALE,BG,0.16f),20,0));
             TextView emblem=text(icons[i],27,DARK,true);emblem.setGravity(Gravity.CENTER);emblem.setBackground(shape(blendColors(PINK,BG,0.82f),16,0));item.addView(emblem,lp(48,48,0,0,12,0));
             LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);addText(words,names[i],15,DARK,true);addText(words,details[i],11,MUTED,false);addText(words,quizTimed?(i==0?"15 секунд на вопрос":i==1?"10 секунд на вопрос":"6 секунд на вопрос"):"Без ограничения времени",10,PINK,true);
             item.addView(words,new LinearLayout.LayoutParams(0,-2,1f));TextView arrow=text("›",25,PINK,true);item.addView(arrow);item.setOnClickListener(v->{quizDifficulty=d;startMathQuiz();});root.addView(item,lp(-1,-2,0,0,0,9));
