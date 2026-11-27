@@ -4009,7 +4009,7 @@ public class MainActivity extends Activity {
         LinearLayout dailyCard=new LinearLayout(this);
         dailyCard.setOrientation(LinearLayout.VERTICAL);
         dailyCard.setPadding(dp(17),dp(12),dp(17),dp(12));
-        dailyCard.setBackground(shape(surface,24,separator));
+        dailyCard.setBackground(shape(themeSurfaceColor(surface),24,blendColors(PALE,BG,0.22f)));
         dailyCard.setElevation(dp(2));
 
         TextView enabled=text("Напоминания об учёбе",16,ink,true);
@@ -4018,12 +4018,15 @@ public class MainActivity extends Activity {
         dailySwitch.setShowText(false);
         dailySwitch.setChecked(prefs.getBoolean("notifications_enabled",true));
         if(Build.VERSION.SDK_INT>=21){
+            int offThumb=blendColors(DARK,BG,0.22f);
+            int offTrack=blendColors(DARK,BG,0.68f);
+            int onTrack=blendColors(accent,BG,0.48f);
             dailySwitch.setThumbTintList(new android.content.res.ColorStateList(
                 new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},
-                new int[]{accent,0xFFE3E3E8}));
+                new int[]{accent,offThumb}));
             dailySwitch.setTrackTintList(new android.content.res.ColorStateList(
                 new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},
-                new int[]{0x66777777,0x33777777}));
+                new int[]{(onTrack&0x00FFFFFF)|0x99000000,(offTrack&0x00FFFFFF)|0x55000000}));
         }
         LinearLayout firstRow=new LinearLayout(this);
         firstRow.setGravity(Gravity.CENTER_VERTICAL);
@@ -4104,7 +4107,7 @@ public class MainActivity extends Activity {
                 boolean active=p==0?selected.size()==7:p==1?selected.equals(new TreeSet<>(Arrays.asList("2","3","4","5","6"))):selected.equals(new TreeSet<>(Arrays.asList("1","7")));
                 TextView chip=presetViews.get(p);
                 chip.setTextColor(active?0xFFFFFFFF:accent);
-                chip.setBackground(shape(active?accent:BG,14,active?accent:separator));
+                chip.setBackground(shape(active?accent:themeSurfaceColor(PALE),14,active?accent:blendColors(PALE,BG,0.22f)));
             }
         };
         for(int p=0;p<3;p++){
@@ -4141,7 +4144,7 @@ public class MainActivity extends Activity {
                 boolean on=selected.contains(String.valueOf(dayIds[i]));
                 TextView b=dayViews.get(i);
                 b.setTextColor(on?0xFFFFFFFF:accent);
-                b.setBackground(shape(on?accent:BG,40,on?accent:separator));
+                b.setBackground(shape(on?accent:themeSurfaceColor(PALE),40,on?accent:blendColors(PALE,BG,0.22f)));
             }
         };
         refreshDaysRef[0]=refreshDays;
