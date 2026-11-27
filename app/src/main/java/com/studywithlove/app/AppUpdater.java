@@ -107,6 +107,10 @@ public final class AppUpdater {
         else if("sky".equals(t)){accent=0xFF5D91B5;surface=0xFFF1F8FC;soft=0xFFE1EFF8;ink=0xFF304656;muted=0xFF5E788A;border=0xFFD5E6F0;}
         else if("peach".equals(t)){accent=0xFFD88968;surface=0xFFFFF5EF;soft=0xFFFBE5D9;ink=0xFF513D34;muted=0xFF856C60;border=0xFFF0D8CA;}
         else if("night".equals(t)){accent=0xFFE39AB5;surface=0xFF25212B;soft=0xFF302735;ink=0xFFF4EAF0;muted=0xFFC8BDC8;border=0xFF403541;}
+        else if("luxury".equals(t)){accent=0xFFD6B36A;surface=0xFF30251F;soft=0xFF3A3028;ink=0xFFF3E7D0;muted=0xFFC5B598;border=0xFF78613D;}
+        else if("red".equals(t)){accent=0xFFB32635;surface=0xFFFFF5F4;soft=0xFFF8E2E3;ink=0xFF4B2026;muted=0xFF81595E;border=0xFFEED1D4;}
+        else if("lv".equals(t)){accent=0xFF76502F;surface=0xFFF4E8D5;soft=0xFFE7D2B3;ink=0xFF3B281C;muted=0xFF76604A;border=0xFFDCC8A8;}
+        else if("custom".equals(t)){String bg=p.getString("custom_theme_background","light");if("black".equals(bg)){surface=0xFF101114;soft=0xFF202226;ink=0xFFF2F2F4;muted=0xFFAAAAB2;border=0xFF383A40;}else if("dark".equals(bg)){surface=0xFF292B30;soft=0xFF383B42;ink=0xFFF3F4F6;muted=0xFFB8BBC3;border=0xFF484B53;}else{surface=0xFFF7F8FA;soft=0xFFE9EDF2;ink=0xFF303844;muted=0xFF65717F;border=0xFFDCE1E8;}}
         return new int[]{accent,surface,soft,ink,muted,border};
     }
     private AppUpdater() {}
