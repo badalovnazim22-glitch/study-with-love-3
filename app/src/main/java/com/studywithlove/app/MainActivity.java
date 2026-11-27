@@ -1789,7 +1789,7 @@ public class MainActivity extends Activity {
         String[] details={"Расти вместе с успехами","Настройся на учёбу","Планируй свой день","Отмечай свои победы","Учитесь вместе","Проверь свои знания"};
         String[] artNames={"home_feature_flower","home_feature_atmosphere","home_feature_planner","home_feature_achievements","home_feature_companion","home_feature_quiz"};
         int[] kinds={0,1,2,3,4,5};
-        Runnable[] actions={this::showFlower,this::showAtmosphere,this::showPlanner,this::showAchievements,this::showStudyBuddy,this::showEnglishQuiz};
+        Runnable[] actions={this::showFlower,this::showAtmosphere,this::showPlanner,this::showAchievements,this::showStudyBuddy,this::showQuizHub};
         LinearLayout grid=new LinearLayout(this);grid.setOrientation(LinearLayout.VERTICAL);
         grid.setClipChildren(false);grid.setClipToPadding(false);
         for(int rowIndex=0;rowIndex<3;rowIndex++){
