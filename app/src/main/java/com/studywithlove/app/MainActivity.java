@@ -905,15 +905,25 @@ public class MainActivity extends Activity {
         toggle.setShowText(false);
         toggle.setChecked(prefs.getBoolean(key,defaultValue));
         if(Build.VERSION.SDK_INT>=21){
+            int inactiveThumb=blendColors(DARK,BG,0.24f);
+            int inactiveTrack=blendColors(DARK,BG,0.70f);
+            int activeTrack=blendColors(PINK,BG,0.48f);
             toggle.setThumbTintList(new android.content.res.ColorStateList(
                 new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},
-                new int[]{PINK,0xFFE3E3E8}));
+                new int[]{PINK,inactiveThumb}));
             toggle.setTrackTintList(new android.content.res.ColorStateList(
                 new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},
-                new int[]{0x66C97891,0x33777777}));
+                new int[]{(activeTrack&0x00FFFFFF)|0x99000000,(inactiveTrack&0x00FFFFFF)|0x55000000}));
         }
+        if(Build.VERSION.SDK_INT>=21){
+            android.util.TypedValue ripple=new android.util.TypedValue();
+            if(getTheme().resolveAttribute(android.R.attr.selectableItemBackground,ripple,true))
+                row.setBackgroundResource(ripple.resourceId);
+        }
+        row.setClickable(true);
+        row.setFocusable(true);
         row.addView(toggle,lp(58,42,dp(8),0,0,0));
-        host.addView(row,lp(-1,48,0,0,0,0));
+        host.addView(row,lp(-1,50,0,0,0,0));
         toggle.setOnCheckedChangeListener((button,checked)->{
             prefs.edit().putBoolean(key,checked).apply();
             if(afterChange!=null)afterChange.run();
