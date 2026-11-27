@@ -1733,8 +1733,6 @@ public class MainActivity extends Activity {
         FrameLayout statsFrame = new FrameLayout(this);
         HomeStats3DView stats3DView = new HomeStats3DView(this);
         FrameLayout.LayoutParams modelLp = new FrameLayout.LayoutParams(-1, dp(48), Gravity.TOP);
-        statsFrame.addView(stats3DView, modelLp);
-
         LinearLayout homeStats = new LinearLayout(this);
         homeStats.setOrientation(LinearLayout.HORIZONTAL);
         homeStats.setGravity(Gravity.CENTER_VERTICAL);
@@ -1774,6 +1772,8 @@ public class MainActivity extends Activity {
             homeStats.addView(statCard, statLp);
         }
         statsFrame.addView(homeStats, new FrameLayout.LayoutParams(-1, -1));
+        // TextureView must be above the card backgrounds; its transparent pixels keep labels visible.
+        statsFrame.addView(stats3DView, modelLp);
         root.addView(statsFrame, lp(-1, -2, 0, 0, 0, 6));
         statsFrame.setTag("home_stats");
 
