@@ -1824,8 +1824,7 @@ public class MainActivity extends Activity {
                 words.addView(title,lp(-1,-2,0,0,0,3));
                 TextView subtitle=text(details[index],9,MUTED,false);
                 subtitle.setMaxLines(2);subtitle.setEllipsize(android.text.TextUtils.TruncateAt.END);
-                sub
-                subtitle.setHyphenationFrequency(android.text.Layout.HYPHENATION_FREQUENCY_NONE);
+
                 words.addView(subtitle,lp(-1,-2,0,0,0,0));
                 tile.addView(words,new LinearLayout.LayoutParams(0,-2,1f));
                 tile.setContentDescription(titles[index]+". "+details[index]);
