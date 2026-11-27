@@ -1295,16 +1295,50 @@ public class MainActivity extends Activity {
         String installedVersion="—";
         try { installedVersion=getPackageManager().getPackageInfo(getPackageName(),0).versionName; } catch(Exception ignored) {}
 
-        LinearLayout updateStatus=new LinearLayout(this);updateStatus.setOrientation(LinearLayout.VERTICAL);updateStatus.setPadding(0,dp(8),0,dp(8));updateStatus.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        LinearLayout updateStatus=new LinearLayout(this);updateStatus.setOrientation(LinearLayout.VERTICAL);updateStatus.setPadding(dp(14),dp(13),dp(14),dp(13));updateStatus.setBackground(shape(themeSurfaceColor(PALE),18,0));
         LinearLayout updateTop=new LinearLayout(this);updateTop.setGravity(Gravity.CENTER_VERTICAL);
         TextView updateIcon=text("✓",22,0xFFFFFFFF,true);updateIcon.setGravity(Gravity.CENTER);GradientDrawable updateIconBg=new GradientDrawable();updateIconBg.setColor(PINK);updateIconBg.setShape(GradientDrawable.OVAL);updateIcon.setBackground(updateIconBg);updateTop.addView(updateIcon,lp(42,42,0,0,11,0));
         LinearLayout updateWords=new LinearLayout(this);updateWords.setOrientation(LinearLayout.VERTICAL);TextView updateTitle=text(translate("Обновлений пока нет"),15,DARK,true);updateWords.addView(updateTitle,lp(-1,-2,0,0,0,3));TextView updateSubtitle=text(translate("Установлена последняя версия"),12,MUTED,false);updateWords.addView(updateSubtitle,lp(-1,-2,0,0,0,0));updateTop.addView(updateWords,new LinearLayout.LayoutParams(0,-2,1f));
         TextView currentBadge=text(translate("АКТУАЛЬНО"),9,PINK,true);currentBadge.setGravity(Gravity.CENTER);currentBadge.setPadding(dp(8),dp(5),dp(8),dp(5));currentBadge.setBackground(shape(BG,10,0));updateTop.addView(currentBadge,lp(-2,-2,0,0,0,0));updateStatus.addView(updateTop,lp(-1,-2,0,0,0,9));
         View updateDivider=new View(this);updateDivider.setBackgroundColor(blendColors(PINK,BG,isDarkAppearance()?0.38f:0.72f));updateStatus.addView(updateDivider,lp(-1,1,0,0,0,7));
         TextView versionLabel=text(translate("Версия · ")+installedVersion,11,MUTED,false);updateStatus.addView(versionLabel,lp(-1,-2,0,0,0,0));
-        updates.addView(updateStatus,lp(-1,-2,0,7,0,5));
+        updates.addView(updateStatus,lp(-1,-2,0,7,0,7));
 
-        Button checkUpdates=button("Проверить обновления",false);
+        LinearLayout downloadStatus=new LinearLayout(this);
+        downloadStatus.setOrientation(LinearLayout.VERTICAL);
+        downloadStatus.setPadding(dp(14),dp(12),dp(14),dp(12));
+        downloadStatus.setBackground(shape(themeSurfaceColor(PALE),18,0));
+        LinearLayout downloadTop=new LinearLayout(this);
+        downloadTop.setGravity(Gravity.CENTER_VERTICAL);
+        TextView downloadIcon=text("↓",22,0xFFFFFFFF,true);
+        downloadIcon.setGravity(Gravity.CENTER);
+        GradientDrawable downloadIconBg=new GradientDrawable();
+        downloadIconBg.setColor(isDarkAppearance()?0xFF8D80B8:0xFF8AAED0);
+        downloadIconBg.setShape(GradientDrawable.OVAL);
+        downloadIcon.setBackground(downloadIconBg);
+        downloadTop.addView(downloadIcon,lp(42,42,0,0,11,0));
+        LinearLayout downloadWords=new LinearLayout(this);
+        downloadWords.setOrientation(LinearLayout.VERTICAL);
+        TextView downloadTitle=text(translate("Загрузка обновления"),15,DARK,true);
+        downloadWords.addView(downloadTitle,lp(-1,-2,0,0,0,3));
+        TextView downloadSubtitle=text(translate("Здесь будет отображаться ход загрузки"),12,MUTED,false);
+        downloadWords.addView(downloadSubtitle,lp(-1,-2,0,0,0,0));
+        downloadTop.addView(downloadWords,new LinearLayout.LayoutParams(0,-2,1f));
+        TextView downloadBadge=text(translate("ОЖИДАНИЕ"),9,MUTED,true);
+        downloadBadge.setGravity(Gravity.CENTER);
+        downloadBadge.setPadding(dp(8),dp(5),dp(8),dp(5));
+        downloadBadge.setBackground(shape(BG,10,0));
+        downloadTop.addView(downloadBadge,lp(-2,-2,0,0,0,0));
+        downloadStatus.addView(downloadTop,lp(-1,-2,0,0,0,0));
+        android.widget.ProgressBar downloadProgress=new android.widget.ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
+        downloadProgress.setMax(100);
+        downloadProgress.setProgress(0);
+        downloadProgress.setProgressTintList(android.content.res.ColorStateList.valueOf(isDarkAppearance()?0xFFB9A5E8:0xFF8AAED0));
+        downloadProgress.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(blendColors(PINK,BG,0.82f)));
+        downloadStatus.addView(downloadProgress,lp(-1,4,0,dp(10),0,0));
+        updates.addView(downloadStatus,lp(-1,-2,0,0,0,5));
+
+        Button checkUpdates=button("Проверить обновление",false);
         checkUpdates.setBackgroundColor(android.graphics.Color.TRANSPARENT);
         if(Build.VERSION.SDK_INT>=21)checkUpdates.setBackgroundTintList(null);
         checkUpdates.setTextColor(isDarkAppearance()?android.graphics.Color.WHITE:android.graphics.Color.BLACK);
@@ -1318,8 +1352,8 @@ public class MainActivity extends Activity {
         updateShimmer.setShimmer(new Shimmer.ColorHighlightBuilder().setBaseColor(0x55FFFFFF).setHighlightColor(0xE6FFFFFF).setDuration(1250).setDirection(Shimmer.Direction.LEFT_TO_RIGHT).build());
         updateShimmer.setClipToPadding(false);
         updateShimmer.addView(checkUpdates,new FrameLayout.LayoutParams(-1,dp(44)));
-        checkUpdates.setOnClickListener(v->{updateShimmer.startShimmer();checkUpdates.setText(translate("Проверяем наличие обновлений…"));checkUpdates.setEnabled(false);AppUpdater.checkAndOffer(this);new Handler(Looper.getMainLooper()).postDelayed(()->{if(!isFinishing()&&!isDestroyed()){updateShimmer.stopShimmer();checkUpdates.setText(translate("Проверить обновления"));checkUpdates.setEnabled(true);}},2400);});
-        updates.addView(updateShimmer,lp(-1,48,0,3,0,0));
+        checkUpdates.setOnClickListener(v->{updateShimmer.startShimmer();checkUpdates.setText(translate("Проверяем наличие обновлений…"));checkUpdates.setEnabled(false);AppUpdater.checkAndOffer(this);new Handler(Looper.getMainLooper()).postDelayed(()->{if(!isFinishing()&&!isDestroyed()){updateShimmer.stopShimmer();checkUpdates.setText(translate("Проверить обновление"));checkUpdates.setEnabled(true);}},2400);});
+        updates.addView(updateShimmer,lp(-1,48,0,2,0,0));
         updates.setVisibility(sectionPage && "about".equals(activeSection) ? View.VISIBLE : View.GONE);
         updates.setAlpha(1f);
         updates.setEnabled(true);
