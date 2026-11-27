@@ -1787,7 +1787,7 @@ public class MainActivity extends Activity {
     private void addHomeFeatureGrid(LinearLayout parent){
         String[] titles={"Мой цветочек","Атмосфера","Планировщик","Достижения","Напарник","Викторина"};
         String[] details={"Расти вместе с успехами","Настройся на учёбу","Планируй свой день","Отмечай свои победы","Учитесь вместе","Проверь свои знания"};
-        String[] artNames={"home_feature_flower","home_feature_atmosphere","home_feature_planner","home_feature_achievements","home_feature_companion","home_feature_quiz"};
+        int[] artIds={R.drawable.home_feature_flower,R.drawable.home_feature_atmosphere,R.drawable.home_feature_planner,R.drawable.home_feature_achievements,R.drawable.home_feature_companion,R.drawable.home_feature_quiz};
         int[] kinds={0,1,2,3,4,5};
         Runnable[] actions={this::showFlower,this::showAtmosphere,this::showPlanner,this::showAchievements,this::showStudyBuddy,this::showQuizHub};
         LinearLayout grid=new LinearLayout(this);grid.setOrientation(LinearLayout.VERTICAL);
@@ -1802,18 +1802,12 @@ public class MainActivity extends Activity {
                 int accent=homeFeatureAccent();
                 tile.setBackground(homePanel(accent,20,isDarkAppearance()?0.18f:0.085f));
                 tile.setElevation(0f);
-                int artId=getResources().getIdentifier(artNames[index],"drawable",getPackageName());
-                if(artId!=0){
-                    ImageView art=new ImageView(this);
-                    art.setImageResource(artId);
-                    art.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                    art.setAdjustViewBounds(true);
-                    art.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-                    tile.addView(art,lp(64,76,0,0,5,0));
-                }else{
-                    HomeFeatureArtView art=new HomeFeatureArtView(this,kinds[index],accent);
-                    tile.addView(art,lp(64,76,0,0,5,0));
-                }
+                ImageView art=new ImageView(this);
+                art.setImageResource(artIds[index]);
+                art.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                art.setAdjustViewBounds(true);
+                art.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+                tile.addView(art,lp(64,76,0,0,5,0));
                 LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);
                 words.setGravity(Gravity.CENTER_VERTICAL);
                 TextView title=text(titles[index],12,DARK,true);
