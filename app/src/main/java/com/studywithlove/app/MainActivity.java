@@ -971,12 +971,12 @@ public class MainActivity extends Activity {
             Button item = button(section[1] + "   " + section[2] + "   ›", false);
             item.setGravity(Gravity.CENTER_VERTICAL);
             item.setTextColor(DARK);
-            item.setTextSize(18);
+            item.setTextSize(16);
             item.setAllCaps(false);
-            item.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+            item.setBackground(shape(themeSurfaceColor(PALE),14,blendColors(PALE,BG,0.22f)));
             item.setElevation(0f);
-            item.setPadding(dp(2),0,dp(2),0);
-            sectionMenu.addView(item, lp(-1, 48, 0, 0, 0, 0));
+            item.setPadding(dp(12),0,dp(10),0);
+            sectionMenu.addView(item, lp(-1, 52, 0, 0, 0, 7));
             item.setOnClickListener(v -> { currentScreen = "settings_" + section[0]; showSettings(); });
         }
         if (!sectionPage) root.addView(sectionMenu, lp(-1, -2, 0, 0, 0, 12));
