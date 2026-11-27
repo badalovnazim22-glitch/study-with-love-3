@@ -979,7 +979,9 @@ public class MainActivity extends Activity {
             Button item = button(section[1] + "   " + section[2] + "   ›", false);
             item.setGravity(Gravity.CENTER_VERTICAL);
             item.setTextColor(DARK);
-            item.setTextSize(16);
+            item.setTextSize(18);
+            item.setTypeface(Typeface.create(selectedFontFamily(), Typeface.BOLD));
+            item.setLetterSpacing(0.005f);
             item.setAllCaps(false);
             item.setBackground(shape(themeSurfaceColor(PALE),14,blendColors(PALE,BG,0.22f)));
             item.setElevation(0f);
