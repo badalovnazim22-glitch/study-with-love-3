@@ -1818,13 +1818,13 @@ public class MainActivity extends Activity {
                 LinearLayout words=new LinearLayout(this);words.setOrientation(LinearLayout.VERTICAL);
                 words.setGravity(Gravity.CENTER_VERTICAL);
                 TextView title=text(titles[index],12,DARK,true);
-                title.setMaxLines(2);title.setBreakStrategy(android.text.Layout.BREAK_STRATEGY_HIGH_QUALITY);
+                title.setMaxLines(2);
                 title.setHyphenationFrequency(android.text.Layout.HYPHENATION_FREQUENCY_NONE);
                 title.setLineSpacing(0,0.98f);
                 words.addView(title,lp(-1,-2,0,0,0,3));
                 TextView subtitle=text(details[index],9,MUTED,false);
                 subtitle.setMaxLines(2);subtitle.setEllipsize(android.text.TextUtils.TruncateAt.END);
-                subtitle.setBreakStrategy(android.text.Layout.BREAK_STRATEGY_HIGH_QUALITY);
+                sub
                 subtitle.setHyphenationFrequency(android.text.Layout.HYPHENATION_FREQUENCY_NONE);
                 words.addView(subtitle,lp(-1,-2,0,0,0,0));
                 tile.addView(words,new LinearLayout.LayoutParams(0,-2,1f));
