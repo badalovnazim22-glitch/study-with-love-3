@@ -1337,6 +1337,25 @@ public class MainActivity extends Activity {
         downloadProgress.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(blendColors(PINK,BG,0.82f)));
         downloadStatus.addView(downloadProgress,lp(-1,4,0,dp(10),0,0));
         updates.addView(downloadStatus,lp(-1,-2,0,0,0,5));
+        AppUpdater.setDownloadObserver(new AppUpdater.DownloadObserver() {
+            @Override public void onProgress(int value, boolean known) {
+                downloadProgress.setIndeterminate(!known);
+                if(known) downloadProgress.setProgress(value);
+                downloadSubtitle.setText(known ? translate("Скачиваем обновление…") : translate("Подготовка загрузки…"));
+                downloadBadge.setText(translate("ЗАГРУЗКА"));
+            }
+            @Override public void onFinished(boolean success) {
+                downloadProgress.setIndeterminate(false);
+                if(success) {
+                    downloadProgress.setProgress(100);
+                    downloadSubtitle.setText(translate("Загрузка завершена. Подготовка установки…"));
+                    downloadBadge.setText(translate("ГОТОВО"));
+                } else {
+                    downloadSubtitle.setText(translate("Не удалось загрузить обновление. Попробуй ещё раз."));
+                    downloadBadge.setText(translate("ОШИБКА"));
+                }
+            }
+        });
 
         Button checkUpdates=button("Проверить обновление",false);
         checkUpdates.setBackgroundColor(android.graphics.Color.TRANSPARENT);
