@@ -21,8 +21,8 @@ android {
         applicationId 'com.studywithlove.app'
         minSdk 23
         targetSdk 35
-        versionCode 208
-        versionName '5.99'
+        versionCode 209
+        versionName '5.100'
         // UI update: compact atmosphere volume and timer controls
         // Compile fix: updater progress label
     }
