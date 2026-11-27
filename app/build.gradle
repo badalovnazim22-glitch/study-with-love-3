@@ -21,8 +21,8 @@ android {
         applicationId 'com.studywithlove.app'
         minSdk 23
         targetSdk 35
-        versionCode 184
-        versionName '5.75'
+        versionCode 185
+        versionName '5.76'
         // UI update: compact atmosphere volume and timer controls
         // Compile fix: updater progress label
     }
@@ -51,5 +51,16 @@ dependencies {
     implementation platform('com.google.firebase:firebase-bom:34.9.0')
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'androidx.core:core:1.15.0'
+
+    // Motion and visual effects
+    implementation 'com.airbnb.android:lottie:6.7.1'
+    implementation 'app.rive:rive-android:11.16.3'
+    implementation 'androidx.dynamicanimation:dynamicanimation:1.1.0'
+    implementation 'com.facebook.shimmer:shimmer:0.5.0'
+
+    // Material components and image loading
+    implementation 'com.google.android.material:material:1.14.0'
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
 }
