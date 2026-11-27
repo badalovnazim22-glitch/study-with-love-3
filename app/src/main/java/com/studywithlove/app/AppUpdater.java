@@ -96,6 +96,19 @@ public final class AppUpdater {
         },"app-update-notification-check").start();
     }
 
+    private static int[] palette(Activity a){
+        android.content.SharedPreferences p=a.getSharedPreferences("study_progress",Activity.MODE_PRIVATE);String t=p.getString("app_theme","pink");
+        int accent=p.getInt("app_accent_color",0xFFC97891),surface=0xFFFFF9F7,soft=0xFFFCEEF2,ink=0xFF3F3439,muted=0xFF75666D,border=0xFFF0DCE4;
+        if("lavender".equals(t)){accent=0xFF8070A8;surface=0xFFF8F7FC;soft=0xFFF0EDFA;ink=0xFF292638;muted=0xFF858096;border=0xFFE5E1EF;}
+        else if("mint".equals(t)){accent=0xFF659B86;surface=0xFFF5FAF7;soft=0xFFEAF5EF;ink=0xFF34443D;muted=0xFF60786B;border=0xFFDCEBE2;}
+        else if("white".equals(t)){accent=0xFF65758B;surface=0xFFF7F8FA;soft=0xFFE9EDF2;ink=0xFF303844;muted=0xFF65717F;border=0xFFDCE1E8;}
+        else if("brown".equals(t)){accent=0xFF8B6046;surface=0xFFF7F1EA;soft=0xFFEDE0D2;ink=0xFF49382E;muted=0xFF796657;border=0xFFE6D8C9;}
+        else if("gold".equals(t)){accent=0xFFC49318;surface=0xFFFFF8DF;soft=0xFFF5E2A6;ink=0xFF49340B;muted=0xFF795B1E;border=0xFFE9D79A;}
+        else if("sky".equals(t)){accent=0xFF5D91B5;surface=0xFFF1F8FC;soft=0xFFE1EFF8;ink=0xFF304656;muted=0xFF5E788A;border=0xFFD5E6F0;}
+        else if("peach".equals(t)){accent=0xFFD88968;surface=0xFFFFF5EF;soft=0xFFFBE5D9;ink=0xFF513D34;muted=0xFF856C60;border=0xFFF0D8CA;}
+        else if("night".equals(t)){accent=0xFFE39AB5;surface=0xFF25212B;soft=0xFF302735;ink=0xFFF4EAF0;muted=0xFFC8BDC8;border=0xFF403541;}
+        return new int[]{accent,surface,soft,ink,muted,border};
+    }
     private AppUpdater() {}
 
     public static void checkAndOffer(Activity activity) { check(activity, true); }
@@ -139,18 +152,19 @@ public final class AppUpdater {
     }
 
     private static void showUpdateScreen(Activity activity,String version,boolean manual){
-        int pad=(int)(activity.getResources().getDisplayMetrics().density*20);
+        int pad=(int)(activity.getResources().getDisplayMetrics().density*18);
+        int[] colors=palette(activity);int accent=colors[0],surface=colors[1],soft=colors[2],ink=colors[3],muted=colors[4],border=colors[5];
         android.widget.LinearLayout panel=new android.widget.LinearLayout(activity);
         panel.setOrientation(android.widget.LinearLayout.VERTICAL);panel.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
         panel.setPadding(pad,pad,pad,pad);
-        panel.setBackground(roundRect(0xFFFFF9F7,28,0xFFF0DCE4,activity));
-        android.widget.TextView icon=new android.widget.TextView(activity);icon.setText("✦");icon.setTextSize(34);icon.setTextColor(0xFFC97891);icon.setGravity(android.view.Gravity.CENTER);
-        icon.setBackground(roundRect(0xFFFCEEF2,28,0,activity));panel.addView(icon,new android.widget.LinearLayout.LayoutParams(pad*3,pad*3));
-        android.widget.TextView title=new android.widget.TextView(activity);title.setText("Для тебя есть обновление");title.setTextColor(0xFF3F3439);title.setTextSize(21);title.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);title.setGravity(android.view.Gravity.CENTER);title.setPadding(0,pad,0,pad/3);panel.addView(title,new android.widget.LinearLayout.LayoutParams(-1,-2));
-        android.widget.TextView versionLabel=new android.widget.TextView(activity);versionLabel.setText("STUDY WITH LOVE  ·  ВЕРСИЯ "+version);versionLabel.setTextColor(0xFFC97891);versionLabel.setTextSize(12);versionLabel.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);versionLabel.setGravity(android.view.Gravity.CENTER);panel.addView(versionLabel,new android.widget.LinearLayout.LayoutParams(-1,-2));
-        android.widget.TextView notes=new android.widget.TextView(activity);String note=latestReleaseNotes==null?"":latestReleaseNotes.trim();if(note.isEmpty())note="Новые улучшения, более удобные функции и исправления для комфортной учёбы.";notes.setText(note);notes.setTextColor(0xFF75666D);notes.setTextSize(14);notes.setGravity(android.view.Gravity.CENTER);notes.setPadding(0,pad,0,pad/2);panel.addView(notes,new android.widget.LinearLayout.LayoutParams(-1,-2));
+        panel.setBackground(roundRect(surface,26,border,activity));
+        android.widget.TextView icon=new android.widget.TextView(activity);icon.setText("✦");icon.setTextSize(34);icon.setTextColor(accent);icon.setGravity(android.view.Gravity.CENTER);
+        icon.setBackground(roundRect(soft,26,0,activity));panel.addView(icon,new android.widget.LinearLayout.LayoutParams(pad*3,pad*3));
+        android.widget.TextView title=new android.widget.TextView(activity);title.setText("Для тебя есть обновление");title.setTextColor(ink);title.setTextSize(21);title.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);title.setGravity(android.view.Gravity.CENTER);title.setPadding(0,pad,0,pad/3);panel.addView(title,new android.widget.LinearLayout.LayoutParams(-1,-2));
+        android.widget.TextView versionLabel=new android.widget.TextView(activity);versionLabel.setText("STUDY WITH LOVE  ·  ВЕРСИЯ "+version);versionLabel.setTextColor(accent);versionLabel.setTextSize(12);versionLabel.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);versionLabel.setGravity(android.view.Gravity.CENTER);panel.addView(versionLabel,new android.widget.LinearLayout.LayoutParams(-1,-2));
+        android.widget.TextView notes=new android.widget.TextView(activity);String note=latestReleaseNotes==null?"":latestReleaseNotes.trim();if(note.isEmpty())note="Новые улучшения, более удобные функции и исправления для комфортной учёбы.";notes.setText(note);notes.setTextColor(muted);notes.setTextSize(14);notes.setGravity(android.view.Gravity.CENTER);notes.setPadding(0,pad,0,pad/2);panel.addView(notes,new android.widget.LinearLayout.LayoutParams(-1,-2));
         android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(activity).setView(panel).setNegativeButton("Позже",null).setPositiveButton("Обновить",null).create();
-        dialog.setOnShowListener(v->{android.widget.Button positive=dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE);positive.setTextColor(0xFFC97891);positive.setOnClickListener(b->{dialog.dismiss();download(activity);});});
+        dialog.setOnShowListener(v->{android.widget.Button positive=dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE);positive.setTextColor(accent);positive.setOnClickListener(b->{dialog.dismiss();download(activity);});});
         dialog.show();
     }
 
@@ -243,16 +257,17 @@ public final class AppUpdater {
 
     private static void download(Activity activity) {
         int pad=(int)(activity.getResources().getDisplayMetrics().density*18);
+        int[] colors=palette(activity);int accent=colors[0],surface=colors[1],soft=colors[2],ink=colors[3],muted=colors[4],border=colors[5];
         android.widget.LinearLayout panel=new android.widget.LinearLayout(activity);panel.setOrientation(android.widget.LinearLayout.VERTICAL);panel.setPadding(pad,pad,pad,pad);
-        panel.setBackground(roundRect(0xFFFFF9F7,26,0xFFF0DCE4,activity));
-        android.widget.TextView icon=new android.widget.TextView(activity);icon.setText("↓");icon.setTextSize(30);icon.setTextColor(0xFFC97891);icon.setGravity(android.view.Gravity.CENTER);icon.setBackground(roundRect(0xFFFCEEF2,24,0,activity));
+        panel.setBackground(roundRect(surface,26,border,activity));
+        android.widget.TextView icon=new android.widget.TextView(activity);icon.setText("↓");icon.setTextSize(30);icon.setTextColor(accent);icon.setGravity(android.view.Gravity.CENTER);icon.setBackground(roundRect(soft,24,0,activity));
         android.widget.LinearLayout.LayoutParams iconLp=new android.widget.LinearLayout.LayoutParams(pad*3,pad*3);iconLp.gravity=android.view.Gravity.CENTER_HORIZONTAL;panel.addView(icon,iconLp);
-        android.widget.TextView title=new android.widget.TextView(activity);title.setText("Загружаем обновление");title.setTextColor(0xFF3F3439);title.setTextSize(19);title.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);title.setGravity(android.view.Gravity.CENTER);title.setPadding(0,pad,0,pad/3);panel.addView(title,new android.widget.LinearLayout.LayoutParams(-1,-2));
-        android.widget.TextView statusText=new android.widget.TextView(activity);statusText.setText("Подготавливаем новую версию Study with Love…");statusText.setTextColor(0xFF75666D);statusText.setTextSize(13);statusText.setGravity(android.view.Gravity.CENTER);panel.addView(statusText,new android.widget.LinearLayout.LayoutParams(-1,-2));
+        android.widget.TextView title=new android.widget.TextView(activity);title.setText("Загружаем обновление");title.setTextColor(ink);title.setTextSize(19);title.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);title.setGravity(android.view.Gravity.CENTER);title.setPadding(0,pad,0,pad/3);panel.addView(title,new android.widget.LinearLayout.LayoutParams(-1,-2));
+        android.widget.TextView statusText=new android.widget.TextView(activity);statusText.setText("Подготавливаем новую версию Study with Love…");statusText.setTextColor(muted);statusText.setTextSize(13);statusText.setGravity(android.view.Gravity.CENTER);panel.addView(statusText,new android.widget.LinearLayout.LayoutParams(-1,-2));
         android.widget.ProgressBar progressBar=new android.widget.ProgressBar(activity,null,android.R.attr.progressBarStyleHorizontal);progressBar.setMax(100);progressBar.setProgress(0);
-        if(Build.VERSION.SDK_INT>=21){progressBar.setProgressTintList(android.content.res.ColorStateList.valueOf(0xFFC97891));progressBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF1DCE4));}
+        if(Build.VERSION.SDK_INT>=21){progressBar.setProgressTintList(android.content.res.ColorStateList.valueOf(accent));progressBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(soft));}
         android.widget.LinearLayout.LayoutParams barLp=new android.widget.LinearLayout.LayoutParams(-1,(int)(8*activity.getResources().getDisplayMetrics().density));barLp.topMargin=pad;barLp.bottomMargin=pad/2;panel.addView(progressBar,barLp);
-        android.widget.TextView percent=new android.widget.TextView(activity);percent.setText("0%");percent.setTextColor(0xFFC97891);percent.setTextSize(13);percent.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);percent.setGravity(android.view.Gravity.CENTER);panel.addView(percent,new android.widget.LinearLayout.LayoutParams(-1,-2));
+        android.widget.TextView percent=new android.widget.TextView(activity);percent.setText("0%");percent.setTextColor(accent);percent.setTextSize(13);percent.setTypeface(android.graphics.Typeface.DEFAULT,android.graphics.Typeface.BOLD);percent.setGravity(android.view.Gravity.CENTER);panel.addView(percent,new android.widget.LinearLayout.LayoutParams(-1,-2));
         AlertDialog progress=new AlertDialog.Builder(activity).setView(panel).setCancelable(false).create();progress.show();
 
         new Thread(() -> {
