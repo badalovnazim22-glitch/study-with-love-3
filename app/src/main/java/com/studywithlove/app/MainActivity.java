@@ -686,7 +686,7 @@ public class MainActivity extends Activity {
             if(action==android.view.MotionEvent.ACTION_DOWN){
                 scroll.animate().cancel();swipePreview.animate().cancel();settling[0]=false;
                 gesture[0]=event.getX();gesture[1]=event.getY();gesture[2]=0f;gesture[3]=0f;
-                gestureTime[0]=android.view.MotionEvent.eventTimeToMillis(event.getEventTime());
+                gestureTime[0]=event.getEventTime();
                 horizontalGesture[0]=false;gestureDirection[0]=0;
                 return false;
             }
