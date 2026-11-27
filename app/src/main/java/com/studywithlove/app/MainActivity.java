@@ -1398,7 +1398,7 @@ public class MainActivity extends Activity {
 
         // Compact motivational progress card: consistent small vertical rhythm.
         LinearLayout continueCard = card();
-        continueCard.setPadding(dp(20), dp(19), dp(20), dp(19));
+        continueCard.setPadding(dp(18), dp(17), dp(18), dp(17));
         TextView progressCaption=text("ТВОЙ ПРОГРЕСС",13,PINK,true);
         continueCard.addView(progressCaption,lp(-1,-2,0,0,0,2));
         TextView encouragement=text("Ты справляешься.\nПродолжай в своём темпе.",23,DARK,true);
@@ -1438,7 +1438,7 @@ public class MainActivity extends Activity {
             statCard.setOrientation(LinearLayout.VERTICAL);
             statCard.setGravity(Gravity.CENTER);
             statCard.setPadding(dp(4), dp(8), dp(4), dp(8));
-            statCard.setBackground(shape(PALE, 16, 0));
+            statCard.setBackground(shape(themeSurfaceColor(PALE), 16, blendColors(PINK, BG, isDarkAppearance() ? 0.48f : 0.72f)));
             statCard.setForeground(null);
             statCard.setElevation(0f);
             TextView statValue = text(String.valueOf(statValues[statIndex]), 22, DARK, true);
@@ -1501,7 +1501,7 @@ public class MainActivity extends Activity {
             TextView dayName = text(weekLabels[dayIndex], 10, isToday ? PINK : MUTED, true);
             dayName.setGravity(Gravity.CENTER);
             dayCell.addView(dayName, lp(-1, 16, 0, 0, 0, 2));
-            if (isToday) dayCell.setBackground(shape(PALE, 12, PINK));
+            if (isToday) dayCell.setBackground(shape(themeSurfaceColor(PALE), 12, blendColors(PINK, BG, isDarkAppearance() ? 0.38f : 0.58f)));
             TextView dayMark = text(dayMinutes > 0 ? "♥" : (isToday ? "●" : "·"),
                     dayMinutes > 0 ? 18 : 17, (dayMinutes > 0 || isToday) ? PINK : MUTED, true);
             dayMark.setGravity(Gravity.CENTER);
@@ -1520,7 +1520,7 @@ public class MainActivity extends Activity {
         aiCard.setOrientation(LinearLayout.HORIZONTAL);
         aiCard.setGravity(Gravity.CENTER_VERTICAL);
         aiCard.setPadding(dp(14), dp(10), dp(14), dp(10));
-        aiCard.setBackground(shape(0xFFF3F0FF, 24, 0));
+        aiCard.setBackground(shape(themeSurfaceColor(0xFFF3F0FF), 20, blendColors(PINK, BG, isDarkAppearance() ? 0.42f : 0.68f)));
         TextView aiIcon = text("✧", 28, PINK, true);
         aiIcon.setGravity(Gravity.CENTER);
         aiCard.addView(aiIcon, lp(42, 44, 0, 0, 10, 0));
@@ -1555,7 +1555,7 @@ public class MainActivity extends Activity {
         reminder.setOrientation(LinearLayout.HORIZONTAL);
         reminder.setGravity(Gravity.CENTER_VERTICAL);
         reminder.setPadding(dp(8), dp(2), dp(7), dp(2));
-        reminder.setBackground(shape(PALE, 15, 0));
+        reminder.setBackground(shape(themeSurfaceColor(PALE), 15, blendColors(PINK, BG, isDarkAppearance() ? 0.55f : 0.78f)));
         LinearLayout reminderWords = new LinearLayout(this);
         reminderWords.setOrientation(LinearLayout.VERTICAL);
         addText(reminderWords, "НАПОМИНАНИЯ", 8, PINK, true);
