@@ -2555,8 +2555,12 @@ public class MainActivity extends Activity {
                 int day = slot - offset + 1;
                 String dateKey = String.format(Locale.US, "%04d-%02d-%02d", yearNumber, monthNumber + 1, day);
                 boolean studied = studiedDays.contains(dateKey), visited = visitedDays.contains(dateKey), isToday = progressMonthOffset == 0 && day == todayDay;
-                cell.setText(String.valueOf(day)); int minutes=prefs.getInt("focus_minutes_"+dateKey,0);int heatColor=minutes>=60?0xFFFFC4D5:minutes>=30?0xFFFFD8E3:minutes>=15?0xFFFFE8EE:studied?0xFFFFF2F5:(isToday?PALE:(visited?0xFFF1F0F2:0xFFFFFFFF));heatColor=themeSurfaceColor(heatColor);cell.setTextColor(studied?PINK:DARK);
-                cell.setBackground(shape(heatColor,9,isToday?PINK:(studied?0xFFFFC6D7:0x00FFFFFF)));
+                cell.setText(String.valueOf(day));
+                int minutes=prefs.getInt("focus_minutes_"+dateKey,0);
+                int surface=themeSurfaceColor(0xFFFFFFFF);
+                int heatColor=minutes>=60?blendColors(surface,PINK,0.48f):minutes>=30?blendColors(surface,PINK,0.34f):minutes>=15?blendColors(surface,PINK,0.22f):studied?blendColors(surface,PINK,0.12f):(isToday?blendColors(surface,PINK,0.16f):(visited?themeSurfaceColor(0xFFF1F0F2):surface));
+                cell.setTextColor(studied?PINK:DARK);
+                cell.setBackground(shape(heatColor,9,isToday?PINK:(studied?blendColors(PINK,BG,0.35f):0x00FFFFFF)));
                 cell.setElevation(dp(1)); if (isToday) cell.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             }
             LinearLayout.LayoutParams dayCell=new LinearLayout.LayoutParams(0,dp(28),1f); dayCell.gravity=Gravity.CENTER; dayCell.setMargins(dp(1),0,dp(1),0); week.addView(cell,dayCell);
