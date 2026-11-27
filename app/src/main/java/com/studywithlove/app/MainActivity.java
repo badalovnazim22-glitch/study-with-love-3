@@ -1678,7 +1678,8 @@ public class MainActivity extends Activity {
         addText(root,"РЕЖИМ ИГРЫ",12,PINK,true);
         FrameLayout track=new FrameLayout(this);track.setBackground(shape(PALE,18,0));View mark=new View(this);mark.setBackground(shape(PINK,15,0));FrameLayout.LayoutParams mp=new FrameLayout.LayoutParams(0,dp(36),Gravity.START|Gravity.CENTER_VERTICAL);mp.leftMargin=dp(3);track.addView(mark,mp);
         LinearLayout labels=new LinearLayout(this);labels.setOrientation(LinearLayout.HORIZONTAL);TextView timed=text("⏱ С таймером",13,quizTimed?0xFFFFFFFF:DARK,true);TextView free=text("☁ Без времени",13,quizTimed?DARK:0xFFFFFFFF,true);timed.setGravity(Gravity.CENTER);free.setGravity(Gravity.CENTER);labels.addView(timed,new LinearLayout.LayoutParams(0,dp(42),1f));labels.addView(free,new LinearLayout.LayoutParams(0,dp(42),1f));track.addView(labels,new FrameLayout.LayoutParams(-1,-1));
-        Runnable sync=()->{mark.animate().translationX(quizTimed?0:Math.max(0,(track.getWidth()-dp(6))/2+dp(3))).setDuration(180).start();timed.setTextColor(quizTimed?0xFFFFFFFF:DARK);free.setTextColor(quizTimed?DARK:0xFFFFFFFF);};track.post(()->{FrameLayout.LayoutParams p=(FrameLayout.LayoutParams)mark.getLayoutParams();p.width=Math.max(0,(track.getWidth()-dp(6))/2);mark.setLayoutParams(p);sync.run();});timed.setOnClickListener(v->{quizTimed=true;sync.run();});free.setOnClickListener(v->{quizTimed=false;sync.run();});root.addView(track,lp(-1,42,0,0,0,12));
+        TextView selectedModeHint=text(quizTimed?"🔥 Режим выбран: с таймером · тренируй скорость":"🌿 Режим выбран: без времени · учись спокойно",11,MUTED,true);
+        Runnable sync=()->{mark.animate().translationX(quizTimed?0:Math.max(0,(track.getWidth()-dp(6))/2+dp(3))).setDuration(180).start();timed.setTextColor(quizTimed?0xFFFFFFFF:DARK);free.setTextColor(quizTimed?DARK:0xFFFFFFFF);selectedModeHint.setText(quizTimed?"🔥 Режим выбран: с таймером · тренируй скорость":"🌿 Режим выбран: без времени · учись спокойно");};track.post(()->{FrameLayout.LayoutParams p=(FrameLayout.LayoutParams)mark.getLayoutParams();p.width=Math.max(0,(track.getWidth()-dp(6))/2);mark.setLayoutParams(p);sync.run();});timed.setOnClickListener(v->{quizTimed=true;sync.run();});free.setOnClickListener(v->{quizTimed=false;sync.run();});root.addView(track,lp(-1,42,0,0,0,3));root.addView(selectedModeHint,lp(-1,-2,0,0,0,11));
         addText(root,"ВЫБЕРИ УРОВЕНЬ",12,PINK,true);
         String[] names={"Начальный","Средний","Продвинутый"};String[] hints={"Повседневные слова и простые переводы","Больше слов и полезных выражений","Сложная лексика и точные значения"};String[] icons={"🌱","⚡","🔥"};int[] counts={20,20,20};
         for(int i=0;i<3;i++){
@@ -1744,10 +1745,12 @@ public class MainActivity extends Activity {
         TextView freeMode=text("☁ Без времени",14,quizTimed?DARK:0xFFFFFFFF,true);freeMode.setGravity(Gravity.CENTER);
         modeLabels.addView(timedMode,new LinearLayout.LayoutParams(0,dp(42),1f));modeLabels.addView(freeMode,new LinearLayout.LayoutParams(0,dp(42),1f));
         modeTrack.addView(modeLabels,new FrameLayout.LayoutParams(-1,-1));
-        Runnable updateModeSelection=()->{int target=quizTimed?0:Math.max(0,(modeTrack.getWidth()-dp(6))/2+dp(3));modeIndicator.animate().translationX(target).setDuration(220).start();timedMode.setTextColor(quizTimed?0xFFFFFFFF:DARK);freeMode.setTextColor(quizTimed?DARK:0xFFFFFFFF);};
+        TextView selectedModeHint=text(quizTimed?"🔥 Режим выбран: с таймером · скорость приносит больше азарта":"🌿 Режим выбран: без времени · играй в своём темпе",11,MUTED,true);
+        Runnable updateModeSelection=()->{int target=quizTimed?0:Math.max(0,(modeTrack.getWidth()-dp(6))/2+dp(3));modeIndicator.animate().translationX(target).setDuration(220).start();timedMode.setTextColor(quizTimed?0xFFFFFFFF:DARK);freeMode.setTextColor(quizTimed?DARK:0xFFFFFFFF);selectedModeHint.setText(quizTimed?"🔥 Режим выбран: с таймером · скорость приносит больше азарта":"🌿 Режим выбран: без времени · играй в своём темпе");};
         modeTrack.post(()->{FrameLayout.LayoutParams p=(FrameLayout.LayoutParams)modeIndicator.getLayoutParams();p.width=Math.max(0,(modeTrack.getWidth()-dp(6))/2);modeIndicator.setLayoutParams(p);updateModeSelection.run();});
         timedMode.setOnClickListener(v->{quizTimed=true;updateModeSelection.run();});freeMode.setOnClickListener(v->{quizTimed=false;updateModeSelection.run();});
-        root.addView(modeTrack,lp(-1,42,0,0,0,12));
+        root.addView(modeTrack,lp(-1,42,0,0,0,3));
+        root.addView(selectedModeHint,lp(-1,-2,0,0,0,11));
         addText(root,"ВЫБЕРИ УРОВЕНЬ",12,PINK,true);
         String[] names={"Лёгкая","Средняя","Тяжёлая"};String[] details={"Простые примеры и таблица умножения 2–5","Умножение и деление, числа до 100","Сложные примеры и большие числа"};String[] icons={"🌱","⚡","🔥"};
         for(int i=0;i<3;i++){
