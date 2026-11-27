@@ -1593,36 +1593,86 @@ public class MainActivity extends Activity {
     private String quizModeName() { return quizTimed ? "С таймером" : "Без времени"; }
 
     private void showQuizHub() {
-        stopQuizTimer(); quizActive=false; currentScreen="math_quiz";
-        base("Викторина", "Выбери направление и проверь свои знания");
-        LinearLayout intro=card();intro.setPadding(dp(17),dp(17),dp(17),dp(17));
-        addText(intro,"ВРЕМЯ ПРОВЕРИТЬ СЕБЯ",11,PINK,true);
-        addText(intro,"Учись играя ✨",22,DARK,true);
-        addText(intro,"Выбирай предмет, отвечай на вопросы и открывай новые достижения.",13,MUTED,false);
-        root.addView(intro,lp(-1,-2,0,0,0,14));
-        addText(root,"ВЫБЕРИ ПРЕДМЕТ",12,PINK,true);
-        LinearLayout tiles=new LinearLayout(this);tiles.setOrientation(LinearLayout.HORIZONTAL);
-        LinearLayout math=quizSubjectTile("🧮","Математика","Примеры · уровни",PALE);
-        LinearLayout english=quizSubjectTile("🇬🇧","Английский","Слова · перевод",blendColors(PALE,BG,0.35f));
-        LinearLayout.LayoutParams mlp=new LinearLayout.LayoutParams(0,dp(142),1f);mlp.setMargins(0,0,dp(6),0);tiles.addView(math,mlp);
-        LinearLayout.LayoutParams elp=new LinearLayout.LayoutParams(0,dp(142),1f);elp.setMargins(dp(6),0,0,0);tiles.addView(english,elp);
-        math.setOnClickListener(v->showMathQuiz());english.setOnClickListener(v->showEnglishQuiz());
-        root.addView(tiles,lp(-1,-2,0,0,0,14));
-        LinearLayout stats=card();stats.setPadding(dp(15),dp(13),dp(15),dp(13));
-        addText(stats,"ТВОЙ РЕЗУЛЬТАТ",11,PINK,true);
-        addText(stats,"Математика · "+prefs.getInt("quiz_best_score",0)+" очков",14,DARK,true);
-        addText(stats,"Английский · "+prefs.getInt("english_quiz_best",0)+" очков",14,DARK,true);
+        stopQuizTimer();
+        quizActive=false;
+        currentScreen="math_quiz";
+        base("Викторина","Проверь свои знания и узнай что-то новое!");
+
+        // Soft planner-style hero banner, using active theme colors.
+        LinearLayout hero=card();
+        hero.setOrientation(LinearLayout.HORIZONTAL);
+        hero.setGravity(Gravity.CENTER_VERTICAL);
+        hero.setPadding(dp(16),dp(15),dp(12),dp(15));
+        hero.setBackground(shape(blendColors(PALE,BG,0.22f),24,0));
+        LinearLayout heroText=new LinearLayout(this);
+        heroText.setOrientation(LinearLayout.VERTICAL);
+        addText(heroText,"УЧИСЬ ИГРАЯ ✨",11,PINK,true);
+        addText(heroText,"Выбирай предмет,\nотвечай на вопросы\nи получай баллы!",14,DARK,true);
+        hero.addView(heroText,new LinearLayout.LayoutParams(0,-2,1f));
+        TextView heroArt=text("📚",58,DARK,true);
+        heroArt.setGravity(Gravity.CENTER);
+        hero.addView(heroArt,lp(104,94,0,0,0,0));
+        root.addView(hero,lp(-1,-2,0,0,0,16));
+
+        addText(root,"ПРЕДМЕТЫ",12,PINK,true);
+        LinearLayout tiles=new LinearLayout(this);
+        tiles.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout math=quizSubjectTile("＋\n−\n×\n÷","Математика","Примеры и уровни",blendColors(PALE,BG,0.10f));
+        LinearLayout english=quizSubjectTile("🇬🇧","Английский","Слова и перевод",blendColors(PALE,BG,0.38f));
+        LinearLayout.LayoutParams mlp=new LinearLayout.LayoutParams(0,dp(166),1f);
+        mlp.setMargins(0,0,dp(6),0);tiles.addView(math,mlp);
+        LinearLayout.LayoutParams elp=new LinearLayout.LayoutParams(0,dp(166),1f);
+        elp.setMargins(dp(6),0,0,0);tiles.addView(english,elp);
+        math.setOnClickListener(v->showMathQuiz());
+        english.setOnClickListener(v->{englishQuestionIndex=0;englishQuizScore=0;showEnglishQuiz();});
+        root.addView(tiles,lp(-1,-2,0,0,0,16));
+
+        addText(root,"РЕЗУЛЬТАТЫ",12,PINK,true);
+        LinearLayout stats=card();
+        stats.setOrientation(LinearLayout.HORIZONTAL);
+        stats.setGravity(Gravity.CENTER_VERTICAL);
+        stats.setPadding(dp(14),dp(12),dp(14),dp(12));
+        TextView statsIcon=text("▥",30,PINK,true);
+        statsIcon.setGravity(Gravity.CENTER);
+        stats.addView(statsIcon,lp(48,52,0,0,10,0));
+        LinearLayout statsText=new LinearLayout(this);
+        statsText.setOrientation(LinearLayout.VERTICAL);
+        addText(statsText,"Математика · "+prefs.getInt("quiz_best_score",0)+" очков",13,DARK,true);
+        addText(statsText,"Английский · "+prefs.getInt("english_quiz_best",0)+" очков",13,DARK,true);
+        stats.addView(statsText,new LinearLayout.LayoutParams(0,-2,1f));
+        TextView statsArrow=text("›",27,PINK,true);stats.addView(statsArrow);
         root.addView(stats,lp(-1,-2,0,0,0,10));
-        Button awards=button("🏅  Достижения математики",false);awards.setOnClickListener(v->showMathQuizAchievements());
-        root.addView(awards,lp(-1,46,0,0,0,6));
+
+        LinearLayout awards=card();
+        awards.setOrientation(LinearLayout.HORIZONTAL);
+        awards.setGravity(Gravity.CENTER_VERTICAL);
+        awards.setPadding(dp(15),dp(10),dp(15),dp(10));
+        TextView medal=text("🏅",24,DARK,true);awards.addView(medal,lp(38,40,0,0,8,0));
+        TextView awardsTitle=text("Достижения",14,DARK,true);
+        awards.addView(awardsTitle,new LinearLayout.LayoutParams(0,-2,1f));
+        TextView awardsArrow=text("›",25,PINK,true);awards.addView(awardsArrow);
+        awards.setOnClickListener(v->showMathQuizAchievements());
+        root.addView(awards,lp(-1,58,0,0,0,8));
     }
 
-    private LinearLayout quizSubjectTile(String emoji,String name,String detail,int bgColor) {
-        LinearLayout tile=new LinearLayout(this);tile.setOrientation(LinearLayout.VERTICAL);tile.setGravity(Gravity.CENTER);
-        tile.setPadding(dp(10),dp(12),dp(10),dp(12));tile.setBackground(shape(bgColor,22,0));
-        TextView icon=text(emoji,32,DARK,true);icon.setGravity(Gravity.CENTER);tile.addView(icon,lp(-1,48,0,0,0,5));
-        TextView title=text(name,16,DARK,true);title.setGravity(Gravity.CENTER);tile.addView(title,lp(-1,-2,0,0,0,3));
-        TextView subtitle=text(detail,11,MUTED,false);subtitle.setGravity(Gravity.CENTER);tile.addView(subtitle,lp(-1,-2,0,0,0,0));
+    private LinearLayout quizSubjectTile(String symbol,String name,String detail,int bgColor) {
+        LinearLayout tile=new LinearLayout(this);
+        tile.setOrientation(LinearLayout.VERTICAL);
+        tile.setGravity(Gravity.CENTER);
+        tile.setPadding(dp(10),dp(12),dp(10),dp(10));
+        tile.setBackground(shape(bgColor,23,0));
+        TextView icon=text(symbol,symbol.contains("\\n")?25:38,DARK,true);
+        icon.setGravity(Gravity.CENTER);
+        icon.setLineSpacing(0f,0.82f);
+        tile.addView(icon,lp(-1,66,0,0,0,5));
+        TextView title=text(name,16,DARK,true);title.setGravity(Gravity.CENTER);
+        tile.addView(title,lp(-1,-2,0,0,0,4));
+        TextView subtitle=text(detail,11,MUTED,false);subtitle.setGravity(Gravity.CENTER);
+        tile.addView(subtitle,lp(-1,-2,0,0,0,8));
+        TextView arrow=text("›",22,PINK,true);
+        arrow.setGravity(Gravity.CENTER);
+        arrow.setBackground(shape(blendColors(BG,PALE,0.35f),30,0));
+        tile.addView(arrow,lp(30,30,0,0,0,0));
         return tile;
     }
 
