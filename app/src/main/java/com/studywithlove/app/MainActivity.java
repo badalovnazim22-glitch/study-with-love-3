@@ -1596,7 +1596,7 @@ public class MainActivity extends Activity {
         stopQuizTimer();
         quizActive=false;
         currentScreen="math_quiz";
-        base("Викторина","Проверь свои знания и узнай что-то новое!");
+        base("Викторина","");
 
         int softAccent=blendColors(PINK,BG,0.90f);
         int softerAccent=blendColors(PINK,BG,0.94f);
@@ -1620,7 +1620,7 @@ public class MainActivity extends Activity {
         LinearLayout tiles=new LinearLayout(this);
         tiles.setOrientation(LinearLayout.HORIZONTAL);
         LinearLayout math=quizSubjectTile("🧮","Математика","Примеры и уровни",blendColors(PINK,BG,0.88f));
-        LinearLayout english=quizSubjectTile("🇬🇧","Английский","Слова и перевод",blendColors(PALE,PINK,0.28f));
+        LinearLayout english=quizSubjectTile("🇬🇧","Английский","Слова и перевод",blendColors(PINK,BG,0.88f));
         LinearLayout.LayoutParams mlp=new LinearLayout.LayoutParams(0,dp(146),1f);
         mlp.setMargins(0,0,dp(5),0);tiles.addView(math,mlp);
         LinearLayout.LayoutParams elp=new LinearLayout.LayoutParams(0,dp(146),1f);
@@ -1645,19 +1645,6 @@ public class MainActivity extends Activity {
         stats.addView(statsText,new LinearLayout.LayoutParams(0,-2,1f));
         root.addView(stats,lp(-1,-2,0,0,0,9));
 
-        LinearLayout awards=new LinearLayout(this);
-        awards.setOrientation(LinearLayout.HORIZONTAL);
-        awards.setGravity(Gravity.CENTER_VERTICAL);
-        awards.setPadding(dp(14),dp(8),dp(14),dp(8));
-        awards.setBackground(shape(softAccent,18,0));
-        TextView medal=text("🏅",23,DARK,true);
-        awards.addView(medal,lp(36,38,0,0,8,0));
-        TextView awardsTitle=text("Достижения",13,DARK,true);
-        awards.addView(awardsTitle,new LinearLayout.LayoutParams(0,-2,1f));
-        TextView awardsArrow=text("›",22,PINK,true);
-        awards.addView(awardsArrow);
-        awards.setOnClickListener(v->showMathQuizAchievements());
-        root.addView(awards,lp(-1,54,0,0,0,8));
     }
 
     private LinearLayout quizSubjectTile(String symbol,String name,String detail,int bgColor) {
@@ -1675,10 +1662,6 @@ public class MainActivity extends Activity {
         TextView subtitle=text(detail,10,MUTED,false);
         subtitle.setGravity(Gravity.CENTER);
         tile.addView(subtitle,lp(-1,-2,0,0,0,5));
-        TextView arrow=text("›",19,PINK,true);
-        arrow.setGravity(Gravity.CENTER);
-        arrow.setBackground(shape(blendColors(PINK,BG,0.88f),26,0));
-        tile.addView(arrow,lp(25,25,0,0,0,0));
         return tile;
     }
 
@@ -1733,7 +1716,7 @@ public class MainActivity extends Activity {
         stopQuizTimer();
         quizActive = false;
         currentScreen = "math_quiz";
-        base("Математическая викторина 🧮", "Проверь знания и набирай очки");
+        base("Математика 🧮", "Выбери режим и уровень");
         LinearLayout intro = card();
         intro.setPadding(dp(18),dp(18),dp(18),dp(18));
         intro.setBackground(shape(0xFFFFF0F4,24,0));
