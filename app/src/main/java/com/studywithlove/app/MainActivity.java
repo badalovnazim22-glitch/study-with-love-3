@@ -21,8 +21,10 @@ import android.view.TextureView;
 import android.view.Choreographer;
 import com.google.android.filament.Engine;
 import com.google.android.filament.Renderer;
+import com.google.android.filament.LightManager;
 import com.google.android.filament.android.UiHelper;
 import com.google.android.filament.utils.ModelViewer;
+import com.google.android.filament.utils.EntityManager;
 import com.google.android.filament.utils.Utils;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -82,6 +84,7 @@ public class MainActivity extends Activity {
     /** One transparent Filament surface for all three compact home statistics models. */
     private static final class HomeStats3DView extends FrameLayout {
         private ModelViewer viewer;
+        private Engine engine;
         private boolean frameLoopActive;
         private final Choreographer.FrameCallback frameCallback = new Choreographer.FrameCallback() {
             @Override public void doFrame(long frameTimeNanos) {
@@ -100,13 +103,33 @@ public class MainActivity extends Activity {
             try {
                 UiHelper helper = new UiHelper(UiHelper.ContextErrorPolicy.DONT_CHECK);
                 helper.setOpaque(false);
-                viewer = new ModelViewer(texture, Engine.create(), helper, null);
+                engine = Engine.create();
+                viewer = new ModelViewer(texture, engine, helper, null);
                 Renderer.ClearOptions clear = viewer.getRenderer().getClearOptions();
                 clear.clear = true;
                 clear.clearColor[0] = 0f; clear.clearColor[1] = 0f;
                 clear.clearColor[2] = 0f; clear.clearColor[3] = 0f;
                 viewer.getRenderer().setClearOptions(clear);
                 viewer.getView().setBlendMode(com.google.android.filament.View.BlendMode.TRANSLUCENT);
+                // Explicit scene lighting is required for lit glTF / PBR materials.
+                // Keep the skybox disabled so the TextureView remains transparent.
+                int keyLight = EntityManager.get().create();
+                new LightManager.Builder(LightManager.Type.DIRECTIONAL)
+                        .color(1.0f, 0.88f, 0.98f)
+                        .intensity(72000.0f)
+                        .direction(-0.35f, 0.48f, -0.80f)
+                        .build(engine, keyLight);
+                viewer.getScene().addEntity(keyLight);
+
+                int fillLight = EntityManager.get().create();
+                new LightManager.Builder(LightManager.Type.POINT)
+                        .color(0.72f, 0.78f, 1.0f)
+                        .intensity(520.0f)
+                        .position(0.0f, -1.4f, 1.8f)
+                        .falloff(5.5f)
+                        .build(engine, fillLight);
+                viewer.getScene().addEntity(fillLight);
+                viewer.getCamera().setExposure(16.0f, 1.0f / 125.0f, 100.0f);
                 viewer.getScene().setSkybox(null);
                 try (InputStream in = context.getResources().openRawResource(R.raw.home_stats);
                      ByteArrayOutputStream out = new ByteArrayOutputStream()) {
