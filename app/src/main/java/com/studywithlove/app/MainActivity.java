@@ -1618,8 +1618,8 @@ public class MainActivity extends Activity {
         currentScreen="math_quiz";
         base("Викторина","");
 
-        int softAccent=blendColors(PINK,BG,0.90f);
-        int softerAccent=blendColors(PINK,BG,0.94f);
+        int softAccent=themeSurfaceColor(blendColors(PINK,BG,0.90f));
+        int softerAccent=themeSurfaceColor(blendColors(PINK,BG,0.94f));
         LinearLayout hero=new LinearLayout(this);
         hero.setOrientation(LinearLayout.HORIZONTAL);
         hero.setGravity(Gravity.CENTER_VERTICAL);
@@ -1639,8 +1639,8 @@ public class MainActivity extends Activity {
         addText(root,"ВЫБЕРИ ПРЕДМЕТ",11,PINK,true);
         LinearLayout tiles=new LinearLayout(this);
         tiles.setOrientation(LinearLayout.HORIZONTAL);
-        LinearLayout math=quizSubjectTile("🧮","Математика","Примеры и уровни",blendColors(PINK,BG,0.88f));
-        LinearLayout english=quizSubjectTile("🇬🇧","Английский","Слова и перевод",blendColors(PINK,BG,0.88f));
+        LinearLayout math=quizSubjectTile("🧮","Математика","Примеры и уровни",themeSurfaceColor(blendColors(PINK,BG,0.88f)));
+        LinearLayout english=quizSubjectTile("🇬🇧","Английский","Слова и перевод",themeSurfaceColor(blendColors(PINK,BG,0.88f)));
         LinearLayout.LayoutParams mlp=new LinearLayout.LayoutParams(0,dp(146),1f);
         mlp.setMargins(0,0,dp(5),0);tiles.addView(math,mlp);
         LinearLayout.LayoutParams elp=new LinearLayout.LayoutParams(0,dp(146),1f);
@@ -2005,7 +2005,7 @@ public class MainActivity extends Activity {
         LinearLayout inlineSearch=new LinearLayout(this);
         inlineSearch.setGravity(Gravity.CENTER_VERTICAL);
         inlineSearch.setPadding(dp(12),0,dp(8),0);
-        inlineSearch.setBackground(shape(0xFFFFF5F7,15,0xFFF0DCE4));
+        inlineSearch.setBackground(shape(themeSurfaceColor(0xFFFFF5F7),15,isDarkAppearance()?0xFF49404B:0xFFF0DCE4));
         TextView inlineSearchIcon=text("⌕",22,PINK,true);
         inlineSearchIcon.setVisibility(View.GONE);
         EditText inlineQuery=new EditText(this);
@@ -2188,7 +2188,7 @@ public class MainActivity extends Activity {
         Button mini=button("📝  Мини-тест по теме · 5 вопросов",true);mini.setOnClickListener(v->startMiniTest(topic));root.addView(mini,lp(-1,50,0,0,0,12));
         topicProgressLabel = text("ТВОЙ ПРОГРЕСС: " + percent + "%", 13, PINK, true); box.addView(topicProgressLabel, lp(-1, -2, 0, 0, 0, 5));
         topicProgressBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal); topicProgressBar.setMax(100); topicProgressBar.setProgress(percent);
-        if (Build.VERSION.SDK_INT >= 21) { topicProgressBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK)); topicProgressBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFE2EA)); }
+        if (Build.VERSION.SDK_INT >= 21) { topicProgressBar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK)); topicProgressBar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(themeSurfaceColor(0xFFFFE2EA))); }
         box.addView(topicProgressBar, lp(-1, 8, 0, 0, 0, 5));
         root.addView(box, lp(-1, -2, 0, 0, 0, 14));
         addTopicStudyCard(topic);
@@ -2605,7 +2605,7 @@ public class MainActivity extends Activity {
             int chapterPercent = sum / topics.size();
             LinearLayout section = card();
             TextView chapterBadge = text("✿  РАЗДЕЛ " + (new ArrayList<>(chapters.keySet()).indexOf(chapter) + 1), 12, PINK, true);
-            chapterBadge.setBackground(shape(0xFFFFEEF3, 16, 0xFFFFD5E1));
+            chapterBadge.setBackground(shape(themeSurfaceColor(0xFFFFEEF3), 16, isDarkAppearance()?0xFF49404B:0xFFFFD5E1));
             chapterBadge.setPadding(dp(10), dp(7), dp(10), dp(7));
             section.addView(chapterBadge, lp(-2, -2, 0, 0, 0, 8));
             addText(section, chapter.replaceFirst("^[^ ]+\\s*", ""), 17, DARK, true);
