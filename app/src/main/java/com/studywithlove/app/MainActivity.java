@@ -1135,7 +1135,7 @@ public class MainActivity extends Activity {
         checkUpdates.setAllCaps(false);
         ShimmerFrameLayout updateShimmer=new ShimmerFrameLayout(this);
         updateShimmer.setShimmer(new Shimmer.ColorHighlightBuilder().setBaseColor(blendColors(PINK,BG,0.78f)).setHighlightColor(blendColors(PINK,BG,0.48f)).setDuration(1150).setDirection(Shimmer.Direction.LEFT_TO_RIGHT).build());
-        updateShimmer.setClipToPadding(false);updateShimmer.setShimmerAutoStart(false);
+        updateShimmer.setClipToPadding(false);
         updateShimmer.addView(checkUpdates,new FrameLayout.LayoutParams(-1,dp(44)));
         checkUpdates.setOnClickListener(v->{updateShimmer.startShimmer();checkUpdates.setText(translate("Проверяем наличие обновлений…"));checkUpdates.setEnabled(false);AppUpdater.checkAndOffer(this);new Handler(Looper.getMainLooper()).postDelayed(()->{if(!isFinishing()&&!isDestroyed()){updateShimmer.stopShimmer();checkUpdates.setText(translate("Проверить обновления"));checkUpdates.setEnabled(true);}},2400);});
         updates.addView(updateShimmer,lp(-1,44,0,3,0,0));
