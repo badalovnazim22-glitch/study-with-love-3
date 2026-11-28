@@ -72,10 +72,10 @@ jobs:
       - name: Set up Python for procedural 3D models
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.12'
 
       - name: Install 3D model generator
-        run: pip install numpy trimesh
+        run: pip install numpy scipy trimesh
 
       - name: Generate premium home-stat GLB models
         run: python scripts/generate_home_stats_3d.py
