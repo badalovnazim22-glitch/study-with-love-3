@@ -1730,7 +1730,7 @@ public class MainActivity extends Activity {
         addDailyMoodCard(root);
         if(root.getChildCount()>0)root.getChildAt(root.getChildCount()-1).setTag("home_mood");
 
-        // Three compact illustrated statistic cards with custom-drawn artwork.
+        // Three illustrated statistic cards: label left, value centered, artwork right.
         LinearLayout homeStats = new LinearLayout(this);
         homeStats.setOrientation(LinearLayout.HORIZONTAL);
         homeStats.setGravity(Gravity.CENTER_VERTICAL);
@@ -1738,9 +1738,9 @@ public class MainActivity extends Activity {
         String[] statLabels = {"дней подряд", "уроков", "личный рекорд"};
         for (int statIndex = 0; statIndex < statValues.length; statIndex++) {
             LinearLayout statCard = new LinearLayout(this);
-            statCard.setOrientation(LinearLayout.VERTICAL);
-            statCard.setGravity(Gravity.CENTER);
-            statCard.setPadding(dp(5), dp(7), dp(5), dp(7));
+            statCard.setOrientation(LinearLayout.HORIZONTAL);
+            statCard.setGravity(Gravity.CENTER_VERTICAL);
+            statCard.setPadding(dp(7), dp(7), dp(5), dp(7));
             GradientDrawable glass = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
                     isDarkAppearance()
                             ? new int[]{0x88716A7A, 0x66534D5B}
@@ -1750,21 +1750,26 @@ public class MainActivity extends Activity {
             statCard.setBackground(glass);
             statCard.setForeground(null);
             statCard.setElevation(0f);
+
+            TextView statLabel = text(statLabels[statIndex], 10, DARK, true);
+            statLabel.setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
+            statLabel.setMaxLines(2);
+            statLabel.setLineSpacing(dp(1), 1.0f);
+            statLabel.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            statCard.addView(statLabel, new LinearLayout.LayoutParams(0, -1, 1.0f));
+
+            TextView statValue = text(String.valueOf(statValues[statIndex]), 20, DARK, true);
+            statValue.setGravity(Gravity.CENTER);
+            statCard.addView(statValue, new LinearLayout.LayoutParams(0, -1, 0.85f));
+
             FrameLayout artSpace = new FrameLayout(this);
             artSpace.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
             artSpace.setClipChildren(true);
             artSpace.setClipToPadding(true);
             HomeStatsIllustrationView illustration = new HomeStatsIllustrationView(this, statIndex);
             artSpace.addView(illustration, new FrameLayout.LayoutParams(-1, -1));
-            statCard.addView(artSpace, lp(56, 49, 0, 0, 0, 1));
-            TextView statValue = text(String.valueOf(statValues[statIndex]), 21, DARK, true);
-            statValue.setGravity(Gravity.CENTER);
-            statCard.addView(statValue, lp(-1, 27, 0, 0, 0, 1));
-            TextView statLabel = text(statLabels[statIndex], 10, DARK, true);
-            statLabel.setGravity(Gravity.CENTER);
-            statLabel.setMaxLines(2);
-            statLabel.setEllipsize(android.text.TextUtils.TruncateAt.END);
-            statCard.addView(statLabel, lp(-1, -2, 0, 0, 0, 0));
+            statCard.addView(artSpace, lp(46, 58, 0, 0, 0, 0));
+
             statCard.setAlpha(0f);
             statCard.setTranslationY(dp(7));
             statCard.postDelayed(() -> statCard.animate().alpha(1f).translationY(0f).setDuration(260)
