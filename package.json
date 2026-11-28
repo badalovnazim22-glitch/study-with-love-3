@@ -1,0 +1,15 @@
+{
+  "name": "study-with-love-3d-tools",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Build-time GLB inspection, optimization and validation tools for Study with Love",
+  "scripts": {
+    "gltf:inspect": "gltf-transform inspect app/src/main/res/raw/home_stats_flame.glb && gltf-transform inspect app/src/main/res/raw/home_stats_books.glb && gltf-transform inspect app/src/main/res/raw/home_stats_trophy.glb",
+    "gltf:validate": "node scripts/validate_gltf.js"
+  },
+  "devDependencies": {
+    "@gltf-transform/cli": "^4.2.1",
+    "@gltf-transform/extensions": "^4.2.1",
+    "gltf-validator": "^2.0.0-dev.3.10"
+  }
+}
