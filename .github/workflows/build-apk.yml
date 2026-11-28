@@ -69,6 +69,17 @@ jobs:
       - name: Install 3D asset tools
         run: npm install --no-audit --no-fund
 
+      - name: Set up Python for procedural 3D models
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install 3D model generator
+        run: pip install numpy trimesh
+
+      - name: Generate premium home-stat GLB models
+        run: python scripts/generate_home_stats_3d.py
+
       - name: Validate GLB assets
         run: npm run gltf:validate
 
