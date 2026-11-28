@@ -88,6 +88,7 @@ public class MainActivity extends Activity {
         private Engine engine;
         private boolean frameLoopActive;
         private long animationStartNanos;
+        private int consecutiveRenderFailures;
         private com.google.android.filament.LightManager lightManager;
         private int fillLightInstance;
         // Individual glTF child nodes are animated independently to give each model
@@ -123,7 +124,15 @@ public class MainActivity extends Activity {
                     }
                     animateIndividualModels(elapsed);
                     viewer.render(frameTimeNanos);
-                } catch (Throwable failure) { Log.e("HomeStats3D", "Filament frame failed", failure); frameLoopActive = false; return; }
+                    consecutiveRenderFailures = 0;
+                } catch (Throwable failure) {
+                    // TextureView can attach its SurfaceTexture after the view enters the window.
+                    // A transient first-frame failure must not permanently stop the render loop.
+                    consecutiveRenderFailures++;
+                    if (consecutiveRenderFailures == 1 || consecutiveRenderFailures % 120 == 0) {
+                        Log.w("HomeStats3D", "Waiting for a valid Filament surface (frame failures: " + consecutiveRenderFailures + ")", failure);
+                    }
+                }
                 Choreographer.getInstance().postFrameCallback(this);
             }
         };
