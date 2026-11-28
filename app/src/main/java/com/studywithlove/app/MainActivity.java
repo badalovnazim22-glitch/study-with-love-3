@@ -128,7 +128,7 @@ public class MainActivity extends Activity {
             }
         };
 
-        HomeStats3DView(Context context) {
+        HomeStats3DView(Context context, int modelResource) {
             super(context);
             if (!FILAMENT_READY) { setVisibility(View.GONE); return; }
             TextureView texture = new TextureView(context);
@@ -167,7 +167,7 @@ public class MainActivity extends Activity {
                 fillLightInstance = lightManager.getInstance(fillLight);
                 viewer.getCamera().setExposure(16.0f, 1.0f / 125.0f, 100.0f);
                 viewer.getScene().setSkybox(null);
-                try (InputStream in = context.getResources().openRawResource(R.raw.home_stats);
+                try (InputStream in = context.getResources().openRawResource(modelResource);
                      ByteArrayOutputStream out = new ByteArrayOutputStream()) {
                     byte[] chunk = new byte[4096]; int count;
                     while ((count = in.read(chunk)) != -1) out.write(chunk, 0, count);
@@ -185,7 +185,7 @@ public class MainActivity extends Activity {
                 // without changing card dimensions or the model's spacing.
                 viewer.getCamera().setScaling(2.0, 2.0);
             } catch (Throwable failure) {
-                Log.e("HomeStats3D", "Unable to initialize or load home_stats.glb", failure);
+                Log.e("HomeStats3D", "Unable to initialize or load independent home statistics GLB", failure);
                 setVisibility(View.GONE);
             }
         }
@@ -1867,11 +1867,7 @@ public class MainActivity extends Activity {
         addDailyMoodCard(root);
         if(root.getChildCount()>0)root.getChildAt(root.getChildCount()-1).setTag("home_mood");
 
-        // Premium 3D summary cards: one shared Filament renderer, unchanged 3-column layout.
-        FrameLayout statsFrame = new FrameLayout(this);
-        HomeStats3DView stats3DView = new HomeStats3DView(this);
-        // Keep the transparent 3D viewport strictly inside the illustration band; counters and captions remain unobstructed.
-        FrameLayout.LayoutParams modelLp = new FrameLayout.LayoutParams(-1, dp(48), Gravity.TOP);
+        // Three independent Filament scenes: each illustration gets its own camera and clipped card viewport.
         LinearLayout homeStats = new LinearLayout(this);
         homeStats.setOrientation(LinearLayout.HORIZONTAL);
         homeStats.setGravity(Gravity.CENTER_VERTICAL);
@@ -1891,8 +1887,14 @@ public class MainActivity extends Activity {
             statCard.setBackground(glass);
             statCard.setForeground(null);
             statCard.setElevation(0f);
-            View artSpace = new View(this);
+            FrameLayout artSpace = new FrameLayout(this);
             artSpace.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+            artSpace.setClipChildren(true);
+            artSpace.setClipToPadding(true);
+            int modelResource = statIndex == 0 ? R.raw.home_stats_flame
+                    : statIndex == 1 ? R.raw.home_stats_books : R.raw.home_stats_trophy;
+            HomeStats3DView modelView = new HomeStats3DView(this, modelResource);
+            artSpace.addView(modelView, new FrameLayout.LayoutParams(-1, -1));
             statCard.addView(artSpace, lp(48, 43, 0, 0, 0, 1));
             TextView statValue = text(String.valueOf(statValues[statIndex]), 21, DARK, true);
             statValue.setGravity(Gravity.CENTER);
@@ -1910,11 +1912,8 @@ public class MainActivity extends Activity {
             statLp.setMargins(dp(3), 0, dp(3), 0);
             homeStats.addView(statCard, statLp);
         }
-        statsFrame.addView(homeStats, new FrameLayout.LayoutParams(-1, -1));
-        // TextureView must be above the card backgrounds; its transparent pixels keep labels visible.
-        statsFrame.addView(stats3DView, modelLp);
-        root.addView(statsFrame, lp(-1, -2, 0, 0, 0, 6));
-        statsFrame.setTag("home_stats");
+        root.addView(homeStats, lp(-1, -2, 0, 0, 0, 6));
+        homeStats.setTag("home_stats");
 
         // Quick access to the existing math quiz from the home screen.
         LinearLayout quizCard = card();
