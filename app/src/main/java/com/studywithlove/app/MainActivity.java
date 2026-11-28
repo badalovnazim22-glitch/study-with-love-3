@@ -1263,7 +1263,7 @@ public class MainActivity extends Activity {
                 option.setOnClickListener(v->{prefs.edit().putString("app_theme",key).remove("app_accent_color").apply();applySavedTheme();showSettings();});
             }
             if(paletteRow.getChildCount()<paletteColumns)paletteRow.addView(new View(this),new LinearLayout.LayoutParams(0,dp(42),paletteColumns-paletteRow.getChildCount()));
-            palette.addView(paletteRow,lp(-1,dp(46),0,0,0,0));
+            palette.addView(paletteRow,lp(-1,46,0,0,0,0));
         }
         appearance.addView(palette,lp(-1,-2,0,7,0,5));
         LinearLayout fontGroup=settingsGroup("ШРИФТ ПРИЛОЖЕНИЯ");
