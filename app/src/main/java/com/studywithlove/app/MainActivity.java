@@ -82,211 +82,81 @@ public class MainActivity extends Activity {
         FILAMENT_READY = ready;
     }
 
-    /** One transparent Filament surface for all three compact home statistics models. */
-    private static final class HomeStats3DView extends FrameLayout {
-        private ModelViewer viewer;
-        private Engine engine;
-        private boolean frameLoopActive;
-        private long animationStartNanos;
-        private int consecutiveRenderFailures;
-        private com.google.android.filament.LightManager lightManager;
-        private int fillLightInstance;
-        // Individual glTF child nodes are animated independently to give each model
-        // its own motion rather than rotating the three parent groups as one object.
-        private final int[] motionEntities = new int[10];
-        private final float[][] motionBaseTransforms = new float[10][];
-        private final Choreographer.FrameCallback frameCallback = new Choreographer.FrameCallback() {
-            @Override public void doFrame(long frameTimeNanos) {
-                if (!frameLoopActive || viewer == null) return;
-                try {
-                    // Filament 1.70.2 does not autoplay GLB animations in ModelViewer.
-                    // Advance the first glTF animation explicitly before rendering.
-                    com.google.android.filament.gltfio.Animator animator = viewer.getAnimator();
-                    if (animationStartNanos == 0L) animationStartNanos = frameTimeNanos;
-                    float elapsed = (frameTimeNanos - animationStartNanos) / 1_000_000_000f;
-                    if (animator != null && animator.getAnimationCount() > 0) {
-                        float duration = animator.getAnimationDuration(0);
-                        if (duration > 0f) {
-                            // Gentle continuous motion for the flame, book stack and trophy.
-                            animator.applyAnimation(0, (elapsed * 0.82f) % duration);
-                            animator.updateBoneMatrices();
-                        }
-                    }
-                    // Sweep a soft warm point-light across the models. The moving
-                    // specular reflection gives the metallic trophy a live highlight.
-                    if (lightManager != null && fillLightInstance != 0) {
-                        float sweep = (float) Math.sin(elapsed * 0.92f);
-                        float depth = (float) Math.cos(elapsed * 0.67f);
-                        lightManager.setPosition(fillLightInstance,
-                                sweep * 1.65f, -0.25f + depth * 0.22f, 1.55f);
-                        lightManager.setIntensity(fillLightInstance,
-                                520.0f + 110.0f * (0.5f + 0.5f * (float) Math.sin(elapsed * 1.35f)));
-                    }
-                    animateIndividualModels(elapsed);
-                    viewer.render(frameTimeNanos);
-                    consecutiveRenderFailures = 0;
-                } catch (Throwable failure) {
-                    // TextureView can attach its SurfaceTexture after the view enters the window.
-                    // A transient first-frame failure must not permanently stop the render loop.
-                    consecutiveRenderFailures++;
-                    if (consecutiveRenderFailures == 1 || consecutiveRenderFailures % 120 == 0) {
-                        Log.w("HomeStats3D", "Waiting for a valid Filament surface (frame failures: " + consecutiveRenderFailures + ")", failure);
-                    }
-                }
-                Choreographer.getInstance().postFrameCallback(this);
-            }
-        };
-
-        HomeStats3DView(Context context, int modelResource) {
+    /** Lightweight illustrated home-stat artwork; no 3D renderer or external assets required. */
+    private static final class HomeStatsIllustrationView extends View {
+        private final int type;
+        private final android.graphics.Paint p = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        private final android.graphics.Path path = new android.graphics.Path();
+        HomeStatsIllustrationView(Context context, int type) {
             super(context);
-            if (!FILAMENT_READY) { setVisibility(View.GONE); return; }
-            TextureView texture = new TextureView(context);
-            texture.setOpaque(false);
-            addView(texture, new FrameLayout.LayoutParams(-1, -1));
-            try {
-                UiHelper helper = new UiHelper(UiHelper.ContextErrorPolicy.DONT_CHECK);
-                helper.setOpaque(false);
-                engine = Engine.create();
-                viewer = new ModelViewer(texture, engine, helper, null);
-                Renderer.ClearOptions clear = viewer.getRenderer().getClearOptions();
-                clear.clear = true;
-                clear.clearColor[0] = 0f; clear.clearColor[1] = 0f;
-                clear.clearColor[2] = 0f; clear.clearColor[3] = 0f;
-                viewer.getRenderer().setClearOptions(clear);
-                viewer.getView().setBlendMode(com.google.android.filament.View.BlendMode.TRANSLUCENT);
-                // Explicit scene lighting is required for lit glTF / PBR materials.
-                // Keep the skybox disabled so the TextureView remains transparent.
-                int keyLight = EntityManager.get().create();
-                new LightManager.Builder(LightManager.Type.DIRECTIONAL)
-                        .color(1.0f, 0.88f, 0.98f)
-                        .intensity(72000.0f)
-                        .direction(-0.35f, 0.48f, -0.80f)
-                        .build(engine, keyLight);
-                viewer.getScene().addEntity(keyLight);
-
-                int fillLight = EntityManager.get().create();
-                new LightManager.Builder(LightManager.Type.POINT)
-                        .color(0.72f, 0.78f, 1.0f)
-                        .intensity(520.0f)
-                        .position(0.0f, -1.4f, 1.8f)
-                        .falloff(5.5f)
-                        .build(engine, fillLight);
-                viewer.getScene().addEntity(fillLight);
-                lightManager = engine.getLightManager();
-                fillLightInstance = lightManager.getInstance(fillLight);
-                viewer.getCamera().setExposure(16.0f, 1.0f / 125.0f, 100.0f);
-                viewer.getScene().setSkybox(null);
-                try (InputStream in = context.getResources().openRawResource(modelResource);
-                     ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-                    byte[] chunk = new byte[4096]; int count;
-                    while ((count = in.read(chunk)) != -1) out.write(chunk, 0, count);
-                    viewer.loadModelGlb(ByteBuffer.wrap(out.toByteArray()));
-                }
-                captureAnimatedNodes();
-                // Fit the complete three-model GLB into the camera frustum.
-                // A hard-coded camera position previously viewed the Y-up glTF scene
-                // from an unverified orientation and could leave the models outside
-                // the visible part of the compact statistics row.
-                viewer.transformToUnitCube(new com.google.android.filament.utils.Float3(0.0f, 0.0f, -4.0f));
-                // The GLB contains three side-by-side illustrations. Unit-cube fitting
-                // keeps the whole strip technically in frame but makes each icon too small
-                // in the shallow statistics viewport. Apply a restrained projection zoom
-                // without changing card dimensions or the model's spacing.
-                viewer.getCamera().setScaling(2.0, 2.0);
-            } catch (Throwable failure) {
-                Log.e("HomeStats3D", "Unable to initialize or load independent home statistics GLB", failure);
-                setVisibility(View.GONE);
-            }
+            this.type = type;
+            setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+            setContentDescription(type == 0 ? "Иллюстрация пламени" : type == 1 ? "Иллюстрация книг" : "Иллюстрация кубка");
         }
-
-        private void captureAnimatedNodes() {
-            if (viewer == null || viewer.getAsset() == null) return;
-            com.google.android.filament.gltfio.FilamentAsset asset = viewer.getAsset();
-            String[] names = {
-                    "Outer flame", "Amber flame", "Inner flame",
-                    "Book cover 0", "Book pages 0",
-                    "Book cover 1", "Book pages 1",
-                    "Book cover 2", "Book pages 2",
-                    "Cup"
-            };
-            com.google.android.filament.TransformManager transforms = engine.getTransformManager();
-            for (int i = 0; i < names.length; i++) {
-                int entity = asset.getFirstEntityByName(names[i]);
-                if (entity != 0 && transforms.hasComponent(entity)) {
-                    motionEntities[i] = entity;
-                    motionBaseTransforms[i] = transforms.getTransform(transforms.getInstance(entity), new float[16]);
-                }
-            }
+        private void fill(android.graphics.Canvas c, int color) {
+            p.setStyle(android.graphics.Paint.Style.FILL); p.setColor(color);
+            p.setShader(null); p.clearShadowLayer(); c.drawPath(path,p);
         }
-
-        private void animateIndividualModels(float elapsed) {
-            if (engine == null) return;
-            float p0 = (float) Math.sin(elapsed * 4.1f);
-            float p1 = (float) Math.sin(elapsed * 3.2f + 1.1f);
-            float p2 = (float) Math.sin(elapsed * 3.7f + 2.0f);
-
-            // Flame: three independent layers breathe and flicker at different rates.
-            applyNodeMotion(0, 1.0f + 0.035f * p0, 1.0f + 0.075f * p1, 1.0f, 0.018f * p2);
-            applyNodeMotion(1, 1.0f + 0.045f * p1, 1.0f + 0.055f * p2, 1.0f, 0.024f * p0);
-            applyNodeMotion(2, 1.0f + 0.025f * p2, 1.0f + 0.045f * p0, 1.0f, 0.015f * p1);
-
-            // Books: each cover and its page block get a restrained, staggered sway.
-            float b0 = 0.012f * (float) Math.sin(elapsed * 1.35f);
-            float b1 = 0.010f * (float) Math.sin(elapsed * 1.18f + 1.4f);
-            float b2 = 0.008f * (float) Math.sin(elapsed * 1.52f + 2.3f);
-            applyNodeMotion(3, 1f, 1f, 1f, b0);
-            applyNodeMotion(4, 1f, 1f, 1f, b0);
-            applyNodeMotion(5, 1f, 1f, 1f, b1);
-            applyNodeMotion(6, 1f, 1f, 1f, b1);
-            applyNodeMotion(7, 1f, 1f, 1f, b2);
-            applyNodeMotion(8, 1f, 1f, 1f, b2);
-
-            // Trophy: a very small independent cup movement catches the moving specular light.
-            applyNodeMotion(9, 1.0f + 0.006f * p1, 1.0f + 0.006f * p1, 1.0f, 0.012f * p2);
+        private void rounded(android.graphics.Canvas c, float l,float t,float r,float b,float radius,int color) {
+            p.setStyle(android.graphics.Paint.Style.FILL); p.setShader(null); p.setColor(color);
+            p.clearShadowLayer(); c.drawRoundRect(l,t,r,b,radius,radius,p);
         }
-
-        private void applyNodeMotion(int index, float sx, float sy, float sz, float angle) {
-            if (motionEntities[index] == 0 || motionBaseTransforms[index] == null) return;
-            float c = (float) Math.cos(angle);
-            float sn = (float) Math.sin(angle);
-            // Column-major local rotation * scale matrix.
-            float[] local = new float[] {
-                    c * sx, sn * sx, 0f, 0f,
-                    -sn * sy, c * sy, 0f, 0f,
-                    0f, 0f, sz, 0f,
-                    0f, 0f, 0f, 1f
-            };
-            float[] result = multiplyMat4(motionBaseTransforms[index], local);
-            com.google.android.filament.TransformManager transforms = engine.getTransformManager();
-            transforms.setTransform(transforms.getInstance(motionEntities[index]), result);
+        private void gradient(android.graphics.Canvas c, float l,float t,float r,float b,float radius,int a,int z) {
+            p.setStyle(android.graphics.Paint.Style.FILL); p.setShader(new android.graphics.LinearGradient(l,t,r,b,a,z,android.graphics.Shader.TileMode.CLAMP));
+            p.setShadowLayer(3.2f,0,2f,0x26000000); c.drawRoundRect(l,t,r,b,radius,radius,p);
+            p.setShader(null); p.clearShadowLayer();
         }
-
-        private float[] multiplyMat4(float[] a, float[] b) {
-            float[] out = new float[16];
-            for (int col = 0; col < 4; col++) {
-                for (int row = 0; row < 4; row++) {
-                    float value = 0f;
-                    for (int k = 0; k < 4; k++) value += a[k * 4 + row] * b[col * 4 + k];
-                    out[col * 4 + row] = value;
-                }
-            }
-            return out;
+        @Override protected void onDraw(android.graphics.Canvas canvas) {
+            super.onDraw(canvas);
+            float sx=getWidth()/64f, sy=getHeight()/56f;
+            canvas.save(); canvas.scale(sx,sy);
+            p.setStyle(android.graphics.Paint.Style.FILL); p.setShader(null); p.clearShadowLayer();
+            p.setColor(type==0?0x22FF9B54:type==1?0x224E8EBA:0x22E8B94D);
+            canvas.drawCircle(32,28,24,p);
+            p.setColor(type==0?0x16FFB56D:type==1?0x164D8DAD:0x16D8A52B);
+            canvas.drawCircle(32,28,19,p);
+            if(type==0) drawFlame(canvas);
+            else if(type==1) drawBooks(canvas);
+            else drawTrophy(canvas);
+            canvas.restore();
         }
-
-        @Override protected void onAttachedToWindow() {
-            super.onAttachedToWindow();
-            if (viewer != null) {
-                frameLoopActive = true;
-                Choreographer.getInstance().postFrameCallback(frameCallback);
-            }
+        private void drawFlame(android.graphics.Canvas c) {
+            path.reset(); path.moveTo(32,49); path.cubicTo(12,45,19,29,28,16);
+            path.cubicTo(28,25,36,24,35,8); path.cubicTo(53,25,52,43,39,49); path.close();
+            p.setShader(new android.graphics.LinearGradient(20,12,43,50,0xFFFFD36B,0xFFE94B36,android.graphics.Shader.TileMode.CLAMP));
+            p.setShadowLayer(5,0,3,0x55E95A2E); c.drawPath(path,p); p.setShader(null); p.clearShadowLayer();
+            path.reset(); path.moveTo(32,46); path.cubicTo(23,40,29,32,34,26);
+            path.cubicTo(34,33,42,34,39,42); path.cubicTo(38,45,35,47,32,46); path.close();
+            p.setShader(new android.graphics.LinearGradient(30,25,36,47,0xFFFFF2A5,0xFFFF8A35,android.graphics.Shader.TileMode.CLAMP));
+            c.drawPath(path,p); p.setShader(null);
+            p.setColor(0xFFFFE8A0); c.drawCircle(18,20,1.5f,p); c.drawCircle(47,17,1.2f,p); c.drawCircle(48,34,1f,p);
         }
-
-        @Override protected void onDetachedFromWindow() {
-            frameLoopActive = false;
-            Choreographer.getInstance().removeFrameCallback(frameCallback);
-            // ModelViewer destroys its Filament resources when its TextureView detaches.
-            viewer = null;
-            super.onDetachedFromWindow();
+        private void drawBooks(android.graphics.Canvas c) {
+            c.save(); c.rotate(-8,32,29);
+            gradient(c,11,34,53,47,3,0xFF526F9C,0xFF293E68);
+            gradient(c,14,20,55,34,3,0xFFCC7184,0xFF98445D);
+            gradient(c,9,8,51,22,3,0xFF6D9D82,0xFF376B59);
+            rounded(c,13,10,47,19,2,0xFFF2DFC0);
+            rounded(c,18,22,51,31,2,0xFFF4E3C8);
+            rounded(c,15,36,49,44,2,0xFFF0DEC0);
+            p.setColor(0xFFCFAD73); p.setStrokeWidth(1.3f); p.setStyle(android.graphics.Paint.Style.STROKE);
+            c.drawLine(17,13,43,13,p); c.drawLine(20,25,47,25,p); c.drawLine(16,39,45,39,p);
+            p.setStyle(android.graphics.Paint.Style.FILL);
+            rounded(c,10,8,14,22,1,0xFF3D705B); rounded(c,12,20,17,34,1,0xFF9A4A60); rounded(c,9,34,14,47,1,0xFF354C78);
+            c.restore();
+        }
+        private void drawTrophy(android.graphics.Canvas c) {
+            p.setStyle(android.graphics.Paint.Style.STROKE); p.setStrokeWidth(4.2f); p.setStrokeCap(android.graphics.Paint.Cap.ROUND);
+            p.setColor(0xFFD89B32); c.drawArc(9,16,27,37,285,155,false,p); c.drawArc(37,16,55,37,100,155,false,p);
+            p.setStyle(android.graphics.Paint.Style.FILL);
+            path.reset(); path.moveTo(18,9); path.lineTo(46,9); path.lineTo(43,25);
+            path.cubicTo(41,34,36,37,32,37); path.cubicTo(25,37,20,32,19,24); path.close();
+            p.setShader(new android.graphics.LinearGradient(16,10,47,35,0xFFFFE995,0xFFB97819,android.graphics.Shader.TileMode.CLAMP));
+            p.setShadowLayer(4,0,2,0x44A96A18); c.drawPath(path,p); p.setShader(null); p.clearShadowLayer();
+            p.setColor(0xFFFFF0B2); c.drawRoundRect(22,12,25,27,1.5f,1.5f,p);
+            gradient(c,28,36,36,44,2,0xFFF6D77A,0xFFB87920);
+            gradient(c,21,43,43,49,3,0xFFFFDF83,0xFFB8751D);
+            p.setColor(0xFFFFF0B0); c.drawCircle(32,22,2.1f,p);
         }
     }
     public static volatile boolean activityVisible=false;
@@ -1876,7 +1746,7 @@ public class MainActivity extends Activity {
         addDailyMoodCard(root);
         if(root.getChildCount()>0)root.getChildAt(root.getChildCount()-1).setTag("home_mood");
 
-        // Three independent Filament scenes: each illustration gets its own camera and clipped card viewport.
+        // Three compact illustrated statistic cards with custom-drawn artwork.
         LinearLayout homeStats = new LinearLayout(this);
         homeStats.setOrientation(LinearLayout.HORIZONTAL);
         homeStats.setGravity(Gravity.CENTER_VERTICAL);
@@ -1900,11 +1770,9 @@ public class MainActivity extends Activity {
             artSpace.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
             artSpace.setClipChildren(true);
             artSpace.setClipToPadding(true);
-            int modelResource = statIndex == 0 ? R.raw.home_stats_flame
-                    : statIndex == 1 ? R.raw.home_stats_books : R.raw.home_stats_trophy;
-            HomeStats3DView modelView = new HomeStats3DView(this, modelResource);
-            artSpace.addView(modelView, new FrameLayout.LayoutParams(-1, -1));
-            statCard.addView(artSpace, lp(48, 43, 0, 0, 0, 1));
+            HomeStatsIllustrationView illustration = new HomeStatsIllustrationView(this, statIndex);
+            artSpace.addView(illustration, new FrameLayout.LayoutParams(-1, -1));
+            statCard.addView(artSpace, lp(56, 49, 0, 0, 0, 1));
             TextView statValue = text(String.valueOf(statValues[statIndex]), 21, DARK, true);
             statValue.setGravity(Gravity.CENTER);
             statCard.addView(statValue, lp(-1, 27, 0, 0, 0, 1));
