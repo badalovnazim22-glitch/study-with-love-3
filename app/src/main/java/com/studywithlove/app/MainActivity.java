@@ -179,6 +179,11 @@ public class MainActivity extends Activity {
                 // from an unverified orientation and could leave the models outside
                 // the visible part of the compact statistics row.
                 viewer.transformToUnitCube(new com.google.android.filament.utils.Float3(0.0f, 0.0f, -4.0f));
+                // The GLB contains three side-by-side illustrations. Unit-cube fitting
+                // keeps the whole strip technically in frame but makes each icon too small
+                // in the shallow statistics viewport. Apply a restrained projection zoom
+                // without changing card dimensions or the model's spacing.
+                viewer.getCamera().setScaling(2.0, 2.0);
             } catch (Throwable failure) {
                 Log.e("HomeStats3D", "Unable to initialize or load home_stats.glb", failure);
                 setVisibility(View.GONE);
