@@ -21,8 +21,46 @@ def add(scene, name, mesh, position=(0, 0, 0), rotation=None):
     transform[:3, 3] = position
     scene.add_geometry(mesh, node_name=name, geom_name=name, transform=transform)
 
-def box(extents, color, radius_detail=2, metallic=0.0, roughness=0.38):
-    mesh = trimesh.creation.box(extents=extents)
+def box(extents, color, radius_detail=6, metallic=0.0, roughness=0.38):
+    """Create a softly bevelled rectangular solid with a real rounded edge profile."""
+    hx, hy, hz = (float(v) * 0.5 for v in extents)
+    radius = min(hx, hy, hz) * 0.16
+    inner = np.array([hx - radius, hy - radius, hz - radius], dtype=float)
+    divisions = max(3, min(16, int(radius_detail)))
+    vertices, faces = [], []
+
+    # Tessellate all six sides; project the edge/corner samples onto a
+    # rounded-box surface so highlights roll smoothly around every edge.
+    sides = [
+        (0, 1, 2, 1), (0, 1, 2, -1),
+        (1, 0, 2, -1), (1, 0, 2, 1),
+        (2, 0, 1, 1), (2, 0, 1, -1),
+    ]
+    for fixed_axis, u_axis, v_axis, sign in sides:
+        start = len(vertices)
+        u_values = np.linspace(-np.array(extents)[u_axis] * .5,
+                               np.array(extents)[u_axis] * .5, divisions + 1)
+        v_values = np.linspace(-np.array(extents)[v_axis] * .5,
+                               np.array(extents)[v_axis] * .5, divisions + 1)
+        for j, v in enumerate(v_values):
+            for i, u in enumerate(u_values):
+                p = np.zeros(3, dtype=float)
+                p[fixed_axis] = sign * np.array(extents)[fixed_axis] * .5
+                p[u_axis], p[v_axis] = u, v
+                q = np.clip(p, -inner, inner)
+                delta = p - q
+                length = np.linalg.norm(delta)
+                rounded = q + (delta / length * radius if length > 1e-9 else delta)
+                vertices.append(rounded.tolist())
+        for j in range(divisions):
+            for i in range(divisions):
+                a = start + j * (divisions + 1) + i
+                b, d = a + 1, a + divisions + 1
+                faces.extend([[a, b, d + 1], [a, d + 1, d]])
+
+    mesh = trimesh.Trimesh(vertices=np.asarray(vertices),
+                           faces=np.asarray(faces), process=True)
+    mesh.fix_normals()
     mesh.visual.material = material(color, metallic, roughness)
     return mesh
 
