@@ -61,35 +61,10 @@ jobs:
       - name: Install Android platform and build tools
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Set up Node.js for 3D asset tools
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install 3D asset tools
-        run: npm install --no-audit --no-fund
-
-      - name: Set up Python for procedural 3D models
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install 3D model generator
-        run: pip install numpy scipy trimesh
-
-      - name: Generate premium home-stat GLB models
-        run: python scripts/generate_home_stats_3d.py
-
-      - name: Validate GLB assets
-        run: npm run gltf:validate
-
-      - name: Inspect GLB assets
-        run: npm run gltf:inspect
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.12'
 
       - name: Validate question bank
         run: python scripts/validate_question_bank.py
