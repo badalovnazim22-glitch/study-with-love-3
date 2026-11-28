@@ -1751,6 +1751,15 @@ public class MainActivity extends Activity {
             statCard.setForeground(null);
             statCard.setElevation(0f);
 
+            // Illustration first: keep the artwork on the left side of each compact card.
+            FrameLayout artSpace = new FrameLayout(this);
+            artSpace.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+            artSpace.setClipChildren(true);
+            artSpace.setClipToPadding(true);
+            HomeStatsIllustrationView illustration = new HomeStatsIllustrationView(this, statIndex);
+            artSpace.addView(illustration, new FrameLayout.LayoutParams(-1, -1));
+            statCard.addView(artSpace, lp(32, 38, 0, 0, 3, 0));
+
             TextView statLabel = text(statLabels[statIndex], 9, DARK, true);
             statLabel.setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
             statLabel.setMaxLines(2);
@@ -1763,15 +1772,7 @@ public class MainActivity extends Activity {
             statValue.setGravity(Gravity.CENTER);
             statValue.setIncludeFontPadding(false);
             statValue.setSingleLine(true);
-            statCard.addView(statValue, lp(29, -1, 0, 0, 0, 0));
-
-            FrameLayout artSpace = new FrameLayout(this);
-            artSpace.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-            artSpace.setClipChildren(true);
-            artSpace.setClipToPadding(true);
-            HomeStatsIllustrationView illustration = new HomeStatsIllustrationView(this, statIndex);
-            artSpace.addView(illustration, new FrameLayout.LayoutParams(-1, -1));
-            statCard.addView(artSpace, lp(36, 43, 0, 0, 0, 0));
+            statCard.addView(statValue, lp(27, -1, 0, 0, 0, 0));
 
             statCard.setAlpha(0f);
             statCard.setTranslationY(dp(5));
