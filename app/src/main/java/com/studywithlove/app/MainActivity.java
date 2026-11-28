@@ -1208,14 +1208,14 @@ public class MainActivity extends Activity {
             Button item = button(section[1] + "   " + section[2] + "   ›", false);
             item.setGravity(Gravity.CENTER_VERTICAL);
             item.setTextColor(DARK);
-            item.setTextSize(18);
+            item.setTextSize("study".equals(section[0]) ? 16 : 18);
             item.setTypeface(Typeface.create(selectedFontFamily(), Typeface.BOLD));
             item.setLetterSpacing(0.005f);
             item.setAllCaps(false);
-            item.setBackground(shape(themeSurfaceColor(PALE),14,blendColors(PALE,BG,0.22f)));
+            item.setBackground("study".equals(section[0]) ? null : shape(themeSurfaceColor(PALE),14,blendColors(PALE,BG,0.22f)));
             item.setElevation(0f);
             item.setPadding(dp(12),0,dp(10),0);
-            sectionMenu.addView(item, lp(-1, 52, 0, 0, 0, 7));
+            sectionMenu.addView(item, lp(-1, "study".equals(section[0]) ? 46 : 52, 0, 0, 0, "study".equals(section[0]) ? 3 : 7));
             item.setOnClickListener(v -> { currentScreen = "settings_" + section[0]; showSettings(); });
         }
         if (!sectionPage) root.addView(sectionMenu, lp(-1, -2, 0, 0, 0, 12));
@@ -1247,12 +1247,23 @@ public class MainActivity extends Activity {
         String[] keys={"pink","lavender","mint","night","white","brown","gold","luxury","sky","peach","red","lv"};
         int[] colors={0xFF8070A8,0xFF8979B8,0xFF659B86,0xFF302735,0xFFFFFFFF,0xFF8B6046,0xFFC49318,0xFF30251F,0xFF5D91B5,0xFFD88968,0xFFB32635,0xFFD9C19A};
         int paletteColumns = getResources().getConfiguration().screenWidthDp < 380 ? 2 : 3;
-        android.widget.GridLayout palette=new android.widget.GridLayout(this);palette.setColumnCount(paletteColumns);
+        LinearLayout palette=new LinearLayout(this);palette.setOrientation(LinearLayout.VERTICAL);
         String activeTheme=prefs.getString("app_theme","pink");
-        for(int i=0;i<keys.length;i++){final String key=keys[i];final int color=colors[i];final String label=names[i];boolean selected=activeTheme.equals(key);LinearLayout option=new LinearLayout(this);option.setGravity(Gravity.CENTER_VERTICAL);option.setPadding(dp(8),dp(6),dp(5),dp(6));option.setBackground(shape(selected?blendColors(PALE,BG,0.12f):themeSurfaceColor(PALE),13,selected?PINK:blendColors(PALE,BG,0.20f)));
-            TextView swatch=text(selected?"✓":"",12,onAccentTextColor(color),true);swatch.setGravity(Gravity.CENTER);GradientDrawable swatchBg=new GradientDrawable();swatchBg.setColor(color);swatchBg.setCornerRadius(dp(50));if(selected)swatchBg.setStroke(dp(2),PINK);swatch.setBackground(swatchBg);option.addView(swatch,lp(30,30,0,0,8,0));TextView labelView=text(label,12,DARK,true);option.addView(labelView,new LinearLayout.LayoutParams(0,dp(32),1f));
-            android.widget.GridLayout.LayoutParams gp=new android.widget.GridLayout.LayoutParams();gp.width=0;gp.height=dp(52);gp.columnSpec=android.widget.GridLayout.spec(i%paletteColumns,1f);gp.setMargins(dp(2),dp(3),dp(2),dp(3));palette.addView(option,gp);
-            option.setOnClickListener(v->{prefs.edit().putString("app_theme",key).remove("app_accent_color").apply();applySavedTheme();showSettings();});
+        for(int rowIndex=0;rowIndex<keys.length;rowIndex+=paletteColumns){
+            LinearLayout paletteRow=new LinearLayout(this);paletteRow.setOrientation(LinearLayout.HORIZONTAL);
+            for(int colIndex=0;colIndex<paletteColumns && rowIndex+colIndex<keys.length;colIndex++){
+                int i=rowIndex+colIndex;final String key=keys[i];final int color=colors[i];final String label=names[i];boolean selected=activeTheme.equals(key);
+                LinearLayout option=new LinearLayout(this);option.setGravity(Gravity.CENTER_VERTICAL);option.setPadding(dp(6),dp(4),dp(3),dp(4));
+                option.setBackground(shape(selected?blendColors(PALE,BG,0.12f):themeSurfaceColor(PALE),12,selected?PINK:blendColors(PALE,BG,0.20f)));
+                TextView swatch=text(selected?"✓":"",11,onAccentTextColor(color),true);swatch.setGravity(Gravity.CENTER);
+                GradientDrawable swatchBg=new GradientDrawable();swatchBg.setColor(color);swatchBg.setCornerRadius(dp(50));if(selected)swatchBg.setStroke(dp(2),PINK);swatch.setBackground(swatchBg);
+                option.addView(swatch,lp(25,25,0,0,5,0));TextView labelView=text(label,11,DARK,true);labelView.setSingleLine(true);labelView.setEllipsize(android.text.TextUtils.TruncateAt.END);
+                option.addView(labelView,new LinearLayout.LayoutParams(0,dp(28),1f));
+                LinearLayout.LayoutParams optionLp=new LinearLayout.LayoutParams(0,dp(42),1f);optionLp.setMargins(dp(2),dp(2),dp(2),dp(2));paletteRow.addView(option,optionLp);
+                option.setOnClickListener(v->{prefs.edit().putString("app_theme",key).remove("app_accent_color").apply();applySavedTheme();showSettings();});
+            }
+            if(paletteRow.getChildCount()<paletteColumns)paletteRow.addView(new View(this),new LinearLayout.LayoutParams(0,dp(42),paletteColumns-paletteRow.getChildCount()));
+            palette.addView(paletteRow,lp(-1,dp(46),0,0,0,0));
         }
         appearance.addView(palette,lp(-1,-2,0,7,0,5));
         LinearLayout fontGroup=settingsGroup("ШРИФТ ПРИЛОЖЕНИЯ");
@@ -1342,8 +1353,8 @@ public class MainActivity extends Activity {
         reminders.setTag("notifications_sound");
         addSettingsToggle(reminders,"Включить напоминания о занятиях","notifications_enabled",true,()->{scheduleReminders(this);if(prefs.getBoolean("notifications_enabled",true)&&Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},20);});
         addSettingsToggle(reminders,"Тихие часы для уведомлений","quiet_hours_enabled",false,()->scheduleReminders(this));
-        LinearLayout quietRange=card();quietRange.setPadding(dp(12),dp(11),dp(12),dp(11));addText(quietRange,"ТИХИЕ ЧАСЫ",10,PINK,true);TextView quietHint=text("Уведомления будут отключены в выбранный период",11,MUTED,false);quietRange.addView(quietHint,lp(-1,-2,0,3,0,8));LinearLayout quietTimes=new LinearLayout(this);quietTimes.setOrientation(LinearLayout.HORIZONTAL);quietTimes.setGravity(Gravity.CENTER_VERTICAL);LinearLayout quietStartBox=new LinearLayout(this);quietStartBox.setOrientation(LinearLayout.VERTICAL);quietStartBox.setGravity(Gravity.CENTER);quietStartBox.setPadding(dp(8),dp(7),dp(8),dp(7));quietStartBox.setBackground(shape(BG,12,blendColors(PINK,BG,0.5f)));addText(quietStartBox,"НАЧАЛО",9,MUTED,true);TextView quietStartValue=text(prefs.getString("quiet_hours_start","22:00"),20,DARK,true);quietStartBox.addView(quietStartValue,lp(-1,30,0,2,0,0));LinearLayout quietMiddle=new LinearLayout(this);quietMiddle.setGravity(Gravity.CENTER);TextView quietArrow=text("→",20,PINK,true);quietMiddle.addView(quietArrow);quietTimes.addView(quietStartBox,new LinearLayout.LayoutParams(0,dp(62),1f));quietTimes.addView(quietMiddle,new LinearLayout.LayoutParams(dp(34),dp(62)));LinearLayout quietEndBox=new LinearLayout(this);quietEndBox.setOrientation(LinearLayout.VERTICAL);quietEndBox.setGravity(Gravity.CENTER);quietEndBox.setPadding(dp(8),dp(7),dp(8),dp(7));quietEndBox.setBackground(shape(BG,12,blendColors(PINK,BG,0.5f)));addText(quietEndBox,"КОНЕЦ",9,MUTED,true);TextView quietEndValue=text(prefs.getString("quiet_hours_end","08:00"),20,DARK,true);quietEndBox.addView(quietEndValue,lp(-1,30,0,2,0,0));quietTimes.addView(quietEndBox,new LinearLayout.LayoutParams(0,dp(62),1f));quietRange.addView(quietTimes,lp(-1,-2,0,0,0,0));quietStartBox.setOnClickListener(v->chooseQuietTime("quiet_hours_start"));quietEndBox.setOnClickListener(v->chooseQuietTime("quiet_hours_end"));quietStartBox.setContentDescription(translate("Начало"));quietEndBox.setContentDescription(translate("Конец"));reminders.addView(quietRange,lp(-1,-2,0,4,0,6));
-        Button reminderSettings=button("Настроить дни и время",false);reminderSettings.setOnClickListener(v->showReminderSettings());reminders.addView(reminderSettings,lp(-1, 48,0,0,0,0));addSettingsToggle(reminders,"Недельный отчёт","weekly_report_enabled",true,()->WeeklyReportReceiver.schedule(this));int repeat=prefs.getInt("reminder_repeat_minutes",0);int[] repeats={0,5,10,15,30};String[] repeatNames={"Не повторять","5 минут","10 минут","15 минут","30 минут"};int ri=0;for(int k=0;k<repeats.length;k++)if(repeats[k]==repeat)ri=k;final int[] repeatIndex={ri};Button repeatButton=button("Повтор напоминания · "+repeatNames[ri],false);repeatButton.setOnClickListener(v->{repeatIndex[0]=(repeatIndex[0]+1)%repeats.length;prefs.edit().putInt("reminder_repeat_minutes",repeats[repeatIndex[0]]).apply();repeatButton.setText("Повтор напоминания · "+repeatNames[repeatIndex[0]]);});reminders.addView(repeatButton,lp(-1,42,0,3,0,3));String tone=prefs.getString("reminder_tone","soft");String[] tones={"soft","neutral","strict"},toneNames={"Мягкий","Нейтральный","Строгий"};int ti=0;for(int k=0;k<tones.length;k++)if(tones[k].equals(tone))ti=k;final int[] toneIndex={ti};Button toneButton=button("Тон напоминаний · "+toneNames[ti],false);toneButton.setOnClickListener(v->{toneIndex[0]=(toneIndex[0]+1)%tones.length;prefs.edit().putString("reminder_tone",tones[toneIndex[0]]).apply();toneButton.setText("Тон напоминаний · "+toneNames[toneIndex[0]]);});reminders.addView(toneButton,lp(-1,42,0,2,0,3));addSettingsToggle(reminders,"Напоминания о письмах себе","future_letters_enabled",true,()->rescheduleFutureLetterReminders(this));addSettingsToggle(reminders,"Вечернее напоминание об отдыхе","evening_rest_enabled",false,()->scheduleReminders(this));root.addView(reminders,lp(-1,-2,0,0,0,4));
+        LinearLayout quietRange=card();quietRange.setPadding(dp(10),dp(7),dp(10),dp(7));addText(quietRange,"ТИХИЕ ЧАСЫ",10,PINK,true);TextView quietHint=text("Уведомления будут отключены в выбранный период",11,MUTED,false);quietRange.addView(quietHint,lp(-1,-2,0,2,0,5));LinearLayout quietTimes=new LinearLayout(this);quietTimes.setOrientation(LinearLayout.HORIZONTAL);quietTimes.setGravity(Gravity.CENTER_VERTICAL);LinearLayout quietStartBox=new LinearLayout(this);quietStartBox.setOrientation(LinearLayout.VERTICAL);quietStartBox.setGravity(Gravity.CENTER);quietStartBox.setPadding(dp(4),dp(3),dp(4),dp(3));quietStartBox.setBackgroundColor(android.graphics.Color.TRANSPARENT);addText(quietStartBox,"НАЧАЛО",8,MUTED,true);TextView quietStartValue=text(prefs.getString("quiet_hours_start","22:00"),17,DARK,true);quietStartBox.addView(quietStartValue,lp(-1,25,0,1,0,0));LinearLayout quietMiddle=new LinearLayout(this);quietMiddle.setGravity(Gravity.CENTER);TextView quietArrow=text("→",20,PINK,true);quietMiddle.addView(quietArrow);quietTimes.addView(quietStartBox,new LinearLayout.LayoutParams(0,dp(50),1f));quietTimes.addView(quietMiddle,new LinearLayout.LayoutParams(dp(28),dp(50)));LinearLayout quietEndBox=new LinearLayout(this);quietEndBox.setOrientation(LinearLayout.VERTICAL);quietEndBox.setGravity(Gravity.CENTER);quietEndBox.setPadding(dp(4),dp(3),dp(4),dp(3));quietEndBox.setBackgroundColor(android.graphics.Color.TRANSPARENT);addText(quietEndBox,"КОНЕЦ",8,MUTED,true);TextView quietEndValue=text(prefs.getString("quiet_hours_end","08:00"),17,DARK,true);quietEndBox.addView(quietEndValue,lp(-1,25,0,1,0,0));quietTimes.addView(quietEndBox,new LinearLayout.LayoutParams(0,dp(50),1f));quietRange.addView(quietTimes,lp(-1,-2,0,0,0,0));quietStartBox.setOnClickListener(v->chooseQuietTime("quiet_hours_start"));quietEndBox.setOnClickListener(v->chooseQuietTime("quiet_hours_end"));quietStartBox.setContentDescription(translate("Начало"));quietEndBox.setContentDescription(translate("Конец"));reminders.addView(quietRange,lp(-1,-2,0,4,0,6));
+        Button reminderSettings=button("Настроить дни и время",false);reminderSettings.setOnClickListener(v->showReminderSettings());reminders.addView(reminderSettings,lp(-1, 48,0,0,0,0));addSettingsToggle(reminders,"Недельный отчёт","weekly_report_enabled",true,()->WeeklyReportReceiver.schedule(this));int repeat=prefs.getInt("reminder_repeat_minutes",0);int[] repeats={0,5,10,15,30};String[] repeatNames={"Не повторять","5 минут","10 минут","15 минут","30 минут"};int ri=0;for(int k=0;k<repeats.length;k++)if(repeats[k]==repeat)ri=k;final int[] repeatIndex={ri};Button repeatButton=button("Повтор напоминания · "+repeatNames[ri],false);repeatButton.setOnClickListener(v->{repeatIndex[0]=(repeatIndex[0]+1)%repeats.length;prefs.edit().putInt("reminder_repeat_minutes",repeats[repeatIndex[0]]).apply();repeatButton.setText("Повтор напоминания · "+repeatNames[repeatIndex[0]]);});reminders.addView(repeatButton,lp(-1,42,0,3,0,3));String tone=prefs.getString("reminder_tone","soft");String[] tones={"soft","neutral","strict"},toneNames={"Мягкий","Нейтральный","Строгий"};int ti=0;for(int k=0;k<tones.length;k++)if(tones[k].equals(tone))ti=k;final int[] toneIndex={ti};Button toneButton=button("Тон напоминаний · "+toneNames[ti],false);toneButton.setOnClickListener(v->{toneIndex[0]=(toneIndex[0]+1)%tones.length;prefs.edit().putString("reminder_tone",tones[toneIndex[0]]).apply();toneButton.setText("Тон напоминаний · "+toneNames[toneIndex[0]]);});reminders.addView(toneButton,lp(-1,42,0,2,0,3));addSettingsToggle(reminders,"Напоминания о письмах себе","future_letters_enabled",true,()->rescheduleFutureLetterReminders(this));addSettingsToggle(reminders,"Вечернее напоминание об отдыхе","evening_rest_enabled",false,()->scheduleReminders(this));for(int childIndex=0;childIndex<reminders.getChildCount();childIndex++){View reminderChild=reminders.getChildAt(childIndex);if(reminderChild instanceof LinearLayout && ((LinearLayout)reminderChild).getOrientation()==LinearLayout.HORIZONTAL){android.view.ViewGroup.LayoutParams compactLp=reminderChild.getLayoutParams();if(compactLp instanceof LinearLayout.LayoutParams){((LinearLayout.LayoutParams)compactLp).height=dp(44);reminderChild.setLayoutParams(compactLp);}}}root.addView(reminders,lp(-1,-2,0,0,0,3));
 
         LinearLayout focus=settingsGroup("РЕЖИМ ФОКУСА");
         focus.setTag("notifications_sound");
@@ -1385,63 +1396,10 @@ public class MainActivity extends Activity {
         TextView versionLabel=text(translate("Версия · ")+installedVersion,11,MUTED,false);updateStatus.addView(versionLabel,lp(-1,-2,0,0,0,0));
         updates.addView(updateStatus,lp(-1,-2,0,7,0,7));
 
-        LinearLayout downloadStatus=new LinearLayout(this);
-        downloadStatus.setOrientation(LinearLayout.VERTICAL);
-        downloadStatus.setPadding(dp(14),dp(12),dp(14),dp(12));
-        downloadStatus.setBackground(shape(themeSurfaceColor(PALE),18,0));
-        LinearLayout downloadTop=new LinearLayout(this);
-        downloadTop.setGravity(Gravity.CENTER_VERTICAL);
-        TextView downloadIcon=text("↓",22,0xFFFFFFFF,true);
-        downloadIcon.setGravity(Gravity.CENTER);
-        GradientDrawable downloadIconBg=new GradientDrawable();
-        downloadIconBg.setColor(isDarkAppearance()?0xFF8D80B8:0xFF8AAED0);
-        downloadIconBg.setShape(GradientDrawable.OVAL);
-        downloadIcon.setBackground(downloadIconBg);
-        downloadTop.addView(downloadIcon,lp(42,42,0,0,11,0));
-        LinearLayout downloadWords=new LinearLayout(this);
-        downloadWords.setOrientation(LinearLayout.VERTICAL);
-        TextView downloadTitle=text(translate("Загрузка обновления"),15,DARK,true);
-        downloadWords.addView(downloadTitle,lp(-1,-2,0,0,0,3));
-        TextView downloadSubtitle=text(translate("Здесь будет отображаться ход загрузки"),12,MUTED,false);
-        downloadWords.addView(downloadSubtitle,lp(-1,-2,0,0,0,0));
-        downloadTop.addView(downloadWords,new LinearLayout.LayoutParams(0,-2,1f));
-        TextView downloadBadge=text(translate("ОЖИДАНИЕ"),9,MUTED,true);
-        downloadBadge.setGravity(Gravity.CENTER);
-        downloadBadge.setPadding(dp(8),dp(5),dp(8),dp(5));
-        downloadBadge.setBackground(shape(BG,10,0));
-        downloadTop.addView(downloadBadge,lp(-2,-2,0,0,0,0));
-        downloadStatus.addView(downloadTop,lp(-1,-2,0,0,0,0));
-        android.widget.ProgressBar downloadProgress=new android.widget.ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
-        downloadProgress.setMax(100);
-        downloadProgress.setProgress(0);
-        downloadProgress.setProgressTintList(android.content.res.ColorStateList.valueOf(isDarkAppearance()?0xFFB9A5E8:0xFF8AAED0));
-        downloadProgress.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(blendColors(PINK,BG,0.82f)));
-        downloadStatus.addView(downloadProgress,lp(-1,4,0,dp(10),0,0));
-        updates.addView(downloadStatus,lp(-1,-2,0,0,0,5));
-        AppUpdater.setDownloadObserver(new AppUpdater.DownloadObserver() {
-            @Override public void onProgress(int value, boolean known) {
-                downloadProgress.setIndeterminate(!known);
-                if(known) downloadProgress.setProgress(value);
-                downloadSubtitle.setText(known ? translate("Скачиваем обновление…") : translate("Подготовка загрузки…"));
-                downloadBadge.setText(translate("ЗАГРУЗКА"));
-            }
-            @Override public void onFinished(boolean success) {
-                downloadProgress.setIndeterminate(false);
-                if(success) {
-                    downloadProgress.setProgress(100);
-                    downloadSubtitle.setText(translate("Загрузка завершена. Подготовка установки…"));
-                    downloadBadge.setText(translate("ГОТОВО"));
-                } else {
-                    downloadSubtitle.setText(translate("Не удалось загрузить обновление. Попробуй ещё раз."));
-                    downloadBadge.setText(translate("ОШИБКА"));
-                }
-            }
-        });
-
         Button checkUpdates=button("Проверить обновление",false);
         checkUpdates.setBackgroundColor(android.graphics.Color.TRANSPARENT);
         if(Build.VERSION.SDK_INT>=21)checkUpdates.setBackgroundTintList(null);
-        checkUpdates.setTextColor(isDarkAppearance()?android.graphics.Color.WHITE:android.graphics.Color.BLACK);
+        checkUpdates.setTextColor(android.graphics.Color.BLACK);
         checkUpdates.setTypeface(Typeface.create(selectedFontFamily(),Typeface.BOLD));
         checkUpdates.setElevation(0f);
         checkUpdates.setElevation(0f);
