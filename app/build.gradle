@@ -21,8 +21,8 @@ android {
         applicationId 'com.studywithlove.app'
         minSdk 23
         targetSdk 35
-        versionCode 251
-        versionName '5.142'
+        versionCode 252
+        versionName '5.143'
         // Launcher icon refresh: blue-lavender glass book
     }
 
@@ -55,9 +55,5 @@ dependencies {
     implementation 'com.facebook.shimmer:shimmer:0.5.0'
     implementation 'com.google.android.material:material:1.12.0'
     implementation 'com.github.bumptech.glide:glide:4.16.0'
-    // Google Filament real-time 3D renderer and glTF model loading
-    implementation 'com.google.android.filament:filament-android:1.70.2'
-    implementation 'com.google.android.filament:gltfio-android:1.70.2'
-    implementation 'com.google.android.filament:filament-utils-android:1.70.2'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
 }
