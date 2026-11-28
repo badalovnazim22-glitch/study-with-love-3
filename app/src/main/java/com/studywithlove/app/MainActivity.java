@@ -17,15 +17,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
-import android.view.TextureView;
-import android.view.Choreographer;
-import com.google.android.filament.Engine;
-import com.google.android.filament.Renderer;
-import com.google.android.filament.LightManager;
-import com.google.android.filament.android.UiHelper;
-import com.google.android.filament.utils.ModelViewer;
-import com.google.android.filament.EntityManager;
-import com.google.android.filament.utils.Utils;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -75,13 +66,6 @@ import java.util.Random;
 import java.util.TimeZone;
 
 public class MainActivity extends Activity {
-    private static final boolean FILAMENT_READY;
-    static {
-        boolean ready = false;
-        try { Utils.init(); ready = true; } catch (Throwable ignored) { }
-        FILAMENT_READY = ready;
-    }
-
     /** Lightweight illustrated home-stat artwork; no 3D renderer or external assets required. */
     private static final class HomeStatsIllustrationView extends View {
         private final int type;
