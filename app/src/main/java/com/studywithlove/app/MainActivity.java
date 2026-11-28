@@ -1730,7 +1730,7 @@ public class MainActivity extends Activity {
         addDailyMoodCard(root);
         if(root.getChildCount()>0)root.getChildAt(root.getChildCount()-1).setTag("home_mood");
 
-        // Three illustrated statistic cards: label left, value centered, artwork right.
+        // Compact home statistics: clear label, centered number and a small illustration.
         LinearLayout homeStats = new LinearLayout(this);
         homeStats.setOrientation(LinearLayout.HORIZONTAL);
         homeStats.setGravity(Gravity.CENTER_VERTICAL);
@@ -1740,27 +1740,30 @@ public class MainActivity extends Activity {
             LinearLayout statCard = new LinearLayout(this);
             statCard.setOrientation(LinearLayout.HORIZONTAL);
             statCard.setGravity(Gravity.CENTER_VERTICAL);
-            statCard.setPadding(dp(7), dp(7), dp(5), dp(7));
+            statCard.setPadding(dp(5), dp(5), dp(4), dp(5));
             GradientDrawable glass = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
                     isDarkAppearance()
-                            ? new int[]{0x88716A7A, 0x66534D5B}
-                            : new int[]{0xBFFFFFFF, 0x88FFFFFF});
-            glass.setCornerRadius(dp(18));
-            glass.setStroke(dp(1), isDarkAppearance() ? 0x33FFFFFF : 0x44FFFFFF);
+                            ? new int[]{0x997C7487, 0x77534D61}
+                            : new int[]{0xF4FFFFFF, 0xDDF8F2F5});
+            glass.setCornerRadius(dp(15));
+            glass.setStroke(dp(1), isDarkAppearance() ? 0x3AFFFFFF : 0x66FFFFFF);
             statCard.setBackground(glass);
             statCard.setForeground(null);
             statCard.setElevation(0f);
 
-            TextView statLabel = text(statLabels[statIndex], 10, DARK, true);
+            TextView statLabel = text(statLabels[statIndex], 9, DARK, true);
             statLabel.setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
             statLabel.setMaxLines(2);
-            statLabel.setLineSpacing(dp(1), 1.0f);
+            statLabel.setIncludeFontPadding(false);
+            statLabel.setLineSpacing(0, 0.96f);
             statLabel.setEllipsize(android.text.TextUtils.TruncateAt.END);
             statCard.addView(statLabel, new LinearLayout.LayoutParams(0, -1, 1.0f));
 
-            TextView statValue = text(String.valueOf(statValues[statIndex]), 20, DARK, true);
+            TextView statValue = text(String.valueOf(statValues[statIndex]), 16, DARK, true);
             statValue.setGravity(Gravity.CENTER);
-            statCard.addView(statValue, new LinearLayout.LayoutParams(0, -1, 0.85f));
+            statValue.setIncludeFontPadding(false);
+            statValue.setSingleLine(true);
+            statCard.addView(statValue, lp(29, -1, 0, 0, 0, 0));
 
             FrameLayout artSpace = new FrameLayout(this);
             artSpace.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
@@ -1768,13 +1771,13 @@ public class MainActivity extends Activity {
             artSpace.setClipToPadding(true);
             HomeStatsIllustrationView illustration = new HomeStatsIllustrationView(this, statIndex);
             artSpace.addView(illustration, new FrameLayout.LayoutParams(-1, -1));
-            statCard.addView(artSpace, lp(46, 58, 0, 0, 0, 0));
+            statCard.addView(artSpace, lp(36, 43, 0, 0, 0, 0));
 
             statCard.setAlpha(0f);
-            statCard.setTranslationY(dp(7));
-            statCard.postDelayed(() -> statCard.animate().alpha(1f).translationY(0f).setDuration(260)
-                    .setInterpolator(new android.view.animation.DecelerateInterpolator()).start(), statIndex * 55L);
-            LinearLayout.LayoutParams statLp = new LinearLayout.LayoutParams(0, dp(112), 1f);
+            statCard.setTranslationY(dp(5));
+            statCard.postDelayed(() -> statCard.animate().alpha(1f).translationY(0f).setDuration(220)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator()).start(), statIndex * 45L);
+            LinearLayout.LayoutParams statLp = new LinearLayout.LayoutParams(0, dp(88), 1f);
             statLp.setMargins(dp(3), 0, dp(3), 0);
             homeStats.addView(statCard, statLp);
         }
